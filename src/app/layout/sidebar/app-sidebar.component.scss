@@ -1,0 +1,45 @@
+.sidebar {
+  min-height: 100dvh;
+  padding: 1.25rem;
+  border-right: 1px solid var(--color-line);
+  background: #102027;
+  color: #f7fbfc;
+}
+
+.sidebar__brand {
+  display: inline-flex;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+nav {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sidebar__link {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.875rem;
+  border-radius: 0.375rem;
+  color: #d8e6e8;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sidebar__link:hover,
+.sidebar__link--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    min-height: auto;
+    border-right: 0;
+  }
+}

@@ -1,0 +1,16 @@
+<aside class="sidebar" aria-label="Main navigation">
+  <a class="sidebar__brand" routerLink="/p/dashboard">Vitarerum</a>
+
+  <nav>
+    @for (item of navItems(); track item.path) {
+      <a
+        class="sidebar__link"
+        [routerLink]="item.path"
+        routerLinkActive="sidebar__link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</aside>

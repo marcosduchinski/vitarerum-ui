@@ -1,0 +1,21 @@
+<main class="login" aria-labelledby="login-title">
+  <section class="login__panel">
+    <p class="login__eyebrow">Vitarerum UI</p>
+    <h1 id="login-title">Sign in</h1>
+    <p class="login__summary">Use any email address to enter the learning workspace.</p>
+
+    <label for="email">Email</label>
+    <input
+      id="email"
+      type="email"
+      autocomplete="email"
+      placeholder="you@example.com"
+      [value]="email()"
+      (input)="updateEmail($event)"
+    />
+
+    <button type="button" [disabled]="!canEnter()" (click)="enterWorkspace()">
+      Enter workspace
+    </button>
+  </section>
+</main>
