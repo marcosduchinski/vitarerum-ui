@@ -27,11 +27,10 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/config"
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {
