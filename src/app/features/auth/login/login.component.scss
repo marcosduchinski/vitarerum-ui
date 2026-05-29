@@ -19,7 +19,8 @@
 }
 
 .login__eyebrow,
-.login__summary {
+.login__summary,
+.login__help {
   margin: 0;
   color: var(--color-muted);
 }
@@ -38,6 +39,10 @@ h1 {
 
 label {
   font-weight: 800;
+}
+
+.login__help {
+  font-size: 0.875rem;
 }
 
 input {

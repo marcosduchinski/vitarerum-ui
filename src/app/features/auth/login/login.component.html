@@ -9,10 +9,13 @@
       id="email"
       type="email"
       autocomplete="email"
+      required
+      aria-describedby="login-email-help"
       placeholder="you@example.com"
       [value]="email()"
       (input)="updateEmail($event)"
     />
+    <p id="login-email-help" class="login__help">Enter an address with an @ symbol.</p>
 
     <button type="button" [disabled]="!canEnter()" (click)="enterWorkspace()">
       Enter workspace
