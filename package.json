@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:e2e": "echo \"Playwright is not configured yet. Complete task T3.05 before running E2E tests.\" && exit 1",
+    "lint": "echo \"ESLint is not configured yet. Complete task T3.02 before running lint.\" && exit 1",
+    "format": "prettier --write \"**/*.{js,mjs,ts,mts,d.ts,html,scss,json,md}\" --cache"
   },
   "private": true,
   "packageManager": "npm@11.9.0",
