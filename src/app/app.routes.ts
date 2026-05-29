@@ -1,16 +1,20 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '@core/identity/auth.guard';
+import { unauthenticatedGuard } from '@core/identity/unauthenticated.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   {
     path: 'login',
     title: 'Login',
+    canActivate: [unauthenticatedGuard],
     loadComponent: () =>
       import('@features/auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'p',
     title: 'Vitarerum',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('@layout/shell/app-shell.component').then((m) => m.AppShellComponent),
     children: [

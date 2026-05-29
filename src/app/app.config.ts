@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
   inject,
@@ -9,6 +9,9 @@ import {
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { API_BASE_URL, USE_MOCK_API } from '@core/config/app-config.model';
 import { AppConfigService } from '@core/config/app-config.service';
+import { authInterceptor } from '@core/identity/auth.interceptor';
+import { sessionExpiredInterceptor } from '@core/identity/session-expired.interceptor';
+import { provideIdentity } from '@core/providers/provide-identity';
 
 import { routes } from './app.routes';
 
@@ -17,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, sessionExpiredInterceptor])),
     provideAppInitializer(() => inject(AppConfigService).load()),
     {
       provide: API_BASE_URL,
@@ -29,5 +32,6 @@ export const appConfig: ApplicationConfig = {
       useFactory: (config: AppConfigService) => config.get('use-mock-api'),
       deps: [AppConfigService],
     },
+    provideIdentity(),
   ],
 };
