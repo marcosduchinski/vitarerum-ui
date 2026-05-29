@@ -6,6 +6,7 @@
 
     <label for="email">Email</label>
     <input
+      pInputText
       id="email"
       type="email"
       autocomplete="email"
@@ -17,8 +18,14 @@
     />
     <p id="login-email-help" class="login__help">Enter an address with an @ symbol.</p>
 
-    <button type="button" [disabled]="!canEnter()" (click)="enterWorkspace()">
-      Enter workspace
+    <button
+      pButton
+      type="button"
+      class="login__submit"
+      [disabled]="!canEnter()"
+      (click)="enterWorkspace()"
+    >
+      <span pButtonLabel>Enter workspace</span>
     </button>
   </section>
 </main>
