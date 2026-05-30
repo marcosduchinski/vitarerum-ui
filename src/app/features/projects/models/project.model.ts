@@ -100,11 +100,6 @@ export interface ReasonRequest {
   readonly reason: string;
 }
 
-export interface CompleteProjectRequest {
-  readonly result: Extract<UseResult, 'COMPLETED' | 'PARTIALLY_COMPLETED'>;
-  readonly note: string;
-}
-
 export interface CreateProjectEntryRequest {
   readonly content: string;
 }

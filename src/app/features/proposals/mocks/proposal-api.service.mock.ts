@@ -265,11 +265,11 @@ export class ProposalApiServiceMock {
     if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const now = new Date().toISOString();
     const evt: ProposalEvent = { occurredAt: now, type: 'REJECTED', triggeredBy: P['bob'], note: request.reason };
-    this.proposals.set(proposalId, { ...proposal, status: 'REJECTED', collectionUseProject: { ...proposal.collectionUseProject, status: 'AUTHORIZATION_REFUSED' } });
+    this.proposals.set(proposalId, { ...proposal, status: 'REJECTED', collectionUseProject: { ...proposal.collectionUseProject, status: 'REFUSED' } });
     (this.events.get(proposalId) ?? []).push(evt);
     return of({
       proposal: { id: proposalId, status: 'REJECTED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'AUTHORIZATION_REFUSED', result: 'REFUSED' },
+      collectionUseProject: { ...proposal.collectionUseProject, status: 'REFUSED' },
     });
   }
 

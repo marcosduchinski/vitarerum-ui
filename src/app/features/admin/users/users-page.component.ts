@@ -24,7 +24,7 @@ const GROUP_LABELS: Record<GroupName, string> = {
   COLLECTIONS_MANAGEMENT: 'Collections management',
   CURATORIAL: 'Curatorial',
   DIRECTION: 'Direction',
-  ADMIN: 'Administrator',
+  ADMINISTRATION: 'Administrator',
 };
 
 const PAGE_SIZE = 20;

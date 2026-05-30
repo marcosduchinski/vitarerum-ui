@@ -11,7 +11,7 @@ export const MOCK_GROUPS: Group[] = [
   { id: 'g-collections', name: 'COLLECTIONS_MANAGEMENT' },
   { id: 'g-curatorial', name: 'CURATORIAL' },
   { id: 'g-direction', name: 'DIRECTION' },
-  { id: 'g-admin', name: 'ADMIN' },
+  { id: 'g-admin', name: 'ADMINISTRATION' },
 ];
 
 export const MOCK_USERS: UserDetail[] = [
@@ -92,7 +92,7 @@ export const P: Record<string, PermissionPrincipal> = {
   eve: {
     permissionId: 'perm-eve',
     user: { id: 'u-eve', name: 'Eve Lima', email: 'eve@admin.example.com' },
-    group: 'ADMIN',
+    group: 'ADMINISTRATION',
   },
 };
 
@@ -173,10 +173,24 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     type: 'RESEARCH',
     requestedBy: P['alice'],
     assignedTo: P['bob'],
-    collectionUseProject: { id: 'proj-6', referenceNumber: 'VR-2026-006', title: 'Genealogical records research', status: 'AUTHORIZATION_REFUSED' },
+    collectionUseProject: { id: 'proj-6', referenceNumber: 'VR-2026-006', title: 'Genealogical records research', status: 'REFUSED' },
     submittedAt: '2026-03-01T07:00:00Z',
     conversationId: 'conv-6',
     documents: [],
+    requestedDocuments: [],
+  },
+  {
+    id: 'prop-7',
+    status: 'UNDER_REVIEW',
+    type: 'EXHIBITION',
+    requestedBy: P['alice'],
+    assignedTo: P['carol'],
+    collectionUseProject: { id: 'proj-7', referenceNumber: 'VR-2026-007', title: 'Instruments of the colonial kitchen — travelling exhibition', status: 'REQUESTED' },
+    submittedAt: '2026-05-10T08:00:00Z',
+    conversationId: 'conv-7',
+    documents: [
+      { id: 'doc-7', type: 'INSTITUTION_LETTER', fileName: 'institution_letter.docx', submittedAt: '2026-05-12T10:00:00Z', submittedBy: P['alice'] },
+    ],
     requestedDocuments: [],
   },
 ];
@@ -213,6 +227,13 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
     { occurredAt: '2026-03-02T09:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
     { occurredAt: '2026-03-03T14:00:00Z', type: 'REJECTED', triggeredBy: P['bob'], note: 'Does not fall within institutional collection use policy.' },
   ],
+  'prop-7': [
+    { occurredAt: '2026-05-10T08:00:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-05-11T09:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-05-12T11:00:00Z', type: 'DOCUMENTS_REQUESTED', triggeredBy: P['bob'], note: 'Please provide an institutional letter from the lending museum.' },
+    { occurredAt: '2026-05-12T10:00:00Z', type: 'DOCUMENTS_SUBMITTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-05-13T09:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['carol'], note: 'Starting curatorial review.' },
+  ],
 };
 
 export const SEED_MESSAGES: Record<string, Message[]> = {
@@ -224,6 +245,7 @@ export const SEED_MESSAGES: Record<string, Message[]> = {
   'conv-4': [],
   'conv-5': [],
   'conv-6': [],
+  'conv-7': [],
 };
 
 export interface MutableProjectState {
@@ -231,7 +253,7 @@ export interface MutableProjectState {
   referenceNumber: string;
   title: string;
   purpose: string;
-  type: 'RESEARCH' | 'OTHER';
+  type: 'EXHIBITION' | 'RESEARCH' | 'OTHER';
   status: import('@shared/models/collection-use-status.model').UseStatus;
   result: import('@shared/models/collection-use-status.model').UseResult | null;
   beginDate: string;
@@ -282,6 +304,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     ],
     entryTotal: 1,
   },
+  {
+    id: 'proj-7', referenceNumber: 'VR-2026-007', title: 'Instruments of the colonial kitchen — travelling exhibition',
+    purpose: 'Temporary loan of selected objects for external exhibition.', type: 'EXHIBITION',
+    status: 'REQUESTED', result: null, beginDate: '2026-09-01', endDate: '2026-12-15',
+    requestedBy: P['alice'], proposalId: 'prop-7', proposalStatus: 'UNDER_REVIEW', proposalAssignedTo: P['carol'],
+    entries: [], entryTotal: 0,
+  },
 ];
 
 export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
@@ -300,6 +329,9 @@ export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
     { occurredAt: '2026-02-15T14:00:00Z', type: 'ACCEPTED', triggeredBy: P['bob'], note: null },
     { occurredAt: '2026-03-01T09:00:00Z', type: 'STARTED', triggeredBy: P['alice'], note: 'Starting collection access.' },
   ],
+  'proj-7': [
+    { occurredAt: '2026-05-10T08:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+  ],
 };
 
 export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
@@ -315,6 +347,7 @@ export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
       attachments: [],
     },
   ],
+  'proj-7': [],
 };
 
 export function makePageFrom<T>(items: readonly T[], query: PageQuery): Page<T> {

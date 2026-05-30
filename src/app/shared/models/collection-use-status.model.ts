@@ -1,4 +1,4 @@
-export type UseType = 'RESEARCH' | 'OTHER';
+export type UseType = 'EXHIBITION' | 'RESEARCH' | 'OTHER';
 
 export type ProposalStatus =
   | 'SUBMITTED'
@@ -25,25 +25,23 @@ export type ProposalEventType =
 export type UseStatus =
   | 'REQUESTED'
   | 'ACCEPTED'
-  | 'AUTHORIZATION_REFUSED'
+  | 'REFUSED'
   | 'IN_PROGRESS'
   | 'SUSPENDED'
   | 'COMPLETED'
-  | 'PARTIALLY_COMPLETED'
   | 'CANCELLED'
   | 'CLOSED';
 
-export type UseResult = 'COMPLETED' | 'PARTIALLY_COMPLETED' | 'CANCELLED' | 'REFUSED';
+export type UseResult = 'COMPLETED' | 'CANCELLED';
 
 export type UseEventType =
   | 'REQUESTED'
   | 'ACCEPTED'
-  | 'AUTHORIZATION_REFUSED'
+  | 'REFUSED'
   | 'STARTED'
   | 'SUSPENDED'
   | 'RESUMED'
   | 'COMPLETED'
-  | 'PARTIALLY_COMPLETED'
   | 'CANCELLED'
   | 'CLOSED';
 
@@ -69,11 +67,10 @@ const PROPOSAL_STATUS_PRESENTATION = {
 const USE_STATUS_PRESENTATION = {
   REQUESTED: { label: 'Requested', tone: 'submitted' },
   ACCEPTED: { label: 'Accepted', tone: 'approved' },
-  AUTHORIZATION_REFUSED: { label: 'Authorization refused', tone: 'rejected' },
+  REFUSED: { label: 'Refused', tone: 'rejected' },
   IN_PROGRESS: { label: 'In progress', tone: 'review' },
   SUSPENDED: { label: 'Suspended', tone: 'pending' },
   COMPLETED: { label: 'Completed', tone: 'approved' },
-  PARTIALLY_COMPLETED: { label: 'Partially completed', tone: 'review' },
   CANCELLED: { label: 'Cancelled', tone: 'closed' },
   CLOSED: { label: 'Closed', tone: 'closed' },
 } as const satisfies Record<UseStatus, StatusPresentation>;

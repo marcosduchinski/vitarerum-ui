@@ -11,6 +11,9 @@ export class IdentityServiceImpl implements IdentityService {
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
 
+  // TODO(real-auth): replace with OIDC redirect (e.g. angular-oauth2-oidc).
+  // On callback: parse JWT → set accessToken, user, and availableGroups from the
+  // "groups" claim. The email param becomes unused once the IdP owns the flow.
   signIn(email: string): void {
     this.sessionState.set({
       accessToken: 'development-access-token',

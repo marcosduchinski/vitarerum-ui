@@ -157,7 +157,7 @@ const MENUS: Record<GroupName, readonly MenuNode[]> = {
     },
   ],
 
-  ADMIN: [
+  ADMINISTRATION: [
     HOME,
     {
       label: 'Use of Collections',

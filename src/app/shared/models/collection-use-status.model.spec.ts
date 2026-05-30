@@ -20,8 +20,8 @@ describe('collection-use status presentation', () => {
   });
 
   it('maps project statuses to stable labels and tones', () => {
-    expect(getUseStatusPresentation('AUTHORIZATION_REFUSED')).toEqual({
-      label: 'Authorization refused',
+    expect(getUseStatusPresentation('REFUSED')).toEqual({
+      label: 'Refused',
       tone: 'rejected',
     });
     expect(getUseStatusPresentation('IN_PROGRESS')).toEqual({

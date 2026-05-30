@@ -33,8 +33,8 @@ describe('IdentityServiceMock', () => {
     expect(service.session()?.availableGroups).toEqual(['COLLECTIONS_MANAGEMENT']);
 
     service.signIn('eve@admin.example.com');
-    expect(service.session()?.group).toBe('ADMIN');
-    expect(service.session()?.availableGroups).toEqual(['ADMIN']);
+    expect(service.session()?.group).toBe('ADMINISTRATION');
+    expect(service.session()?.availableGroups).toEqual(['ADMINISTRATION']);
   });
 
   it('defaults unknown emails to EXTERNAL group', () => {
@@ -54,7 +54,7 @@ describe('IdentityServiceMock', () => {
   it('setGroup is ignored when the group is not in availableGroups', () => {
     const service = new IdentityServiceMock();
     service.signIn('alice@ext.example.com'); // only EXTERNAL
-    service.setGroup('ADMIN');               // not allowed
+    service.setGroup('ADMINISTRATION');               // not allowed
     expect(service.session()?.group).toBe('EXTERNAL'); // unchanged
   });
 
@@ -74,7 +74,7 @@ describe('IdentityServiceMock', () => {
     expect(service.session()?.group).toBe('DIRECTION');
 
     // Cannot switch to a group outside their list
-    service.setGroup('ADMIN');
+    service.setGroup('ADMINISTRATION');
     expect(service.session()?.group).toBe('DIRECTION'); // unchanged
   });
 });

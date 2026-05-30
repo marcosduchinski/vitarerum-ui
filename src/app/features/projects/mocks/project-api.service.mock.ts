@@ -7,7 +7,6 @@ import {
   Attachment,
   CollectionUseProjectDetail,
   CollectionUseProjectSummary,
-  CompleteProjectRequest,
   CreateProjectEntryRequest,
   NoteRequest,
   ProjectEntriesPage,
@@ -80,9 +79,8 @@ export class ProjectApiServiceMock {
     return this.transition(projectId, 'IN_PROGRESS', null, 'RESUMED', request.note);
   }
 
-  completeProject(projectId: string, request: CompleteProjectRequest): Observable<ProjectTransitionResult> {
-    const finalStatus = request.result === 'COMPLETED' ? 'COMPLETED' : 'PARTIALLY_COMPLETED';
-    return this.transition(projectId, finalStatus as UseStatus, request.result as UseResult, request.result, request.note);
+  completeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
+    return this.transition(projectId, 'COMPLETED', 'COMPLETED', 'COMPLETED', request.note);
   }
 
   cancelProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {

@@ -10,7 +10,6 @@ import {
   Attachment,
   CollectionUseProjectDetail,
   CollectionUseProjectSummary,
-  CompleteProjectRequest,
   CreateProjectEntryRequest,
   NoteRequest,
   ProjectEntriesPage,
@@ -72,7 +71,7 @@ export class ProjectApiService {
 
   completeProject(
     projectId: string,
-    request: CompleteProjectRequest,
+    request: NoteRequest,
   ): Observable<ProjectTransitionResult> {
     return this.http.post<ProjectTransitionResult>(
       this.url(`/collection-use-projects/${projectId}/complete`),

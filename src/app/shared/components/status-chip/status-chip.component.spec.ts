@@ -27,8 +27,8 @@ describe('StatusChipComponent', () => {
       label: 'In progress',
       tone: 'review',
     });
-    expect(getWorkflowStatusPresentation('AUTHORIZATION_REFUSED')).toEqual({
-      label: 'Authorization refused',
+    expect(getWorkflowStatusPresentation('REFUSED')).toEqual({
+      label: 'Refused',
       tone: 'rejected',
     });
   });

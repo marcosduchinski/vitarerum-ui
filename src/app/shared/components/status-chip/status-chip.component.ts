@@ -12,11 +12,10 @@ export type WorkflowStatus =
   | 'CANCELLED'
   | 'REQUESTED'
   | 'ACCEPTED'
-  | 'AUTHORIZATION_REFUSED'
+  | 'REFUSED'
   | 'IN_PROGRESS'
   | 'SUSPENDED'
   | 'COMPLETED'
-  | 'PARTIALLY_COMPLETED'
   | 'CLOSED';
 
 interface StatusPresentation {
@@ -34,11 +33,10 @@ const STATUS_PRESENTATION = {
   CANCELLED: { label: 'Cancelled', tone: 'closed' },
   REQUESTED: { label: 'Requested', tone: 'submitted' },
   ACCEPTED: { label: 'Accepted', tone: 'approved' },
-  AUTHORIZATION_REFUSED: { label: 'Authorization refused', tone: 'rejected' },
+  REFUSED: { label: 'Refused', tone: 'rejected' },
   IN_PROGRESS: { label: 'In progress', tone: 'review' },
   SUSPENDED: { label: 'Suspended', tone: 'pending' },
   COMPLETED: { label: 'Completed', tone: 'approved' },
-  PARTIALLY_COMPLETED: { label: 'Partially completed', tone: 'review' },
   CLOSED: { label: 'Closed', tone: 'closed' },
 } as const satisfies Record<WorkflowStatus, StatusPresentation>;
 
