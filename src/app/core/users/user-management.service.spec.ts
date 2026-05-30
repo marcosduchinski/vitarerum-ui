@@ -15,6 +15,7 @@ describe('UserManagementService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: 'https://api.example.test/' },
+        UserManagementService,
       ],
     });
 

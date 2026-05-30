@@ -13,7 +13,9 @@ import { API_BASE_URL, USE_MOCK_API } from '@core/config/app-config.model';
 import { AppConfigService } from '@core/config/app-config.service';
 import { authInterceptor } from '@core/identity/auth.interceptor';
 import { sessionExpiredInterceptor } from '@core/identity/session-expired.interceptor';
+import { provideCollectionUse } from '@core/providers/provide-collection-use';
 import { provideIdentity } from '@core/providers/provide-identity';
+import { provideUserManagement } from '@core/providers/provide-user-management';
 import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
@@ -45,5 +47,7 @@ export const appConfig: ApplicationConfig = {
       deps: [AppConfigService],
     },
     provideIdentity(),
+    provideCollectionUse(),
+    provideUserManagement(),
   ],
 };

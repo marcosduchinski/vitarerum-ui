@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, InjectionToken } from '@angular/core';
 import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 import { buildHttpParams } from '@core/http/http-params.util';
@@ -33,7 +33,9 @@ import {
   SendMessageRequest,
 } from '../models/proposal.model';
 
-@Injectable({ providedIn: 'root' })
+export const PROPOSAL_API_SERVICE = new InjectionToken<ProposalApiService>('PROPOSAL_API_SERVICE');
+
+@Injectable()
 export class ProposalApiService {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = inject(API_BASE_URL);

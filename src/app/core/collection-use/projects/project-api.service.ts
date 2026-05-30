@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, InjectionToken } from '@angular/core';
 import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 import { buildHttpParams } from '@core/http/http-params.util';
@@ -32,7 +32,9 @@ export interface ProjectTransitionResult {
   readonly lastEvent: UseEvent;
 }
 
-@Injectable({ providedIn: 'root' })
+export const PROJECT_API_SERVICE = new InjectionToken<ProjectApiService>('PROJECT_API_SERVICE');
+
+@Injectable()
 export class ProjectApiService {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = inject(API_BASE_URL);
