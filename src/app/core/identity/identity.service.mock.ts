@@ -1,6 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 
 import { IdentityService } from './identity.service';
+import { GroupName } from './models/group-name.enum';
 import { IdentitySession } from './models/identity-session.model';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class IdentityServiceMock implements IdentityService {
         email,
         displayName: email.split('@')[0] || 'Learning User',
       },
+      group: 'EXTERNAL',
     });
   }
 
@@ -27,5 +29,12 @@ export class IdentityServiceMock implements IdentityService {
 
   getAccessToken(): string | null {
     return this.session()?.accessToken ?? null;
+  }
+
+  setGroup(group: GroupName): void {
+    const session = this.session();
+    if (session) {
+      this.sessionState.set({ ...session, group });
+    }
   }
 }

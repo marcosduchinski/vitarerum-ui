@@ -1,8 +1,25 @@
 <header class="topbar">
   <div>
-    <p class="topbar__eyebrow">Vitarerum UI</p>
-    <h1>{{ title() }}</h1>
+    <p class="topbar__eyebrow">Vitarerum</p>
+    <p class="topbar__user">{{ displayName() }}</p>
   </div>
 
-  <a class="topbar__action" routerLink="/login">Sign out</a>
+  <div class="topbar__controls">
+    @if (isMock && currentGroup()) {
+      <label class="topbar__role-label" for="role-switcher">Role</label>
+      <select
+        id="role-switcher"
+        class="topbar__role-select"
+        [value]="currentGroup()"
+        (change)="onGroupChange($event)"
+        aria-label="Switch active role"
+      >
+        @for (g of groups; track g.value) {
+          <option [value]="g.value">{{ g.label }}</option>
+        }
+      </select>
+    }
+
+    <a class="topbar__action" routerLink="/login" (click)="signOut()">Sign out</a>
+  </div>
 </header>

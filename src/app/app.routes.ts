@@ -25,6 +25,48 @@ export const routes: Routes = [
         loadComponent: () =>
           import('@features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
+
+      // Proposal routes — feature screens added per plan task order
+      {
+        path: 'proposals',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
+          { path: 'new', redirectTo: '/p/dashboard' },
+          { path: 'my', redirectTo: '/p/dashboard' },
+          { path: 'queue', redirectTo: '/p/dashboard' },
+          { path: 'assignments', redirectTo: '/p/dashboard' },
+          { path: 'pending-documents', redirectTo: '/p/dashboard' },
+          { path: 'pending-direction', redirectTo: '/p/dashboard' },
+          { path: 'approved', redirectTo: '/p/dashboard' },
+          { path: 'rejected', redirectTo: '/p/dashboard' },
+          { path: ':id', redirectTo: '/p/dashboard' },
+        ],
+      },
+
+      // Project routes — feature screens added per plan task order
+      {
+        path: 'projects',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
+          { path: 'my', redirectTo: '/p/dashboard' },
+          { path: 'all', redirectTo: '/p/dashboard' },
+          { path: 'pending', redirectTo: '/p/dashboard' },
+          { path: 'in-progress', redirectTo: '/p/dashboard' },
+          { path: 'suspended', redirectTo: '/p/dashboard' },
+          { path: 'completed', redirectTo: '/p/dashboard' },
+          { path: ':id', redirectTo: '/p/dashboard' },
+        ],
+      },
+
+      // Admin routes — feature screens added per plan task order
+      {
+        path: 'admin',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
+          { path: 'users', redirectTo: '/p/dashboard' },
+          { path: 'groups', redirectTo: '/p/dashboard' },
+        ],
+      },
     ],
   },
   {
