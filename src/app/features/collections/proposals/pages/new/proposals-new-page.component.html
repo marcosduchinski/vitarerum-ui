@@ -1,0 +1,167 @@
+<div class="proposals-new">
+  <app-page-header
+    eyebrow="Proposals"
+    title="New proposals"
+    description="Incoming requests awaiting assignment."
+  />
+
+  @if (proposalsResource.isLoading()) {
+    <app-loading-state />
+  } @else if (listError()) {
+    <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />
+  } @else if (!proposals().length) {
+    <app-empty-state
+      title="No new proposals"
+      message="All incoming requests have been assigned."
+    />
+  } @else {
+    @if (assumeError()) {
+      <app-error-message [apiError]="assumeError()!" />
+    }
+
+    <table class="proposals-table" aria-label="New proposals">
+      <thead>
+        <tr>
+          <th scope="col">Reference</th>
+          <th scope="col">Title</th>
+          <th scope="col">Type</th>
+          <th scope="col">Requested by</th>
+          <th scope="col">Submitted</th>
+          <th scope="col" class="sr-only">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (proposal of proposals(); track proposal.id) {
+          <tr>
+            <td class="proposals-table__ref">
+              {{ proposal.collectionUseProject.referenceNumber }}
+            </td>
+            <td>
+              <a class="proposals-table__title" [routerLink]="['../', proposal.id]">
+                {{ proposal.collectionUseProject.title }}
+              </a>
+            </td>
+            <td>
+              <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
+            </td>
+            <td>
+              <div class="proposals-table__requester">
+                <span>{{ proposal.requestedBy.user.name }}</span>
+                <span class="proposals-table__requester-email">{{ proposal.requestedBy.user.email }}</span>
+              </div>
+            </td>
+            <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
+            <td class="proposals-table__actions">
+              <button
+                type="button"
+                class="action-btn action-btn--primary"
+                [disabled]="assumingId() === proposal.id"
+                (click)="assume(proposal.id)"
+                aria-label="Assume {{ proposal.collectionUseProject.referenceNumber }}"
+              >
+                {{ assumingId() === proposal.id ? 'Assuming…' : 'Assume' }}
+              </button>
+              <button
+                type="button"
+                class="action-btn"
+                [class.action-btn--active]="forwardPanelId() === proposal.id"
+                (click)="forwardPanelId() === proposal.id ? closeForwardPanel() : openForwardPanel(proposal.id)"
+                aria-label="Forward {{ proposal.collectionUseProject.referenceNumber }}"
+              >
+                Forward
+              </button>
+              <a class="action-btn action-btn--link" [routerLink]="['../', proposal.id]">
+                View
+              </a>
+            </td>
+          </tr>
+
+          @if (forwardPanelId() === proposal.id) {
+            <tr class="forward-panel-row">
+              <td colspan="6">
+                <div class="forward-panel">
+                  <p class="forward-panel__label">Forward to</p>
+
+                  @if (staffUsersResource.isLoading()) {
+                    <app-loading-state label="Loading staff…" />
+                  } @else {
+                    <div class="forward-panel__fields">
+                      <label class="sr-only" for="forward-target-{{ proposal.id }}">Staff member</label>
+                      <select
+                        [id]="'forward-target-' + proposal.id"
+                        class="forward-panel__select"
+                        [value]="forwardTargetPermissionId()"
+                        (change)="onForwardTargetChange($event)"
+                      >
+                        <option value="" disabled selected>Select a staff member…</option>
+                        @for (opt of staffOptions(); track opt.permissionId) {
+                          <option [value]="opt.permissionId">{{ opt.label }}</option>
+                        }
+                      </select>
+
+                      <label class="sr-only" [for]="'forward-note-' + proposal.id">Note</label>
+                      <textarea
+                        [id]="'forward-note-' + proposal.id"
+                        class="forward-panel__note"
+                        placeholder="Add a note (optional)…"
+                        rows="2"
+                        [value]="forwardNote()"
+                        (input)="onForwardNoteChange($event)"
+                      ></textarea>
+                    </div>
+
+                    @if (forwardError()) {
+                      <app-error-message [apiError]="forwardError()!" />
+                    }
+
+                    <div class="forward-panel__footer">
+                      <button
+                        type="button"
+                        class="action-btn action-btn--primary"
+                        [disabled]="!forwardTargetPermissionId() || forwardPending()"
+                        (click)="forward(proposal.id)"
+                      >
+                        {{ forwardPending() ? 'Forwarding…' : 'Forward' }}
+                      </button>
+                      <button type="button" class="action-btn" (click)="closeForwardPanel()">
+                        Cancel
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    @if (totalProposals() > 0) {
+      <div class="proposals-pagination" role="navigation" aria-label="Proposals pagination">
+        <span class="proposals-pagination__info">
+          {{ rangeStart() }}–{{ rangeEnd() }} of {{ totalProposals() }} proposals
+        </span>
+        <div class="proposals-pagination__controls">
+          <button
+            type="button"
+            class="action-btn"
+            [disabled]="currentPage() === 0"
+            (click)="prevPage()"
+            aria-label="Previous page"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="action-btn"
+            [disabled]="currentPage() >= totalPages() - 1"
+            (click)="nextPage()"
+            aria-label="Next page"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

@@ -104,6 +104,7 @@ export class ProposalApiServiceMock {
 
     if (query.status) items = items.filter(p => p.status === query.status);
     if (query.type) items = items.filter(p => p.type === query.type);
+    if (query.unassigned) items = items.filter(p => p.assignedTo === null);
     if (query.assignedTo) items = items.filter(p => p.assignedTo?.permissionId === query.assignedTo);
     if (query.search) {
       const q = query.search.toLowerCase();
@@ -201,10 +202,10 @@ export class ProposalApiServiceMock {
     const assignedTo = request.targetPermissionId
       ? (Object.values(P).find(p => p.permissionId === request.targetPermissionId) ?? P['bob'])
       : P['bob'];
-    const evt: ProposalEvent = { occurredAt: now, type: 'ASSIGNED', triggeredBy: P['bob'], note: request.note || null };
-    this.proposals.set(proposalId, { ...proposal, assignedTo });
+    const evt: ProposalEvent = { occurredAt: now, type: 'ASSIGNED', triggeredBy: assignedTo, note: request.note || null };
+    this.proposals.set(proposalId, { ...proposal, status: 'UNDER_REVIEW', assignedTo });
     (this.events.get(proposalId) ?? []).push(evt);
-    return of({ id: proposalId, status: proposal.status, assignedTo, lastEvent: evt });
+    return of({ id: proposalId, status: 'UNDER_REVIEW', assignedTo, lastEvent: evt });
   }
 
   requestDocuments(proposalId: string, request: RequestDocumentsRequest): Observable<RequestDocumentsResult> {

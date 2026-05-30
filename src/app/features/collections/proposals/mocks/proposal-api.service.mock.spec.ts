@@ -60,4 +60,36 @@ describe('ProposalApiServiceMock', () => {
     const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED' }));
     expect(page.content.every(p => p.status === 'SUBMITTED')).toBe(true);
   });
+
+  it('unassigned filter returns only proposals with no assignedTo', async () => {
+    const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED', unassigned: true }));
+    expect(page.content.length).toBeGreaterThan(0);
+    expect(page.content.every(p => p.assignedTo === null)).toBe(true);
+    expect(page.content.every(p => p.status === 'SUBMITTED')).toBe(true);
+  });
+
+  it('assume transitions proposal to UNDER_REVIEW and sets assignedTo', async () => {
+    const result = await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
+    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.assignedTo).toBeTruthy();
+
+    const updated = await firstValueFrom(service.getProposal('prop-1'));
+    expect(updated.status).toBe('UNDER_REVIEW');
+    expect(updated.assignedTo).not.toBeNull();
+  });
+
+  it('assume removes proposal from the unassigned-SUBMITTED list', async () => {
+    await firstValueFrom(service.assignProposal('prop-1', { note: '' }));
+
+    const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED', unassigned: true }));
+    expect(page.content.find(p => p.id === 'prop-1')).toBeUndefined();
+  });
+
+  it('forward transitions proposal to UNDER_REVIEW with target permission', async () => {
+    const result = await firstValueFrom(
+      service.assignProposal('prop-1', { targetPermissionId: 'perm-carol', note: 'Forwarding to carol' }),
+    );
+    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.assignedTo.permissionId).toBe('perm-carol');
+  });
 });

@@ -1,0 +1,171 @@
+<div class="proposal-submit">
+  <app-page-header
+    eyebrow="Proposals"
+    title="Submit a proposal"
+    description="Describe your collection-use request and send an opening message to the collections team."
+  />
+
+  <form class="submit-form" (submit)="submit($event)" novalidate>
+
+    <fieldset class="submit-form__section">
+      <legend class="submit-form__section-title">Proposal details</legend>
+
+      <div class="field" [class.field--error]="titleError()">
+        <label class="field__label" for="title">Title <span aria-hidden="true">*</span></label>
+        <input
+          id="title"
+          type="text"
+          class="field__input"
+          placeholder="Brief descriptive title of your request"
+          [value]="title()"
+          (input)="onInput('title', $event)"
+          [attr.aria-describedby]="titleError() ? 'title-error' : null"
+          [attr.aria-invalid]="titleError() || null"
+        />
+        @if (titleError()) {
+          <p id="title-error" class="field__error" role="alert">Title is required.</p>
+        }
+      </div>
+
+      <div class="field" [class.field--error]="typeError()">
+        <p class="field__label" id="type-label">Type <span aria-hidden="true">*</span></p>
+        <div class="field__radio-group" role="radiogroup" aria-labelledby="type-label">
+          @for (opt of useTypes; track opt.value) {
+            <label class="radio-option">
+              <input
+                type="radio"
+                name="type"
+                [value]="opt.value"
+                [checked]="type() === opt.value"
+                (change)="onInput('type', $event)"
+              />
+              {{ opt.label }}
+            </label>
+          }
+        </div>
+        @if (typeError()) {
+          <p class="field__error" role="alert">Please select a type.</p>
+        }
+      </div>
+
+      <div class="field" [class.field--error]="purposeError()">
+        <label class="field__label" for="purpose">Purpose <span aria-hidden="true">*</span></label>
+        <textarea
+          id="purpose"
+          class="field__input field__input--textarea"
+          rows="4"
+          placeholder="Describe the purpose and scope of your collection-use request"
+          [value]="purpose()"
+          (input)="onInput('purpose', $event)"
+          [attr.aria-describedby]="purposeError() ? 'purpose-error' : null"
+          [attr.aria-invalid]="purposeError() || null"
+        ></textarea>
+        @if (purposeError()) {
+          <p id="purpose-error" class="field__error" role="alert">Purpose is required.</p>
+        }
+      </div>
+
+      <div class="field-row">
+        <div class="field" [class.field--error]="beginDateError()">
+          <label class="field__label" for="begin-date">Begin date <span aria-hidden="true">*</span></label>
+          <input
+            id="begin-date"
+            type="date"
+            class="field__input"
+            [value]="beginDate()"
+            (input)="onInput('beginDate', $event)"
+            [attr.aria-invalid]="beginDateError() || null"
+          />
+          @if (beginDateError()) {
+            <p class="field__error" role="alert">Begin date is required.</p>
+          }
+        </div>
+
+        <div class="field" [class.field--error]="endDateError()">
+          <label class="field__label" for="end-date">End date <span aria-hidden="true">*</span></label>
+          <input
+            id="end-date"
+            type="date"
+            class="field__input"
+            [value]="endDate()"
+            (input)="onInput('endDate', $event)"
+            [attr.aria-invalid]="endDateError() || null"
+          />
+          @if (endDateError()) {
+            <p class="field__error" role="alert">End date must be after begin date.</p>
+          }
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="submit-form__section">
+      <legend class="submit-form__section-title">Opening message</legend>
+      <p class="submit-form__section-hint">
+        Your proposal starts a conversation with the collections team. Write your first message below.
+      </p>
+
+      <div class="field" [class.field--error]="recipientError()">
+        <label class="field__label" for="recipient">To <span aria-hidden="true">*</span></label>
+        <input
+          id="recipient"
+          type="email"
+          class="field__input"
+          placeholder="collections@museum.example"
+          [value]="recipient()"
+          (input)="onInput('recipient', $event)"
+          [attr.aria-invalid]="recipientError() || null"
+        />
+        @if (recipientError()) {
+          <p class="field__error" role="alert">A valid recipient email is required.</p>
+        }
+      </div>
+
+      <div class="field" [class.field--error]="subjectError()">
+        <label class="field__label" for="subject">Subject <span aria-hidden="true">*</span></label>
+        <input
+          id="subject"
+          type="text"
+          class="field__input"
+          placeholder="Brief subject line"
+          [value]="subject()"
+          (input)="onInput('subject', $event)"
+          [attr.aria-invalid]="subjectError() || null"
+        />
+        @if (subjectError()) {
+          <p class="field__error" role="alert">Subject is required.</p>
+        }
+      </div>
+
+      <div class="field" [class.field--error]="bodyError()">
+        <label class="field__label" for="body">Message <span aria-hidden="true">*</span></label>
+        <textarea
+          id="body"
+          class="field__input field__input--textarea"
+          rows="6"
+          placeholder="Introduce yourself and describe what you need…"
+          [value]="body()"
+          (input)="onInput('body', $event)"
+          [attr.aria-invalid]="bodyError() || null"
+        ></textarea>
+        @if (bodyError()) {
+          <p class="field__error" role="alert">Message body is required.</p>
+        }
+      </div>
+    </fieldset>
+
+    @if (submitError()) {
+      <app-error-message [apiError]="submitError()!" />
+    }
+
+    <div class="submit-form__footer">
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="submitting()"
+      >
+        {{ submitting() ? 'Submitting…' : 'Submit proposal' }}
+      </button>
+    </div>
+
+  </form>
+</div>

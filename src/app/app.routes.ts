@@ -27,16 +27,23 @@ export const routes: Routes = [
       },
 
       {
-        path: 'proposals',
-        loadChildren: () =>
-          import('./features/collections/proposals/proposals.routes').then(m => m.PROPOSALS_ROUTES),
+        path: 'collections',
+        children: [
+          {
+            path: 'proposals',
+            loadChildren: () =>
+              import('./features/collections/proposals/proposals.routes').then(m => m.PROPOSALS_ROUTES),
+          },
+          {
+            path: 'projects',
+            loadChildren: () =>
+              import('./features/collections/projects/projects.routes').then(m => m.PROJECTS_ROUTES),
+          },
+        ],
       },
-
-      {
-        path: 'projects',
-        loadChildren: () =>
-          import('./features/collections/projects/projects.routes').then(m => m.PROJECTS_ROUTES),
-      },
+      // Backward-compat shims so old bookmarks and menus still resolve
+      { path: 'proposals', redirectTo: 'collections/proposals', pathMatch: 'prefix' },
+      { path: 'projects', redirectTo: 'collections/projects', pathMatch: 'prefix' },
 
       {
         path: 'admin',

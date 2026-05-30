@@ -103,6 +103,7 @@ export interface ProposalListQuery extends PageQuery {
   readonly status?: ProposalStatus;
   readonly type?: UseType;
   readonly assignedTo?: string;
+  readonly unassigned?: boolean;
   readonly dateFrom?: string;
   readonly dateTo?: string;
   readonly search?: string;
