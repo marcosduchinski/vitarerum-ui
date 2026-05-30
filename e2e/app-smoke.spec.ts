@@ -3,11 +3,15 @@ import { expect, test } from '@playwright/test';
 test('signs in, shows dashboard, and handles unknown routes', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Enter workspace' })).toBeDisabled();
+  await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+  // Button is enabled but submitting empty form shows validation errors
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('Email is required')).toBeVisible();
+  await expect(page.getByText('Password is required')).toBeVisible();
 
-  await page.getByLabel('Email').fill('learner@example.com');
-  await page.getByRole('button', { name: 'Enter workspace' }).click();
+  await page.getByLabel('Email address').fill('learner@example.com');
+  await page.getByLabel('Password').fill('any');
+  await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page).toHaveURL(/\/p\/dashboard$/);
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();

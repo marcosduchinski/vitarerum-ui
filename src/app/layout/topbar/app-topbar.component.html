@@ -1,25 +1,44 @@
-<header class="topbar">
-  <div>
-    <p class="topbar__eyebrow">Vitarerum</p>
-    <p class="topbar__user">{{ displayName() }}</p>
+<header class="layout-topbar">
+  <div class="layout-topbar-start">
+    <button
+      class="layout-menu-button layout-topbar-action"
+      type="button"
+      aria-label="Toggle navigation"
+      (click)="layoutService.onMenuToggle()"
+    >
+      <i class="pi pi-bars"></i>
+    </button>
+
+    <a class="layout-topbar-logo" routerLink="/p/dashboard" aria-label="Vitarerum — home">
+      Vitarerum
+    </a>
   </div>
 
-  <div class="topbar__controls">
-    @if (isMock && currentGroup()) {
-      <label class="topbar__role-label" for="role-switcher">Role</label>
-      <select
-        id="role-switcher"
-        class="topbar__role-select"
-        [value]="currentGroup()"
-        (change)="onGroupChange($event)"
-        aria-label="Switch active role"
-      >
-        @for (g of groups; track g.value) {
-          <option [value]="g.value">{{ g.label }}</option>
-        }
-      </select>
-    }
+  <div class="layout-topbar-end">
+    @if (session()) {
+      <div class="layout-topbar-user">
+        <p class="layout-topbar-eyebrow">Vitarerum</p>
+        <p class="layout-topbar-username">{{ displayName() }}</p>
+      </div>
 
-    <a class="topbar__action" routerLink="/login" (click)="signOut()">Sign out</a>
+      @if (isMock && currentGroup()) {
+        <label class="layout-topbar-role-label" for="role-switcher">Role</label>
+        <select
+          id="role-switcher"
+          class="layout-topbar-role-select"
+          [value]="currentGroup()"
+          (change)="onGroupChange($event)"
+          aria-label="Switch active role"
+        >
+          @for (g of groups; track g.value) {
+            <option [value]="g.value">{{ g.label }}</option>
+          }
+        </select>
+      }
+
+      <a class="layout-topbar-action layout-topbar-action--text" routerLink="/login" (click)="signOut()">
+        Sign out
+      </a>
+    }
   </div>
 </header>

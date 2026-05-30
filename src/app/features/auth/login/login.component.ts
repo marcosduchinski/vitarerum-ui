@@ -1,13 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+
 import { IDENTITY_SERVICE } from '@core/identity/identity.service';
-import { ButtonDirective, ButtonLabel } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ButtonDirective, ButtonLabel, InputText],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,18 +15,50 @@ export class LoginComponent {
   private readonly router = inject(Router);
 
   protected readonly email = signal('');
-  protected readonly canEnter = computed(() => this.email().includes('@'));
+  protected readonly password = signal('');
+  protected readonly loading = signal(false);
+  protected readonly loginError = signal(false);
+  private readonly submitted = signal(false);
+  private readonly emailTouched = signal(false);
+  private readonly passwordTouched = signal(false);
 
-  protected updateEmail(event: Event): void {
-    if (event.target instanceof HTMLInputElement) {
-      this.email.set(event.target.value);
-    }
+  protected readonly emailRequired = computed(
+    () => (this.submitted() || this.emailTouched()) && !this.email(),
+  );
+  protected readonly emailFormat = computed(
+    () =>
+      (this.submitted() || this.emailTouched()) &&
+      !!this.email() &&
+      !this.email().includes('@'),
+  );
+  protected readonly passwordRequired = computed(
+    () => (this.submitted() || this.passwordTouched()) && !this.password(),
+  );
+
+  private readonly isValid = computed(
+    () => !!this.email() && this.email().includes('@') && !!this.password(),
+  );
+
+  protected onEmailInput(event: Event): void {
+    this.email.set((event.target as HTMLInputElement).value);
+    this.emailTouched.set(true);
   }
 
-  protected enterWorkspace(): void {
-    if (this.canEnter()) {
-      this.identity.signIn(this.email());
-      void this.router.navigateByUrl('/p/dashboard');
-    }
+  protected onPasswordInput(event: Event): void {
+    this.password.set((event.target as HTMLInputElement).value);
+    this.passwordTouched.set(true);
+  }
+
+  protected submit(event: Event): void {
+    event.preventDefault();
+    if (this.loading()) return;
+    this.submitted.set(true);
+    if (!this.isValid()) return;
+
+    this.loading.set(true);
+    this.loginError.set(false);
+
+    this.identity.signIn(this.email());
+    void this.router.navigateByUrl('/p/dashboard');
   }
 }

@@ -1,31 +1,6 @@
-<aside class="sidebar">
-  <a class="sidebar__brand" routerLink="/p/dashboard" aria-label="Vitarerum — home">Vitarerum</a>
-
-  <nav aria-label="Main navigation">
-    <a
-      class="sidebar__link"
-      routerLink="/p/dashboard"
-      routerLinkActive="sidebar__link--active"
-      ariaCurrentWhenActive="page"
-      [routerLinkActiveOptions]="{ exact: true }"
-    >
-      Dashboard
-    </a>
-
-    @for (section of sections(); track section.label) {
-      <div class="sidebar__section">
-        <p class="sidebar__section-label" aria-hidden="true">{{ section.label }}</p>
-        @for (link of section.links; track link.path) {
-          <a
-            class="sidebar__link sidebar__link--nested"
-            [routerLink]="link.path"
-            routerLinkActive="sidebar__link--active"
-            ariaCurrentWhenActive="page"
-          >
-            {{ link.label }}
-          </a>
-        }
-      </div>
-    }
-  </nav>
+<aside class="layout-sidebar">
+  <a class="layout-sidebar-logo" routerLink="/p/dashboard" aria-label="Vitarerum — home">
+    Vitarerum
+  </a>
+  <app-menu />
 </aside>

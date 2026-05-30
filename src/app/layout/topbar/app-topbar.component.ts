@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { USE_MOCK_API } from '@core/config/app-config.model';
 import { IDENTITY_SERVICE } from '@core/identity/identity.service';
 import { GroupName } from '@core/identity/models/group-name.enum';
+import { LayoutService } from '@layout/layout.service';
 
 const ALL_GROUPS: readonly { value: GroupName; label: string }[] = [
   { value: 'EXTERNAL', label: 'External researcher' },
@@ -20,6 +22,7 @@ const ALL_GROUPS: readonly { value: GroupName; label: string }[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppTopbarComponent {
+  protected readonly layoutService = inject(LayoutService);
   private readonly identity = inject(IDENTITY_SERVICE);
 
   protected readonly isMock = inject(USE_MOCK_API);

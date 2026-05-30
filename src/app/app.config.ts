@@ -8,7 +8,36 @@ import {
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+
+const VitarerumPreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: '#e0f8f8',
+      100: '#b3eeed',
+      200: '#80e4e3',
+      300: '#4dd9d8',
+      400: '#2bd1d0',
+      500: '#2bcfce',
+      600: '#1baead',
+      700: '#138a8b',
+      800: '#0d6566',
+      900: '#073f40',
+      950: '#031f20',
+    },
+    colorScheme: {
+      light: {
+        primary: {
+          color: '{primary.500}',
+          contrastColor: '#ffffff',
+          hoverColor: '{primary.600}',
+          activeColor: '{primary.700}',
+        },
+      },
+    },
+  },
+});
 import { API_BASE_URL, USE_MOCK_API } from '@core/config/app-config.model';
 import { AppConfigService } from '@core/config/app-config.service';
 import { authInterceptor } from '@core/identity/auth.interceptor';
@@ -29,7 +58,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
-        preset: Aura,
+        preset: VitarerumPreset,
         options: {
           darkModeSelector: '.app-dark',
         },
