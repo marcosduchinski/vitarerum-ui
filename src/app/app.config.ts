@@ -14,17 +14,17 @@ import Aura from '@primeuix/themes/aura';
 const VitarerumPreset = definePreset(Aura, {
   semantic: {
     primary: {
-      50: '#e0f8f8',
-      100: '#b3eeed',
-      200: '#80e4e3',
-      300: '#4dd9d8',
-      400: '#2bd1d0',
-      500: '#2bcfce',
-      600: '#1baead',
-      700: '#138a8b',
-      800: '#0d6566',
-      900: '#073f40',
-      950: '#031f20',
+      50: '#eef2ff',
+      100: '#dce3fd',
+      200: '#b9c7fb',
+      300: '#8fa5f8',
+      400: '#6583f4',
+      500: '#4361ee',
+      600: '#3451d1',
+      700: '#2a41b0',
+      800: '#20318a',
+      900: '#152065',
+      950: '#0a1040',
     },
     colorScheme: {
       light: {
