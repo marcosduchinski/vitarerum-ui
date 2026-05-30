@@ -1,7 +1,7 @@
 .shell {
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr);
+  grid-template-columns: 18rem minmax(0, 1fr);
   background: var(--color-bg);
 }
 
@@ -12,7 +12,7 @@
   inset-inline-start: 0.75rem;
   transform: translateY(-160%);
   padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   background: var(--color-accent-strong);
   color: #ffffff;
   font-weight: 800;
@@ -32,7 +32,8 @@
 
 .shell__content {
   min-width: 0;
-  padding: 1.5rem;
+  width: min(100%, var(--page-max-width));
+  padding: var(--space-page);
 }
 
 @media (max-width: 760px) {

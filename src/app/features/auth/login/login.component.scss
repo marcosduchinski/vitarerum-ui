@@ -4,7 +4,8 @@
   place-items: center;
   padding: 1rem;
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(23, 32, 42, 0.03)), var(--color-bg);
+    linear-gradient(135deg, #202a31 0%, #33424a 58%, #0f766e 100%),
+    var(--color-sidebar);
 }
 
 .login__panel {
@@ -13,9 +14,9 @@
   gap: 1rem;
   padding: 2rem;
   border: 1px solid var(--color-line);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   background: var(--color-panel);
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--shadow-raised);
 }
 
 .login__eyebrow,
@@ -29,10 +30,12 @@
   font-size: 0.8rem;
   font-weight: 800;
   text-transform: uppercase;
+  color: var(--color-accent-strong);
 }
 
 h1 {
   margin: 0;
+  color: var(--color-text);
   font-size: 2rem;
   line-height: 1.2;
 }
@@ -54,4 +57,5 @@ input {
   width: 100%;
   min-height: 2.75rem;
   justify-content: center;
+  margin-top: 0.25rem;
 }

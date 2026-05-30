@@ -8,6 +8,8 @@
   align-items: end;
   justify-content: space-between;
   gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-line);
 }
 
 .dashboard__eyebrow,
@@ -19,12 +21,14 @@
 
 .dashboard__eyebrow {
   font-size: 0.8rem;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
 h2 {
   margin: 0.25rem 0 0;
-  font-size: 1.75rem;
+  color: var(--color-text);
+  font-size: 1.8rem;
   line-height: 1.2;
 }
 
@@ -38,9 +42,9 @@ h2 {
   min-height: 8rem;
   display: grid;
   align-content: space-between;
-  padding: 1rem;
+  padding: 1.125rem;
   border: 1px solid var(--color-line);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   background: var(--color-panel);
   box-shadow: var(--shadow-panel);
 }
@@ -51,7 +55,9 @@ h2 {
 }
 
 .metric strong {
+  color: var(--color-accent-strong);
   font-size: 2rem;
+  line-height: 1;
 }
 
 @media (max-width: 760px) {
