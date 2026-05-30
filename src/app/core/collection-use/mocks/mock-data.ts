@@ -45,6 +45,16 @@ export const MOCK_USERS: UserDetail[] = [
     email: 'eve@admin.example.com',
     permissions: [{ permissionId: 'perm-eve', group: MOCK_GROUPS[4] }],
   },
+  {
+    id: 'u-fran',
+    name: 'Fran Costa',
+    email: 'fran@staff.example.com',
+    permissions: [
+      { permissionId: 'perm-fran-collections', group: MOCK_GROUPS[1] },
+      { permissionId: 'perm-fran-curatorial',  group: MOCK_GROUPS[2] },
+      { permissionId: 'perm-fran-direction',   group: MOCK_GROUPS[3] },
+    ],
+  },
 ];
 
 export const MOCK_MEMBERSHIPS: GroupMembership[] = [
@@ -52,7 +62,10 @@ export const MOCK_MEMBERSHIPS: GroupMembership[] = [
   { permissionId: 'perm-bob', user: MOCK_USERS[1], group: MOCK_GROUPS[1] },
   { permissionId: 'perm-carol', user: MOCK_USERS[2], group: MOCK_GROUPS[2] },
   { permissionId: 'perm-dan', user: MOCK_USERS[3], group: MOCK_GROUPS[3] },
-  { permissionId: 'perm-eve', user: MOCK_USERS[4], group: MOCK_GROUPS[4] },
+  { permissionId: 'perm-eve',              user: MOCK_USERS[4], group: MOCK_GROUPS[4] },
+  { permissionId: 'perm-fran-collections', user: MOCK_USERS[5], group: MOCK_GROUPS[1] },
+  { permissionId: 'perm-fran-curatorial',  user: MOCK_USERS[5], group: MOCK_GROUPS[2] },
+  { permissionId: 'perm-fran-direction',   user: MOCK_USERS[5], group: MOCK_GROUPS[3] },
 ];
 
 export const P: Record<string, PermissionPrincipal> = {

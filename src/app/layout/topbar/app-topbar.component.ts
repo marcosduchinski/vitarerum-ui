@@ -6,13 +6,13 @@ import { IDENTITY_SERVICE } from '@core/identity/identity.service';
 import { GroupName } from '@core/identity/models/group-name.enum';
 import { LayoutService } from '@layout/layout.service';
 
-const ALL_GROUPS: readonly { value: GroupName; label: string }[] = [
-  { value: 'EXTERNAL', label: 'External researcher' },
-  { value: 'COLLECTIONS_MANAGEMENT', label: 'Collections management' },
-  { value: 'CURATORIAL', label: 'Curatorial' },
-  { value: 'DIRECTION', label: 'Direction' },
-  { value: 'ADMIN', label: 'Administrator' },
-];
+const GROUP_LABELS: Record<GroupName, string> = {
+  EXTERNAL: 'External researcher',
+  COLLECTIONS_MANAGEMENT: 'Collections management',
+  CURATORIAL: 'Curatorial',
+  DIRECTION: 'Direction',
+  ADMIN: 'Administrator',
+};
 
 @Component({
   selector: 'app-topbar',
@@ -30,7 +30,14 @@ export class AppTopbarComponent {
   protected readonly session = this.identity.session;
   protected readonly displayName = computed(() => this.session()?.user.displayName ?? '');
   protected readonly currentGroup = computed(() => this.session()?.group ?? null);
-  protected readonly groups = ALL_GROUPS;
+
+  protected readonly availableGroups = computed(() =>
+    (this.session()?.availableGroups ?? []).map(g => ({ value: g, label: GROUP_LABELS[g] })),
+  );
+
+  protected readonly showSwitcher = computed(
+    () => this.isMock && this.availableGroups().length > 0,
+  );
 
   protected onGroupChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value as GroupName;

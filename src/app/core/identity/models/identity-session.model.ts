@@ -5,4 +5,5 @@ export interface IdentitySession {
   accessToken: string;
   user: IdentityUser;
   group: GroupName | null;
+  availableGroups: readonly GroupName[];
 }

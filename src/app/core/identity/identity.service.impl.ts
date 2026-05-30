@@ -20,6 +20,7 @@ export class IdentityServiceImpl implements IdentityService {
         displayName: email.split('@')[0] || 'Learning User',
       },
       group: null,
+      availableGroups: [],
     });
   }
 

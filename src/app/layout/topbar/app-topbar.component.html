@@ -21,7 +21,7 @@
         <p class="layout-topbar-username">{{ displayName() }}</p>
       </div>
 
-      @if (isMock && currentGroup()) {
+      @if (showSwitcher()) {
         <label class="layout-topbar-role-label" for="role-switcher">Role</label>
         <select
           id="role-switcher"
@@ -30,7 +30,7 @@
           (change)="onGroupChange($event)"
           aria-label="Switch active role"
         >
-          @for (g of groups; track g.value) {
+          @for (g of availableGroups(); track g.value) {
             <option [value]="g.value">{{ g.label }}</option>
           }
         </select>

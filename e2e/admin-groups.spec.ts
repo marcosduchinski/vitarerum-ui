@@ -2,11 +2,10 @@ import { expect, test } from '@playwright/test';
 
 async function loginAsStaff(page: import('@playwright/test').Page) {
   await page.goto('/login');
-  await page.getByLabel('Email address').fill('admin@example.com');
+  await page.getByLabel('Email address').fill('eve@admin.example.com');
   await page.getByLabel('Password').fill('any');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL('**/p/dashboard');
-  await page.selectOption('#role-switcher', 'COLLECTIONS_MANAGEMENT');
   await page.getByRole('link', { name: 'Groups' }).click();
   await page.waitForURL('**/p/admin/groups');
 }
