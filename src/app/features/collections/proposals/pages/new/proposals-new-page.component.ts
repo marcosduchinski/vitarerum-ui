@@ -6,7 +6,9 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
+import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
@@ -20,7 +22,8 @@ import { UseType } from '@shared/models/collection-use-status.model';
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
 const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',
@@ -47,6 +50,7 @@ interface StaffOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    Menu,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -58,11 +62,15 @@ interface StaffOption {
 export class ProposalsNewPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
+  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  protected readonly searchDraft = signal('');
+  protected readonly appliedSearch = signal('');
 
   protected readonly proposalsResource = resource({
-    params: () => ({ page: this.currentPage(), size: PAGE_SIZE }),
+    params: () => ({ page: this.currentPage(), size: this.pageSize(), search: this.appliedSearch().trim() }),
     loader: ({ params }) =>
       firstValueFrom(this.proposalService.listProposals({ status: 'SUBMITTED', unassigned: true, ...params })),
   });
@@ -74,9 +82,9 @@ export class ProposalsNewPageComponent {
   protected readonly proposals = computed(() => this.proposalsResource.value()?.content ?? []);
   protected readonly totalProposals = computed(() => this.proposalsResource.value()?.totalElements ?? 0);
   protected readonly totalPages = computed(() => this.proposalsResource.value()?.totalPages ?? 0);
-  protected readonly rangeStart = computed(() => this.currentPage() * PAGE_SIZE + 1);
+  protected readonly rangeStart = computed(() => this.currentPage() * this.pageSize() + 1);
   protected readonly rangeEnd = computed(() =>
-    Math.min((this.currentPage() + 1) * PAGE_SIZE, this.totalProposals()),
+    Math.min((this.currentPage() + 1) * this.pageSize(), this.totalProposals()),
   );
   protected readonly listError = computed(() => {
     const err = this.proposalsResource.error();
@@ -95,9 +103,31 @@ export class ProposalsNewPageComponent {
   );
 
   protected readonly typeLabels = TYPE_LABELS;
+  protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   protected readonly assumingId = signal<string | null>(null);
   protected readonly assumeError = signal<ApiError | null>(null);
+  protected readonly actionsMenuId = signal<string | null>(null);
+  protected readonly rowActionItems = computed<MenuItem[]>(() => {
+    const proposalId = this.actionsMenuId();
+
+    if (!proposalId) return [];
+
+    return [
+      {
+        label: 'Forward',
+        icon: 'pi pi-send',
+        command: () => this.openForwardPanel(proposalId),
+      },
+      {
+        label: 'View details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigateByUrl(`/p/collections/proposals/${proposalId}`);
+        },
+      },
+    ];
+  });
 
   protected readonly forwardPanelId = signal<string | null>(null);
   protected readonly forwardTargetPermissionId = signal('');
@@ -110,11 +140,40 @@ export class ProposalsNewPageComponent {
   }
 
   protected nextPage(): void {
-    this.currentPage.update(p => p + 1);
+    this.currentPage.update(p => Math.min(Math.max(0, this.totalPages() - 1), p + 1));
+  }
+
+  protected firstPage(): void {
+    this.currentPage.set(0);
+  }
+
+  protected lastPage(): void {
+    this.currentPage.set(Math.max(0, this.totalPages() - 1));
+  }
+
+  protected onPageSizeChange(event: Event): void {
+    this.pageSize.set(Number((event.target as HTMLSelectElement).value));
+    this.currentPage.set(0);
+  }
+
+  protected onSearchInput(event: Event): void {
+    this.searchDraft.set((event.target as HTMLInputElement).value);
+  }
+
+  protected applySearch(): void {
+    this.appliedSearch.set(this.searchDraft().trim());
+    this.currentPage.set(0);
+  }
+
+  protected clearSearch(): void {
+    this.searchDraft.set('');
+    this.appliedSearch.set('');
+    this.currentPage.set(0);
   }
 
   protected async assume(proposalId: string): Promise<void> {
     if (this.assumingId()) return;
+    this.actionsMenuId.set(null);
     this.assumingId.set(proposalId);
     this.assumeError.set(null);
     try {
@@ -128,6 +187,7 @@ export class ProposalsNewPageComponent {
   }
 
   protected openForwardPanel(proposalId: string): void {
+    this.actionsMenuId.set(null);
     this.forwardPanelId.set(proposalId);
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
@@ -136,6 +196,15 @@ export class ProposalsNewPageComponent {
 
   protected closeForwardPanel(): void {
     this.forwardPanelId.set(null);
+  }
+
+  protected toggleActionsMenu(proposalId: string): void {
+    this.actionsMenuId.update(current => current === proposalId ? null : proposalId);
+    this.forwardPanelId.set(null);
+  }
+
+  protected closeActionsMenu(): void {
+    this.actionsMenuId.set(null);
   }
 
   protected onForwardTargetChange(event: Event): void {
