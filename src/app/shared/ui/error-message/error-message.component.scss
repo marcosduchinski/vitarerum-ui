@@ -1,0 +1,35 @@
+.error-message {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+}
+
+.error-message--danger {
+  border-color: #e0a7a7;
+  background: var(--status-rejected-bg);
+  color: var(--status-rejected-text);
+}
+
+.error-message--warning {
+  border-color: #ead07f;
+  background: var(--status-review-bg);
+  color: var(--status-review-text);
+}
+
+.error-message--info {
+  border-color: #a9c2de;
+  background: var(--status-submitted-bg);
+  color: var(--status-submitted-text);
+}
+
+h2,
+p {
+  margin: 0;
+}
+
+h2 {
+  font-size: 1rem;
+  line-height: 1.25;
+}

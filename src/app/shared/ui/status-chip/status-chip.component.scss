@@ -1,0 +1,42 @@
+.status-chip {
+  min-height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.status-chip--submitted {
+  background: var(--status-submitted-bg);
+  color: var(--status-submitted-text);
+}
+
+.status-chip--review {
+  background: var(--status-review-bg);
+  color: var(--status-review-text);
+}
+
+.status-chip--pending {
+  background: var(--status-pending-bg);
+  color: var(--status-pending-text);
+}
+
+.status-chip--approved {
+  background: var(--status-approved-bg);
+  color: var(--status-approved-text);
+}
+
+.status-chip--rejected {
+  background: var(--status-rejected-bg);
+  color: var(--status-rejected-text);
+}
+
+.status-chip--closed {
+  background: var(--status-closed-bg);
+  color: var(--status-closed-text);
+}
