@@ -22,7 +22,100 @@
           </span>
         </div>
       </div>
+      <aside class="proposal-actions" aria-label="Proposal actions">
+        @if (canAssign()) {
+          <div class="proposal-actions__copy">
+            <span class="proposal-actions__eyebrow">Decision desk</span>
+            <strong>Route this proposal</strong>
+          </div>
+          <div class="proposal-actions__buttons">
+            <button
+              type="button"
+              class="action-btn action-btn--primary"
+              [disabled]="assuming()"
+              (click)="assume()"
+            >
+              <span class="pi pi-check-circle" aria-hidden="true"></span>
+              {{ assuming() ? 'Assuming…' : 'Assume' }}
+            </button>
+            <button
+              type="button"
+              class="action-btn"
+              [class.action-btn--active]="forwardPanelOpen()"
+              (click)="forwardPanelOpen() ? closeForwardPanel() : openForwardPanel()"
+            >
+              <span class="pi pi-send" aria-hidden="true"></span>
+              Forward
+            </button>
+          </div>
+        } @else {
+          <div class="proposal-actions__copy">
+            <span class="proposal-actions__eyebrow">Current route</span>
+            @if (proposal()!.assignedTo) {
+              <strong>{{ proposal()!.assignedTo!.user.name }}</strong>
+              <span>{{ proposal()!.assignedTo!.user.email }}</span>
+            } @else {
+              <strong>{{ proposal()!.status.replace('_', ' ') }}</strong>
+              <span>No routing action is available for this status.</span>
+            }
+          </div>
+        }
+      </aside>
     </header>
+
+    @if (actionError()) {
+      <app-error-message [apiError]="actionError()!" />
+    }
+
+    @if (forwardPanelOpen()) {
+      <section class="forward-panel" aria-label="Forward proposal">
+        <div>
+          <p class="forward-panel__eyebrow">Forward to</p>
+          <h2>Choose the next desk</h2>
+        </div>
+
+        @if (staffUsersResource.isLoading()) {
+          <app-loading-state label="Loading staff…" />
+        } @else {
+          <div class="forward-panel__fields">
+            <label for="detail-forward-target">Staff member</label>
+            <select
+              id="detail-forward-target"
+              [value]="forwardTargetPermissionId()"
+              (change)="onForwardTargetChange($event)"
+            >
+              <option value="" disabled selected>Select a staff member…</option>
+              @for (option of staffOptions(); track option.permissionId) {
+                <option [value]="option.permissionId">{{ option.label }}</option>
+              }
+            </select>
+
+            <label for="detail-forward-note">Note</label>
+            <textarea
+              id="detail-forward-note"
+              rows="3"
+              placeholder="Add context for the next reviewer…"
+              [value]="forwardNote()"
+              (input)="onForwardNoteChange($event)"
+            ></textarea>
+          </div>
+
+          <div class="forward-panel__footer">
+            <button
+              type="button"
+              class="action-btn action-btn--primary"
+              [disabled]="!forwardTargetPermissionId() || forwarding()"
+              (click)="forward()"
+            >
+              {{ forwarding() ? 'Forwarding…' : 'Forward proposal' }}
+            </button>
+            <button type="button" class="action-btn" (click)="closeForwardPanel()">
+              Cancel
+            </button>
+          </div>
+        }
+      </section>
+    }
 
     <div class="proposal-detail__grid">
 
