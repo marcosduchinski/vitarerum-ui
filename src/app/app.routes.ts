@@ -62,7 +62,7 @@ export const routes: Routes = [
       {
         path: 'admin',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'users' },
+          { path: '', pathMatch: 'full', redirectTo: '/p/admin/users' },
           {
             path: 'users',
             title: 'Users',
@@ -75,7 +75,18 @@ export const routes: Routes = [
             loadComponent: () =>
               import('@features/admin/users/user-detail.component').then(m => m.UserDetailComponent),
           },
-          { path: 'groups', redirectTo: '/p/dashboard' },
+          {
+            path: 'groups',
+            title: 'Groups',
+            loadComponent: () =>
+              import('@features/admin/groups/groups-page.component').then(m => m.GroupsPageComponent),
+          },
+          {
+            path: 'groups/:id',
+            title: 'Group',
+            loadComponent: () =>
+              import('@features/admin/groups/group-detail.component').then(m => m.GroupDetailComponent),
+          },
         ],
       },
     ],
