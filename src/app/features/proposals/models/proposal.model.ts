@@ -1,4 +1,4 @@
-import { PermissionPrincipal } from '@core/identity/models/permission.model';
+import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { Page, PageQuery } from '@shared/models/page.model';
 
 import {
@@ -6,7 +6,7 @@ import {
   ProposalStatus,
   UseStatus,
   UseType,
-} from './collection-use-status.model';
+} from '@shared/models/collection-use-status.model';
 
 export type DocumentType = string;
 

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { IDENTITY_SERVICE } from '@core/identity/identity.service';
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 
 @Component({
   selector: 'app-login',

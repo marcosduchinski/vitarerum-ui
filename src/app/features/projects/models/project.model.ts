@@ -1,5 +1,5 @@
-import { PermissionPrincipal } from '@core/identity/models/permission.model';
-import { GroupName } from '@core/identity/models/group-name.enum';
+import { PermissionPrincipal } from '@core/auth/models/permission.model';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { Page, PageQuery } from '@shared/models/page.model';
 
 import {
@@ -9,7 +9,7 @@ import {
   UseResult,
   UseStatus,
   UseType,
-} from './collection-use-status.model';
+} from '@shared/models/collection-use-status.model';
 
 export interface ProjectProposalSummary {
   readonly id: string;

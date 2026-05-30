@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ErrorMessageTone } from '@shared/ui/error-message/error-message.component';
+import { ErrorMessageTone } from '@shared/components/error-message/error-message.component';
 
 export type ApiErrorKind =
   | 'forbidden'

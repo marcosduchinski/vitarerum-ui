@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@core/identity/auth.guard';
-import { unauthenticatedGuard } from '@core/identity/unauthenticated.guard';
+import { authGuard } from '@core/guards/auth.guard';
+import { unauthenticatedGuard } from '@core/guards/unauthenticated.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -26,63 +26,22 @@ export const routes: Routes = [
           import('@features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
 
-      // Proposal routes — feature screens added per plan task order
       {
         path: 'proposals',
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
-          { path: 'new', redirectTo: '/p/dashboard' },
-          { path: 'my', redirectTo: '/p/dashboard' },
-          { path: 'others', redirectTo: '/p/dashboard' },
-          { path: 'approved', redirectTo: '/p/dashboard' },
-          { path: 'rejected', redirectTo: '/p/dashboard' },
-          { path: ':id', redirectTo: '/p/dashboard' },
-        ],
+        loadChildren: () =>
+          import('@features/proposals/proposals.routes').then(m => m.PROPOSALS_ROUTES),
       },
 
-      // Project routes — feature screens added per plan task order
       {
         path: 'projects',
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
-          { path: 'my', redirectTo: '/p/dashboard' },
-          { path: 'in-progress', redirectTo: '/p/dashboard' },
-          { path: 'suspended', redirectTo: '/p/dashboard' },
-          { path: 'completed', redirectTo: '/p/dashboard' },
-          { path: ':id', redirectTo: '/p/dashboard' },
-        ],
+        loadChildren: () =>
+          import('@features/projects/projects.routes').then(m => m.PROJECTS_ROUTES),
       },
 
-      // Admin routes
       {
         path: 'admin',
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: '/p/admin/users' },
-          {
-            path: 'users',
-            title: 'Users',
-            loadComponent: () =>
-              import('@features/admin/users/users-page.component').then(m => m.UsersPageComponent),
-          },
-          {
-            path: 'users/:id',
-            title: 'User',
-            loadComponent: () =>
-              import('@features/admin/users/user-detail.component').then(m => m.UserDetailComponent),
-          },
-          {
-            path: 'groups',
-            title: 'Groups',
-            loadComponent: () =>
-              import('@features/admin/groups/groups-page.component').then(m => m.GroupsPageComponent),
-          },
-          {
-            path: 'groups/:id',
-            title: 'Group',
-            loadComponent: () =>
-              import('@features/admin/groups/group-detail.component').then(m => m.GroupDetailComponent),
-          },
-        ],
+        loadChildren: () =>
+          import('@features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
       },
     ],
   },

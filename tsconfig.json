@@ -17,7 +17,7 @@
       "@app/*": ["src/app/*"],
       "@core/*": ["src/app/core/*"],
       "@features/*": ["src/app/features/*"],
-      "@layout/*": ["src/app/layout/*"],
+      "@layout/*": ["src/app/shared/layout/*"],
       "@shared/*": ["src/app/shared/*"]
     },
     "target": "ES2022",

@@ -1,8 +1,7 @@
-import { PermissionPrincipal } from '@core/identity/models/permission.model';
+import { PermissionPrincipal } from '@core/auth/models/permission.model';
 
-import { ProposalStatus, UseResult, UseStatus } from './collection-use-status.model';
-import { RequestedDocument } from './proposal.model';
-import { ProposalEvent, ProposalProjectSummary } from './proposal.model';
+import { ProposalStatus, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
+import { RequestedDocument, ProposalEvent, ProposalProjectSummary } from './proposal.model';
 
 export interface AssignProposalRequest {
   readonly targetPermissionId?: string;

@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { GroupsResponse } from '@core/identity/models/group.model';
-import { IDENTITY_SERVICE } from '@core/identity/identity.service';
-import { GroupName } from '@core/identity/models/group-name.enum';
-import { GroupMembership, UserPermissionsResponse } from '@core/identity/models/permission.model';
-import { UserDetail } from '@core/identity/models/user.model';
-import { makePageFrom, MOCK_GROUPS, MOCK_MEMBERSHIPS, MOCK_USERS } from '@core/collection-use/mocks/mock-data';
+import { GroupsResponse } from '@core/auth/models/group.model';
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
+import { GroupMembership, UserPermissionsResponse } from '@core/auth/models/permission.model';
+import { UserDetail } from '@core/auth/models/user.model';
+import { makePageFrom, MOCK_GROUPS, MOCK_MEMBERSHIPS, MOCK_USERS } from '@features/proposals/mocks/mock-data';
 import { Page, PageQuery } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 

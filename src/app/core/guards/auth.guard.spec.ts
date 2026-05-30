@@ -8,8 +8,8 @@ import {
 } from '@angular/router';
 
 import { authGuard } from './auth.guard';
-import { IDENTITY_SERVICE } from './identity.service';
-import { IdentityServiceMock } from './identity.service.mock';
+import { IDENTITY_SERVICE } from '../auth/identity.service';
+import { IdentityServiceMock } from '../auth/identity.service.mock';
 import { unauthenticatedGuard } from './unauthenticated.guard';
 
 describe('identity guards', () => {

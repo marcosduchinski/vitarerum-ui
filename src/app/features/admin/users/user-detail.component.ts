@@ -11,14 +11,14 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ButtonDirective } from 'primeng/button';
 import { toApiError, ApiError } from '@core/http/api-error.model';
-import { USER_MANAGEMENT_SERVICE } from '@core/users/user-management.service';
-import { GroupName } from '@core/identity/models/group-name.enum';
-import { GroupsResponse } from '@core/identity/models/group.model';
-import { PermissionSummary } from '@core/identity/models/permission.model';
-import { UserDetail } from '@core/identity/models/user.model';
-import { ErrorMessageComponent } from '@shared/ui/error-message/error-message.component';
-import { LoadingStateComponent } from '@shared/ui/loading-state/loading-state.component';
-import { ConfirmActionComponent } from '@shared/ui/confirm-action/confirm-action.component';
+import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
+import { GroupsResponse } from '@core/auth/models/group.model';
+import { PermissionSummary } from '@core/auth/models/permission.model';
+import { UserDetail } from '@core/auth/models/user.model';
+import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
+import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
+import { ConfirmActionComponent } from '@shared/components/confirm-action/confirm-action.component';
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External researcher',

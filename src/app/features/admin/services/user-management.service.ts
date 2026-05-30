@@ -3,12 +3,12 @@ import { inject, Injectable, InjectionToken } from '@angular/core';
 import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 import { buildHttpParams } from '@core/http/http-params.util';
-import { Group, GroupsResponse } from '@core/identity/models/group.model';
+import { Group, GroupsResponse } from '@core/auth/models/group.model';
 import {
   GroupMembership,
   UserPermissionsResponse,
-} from '@core/identity/models/permission.model';
-import { UserDetail } from '@core/identity/models/user.model';
+} from '@core/auth/models/permission.model';
+import { UserDetail } from '@core/auth/models/user.model';
 import { Page, PageQuery } from '@shared/models/page.model';
 import { Observable } from 'rxjs';
 

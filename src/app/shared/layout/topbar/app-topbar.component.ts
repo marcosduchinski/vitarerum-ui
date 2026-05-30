@@ -4,8 +4,8 @@ import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 
 import { USE_MOCK_API } from '@core/config/app-config.model';
-import { IDENTITY_SERVICE } from '@core/identity/identity.service';
-import { GroupName } from '@core/identity/models/group-name.enum';
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { LayoutService } from '@layout/layout.service';
 
 const GROUP_LABELS: Record<GroupName, string> = {

@@ -11,13 +11,13 @@ import { firstValueFrom } from 'rxjs';
 import { InputText } from 'primeng/inputtext';
 import { ButtonDirective } from 'primeng/button';
 import { toApiError } from '@core/http/api-error.model';
-import { USER_MANAGEMENT_SERVICE } from '@core/users/user-management.service';
-import { GroupName } from '@core/identity/models/group-name.enum';
-import { UserDetail } from '@core/identity/models/user.model';
+import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
+import { UserDetail } from '@core/auth/models/user.model';
 import { Page } from '@shared/models/page.model';
-import { ErrorMessageComponent } from '@shared/ui/error-message/error-message.component';
-import { LoadingStateComponent } from '@shared/ui/loading-state/loading-state.component';
-import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
+import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
+import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External researcher',

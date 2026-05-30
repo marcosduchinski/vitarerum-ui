@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Page } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
-import { MediaType, UseResult, UseStatus } from '../models/collection-use-status.model';
+import { MediaType, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
 import {
   Attachment,
   CollectionUseProjectDetail,
@@ -19,7 +19,7 @@ import {
   ReasonRequest,
   UseEvent,
 } from '../models/project.model';
-import { ProjectTransitionResult } from '../projects/project-api.service';
+import { ProjectTransitionResult } from '../services/project-api.service';
 import {
   makePageFrom,
   MutableProjectState,
@@ -27,7 +27,7 @@ import {
   SEED_PROJECT_ENTRIES,
   SEED_PROJECT_EVENTS,
   SEED_PROJECTS,
-} from './mock-data';
+} from '@features/proposals/mocks/mock-data';
 
 @Injectable()
 export class ProjectApiServiceMock {

@@ -3,8 +3,8 @@ import { USE_MOCK_API } from '@core/config/app-config.model';
 import {
   USER_MANAGEMENT_SERVICE,
   UserManagementService,
-} from '@core/users/user-management.service';
-import { UserManagementServiceMock } from '@core/users/user-management.service.mock';
+} from '@features/admin/services/user-management.service';
+import { UserManagementServiceMock } from '@features/admin/services/user-management.service.mock';
 
 export function provideUserManagement(): Provider[] {
   return [

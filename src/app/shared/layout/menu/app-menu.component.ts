@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
-import { IDENTITY_SERVICE } from '@core/identity/identity.service';
-import { GroupName } from '@core/identity/models/group-name.enum';
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 
 import { AppMenuItemComponent } from './app-menu-item.component';
 import { MenuNode } from './menu.model';
