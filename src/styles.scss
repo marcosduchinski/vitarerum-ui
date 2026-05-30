@@ -60,6 +60,42 @@
   --page-max-width: 78rem;
 }
 
+/* ── Dark mode overrides ──────────────────────────────── */
+.app-dark {
+  color-scheme: dark;
+
+  --color-bg: #0f0f11;
+  --color-bg-raised: #18181c;
+  --color-panel: #18181c;
+  --color-panel-muted: #222228;
+
+  --color-text: #e8e8f0;
+  --color-muted: #9696a5;
+  --color-subtle: #6a6a78;
+
+  --color-line: #2a2a34;
+  --color-line-strong: #3a3a46;
+
+  --color-accent-soft: #1a1f4a;
+  --color-cta-soft: #2e120a;
+
+  --status-submitted-bg: #1a1f4a;
+  --status-submitted-text: #8fa5f8;
+  --status-review-bg: #2d220a;
+  --status-review-text: #d4a44c;
+  --status-pending-bg: #1f1230;
+  --status-pending-text: #b58ed4;
+  --status-approved-bg: #0c1f13;
+  --status-approved-text: #6fbb8a;
+  --status-rejected-bg: #1f0d0d;
+  --status-rejected-text: #d47878;
+  --status-closed-bg: #1a1c24;
+  --status-closed-text: #8090a0;
+
+  --shadow-panel: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-raised: 0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
 * {
   box-sizing: border-box;
 }

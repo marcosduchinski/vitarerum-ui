@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 
 interface LayoutState {
@@ -25,12 +25,6 @@ export class LayoutService {
       this.state().staticMenuMobileActive,
   );
 
-  constructor() {
-    effect(() => {
-      document.documentElement.classList.toggle('app-dark', this.isDarkTheme());
-    });
-  }
-
   onMenuToggle(): void {
     if (this.isDesktop()) {
       this.state.update(s => ({
@@ -54,7 +48,9 @@ export class LayoutService {
   }
 
   toggleDarkMode(): void {
-    this.isDarkTheme.update(v => !v);
+    const next = !this.isDarkTheme();
+    this.isDarkTheme.set(next);
+    document.documentElement.classList.toggle('app-dark', next);
   }
 
   isDesktop(): boolean {
