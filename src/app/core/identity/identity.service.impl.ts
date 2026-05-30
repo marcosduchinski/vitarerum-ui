@@ -38,4 +38,9 @@ export class IdentityServiceImpl implements IdentityService {
       this.sessionState.set({ ...session, group });
     }
   }
+
+  // In production, available groups come from the JWT — no client-side update needed.
+  updateAvailableGroups(groups: readonly GroupName[]): void {
+    void groups;
+  }
 }

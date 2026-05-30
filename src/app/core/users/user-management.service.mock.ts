@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { GroupsResponse } from '@core/identity/models/group.model';
+import { IDENTITY_SERVICE } from '@core/identity/identity.service';
+import { GroupName } from '@core/identity/models/group-name.enum';
 import { GroupMembership, UserPermissionsResponse } from '@core/identity/models/permission.model';
 import { UserDetail } from '@core/identity/models/user.model';
 import { makePageFrom, MOCK_GROUPS, MOCK_MEMBERSHIPS, MOCK_USERS } from '@core/collection-use/mocks/mock-data';
@@ -10,6 +12,7 @@ import { GroupUsersPage, UserListQuery } from './user-management.service';
 
 @Injectable()
 export class UserManagementServiceMock {
+  private readonly identity = inject(IDENTITY_SERVICE);
   private readonly users: UserDetail[] = structuredClone(MOCK_USERS);
   private readonly memberships: GroupMembership[] = structuredClone(MOCK_MEMBERSHIPS);
 
@@ -51,6 +54,7 @@ export class UserManagementServiceMock {
       ...user,
       permissions: [...user.permissions, { permissionId: membership.permissionId, group }],
     };
+    this.syncSessionIfCurrentUser(userId);
     return of(membership);
   }
 
@@ -66,6 +70,7 @@ export class UserManagementServiceMock {
         permissions: this.users[uIdx].permissions.filter(p => p.permissionId !== permId),
       };
     }
+    this.syncSessionIfCurrentUser(userId);
     return of(undefined);
   }
 
@@ -84,5 +89,13 @@ export class UserManagementServiceMock {
     if (!group) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const members = this.memberships.filter(m => m.group.id === groupId);
     return of({ ...makePageFrom(members, query), group });
+  }
+
+  private syncSessionIfCurrentUser(userId: string): void {
+    if (this.identity.session()?.user.id !== userId) return;
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return;
+    const groups = user.permissions.map(p => p.group.name as GroupName);
+    this.identity.updateAvailableGroups(groups);
   }
 }

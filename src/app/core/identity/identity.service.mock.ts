@@ -57,4 +57,14 @@ export class IdentityServiceMock implements IdentityService {
       this.sessionState.set({ ...session, group });
     }
   }
+
+  updateAvailableGroups(groups: readonly GroupName[]): void {
+    const session = this.session();
+    if (!session) return;
+    // Keep current group if still in the new list, otherwise switch to first available
+    const group = groups.includes(session.group as GroupName)
+      ? session.group
+      : (groups[0] ?? null);
+    this.sessionState.set({ ...session, group, availableGroups: groups });
+  }
 }

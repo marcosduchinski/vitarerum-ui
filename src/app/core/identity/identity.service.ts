@@ -10,6 +10,7 @@ export interface IdentityService {
   signOut(): void;
   getAccessToken(): string | null;
   setGroup(group: GroupName): void;
+  updateAvailableGroups(groups: readonly GroupName[]): void;
 }
 
 export const IDENTITY_SERVICE = new InjectionToken<IdentityService>('IDENTITY_SERVICE');
