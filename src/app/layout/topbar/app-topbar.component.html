@@ -1,5 +1,5 @@
 <header class="layout-topbar">
-  <div class="layout-topbar-start">
+  <div class="layout-topbar-logo-container">
     <button
       class="layout-menu-button layout-topbar-action"
       type="button"
@@ -14,31 +14,46 @@
     </a>
   </div>
 
-  <div class="layout-topbar-end">
+  <div class="layout-topbar-actions">
+    @if (showSwitcher()) {
+      <label class="sr-only" for="role-switcher">Active role</label>
+      <select
+        id="role-switcher"
+        class="layout-topbar-role-select"
+        [value]="currentGroup()"
+        (change)="onGroupChange($event)"
+        aria-label="Switch active role"
+      >
+        @for (g of availableGroups(); track g.value) {
+          <option [value]="g.value">{{ g.label }}</option>
+        }
+      </select>
+    }
+
+    <button
+      type="button"
+      class="layout-topbar-action"
+      (click)="layoutService.toggleDarkMode()"
+      [attr.aria-label]="layoutService.isDarkTheme() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      <i
+        class="pi"
+        [class.pi-moon]="!layoutService.isDarkTheme()"
+        [class.pi-sun]="layoutService.isDarkTheme()"
+      ></i>
+    </button>
+
     @if (session()) {
-      <div class="layout-topbar-user">
-        <p class="layout-topbar-eyebrow">Vitarerum</p>
-        <p class="layout-topbar-username">{{ displayName() }}</p>
-      </div>
-
-      @if (showSwitcher()) {
-        <label class="layout-topbar-role-label" for="role-switcher">Role</label>
-        <select
-          id="role-switcher"
-          class="layout-topbar-role-select"
-          [value]="currentGroup()"
-          (change)="onGroupChange($event)"
-          aria-label="Switch active role"
-        >
-          @for (g of availableGroups(); track g.value) {
-            <option [value]="g.value">{{ g.label }}</option>
-          }
-        </select>
-      }
-
-      <a class="layout-topbar-action layout-topbar-action--text" routerLink="/login" (click)="signOut()">
-        Sign out
-      </a>
+      <button
+        type="button"
+        class="layout-topbar-action"
+        aria-label="User menu"
+        aria-haspopup="true"
+        (click)="userMenu.toggle($event)"
+      >
+        <i class="pi pi-user"></i>
+      </button>
+      <p-menu #userMenu [popup]="true" [model]="userMenuItems()" />
     }
   </div>
 </header>

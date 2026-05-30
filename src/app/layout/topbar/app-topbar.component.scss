@@ -6,24 +6,16 @@
   top: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
   background: var(--color-sidebar);
   color: #fafafa;
 }
 
-.layout-topbar-start {
+.layout-topbar-logo-container {
+  width: 20rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
-}
-
-.layout-topbar-end {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  flex-shrink: 0;
 }
 
 .layout-topbar-logo {
@@ -38,6 +30,13 @@
   border-radius: var(--radius-sm);
 }
 
+.layout-topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .layout-topbar-action {
   display: inline-flex;
   justify-content: center;
@@ -49,51 +48,20 @@
   background: transparent;
   color: #fafafa;
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: background-color var(--element-transition-duration, 120ms) ease;
 
   i {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
   }
 }
 
 .layout-topbar-action:hover {
-  background: var(--color-cta);
+  background-color: var(--color-cta);
 }
 
-.layout-topbar-action--text {
-  width: auto;
-  height: auto;
-  padding: 0.35rem 0.875rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.layout-topbar-eyebrow {
-  margin: 0 0 0.1rem;
-  color: var(--color-sidebar-muted);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.layout-topbar-username {
-  margin: 0;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.layout-topbar-role-label {
-  color: var(--color-sidebar-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.layout-topbar-action:focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 2px;
 }
 
 .layout-topbar-role-select {
@@ -106,18 +74,42 @@
   font-size: 0.875rem;
   font-family: inherit;
   cursor: pointer;
+  max-width: 14rem;
 }
 
 .layout-topbar-role-select:focus {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-cta);
   outline-offset: 2px;
 }
 
-@media (max-width: 560px) {
-  .layout-topbar-user {
-    display: none;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 991px) {
+  .layout-topbar-logo-container {
+    width: auto;
   }
-  .layout-topbar-role-label {
+
+  .layout-topbar-role-select {
+    max-width: 10rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .layout-topbar {
+    padding: 0 1rem;
+  }
+
+  .layout-topbar-role-select {
     display: none;
   }
 }

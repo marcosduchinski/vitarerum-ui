@@ -53,6 +53,10 @@ export class LayoutService {
     }));
   }
 
+  toggleDarkMode(): void {
+    this.isDarkTheme.update(v => !v);
+  }
+
   isDesktop(): boolean {
     return window.innerWidth > 991;
   }
