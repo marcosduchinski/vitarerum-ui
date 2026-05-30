@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, InjectionToken } from '@angular/core';
-import { API_BASE_URL } from '@core/config/app-config.model';
-import { buildApiUrl } from '@core/http/api-url.util';
-import { buildHttpParams } from '@core/http/http-params.util';
-import { Page, PageQuery } from '@shared/models/page.model';
+import { API_BASE_URL } from 'src/app/core/config/app-config.model';
+import { buildApiUrl } from 'src/app/core/http/api-url.util';
+import { buildHttpParams } from 'src/app/core/http/http-params.util';
+import { Page, PageQuery } from 'src/app/shared/models/page.model';
 import { Observable } from 'rxjs';
 
 import {

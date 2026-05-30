@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Page } from '@shared/models/page.model';
+import { Page } from 'src/app/shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
-import { MediaType, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
+import { MediaType, UseResult, UseStatus } from 'src/app/shared/models/collection-use-status.model';
 import {
   Attachment,
   CollectionUseProjectDetail,
@@ -26,7 +26,7 @@ import {
   SEED_PROJECT_ENTRIES,
   SEED_PROJECT_EVENTS,
   SEED_PROJECTS,
-} from '@features/proposals/mocks/mock-data';
+} from 'src/app/features/collections/proposals/mocks/mock-data';
 
 @Injectable()
 export class ProjectApiServiceMock {

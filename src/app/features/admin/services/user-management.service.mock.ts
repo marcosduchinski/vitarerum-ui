@@ -4,7 +4,7 @@ import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { GroupMembership, UserPermissionsResponse } from '@core/auth/models/permission.model';
 import { UserDetail } from '@core/auth/models/user.model';
-import { makePageFrom, MOCK_GROUPS, MOCK_MEMBERSHIPS, MOCK_USERS } from '@features/proposals/mocks/mock-data';
+import { makePageFrom, MOCK_GROUPS, MOCK_MEMBERSHIPS, MOCK_USERS } from '../../collections/proposals/mocks/mock-data';
 import { Page, PageQuery } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 

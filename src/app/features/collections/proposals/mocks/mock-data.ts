@@ -1,9 +1,9 @@
-import { Group } from '@core/auth/models/group.model';
-import { GroupMembership, PermissionPrincipal } from '@core/auth/models/permission.model';
-import { UserDetail } from '@core/auth/models/user.model';
-import { Page, PageQuery } from '@shared/models/page.model';
+import { Group } from 'src/app/core/auth/models/group.model';
+import { GroupMembership, PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
+import { UserDetail } from 'src/app/core/auth/models/user.model';
+import { Page, PageQuery } from 'src/app/shared/models/page.model';
 
-import { ProjectEntry, UseEvent } from '@features/projects/models/project.model';
+import { ProjectEntry, UseEvent } from 'src/app/features/collections/projects/models/project.model';
 import { Message, ProposalDetail, ProposalEvent } from '../models/proposal.model';
 
 export const MOCK_GROUPS: Group[] = [
@@ -254,15 +254,15 @@ export interface MutableProjectState {
   title: string;
   purpose: string;
   type: 'EXHIBITION' | 'RESEARCH' | 'OTHER';
-  status: import('@shared/models/collection-use-status.model').UseStatus;
-  result: import('@shared/models/collection-use-status.model').UseResult | null;
+  status: import('src/app/shared/models/collection-use-status.model').UseStatus;
+  result: import('src/app/shared/models/collection-use-status.model').UseResult | null;
   beginDate: string;
   endDate: string;
   requestedBy: PermissionPrincipal;
   proposalId: string;
-  proposalStatus: import('@shared/models/collection-use-status.model').ProposalStatus;
+  proposalStatus: import('src/app/shared/models/collection-use-status.model').ProposalStatus;
   proposalAssignedTo: PermissionPrincipal | null;
-  entries: import('@features/projects/models/project.model').ProjectEntry[];
+  entries: import('src/app/features/collections/projects/models/project.model').ProjectEntry[];
   entryTotal: number;
 }
 

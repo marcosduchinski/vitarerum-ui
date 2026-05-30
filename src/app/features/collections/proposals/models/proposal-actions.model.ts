@@ -1,6 +1,6 @@
-import { PermissionPrincipal } from '@core/auth/models/permission.model';
+import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
 
-import { ProposalStatus, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
+import { ProposalStatus, UseResult, UseStatus } from 'src/app/shared/models/collection-use-status.model';
 import { RequestedDocument, ProposalEvent, ProposalProjectSummary } from './proposal.model';
 
 export interface AssignProposalRequest {

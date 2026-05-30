@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Page, PageQuery } from '@shared/models/page.model';
+import { Page, PageQuery } from 'src/app/shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
 import {

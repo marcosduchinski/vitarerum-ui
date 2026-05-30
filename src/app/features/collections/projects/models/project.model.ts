@@ -1,6 +1,6 @@
-import { PermissionPrincipal } from '@core/auth/models/permission.model';
-import { GroupName } from '@core/auth/models/group-name.enum';
-import { Page, PageQuery } from '@shared/models/page.model';
+import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
+import { GroupName } from 'src/app/core/auth/models/group-name.enum';
+import { Page, PageQuery } from 'src/app/shared/models/page.model';
 
 import {
   MediaType,
@@ -9,7 +9,7 @@ import {
   UseResult,
   UseStatus,
   UseType,
-} from '@shared/models/collection-use-status.model';
+} from 'src/app/shared/models/collection-use-status.model';
 
 export interface ProjectProposalSummary {
   readonly id: string;

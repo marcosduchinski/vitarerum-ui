@@ -1,12 +1,12 @@
-import { PermissionPrincipal } from '@core/auth/models/permission.model';
-import { Page, PageQuery } from '@shared/models/page.model';
+import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
+import { Page, PageQuery } from 'src/app/shared/models/page.model';
 
 import {
   ProposalEventType,
   ProposalStatus,
   UseStatus,
   UseType,
-} from '@shared/models/collection-use-status.model';
+} from 'src/app/shared/models/collection-use-status.model';
 
 export type DocumentType = string;
 

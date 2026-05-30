@@ -29,13 +29,13 @@ export const routes: Routes = [
       {
         path: 'proposals',
         loadChildren: () =>
-          import('@features/proposals/proposals.routes').then(m => m.PROPOSALS_ROUTES),
+          import('./features/collections/proposals/proposals.routes').then(m => m.PROPOSALS_ROUTES),
       },
 
       {
         path: 'projects',
         loadChildren: () =>
-          import('@features/projects/projects.routes').then(m => m.PROJECTS_ROUTES),
+          import('./features/collections/projects/projects.routes').then(m => m.PROJECTS_ROUTES),
       },
 
       {
