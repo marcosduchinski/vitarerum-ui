@@ -110,6 +110,54 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     requestedDocuments: [],
   },
   {
+    id: 'prop-8',
+    status: 'SUBMITTED',
+    type: 'EXHIBITION',
+    requestedBy: P['alice'],
+    assignedTo: null,
+    collectionUseProject: { id: 'proj-8', referenceNumber: 'VR-2026-008', title: 'Temporary exhibition of botanical expedition drawings', status: 'REQUESTED' },
+    submittedAt: '2026-05-18T13:20:00Z',
+    conversationId: 'conv-8',
+    documents: [],
+    requestedDocuments: [],
+  },
+  {
+    id: 'prop-9',
+    status: 'SUBMITTED',
+    type: 'RESEARCH',
+    requestedBy: P['alice'],
+    assignedTo: null,
+    collectionUseProject: { id: 'proj-9', referenceNumber: 'VR-2026-009', title: 'Study of restoration records from the modern art collection', status: 'REQUESTED' },
+    submittedAt: '2026-05-19T09:45:00Z',
+    conversationId: 'conv-9',
+    documents: [],
+    requestedDocuments: [],
+  },
+  {
+    id: 'prop-10',
+    status: 'SUBMITTED',
+    type: 'OTHER',
+    requestedBy: P['alice'],
+    assignedTo: null,
+    collectionUseProject: { id: 'proj-10', referenceNumber: 'VR-2026-010', title: 'Podcast episode on oral history archives', status: 'REQUESTED' },
+    submittedAt: '2026-05-20T15:10:00Z',
+    conversationId: 'conv-10',
+    documents: [],
+    requestedDocuments: [],
+  },
+  {
+    id: 'prop-11',
+    status: 'SUBMITTED',
+    type: 'RESEARCH',
+    requestedBy: P['alice'],
+    assignedTo: null,
+    collectionUseProject: { id: 'proj-11', referenceNumber: 'VR-2026-011', title: 'Material analysis of 19th-century textile dyes', status: 'REQUESTED' },
+    submittedAt: '2026-05-21T10:30:00Z',
+    conversationId: 'conv-11',
+    documents: [],
+    requestedDocuments: [],
+  },
+  {
     id: 'prop-2',
     status: 'PENDING_DOCUMENTS',
     type: 'RESEARCH',
@@ -199,6 +247,18 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   'prop-1': [
     { occurredAt: '2026-05-01T10:00:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
   ],
+  'prop-8': [
+    { occurredAt: '2026-05-18T13:20:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+  ],
+  'prop-9': [
+    { occurredAt: '2026-05-19T09:45:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+  ],
+  'prop-10': [
+    { occurredAt: '2026-05-20T15:10:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+  ],
+  'prop-11': [
+    { occurredAt: '2026-05-21T10:30:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+  ],
   'prop-2': [
     { occurredAt: '2026-04-20T09:00:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
     { occurredAt: '2026-04-21T10:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
@@ -238,6 +298,10 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
 
 export const SEED_MESSAGES: Record<string, Message[]> = {
   'conv-1': [],
+  'conv-8': [],
+  'conv-9': [],
+  'conv-10': [],
+  'conv-11': [],
   'conv-2': [
     { id: 'msg-1', sentAt: '2026-04-22T14:05:00Z', sender: 'bob@collections.example.com', recipient: 'alice@ext.example.com', subject: 'Documents required', body: 'Please send your institutional support letter.' },
   ],
@@ -272,6 +336,34 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     purpose: 'Academic research for doctoral dissertation.', type: 'RESEARCH',
     status: 'REQUESTED', result: null, beginDate: '2026-06-01', endDate: '2026-12-31',
     requestedBy: P['alice'], proposalId: 'prop-1', proposalStatus: 'SUBMITTED', proposalAssignedTo: null,
+    entries: [], entryTotal: 0,
+  },
+  {
+    id: 'proj-8', referenceNumber: 'VR-2026-008', title: 'Temporary exhibition of botanical expedition drawings',
+    purpose: 'Selection and display of expedition drawings for a university exhibition.', type: 'EXHIBITION',
+    status: 'REQUESTED', result: null, beginDate: '2026-07-01', endDate: '2026-10-15',
+    requestedBy: P['alice'], proposalId: 'prop-8', proposalStatus: 'SUBMITTED', proposalAssignedTo: null,
+    entries: [], entryTotal: 0,
+  },
+  {
+    id: 'proj-9', referenceNumber: 'VR-2026-009', title: 'Study of restoration records from the modern art collection',
+    purpose: 'Conservation research comparing restoration reports and object condition history.', type: 'RESEARCH',
+    status: 'REQUESTED', result: null, beginDate: '2026-08-01', endDate: '2027-01-31',
+    requestedBy: P['alice'], proposalId: 'prop-9', proposalStatus: 'SUBMITTED', proposalAssignedTo: null,
+    entries: [], entryTotal: 0,
+  },
+  {
+    id: 'proj-10', referenceNumber: 'VR-2026-010', title: 'Podcast episode on oral history archives',
+    purpose: 'Audio production using excerpts from recorded oral history collections.', type: 'OTHER',
+    status: 'REQUESTED', result: null, beginDate: '2026-06-20', endDate: '2026-08-20',
+    requestedBy: P['alice'], proposalId: 'prop-10', proposalStatus: 'SUBMITTED', proposalAssignedTo: null,
+    entries: [], entryTotal: 0,
+  },
+  {
+    id: 'proj-11', referenceNumber: 'VR-2026-011', title: 'Material analysis of 19th-century textile dyes',
+    purpose: 'Non-invasive analysis of pigment and dye samples for peer-reviewed research.', type: 'RESEARCH',
+    status: 'REQUESTED', result: null, beginDate: '2026-09-01', endDate: '2027-02-28',
+    requestedBy: P['alice'], proposalId: 'prop-11', proposalStatus: 'SUBMITTED', proposalAssignedTo: null,
     entries: [], entryTotal: 0,
   },
   {
@@ -317,6 +409,18 @@ export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
   'proj-1': [
     { occurredAt: '2026-05-01T10:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
   ],
+  'proj-8': [
+    { occurredAt: '2026-05-18T13:20:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+  ],
+  'proj-9': [
+    { occurredAt: '2026-05-19T09:45:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+  ],
+  'proj-10': [
+    { occurredAt: '2026-05-20T15:10:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+  ],
+  'proj-11': [
+    { occurredAt: '2026-05-21T10:30:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+  ],
   'proj-2': [
     { occurredAt: '2026-04-20T09:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
   ],
@@ -336,6 +440,10 @@ export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
 
 export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
   'proj-1': [],
+  'proj-8': [],
+  'proj-9': [],
+  'proj-10': [],
+  'proj-11': [],
   'proj-2': [],
   'proj-4': [],
   'proj-5': [
