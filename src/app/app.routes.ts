@@ -58,12 +58,23 @@ export const routes: Routes = [
         ],
       },
 
-      // Admin routes — feature screens added per plan task order
+      // Admin routes
       {
         path: 'admin',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
-          { path: 'users', redirectTo: '/p/dashboard' },
+          { path: '', pathMatch: 'full', redirectTo: 'users' },
+          {
+            path: 'users',
+            title: 'Users',
+            loadComponent: () =>
+              import('@features/admin/users/users-page.component').then(m => m.UsersPageComponent),
+          },
+          {
+            path: 'users/:id',
+            title: 'User',
+            loadComponent: () =>
+              import('@features/admin/users/user-detail.component').then(m => m.UserDetailComponent),
+          },
           { path: 'groups', redirectTo: '/p/dashboard' },
         ],
       },
