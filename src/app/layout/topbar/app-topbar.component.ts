@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 
@@ -27,6 +27,7 @@ const GROUP_LABELS: Record<GroupName, string> = {
 export class AppTopbarComponent {
   protected readonly layoutService = inject(LayoutService);
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly isMock = inject(USE_MOCK_API);
   protected readonly session = this.identity.session;
@@ -60,5 +61,6 @@ export class AppTopbarComponent {
 
   private signOut(): void {
     this.identity.signOut();
+    void this.router.navigateByUrl('/login');
   }
 }
