@@ -7,4 +7,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrl: './app-footer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppFooterComponent {}
+export class AppFooterComponent {
+  protected readonly appName = 'Vitarerum';
+  protected readonly appVersion = 'v0.1';
+}
