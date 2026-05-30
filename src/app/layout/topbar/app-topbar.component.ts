@@ -11,6 +11,7 @@ const ALL_GROUPS: readonly { value: GroupName; label: string }[] = [
   { value: 'COLLECTIONS_MANAGEMENT', label: 'Collections management' },
   { value: 'CURATORIAL', label: 'Curatorial' },
   { value: 'DIRECTION', label: 'Direction' },
+  { value: 'ADMIN', label: 'Administrator' },
 ];
 
 @Component({

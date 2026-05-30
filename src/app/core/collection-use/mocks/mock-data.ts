@@ -11,6 +11,7 @@ export const MOCK_GROUPS: Group[] = [
   { id: 'g-collections', name: 'COLLECTIONS_MANAGEMENT' },
   { id: 'g-curatorial', name: 'CURATORIAL' },
   { id: 'g-direction', name: 'DIRECTION' },
+  { id: 'g-admin', name: 'ADMIN' },
 ];
 
 export const MOCK_USERS: UserDetail[] = [
@@ -38,6 +39,12 @@ export const MOCK_USERS: UserDetail[] = [
     email: 'dan@direction.example.com',
     permissions: [{ permissionId: 'perm-dan', group: MOCK_GROUPS[3] }],
   },
+  {
+    id: 'u-eve',
+    name: 'Eve Lima',
+    email: 'eve@admin.example.com',
+    permissions: [{ permissionId: 'perm-eve', group: MOCK_GROUPS[4] }],
+  },
 ];
 
 export const MOCK_MEMBERSHIPS: GroupMembership[] = [
@@ -45,6 +52,7 @@ export const MOCK_MEMBERSHIPS: GroupMembership[] = [
   { permissionId: 'perm-bob', user: MOCK_USERS[1], group: MOCK_GROUPS[1] },
   { permissionId: 'perm-carol', user: MOCK_USERS[2], group: MOCK_GROUPS[2] },
   { permissionId: 'perm-dan', user: MOCK_USERS[3], group: MOCK_GROUPS[3] },
+  { permissionId: 'perm-eve', user: MOCK_USERS[4], group: MOCK_GROUPS[4] },
 ];
 
 export const P: Record<string, PermissionPrincipal> = {
@@ -67,6 +75,11 @@ export const P: Record<string, PermissionPrincipal> = {
     permissionId: 'perm-dan',
     user: { id: 'u-dan', name: 'Dan Oliveira', email: 'dan@direction.example.com' },
     group: 'DIRECTION',
+  },
+  eve: {
+    permissionId: 'perm-eve',
+    user: { id: 'u-eve', name: 'Eve Lima', email: 'eve@admin.example.com' },
+    group: 'ADMIN',
   },
 };
 
