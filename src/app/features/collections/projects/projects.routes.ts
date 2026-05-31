@@ -25,7 +25,14 @@ export const PROJECTS_ROUTES: Routes = [
       ),
   },
   { path: 'suspended', redirectTo: '/p/dashboard' },
-  { path: 'completed', redirectTo: '/p/dashboard' },
+  {
+    path: 'completed',
+    title: 'Completed Projects',
+    loadComponent: () =>
+      import('./pages/completed/projects-completed-page.component').then(
+        (m) => m.ProjectsCompletedPageComponent,
+      ),
+  },
   {
     path: ':id/log/research',
     title: 'Research Log',
