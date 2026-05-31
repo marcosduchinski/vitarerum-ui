@@ -1,0 +1,17 @@
+.proposal-my-detail {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.proposal-my-detail__back {
+  width: fit-content;
+  color: var(--color-accent-strong);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
