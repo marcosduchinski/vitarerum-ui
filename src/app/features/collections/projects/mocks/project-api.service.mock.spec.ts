@@ -15,7 +15,9 @@ describe('ProjectApiServiceMock', () => {
   });
 
   it('transitions ACCEPTED → IN_PROGRESS and updates event log', async () => {
-    const result = await firstValueFrom(service.startProject('proj-4', { note: 'Starting access.' }));
+    const result = await firstValueFrom(
+      service.startProject('proj-4', { note: 'Starting access.' }),
+    );
     expect(result.status).toBe('IN_PROGRESS');
 
     const detail = await firstValueFrom(service.getProject('proj-4'));
@@ -27,7 +29,9 @@ describe('ProjectApiServiceMock', () => {
   });
 
   it('suspends and resumes a project', async () => {
-    const r1 = await firstValueFrom(service.suspendProject('proj-5', { reason: 'Temporary hold.' }));
+    const r1 = await firstValueFrom(
+      service.suspendProject('proj-5', { reason: 'Temporary hold.' }),
+    );
     expect(r1.status).toBe('SUSPENDED');
 
     const r2 = await firstValueFrom(service.resumeProject('proj-5', { note: 'Resuming.' }));
@@ -40,11 +44,29 @@ describe('ProjectApiServiceMock', () => {
     expect(entry.content).toBe('Session note.');
 
     const page = await firstValueFrom(service.listEntries('proj-4'));
-    expect(page.content.some(e => e.id === entry.id)).toBe(true);
+    expect(page.content.some((e) => e.id === entry.id)).toBe(true);
   });
 
   it('filters projects by status', async () => {
     const page = await firstValueFrom(service.listProjects({ status: 'IN_PROGRESS' }));
-    expect(page.content.every(p => p.status === 'IN_PROGRESS')).toBe(true);
+    expect(page.content.every((p) => p.status === 'IN_PROGRESS')).toBe(true);
+  });
+
+  it('has in-progress project examples across log types', async () => {
+    const page = await firstValueFrom(service.listProjects({ status: 'IN_PROGRESS', size: 20 }));
+    const types = new Set(page.content.map((p) => p.type));
+
+    expect(types.has('RESEARCH')).toBe(true);
+    expect(types.has('EXHIBITION')).toBe(true);
+    expect(types.has('OTHER')).toBe(true);
+  });
+
+  it('filters projects by assigned staff permission', async () => {
+    const page = await firstValueFrom(service.listProjects({ assignedTo: 'perm-bob', size: 20 }));
+
+    expect(page.totalElements).toBeGreaterThan(0);
+    expect(page.content.every((p) => p.proposal.assignedTo?.permissionId === 'perm-bob')).toBe(
+      true,
+    );
   });
 });

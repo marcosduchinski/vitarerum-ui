@@ -31,7 +31,7 @@ import {
 @Injectable()
 export class ProjectApiServiceMock {
   private readonly projects = new Map<string, MutableProjectState>(
-    SEED_PROJECTS.map(p => [p.id, structuredClone(p)]),
+    SEED_PROJECTS.map((p) => [p.id, structuredClone(p)]),
   );
   private readonly entries = new Map<string, ProjectEntry[]>(
     Object.entries(SEED_PROJECT_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
@@ -44,20 +44,25 @@ export class ProjectApiServiceMock {
   listProjects(query: ProjectListQuery = {}): Observable<Page<CollectionUseProjectSummary>> {
     let items = [...this.projects.values()];
 
-    if (query.status) items = items.filter(p => p.status === query.status);
-    if (query.type) items = items.filter(p => p.type === query.type);
-    if (query.result) items = items.filter(p => p.result === query.result);
-    if (query.requestedBy) items = items.filter(p => p.requestedBy.permissionId === query.requestedBy);
+    if (query.status) items = items.filter((p) => p.status === query.status);
+    if (query.type) items = items.filter((p) => p.type === query.type);
+    if (query.result) items = items.filter((p) => p.result === query.result);
+    if (query.requestedBy)
+      items = items.filter((p) => p.requestedBy.permissionId === query.requestedBy);
+    if (query.assignedTo)
+      items = items.filter((p) => p.proposalAssignedTo?.permissionId === query.assignedTo);
     if (query.referenceNumber) {
       const q = query.referenceNumber.toLowerCase();
-      items = items.filter(p => p.referenceNumber.toLowerCase().includes(q));
+      items = items.filter((p) => p.referenceNumber.toLowerCase().includes(q));
     }
     if (query.search) {
       const q = query.search.toLowerCase();
-      items = items.filter(p => p.title.toLowerCase().includes(q) || p.referenceNumber.toLowerCase().includes(q));
+      items = items.filter(
+        (p) => p.title.toLowerCase().includes(q) || p.referenceNumber.toLowerCase().includes(q),
+      );
     }
 
-    const summaries: CollectionUseProjectSummary[] = items.map(p => this.toSummary(p));
+    const summaries: CollectionUseProjectSummary[] = items.map((p) => this.toSummary(p));
     return of(makePageFrom(summaries, query));
   }
 
@@ -113,13 +118,18 @@ export class ProjectApiServiceMock {
     const p = this.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     let items = this.entries.get(projectId) ?? [];
-    if (query.addedBy) items = items.filter(e => e.addedBy.permissionId === query.addedBy);
+    if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
     return of({ ...makePageFrom(items, query), projectId });
   }
 
-  uploadAttachment(projectId: string, entryId: string, file: File, mediaType: MediaType): Observable<Attachment> {
+  uploadAttachment(
+    projectId: string,
+    entryId: string,
+    file: File,
+    mediaType: MediaType,
+  ): Observable<Attachment> {
     const allEntries = this.entries.get(projectId) ?? [];
-    const entry = allEntries.find(e => e.id === entryId);
+    const entry = allEntries.find((e) => e.id === entryId);
     if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const attachment: Attachment = {
       fileReference: `mock-ref-${this.nextId++}`,
@@ -127,8 +137,11 @@ export class ProjectApiServiceMock {
       mediaType,
       uploadedAt: new Date().toISOString(),
     };
-    const updatedEntry: ProjectEntry = { ...entry, attachments: [...entry.attachments, attachment] };
-    const idx = allEntries.findIndex(e => e.id === entryId);
+    const updatedEntry: ProjectEntry = {
+      ...entry,
+      attachments: [...entry.attachments, attachment],
+    };
+    const idx = allEntries.findIndex((e) => e.id === entryId);
     allEntries[idx] = updatedEntry;
     this.entries.set(projectId, allEntries);
     return of(attachment);
@@ -179,8 +192,19 @@ export class ProjectApiServiceMock {
     const now = new Date().toISOString();
     p.status = newStatus;
     if (newResult) p.result = newResult;
-    const evt: UseEvent = { occurredAt: now, type: eventType, triggeredBy: P['alice'], note: note || null };
+    const evt: UseEvent = {
+      occurredAt: now,
+      type: eventType,
+      triggeredBy: P['alice'],
+      note: note || null,
+    };
     (this.events.get(projectId) ?? []).push(evt);
-    return of({ id: projectId, referenceNumber: p.referenceNumber, status: newStatus, result: newResult ?? undefined, lastEvent: evt });
+    return of({
+      id: projectId,
+      referenceNumber: p.referenceNumber,
+      status: newStatus,
+      result: newResult ?? undefined,
+      lastEvent: evt,
+    });
   }
 }
