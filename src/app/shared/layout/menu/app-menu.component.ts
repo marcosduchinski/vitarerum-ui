@@ -15,7 +15,11 @@ const COLLECTION_PROPOSALS_EXTERNAL: MenuNode = {
   label: 'Proposals',
   icon: 'pi pi-copy',
   items: [
-    { label: 'Submit proposal', icon: 'pi pi-plus-circle', routerLink: '/p/collections/proposals/submit' },
+    {
+      label: 'Submit proposal',
+      icon: 'pi pi-plus-circle',
+      routerLink: '/p/collections/proposals/submit',
+    },
     { label: 'My proposals', icon: 'pi pi-bookmark', routerLink: '/p/collections/proposals/my' },
   ],
 };
@@ -26,9 +30,21 @@ const COLLECTION_PROPOSALS_STAFF: MenuNode = {
   items: [
     { label: 'New', icon: 'pi pi-list', routerLink: '/p/collections/proposals/new' },
     { label: 'My assignments', icon: 'pi pi-bookmark', routerLink: '/p/collections/proposals/my' },
-    { label: "Other's assignments", icon: 'pi pi-bookmark', routerLink: '/p/collections/proposals/others' },
-    { label: 'Approved', icon: 'pi pi-check-circle', routerLink: '/p/collections/proposals/approved' },
-    { label: 'Rejected / cancelled', icon: 'pi pi-times-circle', routerLink: '/p/collections/proposals/rejected' },
+    {
+      label: "Other's assignments",
+      icon: 'pi pi-bookmark',
+      routerLink: '/p/collections/proposals/others',
+    },
+    {
+      label: 'Approved',
+      icon: 'pi pi-check-circle',
+      routerLink: '/p/collections/proposals/approved',
+    },
+    {
+      label: 'Rejected / cancelled',
+      icon: 'pi pi-times-circle',
+      routerLink: '/p/collections/proposals/rejected',
+    },
   ],
 };
 
@@ -45,9 +61,22 @@ const COLLECTION_PROJECTS_STAFF: MenuNode = {
   icon: 'pi pi-server',
   items: [
     { label: 'My projects', icon: 'pi pi-th-large', routerLink: '/p/collections/projects/my' },
-    { label: 'In progress', icon: 'pi pi-th-large', routerLink: '/p/collections/projects/in-progress' },
-    { label: 'Suspended', icon: 'pi pi-pause-circle', routerLink: '/p/collections/projects/suspended' },
-    { label: 'Completed / closed', icon: 'pi pi-check', routerLink: '/p/collections/projects/completed' },
+    { label: 'Pending', icon: 'pi pi-clock', routerLink: '/p/collections/projects/pending' },
+    {
+      label: 'In progress',
+      icon: 'pi pi-th-large',
+      routerLink: '/p/collections/projects/in-progress',
+    },
+    {
+      label: 'Suspended',
+      icon: 'pi pi-pause-circle',
+      routerLink: '/p/collections/projects/suspended',
+    },
+    {
+      label: 'Completed / closed',
+      icon: 'pi pi-check',
+      routerLink: '/p/collections/projects/completed',
+    },
   ],
 };
 
@@ -62,11 +91,11 @@ const USE_OF_COLLECTIONS_STAFF: MenuNode = {
 };
 
 const MENUS: Record<GroupName, readonly MenuNode[]> = {
-  EXTERNAL:              [HOME, USE_OF_COLLECTIONS_EXTERNAL],
-  COLLECTIONS_MANAGEMENT:[HOME, USE_OF_COLLECTIONS_STAFF],
-  CURATORIAL:            [HOME, USE_OF_COLLECTIONS_STAFF],
-  DIRECTION:             [HOME, USE_OF_COLLECTIONS_STAFF],
-  ADMINISTRATION:        [HOME, USE_OF_COLLECTIONS_STAFF],
+  EXTERNAL: [HOME, USE_OF_COLLECTIONS_EXTERNAL],
+  COLLECTIONS_MANAGEMENT: [HOME, USE_OF_COLLECTIONS_STAFF],
+  CURATORIAL: [HOME, USE_OF_COLLECTIONS_STAFF],
+  DIRECTION: [HOME, USE_OF_COLLECTIONS_STAFF],
+  ADMINISTRATION: [HOME, USE_OF_COLLECTIONS_STAFF],
 };
 
 @Component({

@@ -1,0 +1,28 @@
+import { ComponentRef } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { TestBed } from '@angular/core/testing';
+
+import { ProjectDetailPageComponent } from './project-detail-page.component';
+
+describe('ProjectDetailPageComponent', () => {
+  let componentRef: ComponentRef<ProjectDetailPageComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProjectDetailPageComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
+  });
+
+  it('renders a blank detail placeholder for the project id', () => {
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('Project detail');
+    expect(text).toContain('proj-12');
+  });
+});
