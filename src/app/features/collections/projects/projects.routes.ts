@@ -16,7 +16,14 @@ export const PROJECTS_ROUTES: Routes = [
         (m) => m.ProjectsPendingPageComponent,
       ),
   },
-  { path: 'in-progress', redirectTo: '/p/dashboard' },
+  {
+    path: 'in-progress',
+    title: 'In Progress Projects',
+    loadComponent: () =>
+      import('./pages/in-progress/projects-in-progress-page.component').then(
+        (m) => m.ProjectsInProgressPageComponent,
+      ),
+  },
   { path: 'suspended', redirectTo: '/p/dashboard' },
   { path: 'completed', redirectTo: '/p/dashboard' },
   {

@@ -8,6 +8,13 @@ describe('PROJECTS_ROUTES', () => {
     expect(route?.loadComponent).toBeDefined();
   });
 
+  it('routes in progress projects to a page component', () => {
+    const route = PROJECTS_ROUTES.find((candidate) => candidate.path === 'in-progress');
+
+    expect(route?.redirectTo).toBeUndefined();
+    expect(route?.loadComponent).toBeDefined();
+  });
+
   it('keeps project log routes before the generic detail route', () => {
     const paths = PROJECTS_ROUTES.map((route) => route.path);
     const detailIndex = paths.indexOf(':id');

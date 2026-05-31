@@ -37,8 +37,12 @@ function render<T extends { readonly id: () => string }>(component: Type<T>): st
   componentRef.setInput('id', 'project-1');
   fixture.detectChanges();
 
+  const backLink = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+    '.back-link',
+  );
   const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
+  expect(backLink?.getAttribute('href')).toBe('/p/collections/projects/my');
   expect(text).toContain('project-1');
   return text;
 }
