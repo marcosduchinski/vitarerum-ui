@@ -132,4 +132,29 @@ describe('ProposalApiService', () => {
       },
     });
   });
+
+  it('adds a proposal watcher with the documented body', () => {
+    service.addWatcher('proposal-1', { permissionId: 'permission-2' }).subscribe();
+
+    const request = http.expectOne('https://api.example.test/proposals/proposal-1/watchers');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ permissionId: 'permission-2' });
+    request.flush({
+      permissionId: 'permission-2',
+      user: { id: 'user-2', name: 'Carol', email: 'carol@example.test' },
+      group: 'CURATORIAL',
+    });
+  });
+
+  it('removes a proposal watcher by permission id', () => {
+    service.removeWatcher('proposal-1', 'permission-2').subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/proposals/proposal-1/watchers/permission-2',
+    );
+
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+  });
 });

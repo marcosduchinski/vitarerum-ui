@@ -67,7 +67,11 @@ class ProposalApiServiceStub {
   }
 
   assignProposal() {
-    return of({ id: PROPOSAL.id, status: 'UNDER_REVIEW', assignedTo: null, lastEvent: null });
+    return of({ id: PROPOSAL.id, status: 'SUBMITTED', assignedTo: null, lastEvent: null });
+  }
+
+  forwardProposal() {
+    return of({ id: PROPOSAL.id, status: 'SUBMITTED', assignedTo: null, lastEvent: null });
   }
 }
 
@@ -133,7 +137,9 @@ describe('ProposalsNewPageComponent', () => {
 
     expect(proposalService.queries.at(-1)).toMatchObject({ page: 1, size: 20 });
 
-    const pageSize = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('#proposals-page-size');
+    const pageSize = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>(
+      '#proposals-page-size',
+    );
     expect(pageSize).not.toBeNull();
 
     pageSize!.value = '50';
@@ -194,7 +200,7 @@ describe('ProposalsNewPageComponent', () => {
 
 function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {
   const button = Array.from(root.querySelectorAll('button')).find(
-    candidate => candidate.textContent?.trim() === text,
+    (candidate) => candidate.textContent?.trim() === text,
   );
 
   if (!(button instanceof HTMLButtonElement)) {

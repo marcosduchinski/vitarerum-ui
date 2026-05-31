@@ -13,10 +13,7 @@
         <p class="proposal-detail__ref">{{ proposal()!.collectionUseProject.referenceNumber }}</p>
         <h1 class="proposal-detail__title">{{ proposal()!.collectionUseProject.title }}</h1>
         <div class="proposal-detail__status-row">
-          <app-status-chip
-            kind="proposal"
-            [status]="asWorkflowStatus(proposal()!.status)"
-          />
+          <app-status-chip kind="proposal" [status]="asWorkflowStatus(proposal()!.status)" />
           <span class="proposal-detail__type-badge">
             {{ typeLabels[proposal()!.type] }}
           </span>
@@ -109,16 +106,13 @@
             >
               {{ forwarding() ? 'Forwarding…' : 'Forward proposal' }}
             </button>
-            <button type="button" class="action-btn" (click)="closeForwardPanel()">
-              Cancel
-            </button>
+            <button type="button" class="action-btn" (click)="closeForwardPanel()">Cancel</button>
           </div>
         }
       </section>
     }
 
     <div class="proposal-detail__grid">
-
       <section class="detail-card" aria-labelledby="overview-heading">
         <h2 id="overview-heading" class="detail-card__title">Overview</h2>
         <dl class="detail-dl">
@@ -182,6 +176,65 @@
         }
       </section>
 
+      <section class="detail-card watchers-card" aria-labelledby="watchers-heading">
+        <h2 id="watchers-heading" class="detail-card__title">Watchers</h2>
+
+        @if (!watchers().length) {
+          <p class="detail-card__empty">No watchers.</p>
+        } @else {
+          <ul class="watcher-list" aria-label="Proposal watchers">
+            @for (watcher of watchers(); track watcher.permissionId) {
+              <li class="watcher">
+                <div class="watcher__identity">
+                  <span class="watcher__name">{{ watcher.user.name }}</span>
+                  <span class="watcher__meta">
+                    {{ watcher.user.email }} - {{ groupLabels[watcher.group] }}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  class="action-btn action-btn--ghost"
+                  [disabled]="removingWatcherId() === watcher.permissionId"
+                  (click)="removeWatcher(watcher.permissionId)"
+                  aria-label="Remove watcher {{ watcher.user.name }}"
+                >
+                  <span class="pi pi-times" aria-hidden="true"></span>
+                  {{ removingWatcherId() === watcher.permissionId ? 'Removing…' : 'Remove' }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="watcher-form">
+          @if (staffUsersResource.isLoading()) {
+            <app-loading-state label="Loading staff…" />
+          } @else {
+            <label for="watcher-permission">Add watcher</label>
+            <div class="watcher-form__controls">
+              <select
+                id="watcher-permission"
+                [value]="watcherPermissionId()"
+                (change)="onWatcherPermissionChange($event)"
+              >
+                <option value="" disabled selected>Select a staff member…</option>
+                @for (option of watcherOptions(); track option.permissionId) {
+                  <option [value]="option.permissionId">{{ option.label }}</option>
+                }
+              </select>
+              <button
+                type="button"
+                class="action-btn action-btn--primary"
+                [disabled]="!watcherPermissionId() || addingWatcher()"
+                (click)="addWatcher()"
+              >
+                {{ addingWatcher() ? 'Adding…' : 'Add' }}
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+
       <section class="detail-card" aria-labelledby="events-heading">
         <h2 id="events-heading" class="detail-card__title">Event log</h2>
 
@@ -209,7 +262,6 @@
           </ol>
         }
       </section>
-
     </div>
   }
 </div>

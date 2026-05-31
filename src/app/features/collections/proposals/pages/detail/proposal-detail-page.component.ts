@@ -15,7 +15,10 @@ import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
-import { StatusChipComponent, WorkflowStatus } from '@shared/components/status-chip/status-chip.component';
+import {
+  StatusChipComponent,
+  WorkflowStatus,
+} from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
@@ -101,20 +104,25 @@ export class ProposalDetailPageComponent {
   protected readonly proposal = computed(() => this.proposalResource.value() ?? null);
   protected readonly messages = computed(() => this.conversationResource.value()?.messages ?? []);
   protected readonly events = computed(() => this.eventsResource.value()?.content ?? []);
+  protected readonly watchers = computed(() => this.proposal()?.watchers ?? []);
   protected readonly canAssign = computed(() => {
     const proposal = this.proposal();
     return proposal?.status === 'SUBMITTED' && proposal.assignedTo === null;
   });
   protected readonly staffOptions = computed<StaffOption[]>(() =>
-    (this.staffUsersResource.value()?.content ?? []).flatMap(u =>
+    (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
       u.permissions
-        .filter(p => p.group.name !== 'EXTERNAL')
-        .map(p => ({
+        .filter((p) => p.group.name !== 'EXTERNAL')
+        .map((p) => ({
           label: `${u.name} — ${GROUP_LABELS[p.group.name]}`,
           permissionId: p.permissionId,
         })),
     ),
   );
+  protected readonly watcherOptions = computed<StaffOption[]>(() => {
+    const watcherIds = new Set(this.watchers().map((watcher) => watcher.permissionId));
+    return this.staffOptions().filter((option) => !watcherIds.has(option.permissionId));
+  });
 
   protected readonly proposalError = computed(() => {
     const err = this.proposalResource.error();
@@ -122,6 +130,7 @@ export class ProposalDetailPageComponent {
   });
 
   protected readonly typeLabels = TYPE_LABELS;
+  protected readonly groupLabels = GROUP_LABELS;
   protected readonly formatDate = formatDate;
   protected readonly formatDateTime = formatDateTime;
   protected readonly assuming = signal(false);
@@ -129,6 +138,9 @@ export class ProposalDetailPageComponent {
   protected readonly forwardPanelOpen = signal(false);
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardNote = signal('');
+  protected readonly watcherPermissionId = signal('');
+  protected readonly addingWatcher = signal(false);
+  protected readonly removingWatcherId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
@@ -142,7 +154,9 @@ export class ProposalDetailPageComponent {
     this.actionError.set(null);
 
     try {
-      await firstValueFrom(this.proposalService.assignProposal(this.id(), { note: 'Assumed from proposal detail.' }));
+      await firstValueFrom(
+        this.proposalService.assignProposal(this.id(), { note: 'Assumed from proposal detail.' }),
+      );
       this.reloadWorkflow();
     } catch (err) {
       this.actionError.set(toApiError(err));
@@ -170,6 +184,10 @@ export class ProposalDetailPageComponent {
     this.forwardNote.set((event.target as HTMLTextAreaElement).value);
   }
 
+  protected onWatcherPermissionChange(event: Event): void {
+    this.watcherPermissionId.set((event.target as HTMLSelectElement).value);
+  }
+
   protected async forward(): Promise<void> {
     const targetPermissionId = this.forwardTargetPermissionId();
     if (!this.canAssign() || !targetPermissionId || this.forwarding()) return;
@@ -179,7 +197,7 @@ export class ProposalDetailPageComponent {
 
     try {
       await firstValueFrom(
-        this.proposalService.assignProposal(this.id(), {
+        this.proposalService.forwardProposal(this.id(), {
           targetPermissionId,
           note: this.forwardNote(),
         }),
@@ -190,6 +208,40 @@ export class ProposalDetailPageComponent {
       this.actionError.set(toApiError(err));
     } finally {
       this.forwarding.set(false);
+    }
+  }
+
+  protected async addWatcher(): Promise<void> {
+    const permissionId = this.watcherPermissionId();
+    if (!permissionId || this.addingWatcher()) return;
+
+    this.addingWatcher.set(true);
+    this.actionError.set(null);
+
+    try {
+      await firstValueFrom(this.proposalService.addWatcher(this.id(), { permissionId }));
+      this.watcherPermissionId.set('');
+      this.proposalResource.reload();
+    } catch (err) {
+      this.actionError.set(toApiError(err));
+    } finally {
+      this.addingWatcher.set(false);
+    }
+  }
+
+  protected async removeWatcher(permissionId: string): Promise<void> {
+    if (this.removingWatcherId()) return;
+
+    this.removingWatcherId.set(permissionId);
+    this.actionError.set(null);
+
+    try {
+      await firstValueFrom(this.proposalService.removeWatcher(this.id(), permissionId));
+      this.proposalResource.reload();
+    } catch (err) {
+      this.actionError.set(toApiError(err));
+    } finally {
+      this.removingWatcherId.set(null);
     }
   }
 

@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, InjectionToken } from '@angular/core';
+import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { API_BASE_URL } from 'src/app/core/config/app-config.model';
 import { buildApiUrl } from 'src/app/core/http/api-url.util';
 import { buildHttpParams } from 'src/app/core/http/http-params.util';
@@ -7,6 +8,7 @@ import { Page, PageQuery } from 'src/app/shared/models/page.model';
 import { Observable } from 'rxjs';
 
 import {
+  AddProposalWatcherRequest,
   AssignProposalRequest,
   DirectionClarificationRequest,
   ForwardProposalRequest,
@@ -89,7 +91,10 @@ export class ProposalApiService {
     proposalId: string,
     request: AssignProposalRequest,
   ): Observable<ProposalAssignmentResult> {
-    return this.http.post<ProposalAssignmentResult>(this.url(`/proposals/${proposalId}/assign`), request);
+    return this.http.post<ProposalAssignmentResult>(
+      this.url(`/proposals/${proposalId}/assign`),
+      request,
+    );
   }
 
   requestDocuments(
@@ -106,10 +111,30 @@ export class ProposalApiService {
     proposalId: string,
     request: ForwardProposalRequest,
   ): Observable<ProposalAssignmentResult> {
-    return this.http.post<ProposalAssignmentResult>(this.url(`/proposals/${proposalId}/forward`), request);
+    return this.http.post<ProposalAssignmentResult>(
+      this.url(`/proposals/${proposalId}/forward`),
+      request,
+    );
   }
 
-  startReview(proposalId: string, request: ProposalNoteRequest): Observable<ProposalStatusActionResult> {
+  addWatcher(
+    proposalId: string,
+    request: AddProposalWatcherRequest,
+  ): Observable<PermissionPrincipal> {
+    return this.http.post<PermissionPrincipal>(
+      this.url(`/proposals/${proposalId}/watchers`),
+      request,
+    );
+  }
+
+  removeWatcher(proposalId: string, permissionId: string): Observable<void> {
+    return this.http.delete<void>(this.url(`/proposals/${proposalId}/watchers/${permissionId}`));
+  }
+
+  startReview(
+    proposalId: string,
+    request: ProposalNoteRequest,
+  ): Observable<ProposalStatusActionResult> {
     return this.http.post<ProposalStatusActionResult>(
       this.url(`/proposals/${proposalId}/start-review`),
       request,
@@ -136,16 +161,34 @@ export class ProposalApiService {
     );
   }
 
-  approveProposal(proposalId: string, request: ProposalNoteRequest): Observable<ProposalDecisionResult> {
-    return this.http.post<ProposalDecisionResult>(this.url(`/proposals/${proposalId}/approve`), request);
+  approveProposal(
+    proposalId: string,
+    request: ProposalNoteRequest,
+  ): Observable<ProposalDecisionResult> {
+    return this.http.post<ProposalDecisionResult>(
+      this.url(`/proposals/${proposalId}/approve`),
+      request,
+    );
   }
 
-  rejectProposal(proposalId: string, request: ProposalReasonRequest): Observable<ProposalDecisionResult> {
-    return this.http.post<ProposalDecisionResult>(this.url(`/proposals/${proposalId}/reject`), request);
+  rejectProposal(
+    proposalId: string,
+    request: ProposalReasonRequest,
+  ): Observable<ProposalDecisionResult> {
+    return this.http.post<ProposalDecisionResult>(
+      this.url(`/proposals/${proposalId}/reject`),
+      request,
+    );
   }
 
-  cancelProposal(proposalId: string, request: ProposalReasonRequest): Observable<ProposalDecisionResult> {
-    return this.http.post<ProposalDecisionResult>(this.url(`/proposals/${proposalId}/cancel`), request);
+  cancelProposal(
+    proposalId: string,
+    request: ProposalReasonRequest,
+  ): Observable<ProposalDecisionResult> {
+    return this.http.post<ProposalDecisionResult>(
+      this.url(`/proposals/${proposalId}/cancel`),
+      request,
+    );
   }
 
   private url(path: string): string {

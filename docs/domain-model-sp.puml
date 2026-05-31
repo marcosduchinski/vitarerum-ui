@@ -210,6 +210,7 @@
         - status: ProposalStatus
         - requestedBy: PermissionId
         - assignedTo: PermissionId?
+        - watchers: List<PermissionId>
         - submittedAt: DateTime
         - events: List<ProposalEvent>
         - requestedDocuments: List<RequestedDocument>
@@ -309,6 +310,7 @@
       Proposal *-- "0..*" ProposalEvent
       Proposal *-- "0..*" RequestedDocument
       Proposal *-- "0..*" Document
+      Proposal "1" o-- "0..*" Permission : watchers
       ProposalEvent *-- ProposalEventType
       RequestedDocument *-- DocumentType
       Document *-- DocumentType

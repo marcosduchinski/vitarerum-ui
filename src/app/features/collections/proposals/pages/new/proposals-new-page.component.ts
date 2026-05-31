@@ -70,9 +70,15 @@ export class ProposalsNewPageComponent {
   protected readonly appliedSearch = signal('');
 
   protected readonly proposalsResource = resource({
-    params: () => ({ page: this.currentPage(), size: this.pageSize(), search: this.appliedSearch().trim() }),
+    params: () => ({
+      page: this.currentPage(),
+      size: this.pageSize(),
+      search: this.appliedSearch().trim(),
+    }),
     loader: ({ params }) =>
-      firstValueFrom(this.proposalService.listProposals({ status: 'SUBMITTED', unassigned: true, ...params })),
+      firstValueFrom(
+        this.proposalService.listProposals({ status: 'SUBMITTED', unassigned: true, ...params }),
+      ),
   });
 
   protected readonly staffUsersResource = resource({
@@ -80,7 +86,9 @@ export class ProposalsNewPageComponent {
   });
 
   protected readonly proposals = computed(() => this.proposalsResource.value()?.content ?? []);
-  protected readonly totalProposals = computed(() => this.proposalsResource.value()?.totalElements ?? 0);
+  protected readonly totalProposals = computed(
+    () => this.proposalsResource.value()?.totalElements ?? 0,
+  );
   protected readonly totalPages = computed(() => this.proposalsResource.value()?.totalPages ?? 0);
   protected readonly rangeStart = computed(() => this.currentPage() * this.pageSize() + 1);
   protected readonly rangeEnd = computed(() =>
@@ -92,10 +100,10 @@ export class ProposalsNewPageComponent {
   });
 
   protected readonly staffOptions = computed<StaffOption[]>(() =>
-    (this.staffUsersResource.value()?.content ?? []).flatMap(u =>
+    (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
       u.permissions
-        .filter(p => p.group.name !== 'EXTERNAL')
-        .map(p => ({
+        .filter((p) => p.group.name !== 'EXTERNAL')
+        .map((p) => ({
           label: `${u.name} — ${GROUP_LABELS[p.group.name]}`,
           permissionId: p.permissionId,
         })),
@@ -136,11 +144,11 @@ export class ProposalsNewPageComponent {
   protected readonly forwardError = signal<ApiError | null>(null);
 
   protected prevPage(): void {
-    this.currentPage.update(p => Math.max(0, p - 1));
+    this.currentPage.update((p) => Math.max(0, p - 1));
   }
 
   protected nextPage(): void {
-    this.currentPage.update(p => Math.min(Math.max(0, this.totalPages() - 1), p + 1));
+    this.currentPage.update((p) => Math.min(Math.max(0, this.totalPages() - 1), p + 1));
   }
 
   protected firstPage(): void {
@@ -199,7 +207,7 @@ export class ProposalsNewPageComponent {
   }
 
   protected toggleActionsMenu(proposalId: string): void {
-    this.actionsMenuId.update(current => current === proposalId ? null : proposalId);
+    this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
     this.forwardPanelId.set(null);
   }
 
@@ -222,7 +230,7 @@ export class ProposalsNewPageComponent {
     this.forwardError.set(null);
     try {
       await firstValueFrom(
-        this.proposalService.assignProposal(proposalId, {
+        this.proposalService.forwardProposal(proposalId, {
           targetPermissionId,
           note: this.forwardNote(),
         }),
