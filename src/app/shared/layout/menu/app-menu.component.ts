@@ -68,11 +68,6 @@ const COLLECTION_PROJECTS_STAFF: MenuNode = {
       routerLink: '/p/collections/projects/in-progress',
     },
     {
-      label: 'Suspended',
-      icon: 'pi pi-pause-circle',
-      routerLink: '/p/collections/projects/suspended',
-    },
-    {
       label: 'Completed / closed',
       icon: 'pi pi-check',
       routerLink: '/p/collections/projects/completed',
