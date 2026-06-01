@@ -154,6 +154,6 @@ describe('ProposalsMyPageComponent', () => {
     expect(compiled.textContent).toContain('Reference');
     expect(compiled.textContent).toContain('Requested by');
     expect(compiled.textContent).toContain('View details');
-    expect(compiled.querySelector('a[href="/proposal-1"]')).not.toBeNull();
+    expect(compiled.querySelector('a[href="/p/collections/proposals/proposal-1"]')).not.toBeNull();
   });
 });

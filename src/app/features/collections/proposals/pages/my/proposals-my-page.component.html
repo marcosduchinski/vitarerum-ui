@@ -76,7 +76,10 @@
                     {{ proposal.collectionUseProject.referenceNumber }}
                   </td>
                   <td>
-                    <a class="proposals-table__title" [routerLink]="[proposal.id]">
+                    <a
+                      class="proposals-table__title"
+                      [routerLink]="['/p/collections/proposals', proposal.id]"
+                    >
                       {{ proposal.collectionUseProject.title }}
                     </a>
                   </td>
@@ -96,7 +99,7 @@
                     <div class="proposals-table__actions">
                       <a
                         class="action-btn action-btn--primary"
-                        [routerLink]="[proposal.id]"
+                        [routerLink]="['/p/collections/proposals', proposal.id]"
                         aria-label="View details for {{
                           proposal.collectionUseProject.referenceNumber
                         }}"
