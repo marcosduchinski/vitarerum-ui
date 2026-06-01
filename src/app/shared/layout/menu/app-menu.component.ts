@@ -85,12 +85,20 @@ const USE_OF_COLLECTIONS_STAFF: MenuNode = {
   items: [COLLECTION_PROPOSALS_STAFF, COLLECTION_PROJECTS_STAFF],
 };
 
+const ADMINISTRATION_MENU: MenuNode = {
+  label: 'Administration',
+  items: [
+    { label: 'Users', icon: 'pi pi-users', routerLink: '/p/admin/users' },
+    { label: 'Groups', icon: 'pi pi-sitemap', routerLink: '/p/admin/groups' },
+  ],
+};
+
 const MENUS: Record<GroupName, readonly MenuNode[]> = {
   EXTERNAL: [HOME, USE_OF_COLLECTIONS_EXTERNAL],
   COLLECTIONS_MANAGEMENT: [HOME, USE_OF_COLLECTIONS_STAFF],
   CURATORIAL: [HOME, USE_OF_COLLECTIONS_STAFF],
   DIRECTION: [HOME, USE_OF_COLLECTIONS_STAFF],
-  ADMINISTRATION: [HOME, USE_OF_COLLECTIONS_STAFF],
+  ADMINISTRATION: [HOME, USE_OF_COLLECTIONS_STAFF, ADMINISTRATION_MENU],
 };
 
 @Component({
