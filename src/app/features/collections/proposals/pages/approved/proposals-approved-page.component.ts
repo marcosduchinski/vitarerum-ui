@@ -6,7 +6,9 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
+import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
@@ -34,6 +36,7 @@ const TYPE_LABELS: Record<UseType, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    Menu,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -45,6 +48,7 @@ const TYPE_LABELS: Record<UseType, string> = {
 })
 export class ProposalsApprovedPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -86,6 +90,32 @@ export class ProposalsApprovedPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  protected readonly actionsMenuContext = signal<{
+    readonly projectId: string;
+    readonly proposalId: string;
+  } | null>(null);
+  protected readonly rowActionItems = computed<MenuItem[]>(() => {
+    const context = this.actionsMenuContext();
+
+    if (!context) return [];
+
+    return [
+      {
+        label: 'View details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigateByUrl(`/p/collections/proposals/${context.proposalId}`);
+        },
+      },
+      {
+        label: 'Go to project',
+        icon: 'pi pi-folder-open',
+        command: () => {
+          void this.router.navigateByUrl(`/p/collections/projects/${context.projectId}`);
+        },
+      },
+    ];
+  });
 
   protected prevPage(): void {
     this.currentPage.update((page) => Math.max(0, page - 1));
@@ -121,5 +151,15 @@ export class ProposalsApprovedPageComponent {
     this.searchDraft.set('');
     this.appliedSearch.set('');
     this.currentPage.set(0);
+  }
+
+  protected toggleActionsMenu(proposalId: string, projectId: string): void {
+    this.actionsMenuContext.update((current) =>
+      current?.proposalId === proposalId ? null : { proposalId, projectId },
+    );
+  }
+
+  protected closeActionsMenu(): void {
+    this.actionsMenuContext.set(null);
   }
 }
