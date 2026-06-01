@@ -30,7 +30,14 @@ export const PROPOSALS_ROUTES: Routes = [
         (m) => m.ProposalMyDetailPageComponent,
       ),
   },
-  { path: 'others', redirectTo: '/p/dashboard' },
+  {
+    path: 'others',
+    title: "Other's Assignments",
+    loadComponent: () =>
+      import('./pages/others/proposals-others-page.component').then(
+        (m) => m.ProposalsOthersPageComponent,
+      ),
+  },
   { path: 'approved', redirectTo: '/p/dashboard' },
   { path: 'rejected', redirectTo: '/p/dashboard' },
   {
