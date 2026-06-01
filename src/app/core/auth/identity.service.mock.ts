@@ -17,6 +17,7 @@ const MOCK_ACCOUNTS: Record<string, MockAccount> = {
   'dan@direction.example.com':   { id: 'u-dan',   name: 'Dan Oliveira',  groups: ['DIRECTION'] },
   'eve@admin.example.com':       { id: 'u-eve',   name: 'Eve Lima',      groups: ['ADMINISTRATION'] },
   'fran@staff.example.com':      { id: 'u-fran',  name: 'Fran Costa',    groups: ['COLLECTIONS_MANAGEMENT', 'CURATORIAL', 'DIRECTION'] },
+  'greg@collections.example.com':{ id: 'u-greg',  name: 'Greg Viana',    groups: ['COLLECTIONS_MANAGEMENT'] },
 };
 
 const UNKNOWN_ACCOUNT: Omit<MockAccount, 'id'> = { name: '', groups: ['EXTERNAL'] };

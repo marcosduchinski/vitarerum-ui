@@ -55,6 +55,12 @@ export const MOCK_USERS: UserDetail[] = [
       { permissionId: 'perm-fran-direction', group: MOCK_GROUPS[3] },
     ],
   },
+  {
+    id: 'u-greg',
+    name: 'Greg Viana',
+    email: 'greg@collections.example.com',
+    permissions: [{ permissionId: 'perm-greg', group: MOCK_GROUPS[1] }],
+  },
 ];
 
 export const MOCK_MEMBERSHIPS: GroupMembership[] = [
@@ -66,6 +72,7 @@ export const MOCK_MEMBERSHIPS: GroupMembership[] = [
   { permissionId: 'perm-fran-collections', user: MOCK_USERS[5], group: MOCK_GROUPS[1] },
   { permissionId: 'perm-fran-curatorial', user: MOCK_USERS[5], group: MOCK_GROUPS[2] },
   { permissionId: 'perm-fran-direction', user: MOCK_USERS[5], group: MOCK_GROUPS[3] },
+  { permissionId: 'perm-greg', user: MOCK_USERS[6], group: MOCK_GROUPS[1] },
 ];
 
 export const P: Record<string, PermissionPrincipal> = {
@@ -93,6 +100,11 @@ export const P: Record<string, PermissionPrincipal> = {
     permissionId: 'perm-eve',
     user: { id: 'u-eve', name: 'Eve Lima', email: 'eve@admin.example.com' },
     group: 'ADMINISTRATION',
+  },
+  greg: {
+    permissionId: 'perm-greg',
+    user: { id: 'u-greg', name: 'Greg Viana', email: 'greg@collections.example.com' },
+    group: 'COLLECTIONS_MANAGEMENT',
   },
 };
 
