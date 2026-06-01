@@ -14,11 +14,13 @@ test('EXTERNAL role shows proposals/projects sections, hides staff items', async
   await loginAs(page, 'alice@ext.example.com');
   await page.screenshot({ path: '/tmp/nav-external.png', fullPage: true });
 
-  await expect(sidebar(page).getByRole('link', { name: 'New proposal' })).toBeVisible();
+  await expect(sidebar(page).getByText('Use of Collections')).toBeVisible();
+  await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
+  await expect(sidebar(page).getByRole('link', { name: 'Submit proposal' })).toBeVisible();
   await expect(sidebar(page).getByRole('link', { name: 'My proposals' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'New' })).not.toBeVisible();
+  await sidebar(page).getByRole('button', { name: 'Projects' }).click();
   await expect(sidebar(page).getByRole('link', { name: 'My projects' })).toBeVisible();
-  await expect(sidebar(page).getByRole('link', { name: 'Staff queue' })).not.toBeVisible();
-  await expect(sidebar(page).getByText('Administration')).not.toBeVisible();
   // Switcher shows but has only one option (Alice belongs to EXTERNAL only)
   const options = await page.locator('#role-switcher option').allTextContents();
   expect(options).toHaveLength(1);
@@ -29,23 +31,32 @@ test('COLLECTIONS_MANAGEMENT user sees expandable collection-use section', async
   await loginAs(page, 'bob@collections.example.com');
   await page.screenshot({ path: '/tmp/nav-staff.png', fullPage: true });
 
-  await expect(sidebar(page).getByText('Collection use')).toBeVisible();
+  await expect(sidebar(page).getByText('Use of Collections')).toBeVisible();
 
   await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
-  await expect(sidebar(page).getByRole('link', { name: 'Staff queue' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'New' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'My assignments' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: "Other's assignments" })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Approved' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Rejected / cancelled' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Submit proposal' })).not.toBeVisible();
 
-  await expect(sidebar(page).getByRole('link', { name: 'Users' })).toBeVisible();
-  await expect(sidebar(page).getByRole('link', { name: 'Groups' })).toBeVisible();
-  await expect(sidebar(page).getByRole('link', { name: 'New proposal' })).not.toBeVisible();
+  await sidebar(page).getByRole('button', { name: 'Projects' }).click();
+  await expect(sidebar(page).getByRole('link', { name: 'Pending' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'In progress' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Completed / closed' })).toBeVisible();
 });
 
-test('DIRECTION user sees direction-only nav', async ({ page }) => {
+test('DIRECTION user sees proposal terminal queues without administration links', async ({ page }) => {
   await loginAs(page, 'dan@direction.example.com');
   await page.screenshot({ path: '/tmp/nav-direction.png', fullPage: true });
 
-  await expect(sidebar(page).getByRole('link', { name: 'Pending direction' })).toBeVisible();
+  await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
+  await expect(sidebar(page).getByRole('link', { name: "Other's assignments" })).toBeVisible();
   await expect(sidebar(page).getByRole('link', { name: 'Approved' })).toBeVisible();
-  await expect(sidebar(page).getByText('Administration')).not.toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Rejected / cancelled' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Users' })).not.toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Groups' })).not.toBeVisible();
 });
 
 test('Dashboard link carries aria-current=page', async ({ page }) => {
@@ -91,16 +102,31 @@ test('multi-group user sees only their 3 groups in the switcher and can switch b
   // ADMIN is not one of Fran's groups
   expect(options).not.toContain('Administrator');
 
-  // Switch to Curatorial — nav changes
+  // Switch to Curatorial — nav remains collection-use scoped
   await page.selectOption('#role-switcher', 'CURATORIAL');
   await page.screenshot({ path: '/tmp/nav-fran-curatorial.png', fullPage: true });
   const sb = page.locator('.layout-sidebar');
   await sb.getByRole('button', { name: 'Proposals' }).click();
-  await expect(sb.getByRole('link', { name: 'Pending direction' })).toBeVisible();
-  await expect(sb.getByRole('link', { name: 'Pending documents' })).not.toBeVisible();
+  await expect(sb.getByRole('link', { name: 'My assignments' })).toBeVisible();
+  await expect(sb.getByRole('link', { name: 'Approved' })).toBeVisible();
 
-  // Switch to Direction — nav changes again
+  // Switch to Direction — admin routes remain hidden
   await page.selectOption('#role-switcher', 'DIRECTION');
-  await expect(sb.getByRole('link', { name: 'Pending direction' })).toBeVisible();
+  await expect(sb.getByRole('link', { name: 'Rejected / cancelled' })).toBeVisible();
   await expect(sb.getByRole('link', { name: 'Users' })).not.toBeVisible();
+});
+
+test('approved proposal action menu can navigate to the related project', async ({ page }) => {
+  await loginAs(page, 'bob@collections.example.com');
+
+  await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
+  await sidebar(page).getByRole('link', { name: 'Approved' }).click();
+  await expect(page).toHaveURL(/\/p\/collections\/proposals\/approved$/);
+  await expect(page.getByRole('heading', { name: 'Approved' })).toBeVisible();
+
+  await page.getByRole('button', { name: /More actions for/ }).first().click();
+  await page.getByRole('menuitem', { name: 'Go to project' }).click();
+
+  await expect(page).toHaveURL(/\/p\/collections\/projects\/.+returnTo=%2Fp%2Fcollections%2Fproposals%2Fapproved/);
+  await expect(page.getByRole('link', { name: 'Back to approved proposals' })).toBeVisible();
 });
