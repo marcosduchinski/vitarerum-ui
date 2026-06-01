@@ -92,4 +92,25 @@ describe('ProposalsApprovedPageComponent', () => {
     expect(compiled.textContent).toContain('Approved research request');
     expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });
+
+  it('shows proposal and project actions in the row menu', async () => {
+    const fixture = TestBed.createComponent(ProposalsApprovedPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const actionButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="More actions for VR-2026-001"]',
+    );
+
+    expect(actionButton).not.toBeNull();
+
+    actionButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Go to project');
+  });
 });
