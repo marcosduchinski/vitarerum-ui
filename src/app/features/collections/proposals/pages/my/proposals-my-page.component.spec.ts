@@ -60,10 +60,21 @@ const STAFF_USERS: Page<UserDetail> = {
         },
       ],
     },
+    {
+      id: 'staff-2',
+      name: 'Carol Lima',
+      email: 'carol@example.test',
+      permissions: [
+        {
+          permissionId: 'permission-curatorial',
+          group: { id: 'group-curatorial', name: 'CURATORIAL' },
+        },
+      ],
+    },
   ],
   page: 0,
   size: 100,
-  totalElements: 1,
+  totalElements: 2,
   totalPages: 1,
 };
 
@@ -90,6 +101,10 @@ class IdentityServiceStub implements IdentityService {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  readonly forwardCalls: Array<{
+    readonly proposalId: string;
+    readonly payload: { readonly targetPermissionId: string; readonly note: string };
+  }> = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
@@ -102,6 +117,14 @@ class ProposalApiServiceStub {
       totalElements: 1,
       totalPages: 1,
     });
+  }
+
+  forwardProposal(
+    proposalId: string,
+    payload: { readonly targetPermissionId: string; readonly note: string },
+  ) {
+    this.forwardCalls.push({ proposalId, payload });
+    return of(PROPOSAL);
   }
 }
 
@@ -142,7 +165,7 @@ describe('ProposalsMyPageComponent', () => {
     });
   });
 
-  it('keeps the search controls and detail action in the replicated list', async () => {
+  it('keeps the search controls and detail navigation in the replicated list', async () => {
     const fixture = TestBed.createComponent(ProposalsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -153,9 +176,77 @@ describe('ProposalsMyPageComponent', () => {
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('Reference');
     expect(compiled.textContent).toContain('Requested by');
-    expect(compiled.textContent).toContain('View details');
     expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/proposal-1"]'),
+      compiled.querySelector('a[href^="/p/collections/proposals/my/proposal-1"]'),
     ).not.toBeNull();
+    expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
+  });
+
+  it('shows forward and view details in the row menu', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const actionButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="More actions for VR-2026-001"]',
+    );
+
+    expect(actionButton).not.toBeNull();
+
+    actionButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('Forward');
+    expect(document.body.textContent).toContain('View details');
+  });
+
+  it('forwards an assignment from the row action panel', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      openForwardPanel(proposalId: string): void;
+    };
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    component.openForwardPanel('proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const select = compiled.querySelector<HTMLSelectElement>('#forward-target-proposal-1');
+    const note = compiled.querySelector<HTMLTextAreaElement>('#forward-note-proposal-1');
+    const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Forward',
+    );
+
+    expect(select).not.toBeNull();
+    expect(note).not.toBeNull();
+    expect(submit).not.toBeNull();
+
+    select!.value = 'permission-curatorial';
+    select!.dispatchEvent(new Event('change'));
+    note!.value = 'Please review the curatorial aspects.';
+    note!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    submit!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.forwardCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        payload: {
+          targetPermissionId: 'permission-curatorial',
+          note: 'Please review the curatorial aspects.',
+        },
+      },
+    ]);
   });
 });

@@ -78,11 +78,7 @@
                   <td>
                     <a
                       class="proposals-table__title"
-                      [routerLink]="['/p/collections/proposals', proposal.id]"
-                      [queryParams]="{
-                        returnTo: '/p/collections/proposals/my',
-                        returnLabel: 'my assignments',
-                      }"
+                      [routerLink]="['/p/collections/proposals/my', proposal.id]"
                     >
                       {{ proposal.collectionUseProject.title }}
                     </a>
@@ -101,22 +97,74 @@
                   <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
                   <td>
                     <div class="proposals-table__actions">
-                      <a
-                        class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/proposals', proposal.id]"
-                        [queryParams]="{
-                          returnTo: '/p/collections/proposals/my',
-                          returnLabel: 'my assignments',
-                        }"
-                        aria-label="View details for {{
-                          proposal.collectionUseProject.referenceNumber
-                        }}"
+                      <button
+                        type="button"
+                        class="action-btn action-btn--icon"
+                        [class.action-btn--active]="actionsMenuId() === proposal.id"
+                        aria-haspopup="menu"
+                        (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
+                        aria-label="More actions for {{ proposal.collectionUseProject.referenceNumber }}"
                       >
-                        View details
-                      </a>
+                        <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
+                      </button>
                     </div>
                   </td>
                 </tr>
+
+                @if (forwardPanelId() === proposal.id) {
+                  <tr class="forward-panel-row">
+                    <td colspan="6">
+                      <div class="forward-panel">
+                        <p class="forward-panel__label">Forward to</p>
+
+                        <div class="forward-panel__fields">
+                          <label class="sr-only" for="forward-target-{{ proposal.id }}">
+                            Staff member
+                          </label>
+                          <select
+                            [id]="'forward-target-' + proposal.id"
+                            class="forward-panel__select"
+                            [value]="forwardTargetPermissionId()"
+                            (change)="onForwardTargetChange($event)"
+                          >
+                            <option value="" disabled selected>Select a staff member...</option>
+                            @for (opt of staffOptions(); track opt.permissionId) {
+                              <option [value]="opt.permissionId">{{ opt.label }}</option>
+                            }
+                          </select>
+
+                          <label class="sr-only" [for]="'forward-note-' + proposal.id">Note</label>
+                          <textarea
+                            [id]="'forward-note-' + proposal.id"
+                            class="forward-panel__note"
+                            placeholder="Add a note (optional)..."
+                            rows="2"
+                            [value]="forwardNote()"
+                            (input)="onForwardNoteChange($event)"
+                          ></textarea>
+                        </div>
+
+                        @if (forwardError()) {
+                          <app-error-message [apiError]="forwardError()!" />
+                        }
+
+                        <div class="forward-panel__footer">
+                          <button
+                            type="button"
+                            class="action-btn action-btn--primary"
+                            [disabled]="!forwardTargetPermissionId() || forwardPending()"
+                            (click)="forward(proposal.id)"
+                          >
+                            {{ forwardPending() ? 'Forwarding...' : 'Forward' }}
+                          </button>
+                          <button type="button" class="action-btn" (click)="closeForwardPanel()">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
@@ -186,5 +234,12 @@
         }
       }
     </section>
+    <p-menu
+      #rowActionsMenu
+      [model]="rowActionItems()"
+      [popup]="true"
+      [appendTo]="'body'"
+      (onHide)="closeActionsMenu()"
+    />
   }
 </div>

@@ -6,10 +6,13 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
+import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -31,6 +34,19 @@ const TYPE_LABELS: Record<UseType, string> = {
   OTHER: 'Other',
 };
 
+const GROUP_LABELS: Record<GroupName, string> = {
+  EXTERNAL: 'External',
+  COLLECTIONS_MANAGEMENT: 'Collections management',
+  CURATORIAL: 'Curatorial',
+  DIRECTION: 'Direction',
+  ADMINISTRATION: 'Administration',
+};
+
+interface StaffOption {
+  readonly label: string;
+  readonly permissionId: string;
+}
+
 function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
   return {
     content: [],
@@ -47,6 +63,7 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    Menu,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -59,6 +76,7 @@ export class ProposalsMyPageComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -124,6 +142,44 @@ export class ProposalsMyPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  protected readonly staffOptions = computed<StaffOption[]>(() =>
+    (this.usersResource.value()?.content ?? []).flatMap((user) =>
+      user.permissions
+        .filter((permission) => permission.group.name !== 'EXTERNAL')
+        .map((permission) => ({
+          label: `${user.name} — ${GROUP_LABELS[permission.group.name]}`,
+          permissionId: permission.permissionId,
+        })),
+    ),
+  );
+
+  protected readonly actionsMenuId = signal<string | null>(null);
+  protected readonly rowActionItems = computed<MenuItem[]>(() => {
+    const proposalId = this.actionsMenuId();
+
+    if (!proposalId) return [];
+
+    return [
+      {
+        label: 'Forward',
+        icon: 'pi pi-send',
+        command: () => this.openForwardPanel(proposalId),
+      },
+      {
+        label: 'View details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigate(['/p/collections/proposals/my', proposalId]);
+        },
+      },
+    ];
+  });
+
+  protected readonly forwardPanelId = signal<string | null>(null);
+  protected readonly forwardTargetPermissionId = signal('');
+  protected readonly forwardNote = signal('');
+  protected readonly forwardPending = signal(false);
+  protected readonly forwardError = signal<ApiError | null>(null);
 
   protected prevPage(): void {
     this.currentPage.update((page) => Math.max(0, page - 1));
@@ -159,5 +215,57 @@ export class ProposalsMyPageComponent {
     this.searchDraft.set('');
     this.appliedSearch.set('');
     this.currentPage.set(0);
+  }
+
+  protected toggleActionsMenu(proposalId: string): void {
+    this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
+    this.forwardPanelId.set(null);
+  }
+
+  protected closeActionsMenu(): void {
+    this.actionsMenuId.set(null);
+  }
+
+  protected openForwardPanel(proposalId: string): void {
+    this.actionsMenuId.set(null);
+    this.forwardPanelId.set(proposalId);
+    this.forwardTargetPermissionId.set('');
+    this.forwardNote.set('');
+    this.forwardError.set(null);
+  }
+
+  protected closeForwardPanel(): void {
+    this.forwardPanelId.set(null);
+  }
+
+  protected onForwardTargetChange(event: Event): void {
+    this.forwardTargetPermissionId.set((event.target as HTMLSelectElement).value);
+  }
+
+  protected onForwardNoteChange(event: Event): void {
+    this.forwardNote.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected async forward(proposalId: string): Promise<void> {
+    const targetPermissionId = this.forwardTargetPermissionId();
+    if (!targetPermissionId || this.forwardPending()) return;
+
+    this.forwardPending.set(true);
+    this.forwardError.set(null);
+
+    try {
+      await firstValueFrom(
+        this.proposalService.forwardProposal(proposalId, {
+          targetPermissionId,
+          note: this.forwardNote(),
+        }),
+      );
+      this.forwardPanelId.set(null);
+      this.proposalsResource.reload();
+    } catch (err) {
+      this.forwardError.set(toApiError(err));
+    } finally {
+      this.forwardPending.set(false);
+    }
   }
 }
