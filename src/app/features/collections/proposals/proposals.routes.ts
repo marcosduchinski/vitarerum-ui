@@ -38,8 +38,22 @@ export const PROPOSALS_ROUTES: Routes = [
         (m) => m.ProposalsOthersPageComponent,
       ),
   },
-  { path: 'approved', redirectTo: '/p/dashboard' },
-  { path: 'rejected', redirectTo: '/p/dashboard' },
+  {
+    path: 'approved',
+    title: 'Approved Proposals',
+    loadComponent: () =>
+      import('./pages/approved/proposals-approved-page.component').then(
+        (m) => m.ProposalsApprovedPageComponent,
+      ),
+  },
+  {
+    path: 'rejected',
+    title: 'Rejected / Cancelled Proposals',
+    loadComponent: () =>
+      import('./pages/rejected/proposals-rejected-page.component').then(
+        (m) => m.ProposalsRejectedPageComponent,
+      ),
+  },
   {
     path: ':id',
     title: 'Proposal',
