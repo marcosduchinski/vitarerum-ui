@@ -1,6 +1,6 @@
 <div class="proposal-detail">
-  <a class="proposal-detail__back" routerLink="/p/collections/proposals/new">
-    ← Back to new proposals
+  <a class="proposal-detail__back" [routerLink]="backLink()">
+    ← {{ backLabel() }}
   </a>
 
   @if (proposalResource.isLoading()) {

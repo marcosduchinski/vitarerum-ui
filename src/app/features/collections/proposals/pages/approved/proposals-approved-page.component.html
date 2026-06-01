@@ -83,6 +83,10 @@
                     <a
                       class="proposals-table__title"
                       [routerLink]="['/p/collections/proposals', proposal.id]"
+                      [queryParams]="{
+                        returnTo: '/p/collections/proposals/approved',
+                        returnLabel: 'approved proposals',
+                      }"
                     >
                       {{ proposal.collectionUseProject.title }}
                     </a>

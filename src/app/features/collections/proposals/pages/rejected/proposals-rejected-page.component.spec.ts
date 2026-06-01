@@ -111,7 +111,11 @@ describe('ProposalsRejectedPageComponent', () => {
     expect(compiled.textContent).toContain('Rejected');
     expect(compiled.textContent).toContain('Cancelled');
     expect(compiled.textContent).toContain('View details');
-    expect(compiled.querySelector('a[href="/p/collections/proposals/proposal-rejected"]')).not.toBeNull();
-    expect(compiled.querySelector('a[href="/p/collections/proposals/proposal-cancelled"]')).not.toBeNull();
+    expect(
+      compiled.querySelector('a[href^="/p/collections/proposals/proposal-rejected"]'),
+    ).not.toBeNull();
+    expect(
+      compiled.querySelector('a[href^="/p/collections/proposals/proposal-cancelled"]'),
+    ).not.toBeNull();
   });
 });

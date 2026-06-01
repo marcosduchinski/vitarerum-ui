@@ -85,6 +85,10 @@
                     <a
                       class="proposals-table__title"
                       [routerLink]="['/p/collections/proposals', proposal.id]"
+                      [queryParams]="{
+                        returnTo: '/p/collections/proposals/rejected',
+                        returnLabel: 'rejected / cancelled proposals',
+                      }"
                     >
                       {{ proposal.collectionUseProject.title }}
                     </a>
@@ -119,6 +123,10 @@
                       <a
                         class="action-btn action-btn--primary"
                         [routerLink]="['/p/collections/proposals', proposal.id]"
+                        [queryParams]="{
+                          returnTo: '/p/collections/proposals/rejected',
+                          returnLabel: 'rejected / cancelled proposals',
+                        }"
                         aria-label="View details for {{
                           proposal.collectionUseProject.referenceNumber
                         }}"

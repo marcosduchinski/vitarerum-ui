@@ -76,7 +76,14 @@
                 {{ proposal.collectionUseProject.referenceNumber }}
               </td>
               <td>
-                <a class="proposals-table__title" [routerLink]="['../', proposal.id]">
+                <a
+                  class="proposals-table__title"
+                  [routerLink]="['../', proposal.id]"
+                  [queryParams]="{
+                    returnTo: '/p/collections/proposals/new',
+                    returnLabel: 'new proposals',
+                  }"
+                >
                   {{ proposal.collectionUseProject.title }}
                 </a>
               </td>

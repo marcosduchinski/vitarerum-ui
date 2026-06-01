@@ -68,6 +68,17 @@ function formatDateTime(iso: string): string {
   }
 }
 
+function safeReturnTo(value: string | undefined): string {
+  return value?.startsWith('/p/collections/proposals')
+    ? value
+    : '/p/collections/proposals/new';
+}
+
+function safeReturnLabel(value: string | undefined): string {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : 'new proposals';
+}
+
 @Component({
   selector: 'app-proposal-detail-page',
   standalone: true,
@@ -81,6 +92,8 @@ export class ProposalDetailPageComponent {
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
 
   readonly id = input.required<string>();
+  readonly returnTo = input<string>();
+  readonly returnLabel = input<string>();
 
   protected readonly proposalResource = resource({
     params: () => this.id(),
@@ -102,6 +115,8 @@ export class ProposalDetailPageComponent {
   });
 
   protected readonly proposal = computed(() => this.proposalResource.value() ?? null);
+  protected readonly backLink = computed(() => safeReturnTo(this.returnTo()));
+  protected readonly backLabel = computed(() => `Back to ${safeReturnLabel(this.returnLabel())}`);
   protected readonly messages = computed(() => this.conversationResource.value()?.messages ?? []);
   protected readonly events = computed(() => this.eventsResource.value()?.content ?? []);
   protected readonly watchers = computed(() => this.proposal()?.watchers ?? []);

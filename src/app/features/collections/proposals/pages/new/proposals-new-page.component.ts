@@ -131,7 +131,12 @@ export class ProposalsNewPageComponent {
         label: 'View details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigateByUrl(`/p/collections/proposals/${proposalId}`);
+          void this.router.navigate(['/p/collections/proposals', proposalId], {
+            queryParams: {
+              returnTo: '/p/collections/proposals/new',
+              returnLabel: 'new proposals',
+            },
+          });
         },
       },
     ];

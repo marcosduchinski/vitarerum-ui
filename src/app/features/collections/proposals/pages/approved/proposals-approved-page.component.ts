@@ -104,7 +104,12 @@ export class ProposalsApprovedPageComponent {
         label: 'View details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigateByUrl(`/p/collections/proposals/${context.proposalId}`);
+          void this.router.navigate(['/p/collections/proposals', context.proposalId], {
+            queryParams: {
+              returnTo: '/p/collections/proposals/approved',
+              returnLabel: 'approved proposals',
+            },
+          });
         },
       },
       {

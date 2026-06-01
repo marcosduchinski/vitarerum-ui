@@ -81,6 +81,10 @@
                     <a
                       class="proposals-table__title"
                       [routerLink]="['/p/collections/proposals', proposal.id]"
+                      [queryParams]="{
+                        returnTo: '/p/collections/proposals/others',
+                        returnLabel: 'other assignments',
+                      }"
                     >
                       {{ proposal.collectionUseProject.title }}
                     </a>
@@ -110,6 +114,10 @@
                       <a
                         class="action-btn action-btn--primary"
                         [routerLink]="['/p/collections/proposals', proposal.id]"
+                        [queryParams]="{
+                          returnTo: '/p/collections/proposals/others',
+                          returnLabel: 'other assignments',
+                        }"
                         aria-label="View details for {{
                           proposal.collectionUseProject.referenceNumber
                         }}"

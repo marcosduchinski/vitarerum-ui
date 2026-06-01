@@ -188,6 +188,8 @@ describe('ProposalsOthersPageComponent', () => {
     expect(compiled.textContent).toContain('Requested by');
     expect(compiled.textContent).toContain('Assigned to');
     expect(compiled.textContent).toContain('View details');
-    expect(compiled.querySelector('a[href="/p/collections/proposals/proposal-other"]')).not.toBeNull();
+    expect(
+      compiled.querySelector('a[href^="/p/collections/proposals/proposal-other"]'),
+    ).not.toBeNull();
   });
 });
