@@ -10,6 +10,10 @@
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />
   } @else {
+    @if (assumeError()) {
+      <app-error-message [apiError]="assumeError()!" />
+    }
+
     <section class="proposals-list-panel" aria-label="Other assignments list">
       <div class="proposals-toolbar">
         <label class="proposals-search" for="proposals-search">
@@ -111,19 +115,17 @@
                   <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
                   <td>
                     <div class="proposals-table__actions">
-                      <a
-                        class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/proposals', proposal.id]"
-                        [queryParams]="{
-                          returnTo: '/p/collections/proposals/others',
-                          returnLabel: 'other assignments',
-                        }"
-                        aria-label="View details for {{
-                          proposal.collectionUseProject.referenceNumber
-                        }}"
+                      <button
+                        type="button"
+                        class="action-btn action-btn--icon"
+                        [class.action-btn--active]="actionsMenuId() === proposal.id"
+                        [disabled]="assumingId() === proposal.id"
+                        aria-haspopup="menu"
+                        (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
+                        aria-label="More actions for {{ proposal.collectionUseProject.referenceNumber }}"
                       >
-                        View details
-                      </a>
+                        <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -196,5 +198,12 @@
         }
       }
     </section>
+    <p-menu
+      #rowActionsMenu
+      [model]="rowActionItems()"
+      [popup]="true"
+      [appendTo]="'body'"
+      (onHide)="closeActionsMenu()"
+    />
   }
 </div>

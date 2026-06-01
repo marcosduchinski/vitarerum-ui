@@ -6,7 +6,9 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
+import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -37,6 +39,7 @@ const TYPE_LABELS: Record<UseType, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    Menu,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -49,6 +52,7 @@ export class ProposalsOthersPageComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -116,6 +120,36 @@ export class ProposalsOthersPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  protected readonly assumingId = signal<string | null>(null);
+  protected readonly assumeError = signal<ApiError | null>(null);
+  protected readonly actionsMenuId = signal<string | null>(null);
+  protected readonly rowActionItems = computed<MenuItem[]>(() => {
+    const proposalId = this.actionsMenuId();
+
+    if (!proposalId) return [];
+
+    return [
+      {
+        label: 'Assume',
+        icon: 'pi pi-user-plus',
+        command: () => {
+          void this.assume(proposalId);
+        },
+      },
+      {
+        label: 'View details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigate(['/p/collections/proposals', proposalId], {
+            queryParams: {
+              returnTo: '/p/collections/proposals/others',
+              returnLabel: 'other assignments',
+            },
+          });
+        },
+      },
+    ];
+  });
 
   private readonly allOtherAssignments = computed(() => this.proposalsResource.value() ?? []);
 
@@ -153,5 +187,30 @@ export class ProposalsOthersPageComponent {
     this.searchDraft.set('');
     this.appliedSearch.set('');
     this.currentPage.set(0);
+  }
+
+  protected toggleActionsMenu(proposalId: string): void {
+    this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
+  }
+
+  protected closeActionsMenu(): void {
+    this.actionsMenuId.set(null);
+  }
+
+  protected async assume(proposalId: string): Promise<void> {
+    if (this.assumingId()) return;
+
+    this.actionsMenuId.set(null);
+    this.assumingId.set(proposalId);
+    this.assumeError.set(null);
+
+    try {
+      await firstValueFrom(this.proposalService.assignProposal(proposalId, { note: '' }));
+      this.proposalsResource.reload();
+    } catch (err) {
+      this.assumeError.set(toApiError(err));
+    } finally {
+      this.assumingId.set(null);
+    }
   }
 }

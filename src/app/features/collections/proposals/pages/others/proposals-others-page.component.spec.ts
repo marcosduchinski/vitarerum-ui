@@ -118,6 +118,10 @@ class IdentityServiceStub implements IdentityService {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  readonly assignCalls: Array<{
+    readonly proposalId: string;
+    readonly payload: { readonly note: string };
+  }> = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
@@ -130,6 +134,11 @@ class ProposalApiServiceStub {
       totalElements: 3,
       totalPages: 1,
     });
+  }
+
+  assignProposal(proposalId: string, payload: { readonly note: string }) {
+    this.assignCalls.push({ proposalId, payload });
+    return of(OTHER_PROPOSAL);
   }
 }
 
@@ -175,7 +184,7 @@ describe('ProposalsOthersPageComponent', () => {
     expect(compiled.textContent).not.toContain('Unassigned request');
   });
 
-  it('keeps the search controls and detail action in the replicated list', async () => {
+  it('keeps the search controls and row action trigger in the replicated list', async () => {
     const fixture = TestBed.createComponent(ProposalsOthersPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -187,9 +196,52 @@ describe('ProposalsOthersPageComponent', () => {
     expect(compiled.textContent).toContain('Reference');
     expect(compiled.textContent).toContain('Requested by');
     expect(compiled.textContent).toContain('Assigned to');
-    expect(compiled.textContent).toContain('View details');
     expect(
       compiled.querySelector('a[href^="/p/collections/proposals/proposal-other"]'),
     ).not.toBeNull();
+    expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
+  });
+
+  it('shows assume and view details in the row menu', async () => {
+    const fixture = TestBed.createComponent(ProposalsOthersPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const actionButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="More actions for VR-2026-001"]',
+    );
+
+    expect(actionButton).not.toBeNull();
+
+    actionButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('Assume');
+    expect(document.body.textContent).toContain('View details');
+  });
+
+  it('assumes another staff assignment from the row action menu', async () => {
+    const fixture = TestBed.createComponent(ProposalsOthersPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      assume(proposalId: string): Promise<void>;
+    };
+
+    await component.assume('proposal-other');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.assignCalls).toEqual([
+      {
+        proposalId: 'proposal-other',
+        payload: { note: '' },
+      },
+    ]);
   });
 });
