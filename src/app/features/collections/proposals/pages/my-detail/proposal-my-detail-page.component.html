@@ -1,7 +1,210 @@
-<div class="proposal-my-detail">
-  <a class="proposal-my-detail__back" routerLink="/p/collections/proposals/my">
+<div class="proposal-detail">
+  <a class="proposal-detail__back" routerLink="/p/collections/proposals/my">
     Back to my assignments
   </a>
 
-  <app-page-header eyebrow="Proposals" title="My assignment" />
+  @if (proposalResource.isLoading()) {
+    <app-loading-state />
+  } @else if (proposalError()) {
+    <app-error-message [apiError]="proposalError()!" (retry)="proposalResource.reload()" />
+  } @else if (proposal()) {
+    <header class="proposal-detail__header">
+      <div class="proposal-detail__header-meta">
+        <p class="proposal-detail__ref">{{ proposal()!.collectionUseProject.referenceNumber }}</p>
+        <h1 class="proposal-detail__title">{{ proposal()!.collectionUseProject.title }}</h1>
+        <div class="proposal-detail__status-row">
+          <app-status-chip kind="proposal" [status]="asWorkflowStatus(proposal()!.status)" />
+          <span class="proposal-detail__type-badge">
+            {{ typeLabels[proposal()!.type] }}
+          </span>
+        </div>
+      </div>
+
+      <aside class="proposal-actions" aria-label="Assignment decision">
+        <div class="proposal-actions__copy">
+          <span class="proposal-actions__eyebrow">Decision desk</span>
+          @if (proposal()!.assignedTo) {
+            <strong>{{ proposal()!.assignedTo!.user.name }}</strong>
+            <span>{{ proposal()!.assignedTo!.user.email }}</span>
+          } @else {
+            <strong>{{ proposal()!.status.replace('_', ' ') }}</strong>
+            <span>No reviewer is currently assigned.</span>
+          }
+        </div>
+        <div class="proposal-actions__buttons">
+          <button
+            type="button"
+            class="action-btn action-btn--primary"
+            [disabled]="accepting() || rejecting()"
+            (click)="accept()"
+          >
+            <span class="pi pi-check-circle" aria-hidden="true"></span>
+            {{ accepting() ? 'Accepting...' : 'Accept' }}
+          </button>
+          <button
+            type="button"
+            class="action-btn"
+            [class.action-btn--active]="rejectPanelOpen()"
+            [disabled]="accepting() || rejecting()"
+            (click)="rejectPanelOpen() ? closeRejectPanel() : openRejectPanel()"
+          >
+            <span class="pi pi-times-circle" aria-hidden="true"></span>
+            Reject
+          </button>
+        </div>
+      </aside>
+    </header>
+
+    @if (actionError()) {
+      <app-error-message [apiError]="actionError()!" />
+    }
+
+    @if (rejectPanelOpen()) {
+      <section class="decision-panel" aria-label="Reject proposal">
+        <div>
+          <p class="decision-panel__eyebrow">Rejection reason</p>
+          <h2>Record why this proposal is being rejected</h2>
+        </div>
+
+        <div class="decision-panel__fields">
+          <label for="rejection-reason">Reason</label>
+          <textarea
+            id="rejection-reason"
+            rows="3"
+            placeholder="Explain the rejection reason..."
+            [value]="rejectionReason()"
+            (input)="onRejectionReasonInput($event)"
+          ></textarea>
+        </div>
+
+        <div class="decision-panel__footer">
+          <button
+            type="button"
+            class="action-btn action-btn--primary"
+            [disabled]="!rejectionReason().trim() || rejecting()"
+            (click)="reject()"
+          >
+            {{ rejecting() ? 'Rejecting...' : 'Reject proposal' }}
+          </button>
+          <button type="button" class="action-btn" [disabled]="rejecting()" (click)="closeRejectPanel()">
+            Cancel
+          </button>
+        </div>
+      </section>
+    }
+
+    <div class="proposal-detail__grid">
+      <section class="detail-card" aria-labelledby="overview-heading">
+        <h2 id="overview-heading" class="detail-card__title">Overview</h2>
+        <dl class="detail-dl">
+          <div class="detail-dl__row">
+            <dt>Requested by</dt>
+            <dd>
+              {{ proposal()!.requestedBy.user.name }}
+              <span class="detail-dl__email">{{ proposal()!.requestedBy.user.email }}</span>
+            </dd>
+          </div>
+          @if (proposal()!.assignedTo) {
+            <div class="detail-dl__row">
+              <dt>Assigned to</dt>
+              <dd>
+                {{ proposal()!.assignedTo!.user.name }}
+                <span class="detail-dl__email">{{ proposal()!.assignedTo!.user.email }}</span>
+              </dd>
+            </div>
+          } @else {
+            <div class="detail-dl__row">
+              <dt>Assigned to</dt>
+              <dd class="detail-dl__empty">Unassigned</dd>
+            </div>
+          }
+          <div class="detail-dl__row">
+            <dt>Submitted</dt>
+            <dd>{{ formatDateTime(proposal()!.submittedAt) }}</dd>
+          </div>
+          <div class="detail-dl__row">
+            <dt>Project status</dt>
+            <dd>
+              <app-status-chip
+                kind="project"
+                [status]="asWorkflowStatus(proposal()!.collectionUseProject.status)"
+              />
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-card" aria-labelledby="conversation-heading">
+        <h2 id="conversation-heading" class="detail-card__title">Conversation</h2>
+
+        @if (conversationResource.isLoading()) {
+          <app-loading-state label="Loading messages..." />
+        } @else if (!messages().length) {
+          <p class="detail-card__empty">No messages yet.</p>
+        } @else {
+          <ol class="message-list" aria-label="Conversation messages">
+            @for (msg of messages(); track msg.id) {
+              <li class="message">
+                <div class="message__header">
+                  <span class="message__sender">{{ msg.sender }}</span>
+                  <span class="message__date">{{ formatDateTime(msg.sentAt) }}</span>
+                </div>
+                <p class="message__subject">{{ msg.subject }}</p>
+                <p class="message__body">{{ msg.body }}</p>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+
+      <section class="detail-card watchers-card" aria-labelledby="watchers-heading">
+        <h2 id="watchers-heading" class="detail-card__title">Watchers</h2>
+
+        @if (!watchers().length) {
+          <p class="detail-card__empty">No watchers.</p>
+        } @else {
+          <ul class="watcher-list" aria-label="Proposal watchers">
+            @for (watcher of watchers(); track watcher.permissionId) {
+              <li class="watcher">
+                <div class="watcher__identity">
+                  <span class="watcher__name">{{ watcher.user.name }}</span>
+                  <span class="watcher__meta">
+                    {{ watcher.user.email }} - {{ groupLabels[watcher.group] }}
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="detail-card" aria-labelledby="events-heading">
+        <h2 id="events-heading" class="detail-card__title">Event log</h2>
+
+        @if (eventsResource.isLoading()) {
+          <app-loading-state label="Loading events..." />
+        } @else if (!events().length) {
+          <p class="detail-card__empty">No events recorded.</p>
+        } @else {
+          <ol class="event-list" aria-label="Proposal events">
+            @for (event of events(); track event.occurredAt) {
+              <li class="event">
+                <div class="event__dot" aria-hidden="true"></div>
+                <div class="event__content">
+                  <div class="event__header">
+                    <span class="event__type">{{ event.type.replace('_', ' ') }}</span>
+                    <span class="event__date">{{ formatDateTime(event.occurredAt) }}</span>
+                  </div>
+                  <p class="event__actor">{{ event.triggeredBy.user.name }}</p>
+                  @if (event.note) {
+                    <p class="event__note">"{{ event.note }}"</p>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    </div>
+  }
 </div>

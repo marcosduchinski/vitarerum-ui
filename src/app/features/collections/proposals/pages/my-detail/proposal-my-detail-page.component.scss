@@ -1,17 +1,53 @@
-.proposal-my-detail {
+@use '../detail/proposal-detail-page.component.scss';
+
+.decision-panel {
   display: grid;
   gap: 1rem;
-  align-content: start;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
 }
 
-.proposal-my-detail__back {
-  width: fit-content;
-  color: var(--color-accent-strong);
+.decision-panel__eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.decision-panel h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.decision-panel__fields {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.decision-panel__fields label {
+  color: var(--color-text);
   font-size: 0.875rem;
   font-weight: 700;
-  text-decoration: none;
+}
 
-  &:hover {
-    text-decoration: underline;
-  }
+.decision-panel__fields textarea {
+  width: 100%;
+  min-height: 6rem;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.decision-panel__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
