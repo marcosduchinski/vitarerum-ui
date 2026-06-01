@@ -111,60 +111,6 @@
                   </td>
                 </tr>
 
-                @if (forwardPanelId() === proposal.id) {
-                  <tr class="forward-panel-row">
-                    <td colspan="6">
-                      <div class="forward-panel">
-                        <p class="forward-panel__label">Forward to</p>
-
-                        <div class="forward-panel__fields">
-                          <label class="sr-only" for="forward-target-{{ proposal.id }}">
-                            Staff member
-                          </label>
-                          <select
-                            [id]="'forward-target-' + proposal.id"
-                            class="forward-panel__select"
-                            [value]="forwardTargetPermissionId()"
-                            (change)="onForwardTargetChange($event)"
-                          >
-                            <option value="" disabled selected>Select a staff member...</option>
-                            @for (opt of staffOptions(); track opt.permissionId) {
-                              <option [value]="opt.permissionId">{{ opt.label }}</option>
-                            }
-                          </select>
-
-                          <label class="sr-only" [for]="'forward-note-' + proposal.id">Note</label>
-                          <textarea
-                            [id]="'forward-note-' + proposal.id"
-                            class="forward-panel__note"
-                            placeholder="Add a note (optional)..."
-                            rows="2"
-                            [value]="forwardNote()"
-                            (input)="onForwardNoteChange($event)"
-                          ></textarea>
-                        </div>
-
-                        @if (forwardError()) {
-                          <app-error-message [apiError]="forwardError()!" />
-                        }
-
-                        <div class="forward-panel__footer">
-                          <button
-                            type="button"
-                            class="action-btn action-btn--primary"
-                            [disabled]="!forwardTargetPermissionId() || forwardPending()"
-                            (click)="forward(proposal.id)"
-                          >
-                            {{ forwardPending() ? 'Forwarding...' : 'Forward' }}
-                          </button>
-                          <button type="button" class="action-btn" (click)="closeForwardPanel()">
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                }
               }
             </tbody>
           </table>
@@ -241,5 +187,22 @@
       [appendTo]="'body'"
       (onHide)="closeActionsMenu()"
     />
+    @if (forwardModalProposal(); as proposal) {
+      <app-proposal-forward-modal
+        [open]="true"
+        [proposalReference]="proposal.collectionUseProject.referenceNumber"
+        [proposalTitle]="proposal.collectionUseProject.title"
+        [staffOptions]="staffOptions()"
+        [targetPermissionId]="forwardTargetPermissionId()"
+        [note]="forwardNote()"
+        [pending]="forwardPending()"
+        [loadingStaff]="usersResource.isLoading()"
+        [error]="forwardError()"
+        (close)="closeForwardModal()"
+        (targetPermissionIdChange)="forwardTargetPermissionId.set($event)"
+        (noteChange)="forwardNote.set($event)"
+        (submitForward)="forward(proposal.id)"
+      />
+    }
   }
 </div>

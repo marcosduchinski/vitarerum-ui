@@ -203,37 +203,44 @@ describe('ProposalsMyPageComponent', () => {
     expect(document.body.textContent).toContain('View details');
   });
 
-  it('forwards an assignment from the row action panel', async () => {
+  it('forwards an assignment from the modal screen', async () => {
     const fixture = TestBed.createComponent(ProposalsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
     const component = fixture.componentInstance as unknown as {
-      openForwardPanel(proposalId: string): void;
+      openForwardModal(proposalId: string): void;
     };
     const compiled = fixture.nativeElement as HTMLElement;
 
-    component.openForwardPanel('proposal-1');
+    component.openForwardModal('proposal-1');
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const select = compiled.querySelector<HTMLSelectElement>('#forward-target-proposal-1');
-    const note = compiled.querySelector<HTMLTextAreaElement>('#forward-note-proposal-1');
+    const dialog = compiled.querySelector<HTMLElement>('[role="dialog"]');
+    const select = compiled.querySelector<HTMLSelectElement>('#forward-modal-target');
+    const note = compiled.querySelector<HTMLTextAreaElement>('#forward-modal-note');
     const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
       (button) => button.textContent?.trim() === 'Forward',
     );
 
+    expect(compiled.querySelector('.forward-panel-row')).toBeNull();
+    expect(dialog).not.toBeNull();
+    expect(dialog!.textContent).toContain('VR-2026-001');
     expect(select).not.toBeNull();
     expect(note).not.toBeNull();
     expect(submit).not.toBeNull();
+    expect(submit!.disabled).toBe(true);
 
     select!.value = 'permission-curatorial';
     select!.dispatchEvent(new Event('change'));
     note!.value = 'Please review the curatorial aspects.';
     note!.dispatchEvent(new Event('input'));
     fixture.detectChanges();
+
+    expect(submit!.disabled).toBe(false);
 
     submit!.click();
     fixture.detectChanges();

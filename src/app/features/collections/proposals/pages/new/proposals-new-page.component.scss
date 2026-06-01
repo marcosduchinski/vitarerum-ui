@@ -251,55 +251,6 @@
   }
 }
 
-.forward-panel-row td {
-  padding: 0;
-  background: var(--color-panel-muted);
-}
-
-.forward-panel {
-  padding: 0.9rem 1rem;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.forward-panel__label {
-  margin: 0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-subtle);
-}
-
-.forward-panel__fields {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.forward-panel__select,
-.forward-panel__note {
-  width: 100%;
-  max-width: 32rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-panel);
-  color: var(--color-text);
-  font-size: 0.875rem;
-  resize: vertical;
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-  }
-}
-
-.forward-panel__footer {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .proposals-pagination {
   display: flex;
   align-items: center;

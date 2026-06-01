@@ -1,0 +1,84 @@
+@if (open()) {
+  <div class="forward-modal" role="presentation" (keydown.escape)="requestClose()">
+    <button
+      type="button"
+      class="forward-modal__backdrop"
+      [disabled]="pending()"
+      (click)="requestClose()"
+      aria-label="Close forward dialog"
+    ></button>
+
+    <section
+      class="forward-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="forward-modal-title"
+      aria-describedby="forward-modal-description"
+      tabindex="-1"
+    >
+      <header class="forward-modal__header">
+        <div>
+          <p class="forward-modal__eyebrow">Forward proposal</p>
+          <h2 id="forward-modal-title">Forward to another staff member</h2>
+          <p id="forward-modal-description">
+            {{ proposalReference() }} - {{ proposalTitle() }}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="forward-modal__close"
+          [disabled]="pending()"
+          (click)="requestClose()"
+          aria-label="Close forward dialog"
+        >
+          <span class="pi pi-times" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      @if (loadingStaff()) {
+        <app-loading-state label="Loading staff..." />
+      } @else {
+        <div class="forward-modal__fields">
+          <label for="forward-modal-target">Staff member</label>
+          <select
+            id="forward-modal-target"
+            [value]="targetPermissionId()"
+            (change)="onTargetChange($event)"
+          >
+            <option value="" disabled selected>Select a staff member...</option>
+            @for (opt of staffOptions(); track opt.permissionId) {
+              <option [value]="opt.permissionId">{{ opt.label }}</option>
+            }
+          </select>
+
+          <label for="forward-modal-note">Note</label>
+          <textarea
+            id="forward-modal-note"
+            rows="4"
+            placeholder="Add a note (optional)..."
+            [value]="note()"
+            (input)="onNoteChange($event)"
+          ></textarea>
+        </div>
+
+        @if (error()) {
+          <app-error-message [apiError]="error()!" />
+        }
+
+        <footer class="forward-modal__footer">
+          <button
+            type="button"
+            class="action-btn action-btn--primary"
+            [disabled]="!targetPermissionId() || pending()"
+            (click)="submit()"
+          >
+            {{ pending() ? 'Forwarding...' : 'Forward' }}
+          </button>
+          <button type="button" class="action-btn" [disabled]="pending()" (click)="requestClose()">
+            Cancel
+          </button>
+        </footer>
+      }
+    </section>
+  </div>
+}

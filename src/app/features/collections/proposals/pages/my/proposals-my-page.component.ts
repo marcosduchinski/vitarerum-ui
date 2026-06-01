@@ -22,6 +22,10 @@ import { PageHeaderComponent } from '@shared/components/page-header/page-header.
 import { Page } from '@shared/models/page.model';
 import { UseType } from '@shared/models/collection-use-status.model';
 
+import {
+  ProposalForwardModalComponent,
+  ProposalForwardStaffOption,
+} from '../../components/proposal-forward-modal/proposal-forward-modal.component';
 import { ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
@@ -41,11 +45,6 @@ const GROUP_LABELS: Record<GroupName, string> = {
   DIRECTION: 'Direction',
   ADMINISTRATION: 'Administration',
 };
-
-interface StaffOption {
-  readonly label: string;
-  readonly permissionId: string;
-}
 
 function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
   return {
@@ -68,6 +67,7 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
     LoadingStateComponent,
     ErrorMessageComponent,
     EmptyStateComponent,
+    ProposalForwardModalComponent,
   ],
   templateUrl: './proposals-my-page.component.html',
   styleUrl: './proposals-my-page.component.scss',
@@ -142,7 +142,7 @@ export class ProposalsMyPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  protected readonly staffOptions = computed<StaffOption[]>(() =>
+  protected readonly staffOptions = computed<ProposalForwardStaffOption[]>(() =>
     (this.usersResource.value()?.content ?? []).flatMap((user) =>
       user.permissions
         .filter((permission) => permission.group.name !== 'EXTERNAL')
@@ -163,7 +163,7 @@ export class ProposalsMyPageComponent {
       {
         label: 'Forward',
         icon: 'pi pi-send',
-        command: () => this.openForwardPanel(proposalId),
+        command: () => this.openForwardModal(proposalId),
       },
       {
         label: 'View details',
@@ -175,7 +175,11 @@ export class ProposalsMyPageComponent {
     ];
   });
 
-  protected readonly forwardPanelId = signal<string | null>(null);
+  protected readonly forwardModalProposalId = signal<string | null>(null);
+  protected readonly forwardModalProposal = computed(() => {
+    const proposalId = this.forwardModalProposalId();
+    return this.proposals().find((proposal) => proposal.id === proposalId) ?? null;
+  });
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardNote = signal('');
   protected readonly forwardPending = signal(false);
@@ -219,23 +223,23 @@ export class ProposalsMyPageComponent {
 
   protected toggleActionsMenu(proposalId: string): void {
     this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
-    this.forwardPanelId.set(null);
+    this.forwardModalProposalId.set(null);
   }
 
   protected closeActionsMenu(): void {
     this.actionsMenuId.set(null);
   }
 
-  protected openForwardPanel(proposalId: string): void {
+  protected openForwardModal(proposalId: string): void {
     this.actionsMenuId.set(null);
-    this.forwardPanelId.set(proposalId);
+    this.forwardModalProposalId.set(proposalId);
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
     this.forwardError.set(null);
   }
 
-  protected closeForwardPanel(): void {
-    this.forwardPanelId.set(null);
+  protected closeForwardModal(): void {
+    this.forwardModalProposalId.set(null);
   }
 
   protected onForwardTargetChange(event: Event): void {
@@ -260,7 +264,7 @@ export class ProposalsMyPageComponent {
           note: this.forwardNote(),
         }),
       );
-      this.forwardPanelId.set(null);
+      this.forwardModalProposalId.set(null);
       this.proposalsResource.reload();
     } catch (err) {
       this.forwardError.set(toApiError(err));

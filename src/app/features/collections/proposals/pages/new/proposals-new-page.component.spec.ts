@@ -51,6 +51,10 @@ const STAFF_USERS: Page<UserDetail> = {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  readonly forwardCalls: Array<{
+    readonly proposalId: string;
+    readonly payload: { readonly targetPermissionId: string; readonly note: string };
+  }> = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
@@ -70,7 +74,11 @@ class ProposalApiServiceStub {
     return of({ id: PROPOSAL.id, status: 'SUBMITTED', assignedTo: null, lastEvent: null });
   }
 
-  forwardProposal() {
+  forwardProposal(
+    proposalId: string,
+    payload: { readonly targetPermissionId: string; readonly note: string },
+  ) {
+    this.forwardCalls.push({ proposalId, payload });
     return of({ id: PROPOSAL.id, status: 'SUBMITTED', assignedTo: null, lastEvent: null });
   }
 }
@@ -195,6 +203,60 @@ describe('ProposalsNewPageComponent', () => {
 
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('No proposals found');
+  });
+
+  it('forwards a new proposal from the modal screen', async () => {
+    const fixture = TestBed.createComponent(ProposalsNewPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      openForwardModal(proposalId: string): void;
+    };
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    component.openForwardModal('proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const dialog = compiled.querySelector<HTMLElement>('[role="dialog"]');
+    const select = compiled.querySelector<HTMLSelectElement>('#forward-modal-target');
+    const note = compiled.querySelector<HTMLTextAreaElement>('#forward-modal-note');
+    const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Forward',
+    );
+
+    expect(compiled.querySelector('.forward-panel-row')).toBeNull();
+    expect(dialog).not.toBeNull();
+    expect(dialog!.textContent).toContain('VR-2026-001');
+    expect(select).not.toBeNull();
+    expect(note).not.toBeNull();
+    expect(submit).not.toBeNull();
+    expect(submit!.disabled).toBe(true);
+
+    select!.value = 'permission-staff';
+    select!.dispatchEvent(new Event('change'));
+    note!.value = 'Please review this incoming request.';
+    note!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(submit!.disabled).toBe(false);
+
+    submit!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.forwardCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        payload: {
+          targetPermissionId: 'permission-staff',
+          note: 'Please review this incoming request.',
+        },
+      },
+    ]);
   });
 });
 
