@@ -59,6 +59,20 @@ test('DIRECTION user sees proposal terminal queues without administration links'
   await expect(sidebar(page).getByRole('link', { name: 'Groups' })).not.toBeVisible();
 });
 
+test('ADMINISTRATION user can reach users and groups from the sidebar', async ({ page }) => {
+  await loginAs(page, 'eve@admin.example.com');
+
+  await expect(sidebar(page).getByText('Administration')).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Users' })).toBeVisible();
+  await expect(sidebar(page).getByRole('link', { name: 'Groups' })).toBeVisible();
+
+  await sidebar(page).getByRole('link', { name: 'Users' }).click();
+  await expect(page).toHaveURL(/\/p\/admin\/users$/);
+
+  await sidebar(page).getByRole('link', { name: 'Groups' }).click();
+  await expect(page).toHaveURL(/\/p\/admin\/groups$/);
+});
+
 test('Dashboard link carries aria-current=page', async ({ page }) => {
   await loginAs(page, 'alice@ext.example.com');
   await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
