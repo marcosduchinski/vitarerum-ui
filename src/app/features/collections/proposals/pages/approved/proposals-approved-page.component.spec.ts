@@ -77,7 +77,7 @@ describe('ProposalsApprovedPageComponent', () => {
     });
   });
 
-  it('renders the terminal proposal table, status, and detail action', async () => {
+  it('renders the terminal proposal table, status, and row action trigger', async () => {
     const fixture = TestBed.createComponent(ProposalsApprovedPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -90,7 +90,6 @@ describe('ProposalsApprovedPageComponent', () => {
     expect(compiled.textContent).toContain('Assigned to');
     expect(compiled.textContent).toContain('Approved');
     expect(compiled.textContent).toContain('Approved research request');
-    expect(compiled.textContent).toContain('View details');
-    expect(compiled.querySelector('a[href="/p/collections/proposals/proposal-approved"]')).not.toBeNull();
+    expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });
 });
