@@ -290,7 +290,7 @@ describe('ProjectsPendingPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(`/p/collections/projects/${PROJECT.id}`);
   });
 
-  it('cancels a pending project from the popup menu and reloads the list', async () => {
+  it('confirms cancelling a pending project from the popup menu and reloads the list', async () => {
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -304,7 +304,18 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+
+    expect(projectService.cancelled).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cancel project?');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'This will cancel VR-2026-041 before work starts and move it to completed / closed projects.',
+    );
+
+    buttonByText(fixture.nativeElement, 'Cancel project').click();
+    fixture.detectChanges();
     await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
 
     expect(projectService.cancelled).toEqual([
       { projectId: PROJECT.id, reason: 'Cancelled from pending projects.' },

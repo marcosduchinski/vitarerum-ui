@@ -14,6 +14,16 @@
       <app-error-message [apiError]="assumeError()!" />
     }
 
+    @if (forwardSuccessMessage(); as message) {
+      <app-feedback-message
+        title="Proposal forwarded"
+        [message]="message"
+        tone="success"
+        [dismissible]="true"
+        (dismissed)="dismissForwardSuccess()"
+      />
+    }
+
     <section class="proposals-list-panel" aria-label="New proposals list">
       <div class="proposals-toolbar">
         <label class="proposals-search" for="proposals-search">
@@ -103,7 +113,7 @@
                     type="button"
                     class="action-btn action-btn--primary"
                     [disabled]="assumingId() === proposal.id"
-                    (click)="assume(proposal.id)"
+                    (click)="requestAssumeConfirmation(proposal.id)"
                     aria-label="Assume {{ proposal.collectionUseProject.referenceNumber }}"
                   >
                     {{ assumingId() === proposal.id ? 'Assuming…' : 'Assume' }}
@@ -208,7 +218,41 @@
         (close)="closeForwardModal()"
         (targetPermissionIdChange)="forwardTargetPermissionId.set($event)"
         (noteChange)="forwardNote.set($event)"
-        (submitForward)="forward(proposal.id)"
+        (submitForward)="requestForwardConfirmation(proposal.id)"
+      />
+      <app-confirm-modal
+        [open]="forwardConfirmProposalId() === proposal.id"
+        title="Forward proposal?"
+        [message]="
+          'This will move ' +
+          proposal.collectionUseProject.referenceNumber +
+          ' to ' +
+          forwardTargetLabel() +
+          '.'
+        "
+        confirmLabel="Forward proposal"
+        cancelLabel="Keep editing"
+        tone="warning"
+        [pending]="forwardPending()"
+        (confirmed)="forward(proposal.id)"
+        (cancelled)="cancelForwardConfirmation()"
+      />
+    }
+    @for (proposal of proposals(); track proposal.id) {
+      <app-confirm-modal
+        [open]="assumeConfirmProposalId() === proposal.id"
+        title="Assume proposal?"
+        [message]="
+          'This will assign ' +
+          proposal.collectionUseProject.referenceNumber +
+          ' to you for review.'
+        "
+        confirmLabel="Assume proposal"
+        cancelLabel="Keep unassigned"
+        tone="warning"
+        [pending]="assumingId() === proposal.id"
+        (confirmed)="assume(proposal.id)"
+        (cancelled)="cancelAssumeConfirmation()"
       />
     }
   }

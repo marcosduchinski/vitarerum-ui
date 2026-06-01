@@ -12,6 +12,7 @@ import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
@@ -41,6 +42,7 @@ const TYPE_LABELS: Record<UseType, string> = {
     LoadingStateComponent,
     ErrorMessageComponent,
     EmptyStateComponent,
+    ConfirmModalComponent,
   ],
   templateUrl: './projects-pending-page.component.html',
   styleUrl: './projects-pending-page.component.scss',
@@ -88,6 +90,7 @@ export class ProjectsPendingPageComponent {
   protected readonly actionProjectId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly actionsMenuId = signal<string | null>(null);
+  protected readonly cancelConfirmProjectId = signal<string | null>(null);
   protected readonly cardActionItems = computed<MenuItem[]>(() => {
     const projectId = this.actionsMenuId();
 
@@ -104,9 +107,7 @@ export class ProjectsPendingPageComponent {
       {
         label: 'Cancel',
         icon: 'pi pi-times',
-        command: () => {
-          void this.cancel(projectId);
-        },
+        command: () => this.requestCancelConfirmation(projectId),
       },
     ];
   });
@@ -165,10 +166,21 @@ export class ProjectsPendingPageComponent {
 
   protected toggleActionsMenu(projectId: string): void {
     this.actionsMenuId.update((current) => (current === projectId ? null : projectId));
+    this.cancelConfirmProjectId.set(null);
   }
 
   protected closeActionsMenu(): void {
     this.actionsMenuId.set(null);
+  }
+
+  protected requestCancelConfirmation(projectId: string): void {
+    if (this.actionProjectId()) return;
+    this.actionsMenuId.set(null);
+    this.cancelConfirmProjectId.set(projectId);
+  }
+
+  protected cancelCancelConfirmation(): void {
+    this.cancelConfirmProjectId.set(null);
   }
 
   protected async start(projectId: string): Promise<void> {
@@ -195,9 +207,11 @@ export class ProjectsPendingPageComponent {
 
     try {
       await firstValueFrom(this.projectService.cancelProject(projectId, { reason: CANCEL_REASON }));
+      this.cancelConfirmProjectId.set(null);
       this.projectsResource.reload();
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.cancelConfirmProjectId.set(null);
     } finally {
       this.actionProjectId.set(null);
     }

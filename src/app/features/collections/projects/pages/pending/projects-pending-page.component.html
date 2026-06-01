@@ -137,6 +137,24 @@
         (onHide)="closeActionsMenu()"
       />
 
+      @for (project of projects(); track project.id) {
+        <app-confirm-modal
+          [open]="cancelConfirmProjectId() === project.id"
+          title="Cancel project?"
+          [message]="
+            'This will cancel ' +
+            project.referenceNumber +
+            ' before work starts and move it to completed / closed projects.'
+          "
+          confirmLabel="Cancel project"
+          cancelLabel="Keep pending"
+          tone="danger"
+          [pending]="actionProjectId() === project.id"
+          (confirmed)="cancel(project.id)"
+          (cancelled)="cancelCancelConfirmation()"
+        />
+      }
+
       <nav class="projects-pagination" aria-label="Pending projects pagination">
         <p aria-live="polite">Page {{ currentPage() + 1 }} of {{ totalPages() }}</p>
         <div class="projects-pagination__controls">

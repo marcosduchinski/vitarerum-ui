@@ -223,17 +223,33 @@ describe('ProposalsOthersPageComponent', () => {
     expect(document.body.textContent).toContain('View details');
   });
 
-  it('assumes another staff assignment from the row action menu', async () => {
+  it('confirms assuming another staff assignment from the row action menu', async () => {
     const fixture = TestBed.createComponent(ProposalsOthersPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const component = fixture.componentInstance as unknown as {
-      assume(proposalId: string): Promise<void>;
-    };
+    const compiled = fixture.nativeElement as HTMLElement;
+    const actionButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="More actions for VR-2026-001"]',
+    );
 
-    await component.assume('proposal-other');
+    expect(actionButton).not.toBeNull();
+
+    actionButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    menuItemByText('Assume').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.assignCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Assume assignment?');
+    expect(compiled.textContent).toContain('This will move VR-2026-001 from Carolina Silva to you.');
+
+    buttonByText(compiled, 'Assume assignment').click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -245,3 +261,27 @@ describe('ProposalsOthersPageComponent', () => {
     ]);
   });
 });
+
+function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {
+  const button = Array.from(root.querySelectorAll('button')).find(
+    (candidate) => candidate.textContent?.trim() === text,
+  );
+
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${text}`);
+  }
+
+  return button;
+}
+
+function menuItemByText(text: string): HTMLElement {
+  const item = Array.from(document.body.querySelectorAll<HTMLElement>('.p-menu-item-content')).find(
+    (candidate) => candidate.textContent?.includes(text),
+  );
+
+  if (!item) {
+    throw new Error(`Menu item not found: ${text}`);
+  }
+
+  return item;
+}

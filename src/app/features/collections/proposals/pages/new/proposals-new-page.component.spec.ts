@@ -51,6 +51,10 @@ const STAFF_USERS: Page<UserDetail> = {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  readonly assignCalls: Array<{
+    readonly proposalId: string;
+    readonly payload: { readonly note: string };
+  }> = [];
   readonly forwardCalls: Array<{
     readonly proposalId: string;
     readonly payload: { readonly targetPermissionId: string; readonly note: string };
@@ -70,7 +74,8 @@ class ProposalApiServiceStub {
     });
   }
 
-  assignProposal() {
+  assignProposal(proposalId: string, payload: { readonly note: string }) {
+    this.assignCalls.push({ proposalId, payload });
     return of({ id: PROPOSAL.id, status: 'SUBMITTED', assignedTo: null, lastEvent: null });
   }
 
@@ -205,7 +210,36 @@ describe('ProposalsNewPageComponent', () => {
     expect(compiled.textContent).toContain('No proposals found');
   });
 
-  it('forwards a new proposal from the modal screen', async () => {
+  it('confirms assuming a new proposal before assigning it', async () => {
+    const fixture = TestBed.createComponent(ProposalsNewPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    buttonByText(compiled, 'Assume').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.assignCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Assume proposal?');
+    expect(compiled.textContent).toContain('This will assign VR-2026-001 to you for review.');
+
+    buttonByText(compiled, 'Assume proposal').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.assignCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        payload: { note: '' },
+      },
+    ]);
+  });
+
+  it('confirms and forwards a new proposal from the modal screen', async () => {
     const fixture = TestBed.createComponent(ProposalsNewPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -247,6 +281,17 @@ describe('ProposalsNewPageComponent', () => {
     submit!.click();
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.forwardCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Forward proposal?');
+    expect(compiled.textContent).toContain('This will move VR-2026-001 to Bob Santos');
+
+    buttonByText(compiled, 'Forward proposal').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
 
     expect(proposalService.forwardCalls).toEqual([
       {
@@ -257,6 +302,8 @@ describe('ProposalsNewPageComponent', () => {
         },
       },
     ]);
+    expect(compiled.textContent).toContain('Proposal forwarded');
+    expect(compiled.textContent).toContain('VR-2026-001 was forwarded to Bob Santos');
   });
 });
 

@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import {
@@ -54,7 +55,13 @@ function formatDateTime(iso: string): string {
   selector: 'app-proposal-my-detail-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LoadingStateComponent, ErrorMessageComponent, StatusChipComponent],
+  imports: [
+    RouterLink,
+    LoadingStateComponent,
+    ErrorMessageComponent,
+    StatusChipComponent,
+    ConfirmModalComponent,
+  ],
   templateUrl: './proposal-my-detail-page.component.html',
   styleUrl: './proposal-my-detail-page.component.scss',
 })
@@ -93,6 +100,8 @@ export class ProposalMyDetailPageComponent {
   protected readonly formatDateTime = formatDateTime;
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
+  protected readonly acceptConfirmOpen = signal(false);
+  protected readonly rejectConfirmOpen = signal(false);
   protected readonly rejectPanelOpen = signal(false);
   protected readonly rejectionReason = signal('');
   protected readonly actionError = signal<ApiError | null>(null);
@@ -103,16 +112,36 @@ export class ProposalMyDetailPageComponent {
 
   protected openRejectPanel(): void {
     this.rejectPanelOpen.set(true);
+    this.acceptConfirmOpen.set(false);
     this.actionError.set(null);
   }
 
   protected closeRejectPanel(): void {
     this.rejectPanelOpen.set(false);
+    this.rejectConfirmOpen.set(false);
     this.rejectionReason.set('');
   }
 
   protected onRejectionReasonInput(event: Event): void {
     this.rejectionReason.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected requestAcceptConfirmation(): void {
+    if (this.accepting() || this.rejecting()) return;
+    this.acceptConfirmOpen.set(true);
+  }
+
+  protected cancelAcceptConfirmation(): void {
+    this.acceptConfirmOpen.set(false);
+  }
+
+  protected requestRejectConfirmation(): void {
+    if (!this.rejectionReason().trim() || this.accepting() || this.rejecting()) return;
+    this.rejectConfirmOpen.set(true);
+  }
+
+  protected cancelRejectConfirmation(): void {
+    this.rejectConfirmOpen.set(false);
   }
 
   protected async accept(): Promise<void> {
@@ -130,6 +159,7 @@ export class ProposalMyDetailPageComponent {
       await this.router.navigate(['/p/collections/proposals/approved']);
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.acceptConfirmOpen.set(false);
     } finally {
       this.accepting.set(false);
     }
@@ -147,6 +177,7 @@ export class ProposalMyDetailPageComponent {
       await this.router.navigate(['/p/collections/proposals/rejected']);
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.rejectConfirmOpen.set(false);
     } finally {
       this.rejecting.set(false);
     }

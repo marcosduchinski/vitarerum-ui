@@ -30,7 +30,7 @@
               type="button"
               class="action-btn action-btn--primary"
               [disabled]="assuming()"
-              (click)="assume()"
+              (click)="requestAssumeConfirmation()"
             >
               <span class="pi pi-check-circle" aria-hidden="true"></span>
               {{ assuming() ? 'Assuming…' : 'Assume' }}
@@ -38,8 +38,8 @@
             <button
               type="button"
               class="action-btn"
-              [class.action-btn--active]="forwardPanelOpen()"
-              (click)="forwardPanelOpen() ? closeForwardPanel() : openForwardPanel()"
+              [class.action-btn--active]="forwardModalOpen()"
+              (click)="openForwardModal()"
             >
               <span class="pi pi-send" aria-hidden="true"></span>
               Forward
@@ -60,57 +60,59 @@
       </aside>
     </header>
 
+    <app-confirm-modal
+      [open]="assumeConfirmOpen()"
+      title="Assume proposal?"
+      [message]="
+        'This will assign ' +
+        proposal()!.collectionUseProject.referenceNumber +
+        ' to you for review.'
+      "
+      confirmLabel="Assume proposal"
+      cancelLabel="Keep unassigned"
+      tone="warning"
+      [pending]="assuming()"
+      (confirmed)="assume()"
+      (cancelled)="cancelAssumeConfirmation()"
+    />
+
     @if (actionError()) {
       <app-error-message [apiError]="actionError()!" />
     }
 
-    @if (forwardPanelOpen()) {
-      <section class="forward-panel" aria-label="Forward proposal">
-        <div>
-          <p class="forward-panel__eyebrow">Forward to</p>
-          <h2>Choose the next desk</h2>
-        </div>
+    <app-proposal-forward-modal
+      [open]="forwardModalOpen()"
+      [proposalReference]="proposal()!.collectionUseProject.referenceNumber"
+      [proposalTitle]="proposal()!.collectionUseProject.title"
+      [staffOptions]="staffOptions()"
+      [targetPermissionId]="forwardTargetPermissionId()"
+      [note]="forwardNote()"
+      [pending]="forwarding()"
+      [loadingStaff]="staffUsersResource.isLoading()"
+      [error]="actionError()"
+      (close)="closeForwardModal()"
+      (targetPermissionIdChange)="forwardTargetPermissionId.set($event)"
+      (noteChange)="forwardNote.set($event)"
+      (submitForward)="requestForwardConfirmation()"
+    />
 
-        @if (staffUsersResource.isLoading()) {
-          <app-loading-state label="Loading staff…" />
-        } @else {
-          <div class="forward-panel__fields">
-            <label for="detail-forward-target">Staff member</label>
-            <select
-              id="detail-forward-target"
-              [value]="forwardTargetPermissionId()"
-              (change)="onForwardTargetChange($event)"
-            >
-              <option value="" disabled selected>Select a staff member…</option>
-              @for (option of staffOptions(); track option.permissionId) {
-                <option [value]="option.permissionId">{{ option.label }}</option>
-              }
-            </select>
-
-            <label for="detail-forward-note">Note</label>
-            <textarea
-              id="detail-forward-note"
-              rows="3"
-              placeholder="Add context for the next reviewer…"
-              [value]="forwardNote()"
-              (input)="onForwardNoteChange($event)"
-            ></textarea>
-          </div>
-
-          <div class="forward-panel__footer">
-            <button
-              type="button"
-              class="action-btn action-btn--primary"
-              [disabled]="!forwardTargetPermissionId() || forwarding()"
-              (click)="forward()"
-            >
-              {{ forwarding() ? 'Forwarding…' : 'Forward proposal' }}
-            </button>
-            <button type="button" class="action-btn" (click)="closeForwardPanel()">Cancel</button>
-          </div>
-        }
-      </section>
-    }
+    <app-confirm-modal
+      [open]="forwardConfirmOpen()"
+      title="Forward proposal?"
+      [message]="
+        'This will move ' +
+        proposal()!.collectionUseProject.referenceNumber +
+        ' to ' +
+        forwardTargetLabel() +
+        '.'
+      "
+      confirmLabel="Forward proposal"
+      cancelLabel="Keep editing"
+      tone="warning"
+      [pending]="forwarding()"
+      (confirmed)="forward()"
+      (cancelled)="cancelForwardConfirmation()"
+    />
 
     <div class="proposal-detail__grid">
       <section class="detail-card" aria-labelledby="overview-heading">

@@ -14,8 +14,10 @@ import { firstValueFrom } from 'rxjs';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
+import { FeedbackMessageComponent } from '@shared/components/feedback-message/feedback-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { UseType } from '@shared/models/collection-use-status.model';
@@ -53,7 +55,9 @@ const GROUP_LABELS: Record<GroupName, string> = {
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
+    FeedbackMessageComponent,
     EmptyStateComponent,
+    ConfirmModalComponent,
     ProposalForwardModalComponent,
   ],
   templateUrl: './proposals-new-page.component.html',
@@ -114,6 +118,7 @@ export class ProposalsNewPageComponent {
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   protected readonly assumingId = signal<string | null>(null);
+  protected readonly assumeConfirmProposalId = signal<string | null>(null);
   protected readonly assumeError = signal<ApiError | null>(null);
   protected readonly actionsMenuId = signal<string | null>(null);
   protected readonly rowActionItems = computed<MenuItem[]>(() => {
@@ -148,9 +153,16 @@ export class ProposalsNewPageComponent {
     return this.proposals().find((proposal) => proposal.id === proposalId) ?? null;
   });
   protected readonly forwardTargetPermissionId = signal('');
+  protected readonly forwardTargetLabel = computed(
+    () =>
+      this.staffOptions().find((option) => option.permissionId === this.forwardTargetPermissionId())
+        ?.label ?? 'the selected staff member',
+  );
   protected readonly forwardNote = signal('');
   protected readonly forwardPending = signal(false);
   protected readonly forwardError = signal<ApiError | null>(null);
+  protected readonly forwardConfirmProposalId = signal<string | null>(null);
+  protected readonly forwardSuccessMessage = signal<string | null>(null);
 
   protected prevPage(): void {
     this.currentPage.update((p) => Math.max(0, p - 1));
@@ -188,6 +200,15 @@ export class ProposalsNewPageComponent {
     this.currentPage.set(0);
   }
 
+  protected requestAssumeConfirmation(proposalId: string): void {
+    if (this.assumingId()) return;
+    this.assumeConfirmProposalId.set(proposalId);
+  }
+
+  protected cancelAssumeConfirmation(): void {
+    this.assumeConfirmProposalId.set(null);
+  }
+
   protected async assume(proposalId: string): Promise<void> {
     if (this.assumingId()) return;
     this.actionsMenuId.set(null);
@@ -195,9 +216,11 @@ export class ProposalsNewPageComponent {
     this.assumeError.set(null);
     try {
       await firstValueFrom(this.proposalService.assignProposal(proposalId, { note: '' }));
+      this.assumeConfirmProposalId.set(null);
       this.proposalsResource.reload();
     } catch (err) {
       this.assumeError.set(toApiError(err));
+      this.assumeConfirmProposalId.set(null);
     } finally {
       this.assumingId.set(null);
     }
@@ -209,15 +232,18 @@ export class ProposalsNewPageComponent {
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
     this.forwardError.set(null);
+    this.forwardConfirmProposalId.set(null);
   }
 
   protected closeForwardModal(): void {
     this.forwardModalProposalId.set(null);
+    this.forwardConfirmProposalId.set(null);
   }
 
   protected toggleActionsMenu(proposalId: string): void {
     this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
     this.forwardModalProposalId.set(null);
+    this.forwardConfirmProposalId.set(null);
   }
 
   protected closeActionsMenu(): void {
@@ -232,9 +258,24 @@ export class ProposalsNewPageComponent {
     this.forwardNote.set((event.target as HTMLTextAreaElement).value);
   }
 
+  protected requestForwardConfirmation(proposalId: string): void {
+    if (!this.forwardTargetPermissionId() || this.forwardPending()) return;
+    this.forwardConfirmProposalId.set(proposalId);
+  }
+
+  protected cancelForwardConfirmation(): void {
+    this.forwardConfirmProposalId.set(null);
+  }
+
+  protected dismissForwardSuccess(): void {
+    this.forwardSuccessMessage.set(null);
+  }
+
   protected async forward(proposalId: string): Promise<void> {
     const targetPermissionId = this.forwardTargetPermissionId();
     if (!targetPermissionId || this.forwardPending()) return;
+    const proposalReference =
+      this.forwardModalProposal()?.collectionUseProject.referenceNumber ?? 'The proposal';
     this.forwardPending.set(true);
     this.forwardError.set(null);
     try {
@@ -245,9 +286,12 @@ export class ProposalsNewPageComponent {
         }),
       );
       this.forwardModalProposalId.set(null);
+      this.forwardConfirmProposalId.set(null);
+      this.forwardSuccessMessage.set(`${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`);
       this.proposalsResource.reload();
     } catch (err) {
       this.forwardError.set(toApiError(err));
+      this.forwardConfirmProposalId.set(null);
     } finally {
       this.forwardPending.set(false);
     }

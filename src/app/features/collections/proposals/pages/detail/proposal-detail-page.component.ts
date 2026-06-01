@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import {
@@ -21,6 +22,10 @@ import {
 } from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
+import {
+  ProposalForwardModalComponent,
+  ProposalForwardStaffOption,
+} from '../../components/proposal-forward-modal/proposal-forward-modal.component';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const TYPE_LABELS: Record<UseType, string> = {
@@ -36,11 +41,6 @@ const GROUP_LABELS: Record<GroupName, string> = {
   DIRECTION: 'Direction',
   ADMINISTRATION: 'Administration',
 };
-
-interface StaffOption {
-  readonly label: string;
-  readonly permissionId: string;
-}
 
 function formatDate(iso: string): string {
   try {
@@ -83,7 +83,14 @@ function safeReturnLabel(value: string | undefined): string {
   selector: 'app-proposal-detail-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LoadingStateComponent, ErrorMessageComponent, StatusChipComponent],
+  imports: [
+    RouterLink,
+    LoadingStateComponent,
+    ErrorMessageComponent,
+    StatusChipComponent,
+    ConfirmModalComponent,
+    ProposalForwardModalComponent,
+  ],
   templateUrl: './proposal-detail-page.component.html',
   styleUrl: './proposal-detail-page.component.scss',
 })
@@ -124,7 +131,7 @@ export class ProposalDetailPageComponent {
     const proposal = this.proposal();
     return proposal?.status === 'SUBMITTED' && proposal.assignedTo === null;
   });
-  protected readonly staffOptions = computed<StaffOption[]>(() =>
+  protected readonly staffOptions = computed<ProposalForwardStaffOption[]>(() =>
     (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
       u.permissions
         .filter((p) => p.group.name !== 'EXTERNAL')
@@ -134,7 +141,7 @@ export class ProposalDetailPageComponent {
         })),
     ),
   );
-  protected readonly watcherOptions = computed<StaffOption[]>(() => {
+  protected readonly watcherOptions = computed<ProposalForwardStaffOption[]>(() => {
     const watcherIds = new Set(this.watchers().map((watcher) => watcher.permissionId));
     return this.staffOptions().filter((option) => !watcherIds.has(option.permissionId));
   });
@@ -149,9 +156,16 @@ export class ProposalDetailPageComponent {
   protected readonly formatDate = formatDate;
   protected readonly formatDateTime = formatDateTime;
   protected readonly assuming = signal(false);
+  protected readonly assumeConfirmOpen = signal(false);
   protected readonly forwarding = signal(false);
-  protected readonly forwardPanelOpen = signal(false);
+  protected readonly forwardModalOpen = signal(false);
+  protected readonly forwardConfirmOpen = signal(false);
   protected readonly forwardTargetPermissionId = signal('');
+  protected readonly forwardTargetLabel = computed(
+    () =>
+      this.staffOptions().find((option) => option.permissionId === this.forwardTargetPermissionId())
+        ?.label ?? 'the selected staff member',
+  );
   protected readonly forwardNote = signal('');
   protected readonly watcherPermissionId = signal('');
   protected readonly addingWatcher = signal(false);
@@ -160,6 +174,15 @@ export class ProposalDetailPageComponent {
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
+  }
+
+  protected requestAssumeConfirmation(): void {
+    if (!this.canAssign() || this.assuming()) return;
+    this.assumeConfirmOpen.set(true);
+  }
+
+  protected cancelAssumeConfirmation(): void {
+    this.assumeConfirmOpen.set(false);
   }
 
   protected async assume(): Promise<void> {
@@ -172,21 +195,27 @@ export class ProposalDetailPageComponent {
       await firstValueFrom(
         this.proposalService.assignProposal(this.id(), { note: 'Assumed from proposal detail.' }),
       );
+      this.assumeConfirmOpen.set(false);
       this.reloadWorkflow();
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.assumeConfirmOpen.set(false);
     } finally {
       this.assuming.set(false);
     }
   }
 
-  protected openForwardPanel(): void {
-    this.forwardPanelOpen.set(true);
+  protected openForwardModal(): void {
+    this.forwardModalOpen.set(true);
+    this.forwardConfirmOpen.set(false);
+    this.forwardTargetPermissionId.set('');
+    this.forwardNote.set('');
     this.actionError.set(null);
   }
 
-  protected closeForwardPanel(): void {
-    this.forwardPanelOpen.set(false);
+  protected closeForwardModal(): void {
+    this.forwardModalOpen.set(false);
+    this.forwardConfirmOpen.set(false);
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
   }
@@ -203,6 +232,15 @@ export class ProposalDetailPageComponent {
     this.watcherPermissionId.set((event.target as HTMLSelectElement).value);
   }
 
+  protected requestForwardConfirmation(): void {
+    if (!this.canAssign() || !this.forwardTargetPermissionId() || this.forwarding()) return;
+    this.forwardConfirmOpen.set(true);
+  }
+
+  protected cancelForwardConfirmation(): void {
+    this.forwardConfirmOpen.set(false);
+  }
+
   protected async forward(): Promise<void> {
     const targetPermissionId = this.forwardTargetPermissionId();
     if (!this.canAssign() || !targetPermissionId || this.forwarding()) return;
@@ -217,10 +255,11 @@ export class ProposalDetailPageComponent {
           note: this.forwardNote(),
         }),
       );
-      this.closeForwardPanel();
+      this.closeForwardModal();
       this.reloadWorkflow();
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.forwardConfirmOpen.set(false);
     } finally {
       this.forwarding.set(false);
     }

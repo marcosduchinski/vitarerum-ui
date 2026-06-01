@@ -36,7 +36,7 @@
             type="button"
             class="action-btn action-btn--primary"
             [disabled]="accepting() || rejecting()"
-            (click)="accept()"
+            (click)="requestAcceptConfirmation()"
           >
             <span class="pi pi-check-circle" aria-hidden="true"></span>
             {{ accepting() ? 'Accepting...' : 'Accept' }}
@@ -82,7 +82,7 @@
             type="button"
             class="action-btn action-btn--primary"
             [disabled]="!rejectionReason().trim() || rejecting()"
-            (click)="reject()"
+            (click)="requestRejectConfirmation()"
           >
             {{ rejecting() ? 'Rejecting...' : 'Reject proposal' }}
           </button>
@@ -92,6 +92,37 @@
         </div>
       </section>
     }
+
+    <app-confirm-modal
+      [open]="acceptConfirmOpen()"
+      title="Accept assignment?"
+      [message]="
+        'This will approve ' +
+        proposal()!.collectionUseProject.referenceNumber +
+        ' and move it to approved proposals.'
+      "
+      confirmLabel="Accept assignment"
+      cancelLabel="Review again"
+      [pending]="accepting()"
+      (confirmed)="accept()"
+      (cancelled)="cancelAcceptConfirmation()"
+    />
+
+    <app-confirm-modal
+      [open]="rejectConfirmOpen()"
+      title="Reject proposal?"
+      [message]="
+        'This will reject ' +
+        proposal()!.collectionUseProject.referenceNumber +
+        ' using the recorded reason.'
+      "
+      confirmLabel="Reject proposal"
+      cancelLabel="Keep editing"
+      tone="danger"
+      [pending]="rejecting()"
+      (confirmed)="reject()"
+      (cancelled)="cancelRejectConfirmation()"
+    />
 
     <div class="proposal-detail__grid">
       <section class="detail-card" aria-labelledby="overview-heading">

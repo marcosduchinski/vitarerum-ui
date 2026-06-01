@@ -137,6 +137,40 @@
         (onHide)="closeActionsMenu()"
       />
 
+      @for (project of projects(); track project.id) {
+        <app-confirm-modal
+          [open]="concludeConfirmProjectId() === project.id"
+          title="Conclude project?"
+          [message]="
+            'This will mark ' +
+            project.referenceNumber +
+            ' as completed and move it out of active projects.'
+          "
+          confirmLabel="Conclude project"
+          cancelLabel="Keep active"
+          tone="warning"
+          [pending]="actionProjectId() === project.id"
+          (confirmed)="conclude(project.id)"
+          (cancelled)="cancelConcludeConfirmation()"
+        />
+
+        <app-confirm-modal
+          [open]="cancelConfirmProjectId() === project.id"
+          title="Cancel project?"
+          [message]="
+            'This will cancel ' +
+            project.referenceNumber +
+            ' and move it to completed / closed projects.'
+          "
+          confirmLabel="Cancel project"
+          cancelLabel="Keep active"
+          tone="danger"
+          [pending]="actionProjectId() === project.id"
+          (confirmed)="cancel(project.id)"
+          (cancelled)="cancelCancelConfirmation()"
+        />
+      }
+
       <nav class="projects-pagination" aria-label="My projects pagination">
         <p aria-live="polite">Page {{ currentPage() + 1 }} of {{ totalPages() }}</p>
         <div class="projects-pagination__controls">

@@ -205,5 +205,24 @@
       [appendTo]="'body'"
       (onHide)="closeActionsMenu()"
     />
+    @for (proposal of proposals(); track proposal.id) {
+      <app-confirm-modal
+        [open]="assumeConfirmProposalId() === proposal.id"
+        title="Assume assignment?"
+        [message]="
+          'This will move ' +
+          proposal.collectionUseProject.referenceNumber +
+          ' from ' +
+          proposal.assignedTo!.user.name +
+          ' to you.'
+        "
+        confirmLabel="Assume assignment"
+        cancelLabel="Keep assigned"
+        tone="warning"
+        [pending]="assumingId() === proposal.id"
+        (confirmed)="assume(proposal.id)"
+        (cancelled)="cancelAssumeConfirmation()"
+      />
+    }
   }
 </div>

@@ -10,6 +10,16 @@
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />
   } @else {
+    @if (forwardSuccessMessage(); as message) {
+      <app-feedback-message
+        title="Assignment forwarded"
+        [message]="message"
+        tone="success"
+        [dismissible]="true"
+        (dismissed)="dismissForwardSuccess()"
+      />
+    }
+
     <section class="proposals-list-panel" aria-label="My assignments list">
       <div class="proposals-toolbar">
         <label class="proposals-search" for="proposals-search">
@@ -201,7 +211,24 @@
         (close)="closeForwardModal()"
         (targetPermissionIdChange)="forwardTargetPermissionId.set($event)"
         (noteChange)="forwardNote.set($event)"
-        (submitForward)="forward(proposal.id)"
+        (submitForward)="requestForwardConfirmation(proposal.id)"
+      />
+      <app-confirm-modal
+        [open]="forwardConfirmProposalId() === proposal.id"
+        title="Forward assignment?"
+        [message]="
+          'This will move ' +
+          proposal.collectionUseProject.referenceNumber +
+          ' to ' +
+          forwardTargetLabel() +
+          '.'
+        "
+        confirmLabel="Forward assignment"
+        cancelLabel="Keep editing"
+        tone="warning"
+        [pending]="forwardPending()"
+        (confirmed)="forward(proposal.id)"
+        (cancelled)="cancelForwardConfirmation()"
       />
     }
   }

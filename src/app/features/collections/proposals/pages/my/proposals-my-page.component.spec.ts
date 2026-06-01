@@ -203,7 +203,7 @@ describe('ProposalsMyPageComponent', () => {
     expect(document.body.textContent).toContain('View details');
   });
 
-  it('forwards an assignment from the modal screen', async () => {
+  it('confirms and forwards an assignment from the modal screen', async () => {
     const fixture = TestBed.createComponent(ProposalsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -245,6 +245,23 @@ describe('ProposalsMyPageComponent', () => {
     submit!.click();
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.forwardCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Forward assignment?');
+    expect(compiled.textContent).toContain('This will move VR-2026-001 to Carol Lima');
+
+    const confirm = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Forward assignment',
+    );
+
+    expect(confirm).not.toBeNull();
+
+    confirm!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
 
     expect(proposalService.forwardCalls).toEqual([
       {
@@ -255,5 +272,7 @@ describe('ProposalsMyPageComponent', () => {
         },
       },
     ]);
+    expect(compiled.textContent).toContain('Assignment forwarded');
+    expect(compiled.textContent).toContain('VR-2026-001 was forwarded to Carol Lima');
   });
 });

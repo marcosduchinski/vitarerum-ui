@@ -177,7 +177,7 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('Reject');
   });
 
-  it('accepts the assignment and navigates to the approved list', async () => {
+  it('confirms accepting the assignment and navigates to the approved list', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
 
@@ -195,6 +195,20 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(acceptButton).not.toBeNull();
 
     acceptButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.approveCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Accept assignment?');
+
+    const confirm = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
+    ).find((button) => button.textContent?.trim() === 'Accept assignment');
+
+    expect(confirm).not.toBeNull();
+
+    confirm!.click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -237,7 +251,7 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(proposalService.rejectCalls).toEqual([]);
   });
 
-  it('rejects the assignment and navigates to the rejected list', async () => {
+  it('confirms rejecting the assignment and navigates to the rejected list', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
 
@@ -270,6 +284,20 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
 
     submit!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.rejectCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Reject proposal?');
+
+    const confirm = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
+    ).find((button) => button.textContent?.trim() === 'Reject proposal');
+
+    expect(confirm).not.toBeNull();
+
+    confirm!.click();
     fixture.detectChanges();
     await fixture.whenStable();
 

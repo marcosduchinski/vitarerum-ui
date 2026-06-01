@@ -241,7 +241,7 @@ describe('ProjectsMyPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(`/p/collections/projects/${PROJECTS[0].id}`);
   });
 
-  it('concludes a project from the popup menu and reloads the list', async () => {
+  it('confirms concluding a project from the popup menu and reloads the list', async () => {
     const fixture = TestBed.createComponent(ProjectsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -255,7 +255,18 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+
+    expect(projectService.completed).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Conclude project?');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'This will mark VR-2026-051 as completed and move it out of active projects.',
+    );
+
+    buttonByText(fixture.nativeElement, 'Conclude project').click();
+    fixture.detectChanges();
     await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
 
     expect(projectService.completed).toEqual([
       { projectId: PROJECTS[0].id, note: 'Concluded from my projects.' },
@@ -263,7 +274,7 @@ describe('ProjectsMyPageComponent', () => {
     expect(projectService.queries).toHaveLength(2);
   });
 
-  it('cancels a project from the popup menu and reloads the list', async () => {
+  it('confirms cancelling a project from the popup menu and reloads the list', async () => {
     const fixture = TestBed.createComponent(ProjectsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -277,7 +288,18 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+
+    expect(projectService.cancelled).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cancel project?');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'This will cancel VR-2026-051 and move it to completed / closed projects.',
+    );
+
+    buttonByText(fixture.nativeElement, 'Cancel project').click();
+    fixture.detectChanges();
     await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
 
     expect(projectService.cancelled).toEqual([
       { projectId: PROJECTS[0].id, reason: 'Cancelled from my projects.' },

@@ -14,6 +14,7 @@ import { firstValueFrom } from 'rxjs';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
@@ -44,6 +45,7 @@ const TYPE_LABELS: Record<UseType, string> = {
     LoadingStateComponent,
     ErrorMessageComponent,
     EmptyStateComponent,
+    ConfirmModalComponent,
   ],
   templateUrl: './proposals-others-page.component.html',
   styleUrl: './proposals-others-page.component.scss',
@@ -121,6 +123,7 @@ export class ProposalsOthersPageComponent {
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly assumingId = signal<string | null>(null);
+  protected readonly assumeConfirmProposalId = signal<string | null>(null);
   protected readonly assumeError = signal<ApiError | null>(null);
   protected readonly actionsMenuId = signal<string | null>(null);
   protected readonly rowActionItems = computed<MenuItem[]>(() => {
@@ -132,9 +135,7 @@ export class ProposalsOthersPageComponent {
       {
         label: 'Assume',
         icon: 'pi pi-user-plus',
-        command: () => {
-          void this.assume(proposalId);
-        },
+        command: () => this.requestAssumeConfirmation(proposalId),
       },
       {
         label: 'View details',
@@ -191,10 +192,21 @@ export class ProposalsOthersPageComponent {
 
   protected toggleActionsMenu(proposalId: string): void {
     this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
+    this.assumeConfirmProposalId.set(null);
   }
 
   protected closeActionsMenu(): void {
     this.actionsMenuId.set(null);
+  }
+
+  protected requestAssumeConfirmation(proposalId: string): void {
+    if (this.assumingId()) return;
+    this.actionsMenuId.set(null);
+    this.assumeConfirmProposalId.set(proposalId);
+  }
+
+  protected cancelAssumeConfirmation(): void {
+    this.assumeConfirmProposalId.set(null);
   }
 
   protected async assume(proposalId: string): Promise<void> {
@@ -206,9 +218,11 @@ export class ProposalsOthersPageComponent {
 
     try {
       await firstValueFrom(this.proposalService.assignProposal(proposalId, { note: '' }));
+      this.assumeConfirmProposalId.set(null);
       this.proposalsResource.reload();
     } catch (err) {
       this.assumeError.set(toApiError(err));
+      this.assumeConfirmProposalId.set(null);
     } finally {
       this.assumingId.set(null);
     }

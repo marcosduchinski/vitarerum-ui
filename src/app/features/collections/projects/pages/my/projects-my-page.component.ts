@@ -12,6 +12,7 @@ import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
@@ -41,6 +42,7 @@ const TYPE_LABELS: Record<UseType, string> = {
     LoadingStateComponent,
     ErrorMessageComponent,
     EmptyStateComponent,
+    ConfirmModalComponent,
   ],
   templateUrl: './projects-my-page.component.html',
   styleUrl: './projects-my-page.component.scss',
@@ -88,6 +90,8 @@ export class ProjectsMyPageComponent {
   protected readonly actionProjectId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly actionsMenuId = signal<string | null>(null);
+  protected readonly concludeConfirmProjectId = signal<string | null>(null);
+  protected readonly cancelConfirmProjectId = signal<string | null>(null);
   protected readonly cardActionItems = computed<MenuItem[]>(() => {
     const projectId = this.actionsMenuId();
 
@@ -104,16 +108,12 @@ export class ProjectsMyPageComponent {
       {
         label: 'Conclude',
         icon: 'pi pi-check',
-        command: () => {
-          void this.conclude(projectId);
-        },
+        command: () => this.requestConcludeConfirmation(projectId),
       },
       {
         label: 'Cancel',
         icon: 'pi pi-times',
-        command: () => {
-          void this.cancel(projectId);
-        },
+        command: () => this.requestCancelConfirmation(projectId),
       },
     ];
   });
@@ -177,10 +177,34 @@ export class ProjectsMyPageComponent {
 
   protected toggleActionsMenu(projectId: string): void {
     this.actionsMenuId.update((current) => (current === projectId ? null : projectId));
+    this.concludeConfirmProjectId.set(null);
+    this.cancelConfirmProjectId.set(null);
   }
 
   protected closeActionsMenu(): void {
     this.actionsMenuId.set(null);
+  }
+
+  protected requestConcludeConfirmation(projectId: string): void {
+    if (this.actionProjectId()) return;
+    this.actionsMenuId.set(null);
+    this.cancelConfirmProjectId.set(null);
+    this.concludeConfirmProjectId.set(projectId);
+  }
+
+  protected cancelConcludeConfirmation(): void {
+    this.concludeConfirmProjectId.set(null);
+  }
+
+  protected requestCancelConfirmation(projectId: string): void {
+    if (this.actionProjectId()) return;
+    this.actionsMenuId.set(null);
+    this.concludeConfirmProjectId.set(null);
+    this.cancelConfirmProjectId.set(projectId);
+  }
+
+  protected cancelCancelConfirmation(): void {
+    this.cancelConfirmProjectId.set(null);
   }
 
   protected async conclude(projectId: string): Promise<void> {
@@ -191,9 +215,11 @@ export class ProjectsMyPageComponent {
 
     try {
       await firstValueFrom(this.projectService.completeProject(projectId, { note: CONCLUDE_NOTE }));
+      this.concludeConfirmProjectId.set(null);
       this.projectsResource.reload();
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.concludeConfirmProjectId.set(null);
     } finally {
       this.actionProjectId.set(null);
     }
@@ -207,9 +233,11 @@ export class ProjectsMyPageComponent {
 
     try {
       await firstValueFrom(this.projectService.cancelProject(projectId, { reason: CANCEL_REASON }));
+      this.cancelConfirmProjectId.set(null);
       this.projectsResource.reload();
     } catch (err) {
       this.actionError.set(toApiError(err));
+      this.cancelConfirmProjectId.set(null);
     } finally {
       this.actionProjectId.set(null);
     }
