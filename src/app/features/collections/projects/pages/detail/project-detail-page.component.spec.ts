@@ -24,5 +24,25 @@ describe('ProjectDetailPageComponent', () => {
 
     expect(text).toContain('Project detail');
     expect(text).toContain('proj-12');
+    expect(compiled(fixture).querySelector('a[href="/p/collections/projects/my"]')).not.toBeNull();
+    expect(text).toContain('Back to my projects');
+  });
+
+  it('uses safe return query inputs for the back link', () => {
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    componentRef.setInput('returnTo', '/p/collections/proposals/approved');
+    componentRef.setInput('returnLabel', 'approved proposals');
+    fixture.detectChanges();
+
+    const element = compiled(fixture);
+
+    expect(element.querySelector('a[href="/p/collections/proposals/approved"]')).not.toBeNull();
+    expect(element.textContent).toContain('Back to approved proposals');
   });
 });
+
+function compiled(fixture: ReturnType<typeof TestBed.createComponent<ProjectDetailPageComponent>>): HTMLElement {
+  return fixture.nativeElement as HTMLElement;
+}

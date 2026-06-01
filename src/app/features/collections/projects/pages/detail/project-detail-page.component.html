@@ -4,7 +4,7 @@
     title="Project detail"
     description="This project detail page is intentionally blank for now."
   >
-    <a class="back-link" routerLink="../pending">Back to pending</a>
+    <a class="back-link" [routerLink]="backLink()">{{ backLabel() }}</a>
   </app-page-header>
 
   <section class="project-detail__placeholder" aria-label="Project detail placeholder">

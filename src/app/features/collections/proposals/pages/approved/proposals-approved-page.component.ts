@@ -116,7 +116,12 @@ export class ProposalsApprovedPageComponent {
         label: 'Go to project',
         icon: 'pi pi-folder-open',
         command: () => {
-          void this.router.navigateByUrl(`/p/collections/projects/${context.projectId}`);
+          void this.router.navigate(['/p/collections/projects', context.projectId], {
+            queryParams: {
+              returnTo: '/p/collections/proposals/approved',
+              returnLabel: 'approved proposals',
+            },
+          });
         },
       },
     ];
