@@ -17,9 +17,13 @@
 
     note as MessageAttachmentViewNote
       Message-attachment focused view.
-      Status enums in this diagram are lifecycle phases used by the
-      proposal and project lifecycle diagrams. The canonical operational
-      status vocabulary remains in domain-model-sp.puml.
+      All enum values in this diagram are exact API enum strings as used
+      by the application (collection-use-status.model.ts).
+      Frontend-only derived concepts:
+        ProposalLifecyclePhase (SUBMITTED | PENDING | APPROVED | REJECTED)
+          — computed from ProposalStatus for UI grouping, not an API value.
+        ProjectLifecyclePhase (CREATED | IN_PROGRESS | COMPLETED | CANCELLED)
+          — computed from UseStatus for UI grouping, not an API value.
     end note
 
     package "Identity" <<Bounded Context>> {
@@ -165,10 +169,14 @@
       }
 
       enum UseStatus {
-        CREATED
+        REQUESTED
+        ACCEPTED
+        REFUSED
         IN_PROGRESS
+        SUSPENDED
         COMPLETED
         CANCELLED
+        CLOSED
       }
 
 
@@ -202,11 +210,15 @@
       }
 
       enum UseEventType {
-        CREATED
+        REQUESTED
+        ACCEPTED
+        REFUSED
         STARTED
-        LOGGED_UPDATE
-        LOGGED_INCIDENT
+        SUSPENDED
+        RESUMED
+        COMPLETED
         CANCELLED
+        CLOSED
       }
 
       class Proposal <<Aggregate Root>> {
@@ -225,9 +237,12 @@
 
       enum ProposalStatus {
         SUBMITTED
-        PENDING
+        PENDING_DOCUMENTS
+        UNDER_REVIEW
+        PENDING_DIRECTION
         APPROVED
         REJECTED
+        CANCELLED
       }
 
       class ProposalEvent <<Value Object>> {
@@ -239,11 +254,16 @@
 
       enum ProposalEventType {
         SUBMITTED
+        ASSIGNED
         FORWARDED
         REVIEW_STARTED
-        DOCUMENT_REQUESTED
+        DOCUMENTS_REQUESTED
+        DOCUMENTS_SUBMITTED
+        REFERRED_TO_DIRECTION
+        DIRECTION_CLARIFIED
         APPROVED
         REJECTED
+        CANCELLED
       }
 
       class Document <<Entity>> <<Updated>> {
