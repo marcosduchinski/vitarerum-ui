@@ -125,4 +125,72 @@ describe('ProjectApiServiceMock', () => {
       true,
     );
   });
+
+  it('rejects createEntry on a CLOSED project', async () => {
+    state.projects.get('proj-4')!.status = 'CLOSED';
+
+    await expect(
+      firstValueFrom(service.createEntry('proj-4', { content: 'Should be rejected.' })),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_PROJECT_STATUS',
+    });
+  });
+
+  it('rejects uploadAttachment on a CLOSED project', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
+    const entry = await firstValueFrom(service.createEntry('proj-4', { content: 'Entry.' }));
+
+    state.projects.get('proj-4')!.status = 'CLOSED';
+    await expect(
+      firstValueFrom(
+        service.uploadAttachment('proj-4', entry.id, new File(['x'], 'x.jpg'), 'IMAGE'),
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_PROJECT_STATUS',
+    });
+  });
+
+  it('filters entries by group', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
+    await firstValueFrom(service.createEntry('proj-4', { content: 'Researcher entry.' }));
+
+    const externalOnly = await firstValueFrom(
+      service.listEntries('proj-4', { group: 'EXTERNAL' }),
+    );
+    expect(externalOnly.content.every((e) => e.addedBy.group === 'EXTERNAL')).toBe(true);
+
+    const curatorial = await firstValueFrom(
+      service.listEntries('proj-4', { group: 'CURATORIAL' }),
+    );
+    expect(curatorial.content.every((e) => e.addedBy.group === 'CURATORIAL')).toBe(true);
+  });
+
+  it('filters events by type', async () => {
+    state.projects.get('proj-4')!.status = 'ACCEPTED';
+    await firstValueFrom(service.startProject('proj-4', { note: 'Starting.' }));
+
+    const started = await firstValueFrom(service.listEvents('proj-4', { type: 'STARTED' }));
+    expect(started.content.every((e) => e.type === 'STARTED')).toBe(true);
+
+    const accepted = await firstValueFrom(service.listEvents('proj-4', { type: 'ACCEPTED' }));
+    expect(accepted.content.every((e) => e.type === 'ACCEPTED')).toBe(true);
+    expect(accepted.content.some((e) => e.type === 'STARTED')).toBe(false);
+  });
+
+  it('matches referenceNumber exactly, not as a prefix', async () => {
+    const allProjects = await firstValueFrom(service.listProjects({ size: 50 }));
+    const first = allProjects.content[0];
+
+    const exact = await firstValueFrom(
+      service.listProjects({ referenceNumber: first.referenceNumber }),
+    );
+    expect(exact.totalElements).toBe(1);
+
+    const prefix = await firstValueFrom(
+      service.listProjects({ referenceNumber: first.referenceNumber.slice(0, 3) }),
+    );
+    expect(prefix.totalElements).toBe(0);
+  });
 });

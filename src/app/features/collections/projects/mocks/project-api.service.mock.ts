@@ -42,7 +42,7 @@ export class ProjectApiServiceMock {
       items = items.filter((p) => p.proposalAssignedTo?.permissionId === query.assignedTo);
     if (query.referenceNumber) {
       const q = query.referenceNumber.toLowerCase();
-      items = items.filter((p) => p.referenceNumber.toLowerCase().includes(q));
+      items = items.filter((p) => p.referenceNumber.toLowerCase() === q);
     }
     if (query.search) {
       const q = query.search.toLowerCase();
@@ -109,6 +109,13 @@ export class ProjectApiServiceMock {
   createEntry(projectId: string, request: CreateProjectEntryRequest): Observable<ProjectEntry> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    if (p.status === 'CLOSED') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_PROJECT_STATUS',
+        message: 'Entries cannot be added to a CLOSED project',
+      }));
+    }
     const entry: ProjectEntry = {
       id: this.state.nextEntryId(),
       content: request.content,
@@ -129,6 +136,7 @@ export class ProjectApiServiceMock {
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     let items = this.state.entries.get(projectId) ?? [];
     if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
+    if (query.group) items = items.filter((e) => e.addedBy.group === query.group);
     return of({ ...makePageFrom(items, query), projectId });
   }
 
@@ -138,6 +146,15 @@ export class ProjectApiServiceMock {
     file: File,
     mediaType: MediaType,
   ): Observable<Attachment> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    if (p.status === 'CLOSED') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_PROJECT_STATUS',
+        message: 'Attachments cannot be added to a CLOSED project',
+      }));
+    }
     const allEntries = this.state.entries.get(projectId) ?? [];
     const entry = allEntries.find((e) => e.id === entryId);
     if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
@@ -158,7 +175,8 @@ export class ProjectApiServiceMock {
   }
 
   listEvents(projectId: string, query: ProjectEventsQuery = {}): Observable<ProjectEventsPage> {
-    const evts = this.state.events.get(projectId) ?? [];
+    let evts = this.state.events.get(projectId) ?? [];
+    if (query.type) evts = evts.filter((e) => e.type === query.type);
     return of({ ...makePageFrom(evts, query), projectId });
   }
 

@@ -23,6 +23,7 @@ export interface CollectionUseProjectSummary {
   readonly referenceNumber: string;
   readonly title: string;
   readonly purpose: string;
+  readonly note?: string | null;
   readonly type: UseType;
   readonly status: UseStatus;
   readonly result: UseResult | null;
