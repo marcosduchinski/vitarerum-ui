@@ -1,0 +1,41 @@
+@startuml
+
+  [*] --> Created : A project is created \n after a proposal is approved
+  note left of Created
+     Status: CREATED
+     UseEvent: PENDING
+     visibility:
+        Pending projects list (for curators and collections managers)
+        My projects list (for requesters)
+  end note
+  Created --> Created :Waiting for requester \n to start the project
+  Created --> Cancelled : Project is cancelled \n before starting
+  Created --> In_Progress : Project is started
+  In_Progress --> In_Progress : Project is updated \n during its life cycle
+   note left of In_Progress
+       Status: IN_PROGRESS
+       UseEvent: PROJECT_STARTED, LOGGED_UPDATE, LOGGED_INCIDENT
+       visibility:
+          In progress projects list (for curators and collections managers)
+          My projects list (for requesters)
+    end note
+  In_Progress --> Completed : Project is completed \n (eg. visit is finished)
+  Completed --> Completed : Project is updated \n after completion \n (eg. final report)
+   note left of Completed
+          Status: Completed
+          UseEvent: PROJECT_COMPLETED, LOGGED_UPDATE
+          visibility:
+             Completed projects list (for curators and collections managers)
+             My projects list (for requesters)
+       end note
+  In_Progress --> Cancelled :Project is cancelled
+  Cancelled --> [*]
+  note right of Cancelled
+         Status: CANCELLED
+          UseEvent: PROJECT_CANCELLED
+          visibility:
+             Cancelled projects list (for curators and collections managers)
+             My projects list (for requesters)
+      end note
+   Completed --> [*]
+@enduml

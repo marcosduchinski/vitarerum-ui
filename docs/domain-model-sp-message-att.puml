@@ -58,7 +58,6 @@
         - note: String?
         - type: UseType
         - status: UseStatus
-        - result: UseResult?
         - beginDate: LocalDate
         - endDate: LocalDate?
         - organiser: PermissionId?
@@ -160,19 +159,11 @@
 
       enum UseStatus {
         CREATED
-        x
-        REFUSED
         IN_PROGRESS
-        SUSPENDED
         COMPLETED
         CANCELLED
-        CLOSED
       }
 
-      enum UseResult {
-        COMPLETED
-        CANCELLED
-      }
 
       class ProjectEntry <<Entity>> {
         - id: ProjectEntryId
@@ -204,15 +195,11 @@
       }
 
       enum UseEventType {
-        REQUESTED
-        ACCEPTED
-        REFUSED
+        CREATED
         STARTED
-        SUSPENDED
-        RESUMED
-        COMPLETED
+        LOGGED_UPDATE
+        LOGGED_INCIDENT
         CANCELLED
-        CLOSED
       }
 
       class Proposal <<Aggregate Root>> {
@@ -231,12 +218,9 @@
 
       enum ProposalStatus {
         SUBMITTED
-        PENDING_DOCUMENTS
-        UNDER_REVIEW
-        PENDING_DIRECTION
+        PENDING
         APPROVED
         REJECTED
-        CANCELLED
       }
 
       class ProposalEvent <<Value Object>> {
@@ -248,16 +232,11 @@
 
       enum ProposalEventType {
         SUBMITTED
-        ASSIGNED
         FORWARDED
-        DOCUMENTS_REQUESTED
-        DOCUMENTS_SUBMITTED
         REVIEW_STARTED
-        REFERRED_TO_DIRECTION
-        DIRECTION_CLARIFIED
+        DOCUMENT_REQUESTED
         APPROVED
         REJECTED
-        CANCELLED
       }
 
       class Document <<Entity>> <<Updated>> {
@@ -309,7 +288,6 @@
       CollectionUseProject *-- ReferenceNumber
       CollectionUseProject *-- UseType
       CollectionUseProject *-- UseStatus
-      CollectionUseProject *-- UseResult
       CollectionUseProject *-- "0..1" Contact : externalUser
       CollectionUseProject *-- "0..*" ObjectReference
       CollectionUseProject *-- "0..*" ReproductionReference
