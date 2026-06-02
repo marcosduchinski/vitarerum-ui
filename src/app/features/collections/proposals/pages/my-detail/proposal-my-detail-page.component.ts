@@ -2,10 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   input,
   resource,
   signal,
+  viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +23,7 @@ import {
 } from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
+import { Message } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const TYPE_LABELS: Record<UseType, string> = {
@@ -68,6 +71,7 @@ function formatDateTime(iso: string): string {
 export class ProposalMyDetailPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly router = inject(Router);
+  private readonly replyEditor = viewChild<ElementRef<HTMLElement>>('replyEditor');
 
   readonly id = input.required<string>();
 
@@ -104,7 +108,11 @@ export class ProposalMyDetailPageComponent {
   protected readonly rejectConfirmOpen = signal(false);
   protected readonly rejectPanelOpen = signal(false);
   protected readonly rejectionReason = signal('');
+  protected readonly replyBody = signal('');
+  protected readonly selectedFiles = signal<readonly File[]>([]);
+  protected readonly sendingMessage = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
+  protected readonly messageError = signal<ApiError | null>(null);
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
@@ -124,6 +132,86 @@ export class ProposalMyDetailPageComponent {
 
   protected onRejectionReasonInput(event: Event): void {
     this.rejectionReason.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected messageIcon(message: Message): string {
+    return this.isRequesterMessage(message) ? 'pi pi-user' : 'pi pi-briefcase';
+  }
+
+  protected messageRoleLabel(message: Message): string {
+    if (this.isRequesterMessage(message)) return 'Requester';
+    return this.proposal()?.assignedTo?.group.replace('_', ' ') ?? 'Staff';
+  }
+
+  protected isRequesterMessage(message: Message): boolean {
+    return message.sender === this.proposal()?.requestedBy.user.email;
+  }
+
+  protected onReplyInput(event: Event): void {
+    this.replyBody.set((event.target as HTMLElement).innerHTML.trim());
+  }
+
+  protected applyEditorCommand(command: 'bold' | 'italic' | 'insertUnorderedList'): void {
+    this.replyEditor()?.nativeElement.focus();
+    document.execCommand(command, false);
+    this.syncReplyBody();
+  }
+
+  protected clearReplyFormatting(): void {
+    this.replyEditor()?.nativeElement.focus();
+    document.execCommand('removeFormat', false);
+    this.syncReplyBody();
+  }
+
+  protected onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    this.selectedFiles.update((current) => [...current, ...files]);
+    input.value = '';
+  }
+
+  protected removeSelectedFile(index: number): void {
+    this.selectedFiles.update((files) => files.filter((_, i) => i !== index));
+  }
+
+  protected canSendReply(): boolean {
+    return this.hasReplyContent() && !this.sendingMessage();
+  }
+
+  protected async sendReply(): Promise<void> {
+    if (!this.canSendReply()) return;
+
+    this.sendingMessage.set(true);
+    this.messageError.set(null);
+
+    try {
+      const uploadedDocuments = [];
+      for (const file of this.selectedFiles()) {
+        uploadedDocuments.push(
+          await firstValueFrom(
+            this.proposalService.uploadDocument(this.id(), file, 'STAFF_RESPONSE_ATTACHMENT'),
+          ),
+        );
+      }
+
+      await firstValueFrom(
+        this.proposalService.sendMessage(this.id(), {
+          recipient: this.proposal()?.requestedBy.user.email ?? '',
+          subject: `Response to ${this.proposal()?.collectionUseProject.referenceNumber ?? 'proposal'}`,
+          body: this.replyBody(),
+          documentIds: uploadedDocuments.map((document) => document.id),
+        }),
+      );
+
+      this.clearReply();
+      this.proposalResource.reload();
+      this.conversationResource.reload();
+      this.eventsResource.reload();
+    } catch (err) {
+      this.messageError.set(toApiError(err));
+    } finally {
+      this.sendingMessage.set(false);
+    }
   }
 
   protected requestAcceptConfirmation(): void {
@@ -181,5 +269,21 @@ export class ProposalMyDetailPageComponent {
     } finally {
       this.rejecting.set(false);
     }
+  }
+
+  private syncReplyBody(): void {
+    this.replyBody.set(this.replyEditor()?.nativeElement.innerHTML.trim() ?? '');
+  }
+
+  private clearReply(): void {
+    const editor = this.replyEditor()?.nativeElement;
+    if (editor) editor.innerHTML = '';
+    this.replyBody.set('');
+    this.selectedFiles.set([]);
+  }
+
+  private hasReplyContent(): boolean {
+    const text = this.replyEditor()?.nativeElement.textContent?.trim() ?? '';
+    return text.length > 0 || this.selectedFiles().length > 0;
   }
 }

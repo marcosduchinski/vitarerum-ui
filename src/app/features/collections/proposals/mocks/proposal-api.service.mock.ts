@@ -24,6 +24,7 @@ import {
   CreateProposalResponse,
   Document,
   Message,
+  MessageAttachment,
   ProposalDetail,
   ProposalDocumentsResponse,
   ProposalEventsPage,
@@ -159,6 +160,7 @@ export class ProposalApiServiceMock {
       id: `doc-${this.nextId++}`,
       type: documentType,
       fileName: _file.name,
+      fileReference: `mock-proposal-file-${this.nextId++}`,
       submittedAt: now,
       submittedBy: P['alice'],
     };
@@ -204,18 +206,36 @@ export class ProposalApiServiceMock {
   sendMessage(proposalId: string, request: SendMessageRequest): Observable<Message> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const attachments = this.resolveMessageAttachments(proposal, request.documentIds ?? []);
     const msg: Message = {
       id: `msg-${this.nextId++}`,
       sentAt: new Date().toISOString(),
-      sender: P['alice'].user.email,
+      sender: proposal.assignedTo?.user.email ?? P['bob'].user.email,
       recipient: request.recipient,
       subject: request.subject,
       body: request.body,
+      attachments,
     };
     const msgs = this.messages.get(proposal.conversationId) ?? [];
     msgs.push(msg);
     this.messages.set(proposal.conversationId, msgs);
     return of(msg);
+  }
+
+  private resolveMessageAttachments(
+    proposal: ProposalDetail,
+    documentIds: readonly string[],
+  ): MessageAttachment[] {
+    if (!documentIds.length) return [];
+
+    const requested = new Set(documentIds);
+    return proposal.documents
+      .filter((document) => requested.has(document.id))
+      .map((document) => ({
+        documentId: document.id,
+        fileName: document.fileName,
+        fileReference: document.fileReference,
+      }));
   }
 
   assignProposal(

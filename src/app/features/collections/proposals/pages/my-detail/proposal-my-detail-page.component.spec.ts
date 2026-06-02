@@ -5,8 +5,11 @@ import { of } from 'rxjs';
 
 import {
   Conversation,
+  Document,
+  Message,
   ProposalDetail,
   ProposalEventsPage,
+  SendMessageRequest,
 } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import { ProposalMyDetailPageComponent } from './proposal-my-detail-page.component';
@@ -51,15 +54,30 @@ const CONVERSATION: Conversation = {
     {
       id: 'message-1',
       sentAt: '2026-05-01T11:00:00',
-      sender: 'Alice Ferreira',
+      sender: 'alice@example.test',
       recipient: 'Collections management',
       subject: 'Initial request',
       body: 'Please review this research request.',
     },
+    {
+      id: 'message-2',
+      sentAt: '2026-05-01T14:00:00',
+      sender: 'bob@example.test',
+      recipient: 'alice@example.test',
+      subject: 'Response to VR-2026-001',
+      body: '<p>Attached signed response for museum review.</p>',
+      attachments: [
+        {
+          documentId: 'document-1',
+          fileName: 'signed-response.docx',
+          fileReference: 'mock-proposal-file-1',
+        },
+      ],
+    },
   ],
   page: 0,
   size: 20,
-  totalElements: 1,
+  totalElements: 2,
   totalPages: 1,
 };
 
@@ -88,6 +106,16 @@ class ProposalApiServiceStub {
     readonly proposalId: string;
     readonly payload: { readonly reason: string };
   }> = [];
+  readonly uploadCalls: Array<{
+    readonly proposalId: string;
+    readonly file: File;
+    readonly documentType: string;
+  }> = [];
+  readonly sendMessageCalls: Array<{
+    readonly proposalId: string;
+    readonly payload: SendMessageRequest;
+  }> = [];
+  private nextDocumentId = 1;
 
   getProposal() {
     return of(PROPOSAL);
@@ -99,6 +127,38 @@ class ProposalApiServiceStub {
 
   listEvents() {
     return of(EVENTS);
+  }
+
+  uploadDocument(proposalId: string, file: File, documentType: string) {
+    const document: Document = {
+      id: `uploaded-document-${this.nextDocumentId++}`,
+      type: documentType,
+      fileName: file.name,
+      fileReference: `mock-file-reference/${file.name}`,
+      submittedAt: '2026-05-02T10:00:00',
+      submittedBy: PROPOSAL.assignedTo ?? undefined,
+    };
+
+    this.uploadCalls.push({ proposalId, file, documentType });
+    return of(document);
+  }
+
+  sendMessage(proposalId: string, payload: SendMessageRequest) {
+    const message: Message = {
+      id: 'sent-message-1',
+      sentAt: '2026-05-02T10:05:00',
+      sender: PROPOSAL.assignedTo?.user.email ?? '',
+      recipient: payload.recipient,
+      subject: payload.subject,
+      body: payload.body,
+      attachments: payload.documentIds?.map((documentId) => ({
+        documentId,
+        fileName: 'signed-response.docx',
+      })),
+    };
+
+    this.sendMessageCalls.push({ proposalId, payload });
+    return of(message);
   }
 
   approveProposal(proposalId: string, payload: { readonly note: string }) {
@@ -140,10 +200,7 @@ describe('ProposalMyDetailPageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ProposalMyDetailPageComponent],
-      providers: [
-        provideRouter([]),
-        { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
-      ],
+      providers: [provideRouter([]), { provide: PROPOSAL_API_SERVICE, useValue: proposalService }],
     }).compileComponents();
   });
 
@@ -169,12 +226,93 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('Bob Santos');
     expect(compiled.textContent).toContain('Conversation');
     expect(compiled.textContent).toContain('Initial request');
+    expect(compiled.textContent).toContain('signed-response.docx');
     expect(compiled.textContent).toContain('Watchers');
     expect(compiled.textContent).toContain('Carolina Silva');
     expect(compiled.textContent).toContain('Event log');
     expect(compiled.textContent).toContain('SUBMITTED');
     expect(compiled.textContent).toContain('Accept');
     expect(compiled.textContent).toContain('Reject');
+  });
+
+  it('marks requester and staff messages with distinct roles and icons', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const messages = Array.from(compiled.querySelectorAll<HTMLElement>('.message'));
+
+    expect(messages).toHaveLength(2);
+    expect(messages[0].textContent).toContain('Requester');
+    expect(messages[0].querySelector('.pi-user')).not.toBeNull();
+    expect(messages[1].textContent).toContain('COLLECTIONS MANAGEMENT');
+    expect(messages[1].querySelector('.pi-briefcase')).not.toBeNull();
+    expect(messages[1].textContent).toContain('signed-response.docx');
+  });
+
+  it('uploads selected files and attaches them to a staff response message', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editor = compiled.querySelector<HTMLElement>('.reply-editor');
+    const fileInput = compiled.querySelector<HTMLInputElement>('#staff-response-files');
+    const sendButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Send response'),
+    );
+
+    expect(editor).not.toBeNull();
+    expect(fileInput).not.toBeNull();
+    expect(sendButton).not.toBeNull();
+
+    editor!.innerHTML = '<p>Please review the attached signed files.</p>';
+    editor!.dispatchEvent(new Event('input'));
+
+    const file = new File(['signed'], 'signed-response.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    Object.defineProperty(fileInput!, 'files', {
+      value: [file],
+      configurable: true,
+    });
+    fileInput!.dispatchEvent(new Event('change'));
+
+    fixture.detectChanges();
+
+    expect(compiled.textContent).toContain('signed-response.docx');
+
+    sendButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.uploadCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        file,
+        documentType: 'STAFF_RESPONSE_ATTACHMENT',
+      },
+    ]);
+    expect(proposalService.sendMessageCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        payload: {
+          recipient: 'alice@example.test',
+          subject: 'Response to VR-2026-001',
+          body: '<p>Please review the attached signed files.</p>',
+          documentIds: ['uploaded-document-1'],
+        },
+      },
+    ]);
   });
 
   it('confirms accepting the assignment and navigates to the approved list', async () => {

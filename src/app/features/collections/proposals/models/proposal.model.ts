@@ -65,6 +65,13 @@ export interface Message {
   readonly recipient: string;
   readonly subject: string;
   readonly body: string;
+  readonly attachments?: readonly MessageAttachment[];
+}
+
+export interface MessageAttachment {
+  readonly documentId: string;
+  readonly fileName: string;
+  readonly fileReference?: string;
 }
 
 export interface Conversation {
@@ -123,4 +130,5 @@ export interface SendMessageRequest {
   readonly recipient: string;
   readonly subject: string;
   readonly body: string;
+  readonly documentIds?: readonly string[];
 }
