@@ -273,7 +273,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('navigates to project detail from the popup menu', async () => {
-    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -287,7 +287,12 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(`/p/collections/projects/${PROJECT.id}`);
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects', PROJECT.id], {
+      queryParams: {
+        returnTo: '/p/collections/projects/pending',
+        returnLabel: 'pending projects',
+      },
+    });
   });
 
   it('confirms cancelling a pending project from the popup menu and reloads the list', async () => {

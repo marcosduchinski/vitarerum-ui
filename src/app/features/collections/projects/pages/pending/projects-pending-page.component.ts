@@ -101,7 +101,12 @@ export class ProjectsPendingPageComponent {
         label: 'View',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigateByUrl(`/p/collections/projects/${projectId}`);
+          void this.router.navigate(['/p/collections/projects', projectId], {
+            queryParams: {
+              returnTo: '/p/collections/projects/pending',
+              returnLabel: 'pending projects',
+            },
+          });
         },
       },
       {
