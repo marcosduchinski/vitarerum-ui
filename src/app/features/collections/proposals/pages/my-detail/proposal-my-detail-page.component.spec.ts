@@ -3,6 +3,10 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
+import { UserDetail } from '@core/auth/models/user.model';
+import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { Page } from '@shared/models/page.model';
+
 import {
   Conversation,
   Document,
@@ -97,6 +101,37 @@ const EVENTS: ProposalEventsPage = {
   totalPages: 1,
 };
 
+const STAFF_USERS: Page<UserDetail> = {
+  content: [
+    {
+      id: 'staff-2',
+      name: 'Carolina Silva',
+      email: 'carol@example.test',
+      permissions: [
+        {
+          permissionId: 'permission-curatorial',
+          group: { id: 'group-curatorial', name: 'CURATORIAL' },
+        },
+      ],
+    },
+    {
+      id: 'staff-3',
+      name: 'Dan Oliveira',
+      email: 'dan@example.test',
+      permissions: [
+        {
+          permissionId: 'permission-direction',
+          group: { id: 'group-direction', name: 'DIRECTION' },
+        },
+      ],
+    },
+  ],
+  page: 0,
+  size: 100,
+  totalElements: 2,
+  totalPages: 1,
+};
+
 class ProposalApiServiceStub {
   readonly approveCalls: Array<{
     readonly proposalId: string;
@@ -114,6 +149,14 @@ class ProposalApiServiceStub {
   readonly sendMessageCalls: Array<{
     readonly proposalId: string;
     readonly payload: SendMessageRequest;
+  }> = [];
+  readonly addWatcherCalls: Array<{
+    readonly proposalId: string;
+    readonly payload: { readonly permissionId: string };
+  }> = [];
+  readonly removeWatcherCalls: Array<{
+    readonly proposalId: string;
+    readonly permissionId: string;
   }> = [];
   private nextDocumentId = 1;
 
@@ -190,6 +233,26 @@ class ProposalApiServiceStub {
       },
     });
   }
+
+  addWatcher(proposalId: string, payload: { readonly permissionId: string }) {
+    this.addWatcherCalls.push({ proposalId, payload });
+    return of({
+      permissionId: payload.permissionId,
+      user: { id: 'staff-3', name: 'Dan Oliveira', email: 'dan@example.test' },
+      group: 'DIRECTION' as const,
+    });
+  }
+
+  removeWatcher(proposalId: string, permissionId: string) {
+    this.removeWatcherCalls.push({ proposalId, permissionId });
+    return of(undefined);
+  }
+}
+
+class UserManagementServiceStub {
+  listUsers() {
+    return of(STAFF_USERS);
+  }
 }
 
 describe('ProposalMyDetailPageComponent', () => {
@@ -200,7 +263,11 @@ describe('ProposalMyDetailPageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ProposalMyDetailPageComponent],
-      providers: [provideRouter([]), { provide: PROPOSAL_API_SERVICE, useValue: proposalService }],
+      providers: [
+        provideRouter([]),
+        { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
+        { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
+      ],
     }).compileComponents();
   });
 
@@ -233,6 +300,59 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('SUBMITTED');
     expect(compiled.textContent).toContain('Accept');
     expect(compiled.textContent).toContain('Reject');
+  });
+
+  it('adds and removes watchers from the assignment detail page', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const select = compiled.querySelector<HTMLSelectElement>('#watcher-permission');
+    const addButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Add',
+    );
+    const removeButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Remove watcher Carolina Silva"]',
+    );
+
+    expect(select).not.toBeNull();
+    expect(addButton).not.toBeNull();
+    expect(removeButton).not.toBeNull();
+    expect(select!.textContent).not.toContain('Carolina Silva');
+    expect(select!.textContent).toContain('Dan Oliveira');
+
+    select!.value = 'permission-direction';
+    select!.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(addButton!.disabled).toBe(false);
+
+    addButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.addWatcherCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        payload: { permissionId: 'permission-direction' },
+      },
+    ]);
+
+    removeButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(proposalService.removeWatcherCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        permissionId: 'permission-curatorial',
+      },
+    ]);
   });
 
   it('marks requester and staff messages with distinct roles and icons', async () => {

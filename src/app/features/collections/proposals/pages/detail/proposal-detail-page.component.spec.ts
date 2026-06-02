@@ -28,7 +28,13 @@ const PROPOSAL: ProposalDetail = {
     status: 'REQUESTED',
   },
   submittedAt: '2026-05-01T10:00:00',
-  watchers: [],
+  watchers: [
+    {
+      permissionId: 'permission-curatorial',
+      user: { id: 'staff-2', name: 'Carolina Silva', email: 'carol@example.test' },
+      group: 'CURATORIAL',
+    },
+  ],
   conversationId: 'conversation-1',
   documents: [],
   requestedDocuments: [],
@@ -185,6 +191,28 @@ describe('ProposalDetailPageComponent', () => {
     expect(messages[1].textContent).toContain('Staff');
     expect(messages[1].textContent).toContain('signed-response.docx');
     expect(messages[1].querySelector('.message-attachments .pi-paperclip')).not.toBeNull();
+  });
+
+  it('renders watchers as read-only context on the new proposal detail page', async () => {
+    const fixture = TestBed.createComponent(ProposalDetailPageComponent);
+    const componentRef: ComponentRef<ProposalDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.textContent).toContain('Watchers');
+    expect(compiled.textContent).toContain('Carolina Silva');
+    expect(compiled.querySelector('#watcher-permission')).toBeNull();
+    expect(compiled.querySelector('[aria-label="Remove watcher Carolina Silva"]')).toBeNull();
+    expect(
+      Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).some(
+        (button) => button.textContent?.trim() === 'Add',
+      ),
+    ).toBe(false);
   });
 
   it('confirms assuming a submitted proposal before assigning it', async () => {

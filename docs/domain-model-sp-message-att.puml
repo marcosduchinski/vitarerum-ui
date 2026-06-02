@@ -159,8 +159,8 @@
       }
 
       enum UseStatus {
-        REQUESTED
-        ACCEPTED
+        CREATED
+        x
         REFUSED
         IN_PROGRESS
         SUSPENDED

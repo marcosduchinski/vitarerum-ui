@@ -140,10 +140,6 @@ export class ProposalDetailPageComponent {
         })),
     ),
   );
-  protected readonly watcherOptions = computed<ProposalForwardStaffOption[]>(() => {
-    const watcherIds = new Set(this.watchers().map((watcher) => watcher.permissionId));
-    return this.staffOptions().filter((option) => !watcherIds.has(option.permissionId));
-  });
 
   protected readonly proposalError = computed(() => {
     const err = this.proposalResource.error();
@@ -166,9 +162,6 @@ export class ProposalDetailPageComponent {
         ?.label ?? 'the selected staff member',
   );
   protected readonly forwardNote = signal('');
-  protected readonly watcherPermissionId = signal('');
-  protected readonly addingWatcher = signal(false);
-  protected readonly removingWatcherId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
@@ -240,10 +233,6 @@ export class ProposalDetailPageComponent {
     this.forwardNote.set((event.target as HTMLTextAreaElement).value);
   }
 
-  protected onWatcherPermissionChange(event: Event): void {
-    this.watcherPermissionId.set((event.target as HTMLSelectElement).value);
-  }
-
   protected requestForwardConfirmation(): void {
     if (!this.canAssign() || !this.forwardTargetPermissionId() || this.forwarding()) return;
     this.forwardConfirmOpen.set(true);
@@ -274,40 +263,6 @@ export class ProposalDetailPageComponent {
       this.forwardConfirmOpen.set(false);
     } finally {
       this.forwarding.set(false);
-    }
-  }
-
-  protected async addWatcher(): Promise<void> {
-    const permissionId = this.watcherPermissionId();
-    if (!permissionId || this.addingWatcher()) return;
-
-    this.addingWatcher.set(true);
-    this.actionError.set(null);
-
-    try {
-      await firstValueFrom(this.proposalService.addWatcher(this.id(), { permissionId }));
-      this.watcherPermissionId.set('');
-      this.proposalResource.reload();
-    } catch (err) {
-      this.actionError.set(toApiError(err));
-    } finally {
-      this.addingWatcher.set(false);
-    }
-  }
-
-  protected async removeWatcher(permissionId: string): Promise<void> {
-    if (this.removingWatcherId()) return;
-
-    this.removingWatcherId.set(permissionId);
-    this.actionError.set(null);
-
-    try {
-      await firstValueFrom(this.proposalService.removeWatcher(this.id(), permissionId));
-      this.proposalResource.reload();
-    } catch (err) {
-      this.actionError.set(toApiError(err));
-    } finally {
-      this.removingWatcherId.set(null);
     }
   }
 
