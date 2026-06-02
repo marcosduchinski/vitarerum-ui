@@ -13,7 +13,7 @@ type          : UseType    (optional) EXHIBITION | RESEARCH | OTHER
 result        : UseResult  (optional) COMPLETED | CANCELLED
 requestedBy   : UUID       (optional) filter by researcher userId
 assignedTo    : UUID       (optional) filter by proposal attendant permissionId
-referenceNumber: String    (optional) exact match on reference number
+referenceNumber: String    (optional) exact match on reference number (use `search` for partial lookup)
 dateFrom      : LocalDate  (optional) filter by begin date
 dateTo        : LocalDate  (optional)
 search        : String     (optional) search by title or reference number

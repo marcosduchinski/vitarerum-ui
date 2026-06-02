@@ -8,14 +8,21 @@
 
 **Query parameters**
 ```
-status     : ProposalStatus  (optional) filter by status
-type       : UseType         (optional) EXHIBITION | RESEARCH | OTHER
-assignedTo : UUID            (optional) filter by attendant permissionId
-dateFrom   : LocalDate       (optional) filter by submission date range
-dateTo     : LocalDate       (optional)
-search     : String          (optional) search by title or reference number
-page       : Integer         (default 0)
-size       : Integer         (default 20)
+status          : ProposalStatus       (optional) filter by operational status
+lifecyclePhase  : ProposalLifecyclePhase (optional) SUBMITTED | PENDING | APPROVED | REJECTED
+                                         groups multiple operational statuses into a phase:
+                                         SUBMITTED  → SUBMITTED
+                                         PENDING    → PENDING_DOCUMENTS | UNDER_REVIEW | PENDING_DIRECTION
+                                         APPROVED   → APPROVED
+                                         REJECTED   → REJECTED | CANCELLED
+type            : UseType              (optional) EXHIBITION | RESEARCH | OTHER
+assignedTo      : UUID                 (optional) filter by attendant permissionId
+unassigned      : Boolean              (optional) when true, returns only proposals with no assignedTo
+dateFrom        : LocalDate            (optional) filter by submission date range
+dateTo          : LocalDate            (optional)
+search          : String               (optional) search by title or reference number
+page            : Integer              (default 0)
+size            : Integer              (default 20)
 ```
 
 **Response `200 OK`**
@@ -64,7 +71,7 @@ size       : Integer         (default 20)
 
 ### `POST /proposals/{proposalId}/assign`
 
-**Description** — A staff member assumes responsibility for the request, becoming its attendant. If no `targetPermissionId` is provided the caller assigns themselves. Records an `ASSIGNED` `ProposalEvent`. Does not change the proposal status.
+**Description** — A staff member assumes responsibility for the request, becoming its attendant. If no `targetPermissionId` is provided the caller assigns themselves. Records a `REVIEW_STARTED` `ProposalEvent` and transitions the proposal to `UNDER_REVIEW`.
 
 **Path parameters**
 ```
@@ -83,7 +90,7 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
-  "status": "SUBMITTED",
+  "status": "UNDER_REVIEW",
   "assignedTo": {
     "permissionId": "uuid",
     "user": {
@@ -95,7 +102,7 @@ proposalId : UUID (required)
   },
   "lastEvent": {
     "occurredAt": "2025-01-16T08:45:00",
-    "type": "ASSIGNED",
+    "type": "REVIEW_STARTED",
     "triggeredBy": {
       "permissionId": "uuid",
       "user": {
@@ -122,7 +129,7 @@ proposalId : UUID (required)
 
 ### `POST /proposals/{proposalId}/request-documents`
 
-**Description** — Attendant formally requests the institutional documents from the researcher. Stores the requested document list on the proposal, transitions the proposal from `SUBMITTED` to `PENDING_DOCUMENTS`, and records a `DOCUMENTS_REQUESTED` `ProposalEvent`.
+**Description** — Attendant formally requests the institutional documents from the researcher. Stores the requested document list on the proposal, transitions the proposal from `SUBMITTED` or `UNDER_REVIEW` to `PENDING_DOCUMENTS`, and records a `DOCUMENTS_REQUESTED` `ProposalEvent`.
 
 **Path parameters**
 ```
@@ -189,7 +196,7 @@ proposalId : UUID (required)
 ```json
 {
   "error": "INVALID_TRANSITION",
-  "message": "Documents can only be requested when proposal is in SUBMITTED status"
+  "message": "Documents can only be requested when proposal is SUBMITTED or UNDER_REVIEW"
 }
 ```
 
@@ -681,6 +688,8 @@ A few conventions worth noting across this group:
 
 **`reason` is mandatory on rejection and cancellation** — the audit trail requires a human-readable justification on every negative decision, enforced at the API level with `400 Bad Request`.
 
-**Conversation endpoints are shared** — staff use the same `GET /proposals/{proposalId}/conversation` and `POST /proposals/{proposalId}/conversation/messages` contracts defined in the researcher group. The sender is always resolved from the authenticated user's session.
+**Conversation endpoints are shared** — staff use the same `GET /proposals/{proposalId}/conversation` and `POST /proposals/{proposalId}/conversation/messages` contracts defined in the researcher group. The sender is always resolved from the authenticated user's session. Both request and response include message attachments via `documentIds` / `Message.attachments` — staff may attach files by first uploading to `POST /proposals/{proposalId}/documents` and then referencing the returned document `id` in `documentIds`.
+
+**Document uploads are shared** — staff use `POST /proposals/{proposalId}/documents` to upload response files or supporting materials. The `documentType` field identifies the category. Staff may upload at any non-terminal proposal status. Uploaded documents can then be referenced in `SendMessageRequest.documentIds`.
 
 **Watchers carry no behavior** — `POST /proposals/{proposalId}/watchers` and `DELETE /proposals/{proposalId}/watchers/{permissionId}` manage visibility only. Watchers produce no `ProposalEvent` and have no effect on status transitions. The `watchers` list is always returned in the `GET /proposals/{proposalId}` response.

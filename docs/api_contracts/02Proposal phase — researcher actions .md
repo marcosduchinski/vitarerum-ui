@@ -161,7 +161,9 @@ proposalId : UUID (required)
 
 ### `POST /proposals/{proposalId}/documents`
 
-**Description** — Researcher uploads a document requested by the attendant. Accepted format is `docx`. The document type must match one of the proposal's requested documents. Transitions the proposal event log with a `DOCUMENTS_SUBMITTED` event.
+**Description** — Uploads a file to the proposal's shared document store. Documents serve three distinct roles: (1) **solicitation/supporting files** attached to the initial message by the researcher at submission time, (2) **formally requested documents** submitted by the researcher in response to a staff `request-documents` action, and (3) **staff response files** uploaded by staff to attach to their conversation messages. All three roles use this same endpoint. The `documentType` string identifies the category. Transitions the proposal event log with a `DOCUMENTS_SUBMITTED` event when the upload is in response to a document request.
+
+Status rules by actor: the researcher may upload when the proposal is `SUBMITTED`, `PENDING_DOCUMENTS`, or `UNDER_REVIEW`; staff may upload at any non-terminal status. Format restrictions apply per `documentType` — there is no global format constraint at this endpoint.
 
 **Path parameters**
 ```
@@ -206,7 +208,7 @@ documentType : String  (required) e.g. "RESEARCH_FORM", "IDENTIFICATION", "INSTI
 ```json
 {
   "error": "INVALID_FILE_FORMAT",
-  "message": "Only .docx files are accepted"
+  "message": "Uploaded file type does not match the format required for the given documentType"
 }
 ```
 
@@ -333,7 +335,14 @@ size : Integer (default 20)
       "sender": "researcher@university.pt",
       "recipient": "collections@museum.pt",
       "subject": "Research visit request",
-      "body": "string"
+      "body": "string",
+      "attachments": [
+        {
+          "documentId": "uuid",
+          "fileName": "research_form.docx",
+          "fileReference": "string"
+        }
+      ]
     },
     {
       "id": "uuid",
@@ -341,7 +350,8 @@ size : Integer (default 20)
       "sender": "collections@museum.pt",
       "recipient": "researcher@university.pt",
       "subject": "RE: Research visit request",
-      "body": "string"
+      "body": "string",
+      "attachments": []
     }
   ],
   "page": 0,
@@ -367,9 +377,12 @@ proposalId : UUID (required)
 {
   "recipient": "collections@museum.pt",
   "subject": "string",
-  "body": "string"
+  "body": "string",
+  "documentIds": ["uuid"]
 }
 ```
+
+`documentIds` is optional. Each id must reference a document already uploaded to `POST /proposals/{proposalId}/documents`. The server resolves the file metadata and returns it in `attachments`.
 
 **Response `201 Created`**
 ```json
@@ -379,7 +392,14 @@ proposalId : UUID (required)
   "sender": "researcher@university.pt",
   "recipient": "collections@museum.pt",
   "subject": "string",
-  "body": "string"
+  "body": "string",
+  "attachments": [
+    {
+      "documentId": "uuid",
+      "fileName": "research_form.docx",
+      "fileReference": "string"
+    }
+  ]
 }
 ```
 
@@ -402,3 +422,5 @@ A few conventions worth noting across this group:
 **Document upload uses `multipart/form-data`** — files are never base64 encoded in JSON bodies. The `fileReference` in the response is the internal storage path or identifier resolved by the file service.
 
 **Events are always read-only** — `GET /proposals/{proposalId}/events` exposes the immutable audit trail. There is no POST to this endpoint; events are only produced as side effects of commands.
+
+**Message attachments reference proposal documents** — attachments are never uploaded directly in the message body. The caller first uploads a file via `POST /proposals/{proposalId}/documents`, then references the returned `document.id` in `documentIds`. The server resolves the file metadata and returns populated `attachments` on the message. This allows the same uploaded file to be attached to multiple messages without duplication.
