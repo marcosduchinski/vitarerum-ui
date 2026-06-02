@@ -70,6 +70,19 @@ describe('ProposalApiServiceMock', () => {
     expect(p.status).toBe('SUBMITTED');
   });
 
+  it('starts seeded proposal conversations with the collection-use request', async () => {
+    const conversation = await firstValueFrom(service.getConversation('prop-1'));
+
+    expect(conversation.messages).toHaveLength(1);
+    expect(conversation.messages[0]).toMatchObject({
+      id: 'msg-prop-1-initial',
+      sender: 'alice@ext.example.com',
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-001',
+    });
+    expect(conversation.messages[0].body).toContain('zoology specimen catalogues');
+  });
+
   it('transitions to APPROVED and updates event log', async () => {
     const result = await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
     expect(result.proposal.status).toBe('APPROVED');

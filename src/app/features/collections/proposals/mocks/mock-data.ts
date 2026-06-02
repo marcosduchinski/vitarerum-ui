@@ -124,7 +124,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     collectionUseProject: {
       id: 'proj-1',
       referenceNumber: 'VR-2026-001',
-      title: 'Photographic history of Rio de Janeiro port, 1890-1930',
+      title: 'Zoology specimen catalogues from Atlantic forest surveys',
       status: 'REQUESTED',
     },
     submittedAt: '2026-06-01T09:00:00Z',
@@ -142,7 +142,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     collectionUseProject: {
       id: 'proj-2',
       referenceNumber: 'VR-2026-002',
-      title: 'Conservation records for modern art restoration',
+      title: 'Botanical herbarium records of medicinal plant collections',
       status: 'REQUESTED',
     },
     submittedAt: '2026-06-01T09:20:00Z',
@@ -160,7 +160,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     collectionUseProject: {
       id: 'proj-3',
       referenceNumber: 'VR-2026-003',
-      title: 'Material analysis of 19th-century textile dyes',
+      title: 'Comparative study of zoological field notebooks',
       status: 'REQUESTED',
     },
     submittedAt: '2026-06-01T09:40:00Z',
@@ -172,13 +172,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   {
     id: 'prop-4',
     status: 'SUBMITTED',
-    type: 'RESEARCH',
+    type: 'EXHIBITION',
     requestedBy: P['alice'],
     assignedTo: null,
     collectionUseProject: {
       id: 'proj-4',
       referenceNumber: 'VR-2026-004',
-      title: 'Field notebooks from Amazon expeditions',
+      title: 'Science history exhibition on early laboratory instruments',
       status: 'REQUESTED',
     },
     submittedAt: '2026-06-01T10:00:00Z',
@@ -190,13 +190,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   {
     id: 'prop-5',
     status: 'SUBMITTED',
-    type: 'RESEARCH',
+    type: 'EXHIBITION',
     requestedBy: P['alice'],
     assignedTo: null,
     collectionUseProject: {
       id: 'proj-5',
       referenceNumber: 'VR-2026-005',
-      title: 'Glass plate negatives from the railway archive',
+      title: 'Science history exhibition on expedition photography',
       status: 'REQUESTED',
     },
     submittedAt: '2026-06-01T10:20:00Z',
@@ -214,7 +214,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     collectionUseProject: {
       id: 'proj-6',
       referenceNumber: 'VR-2026-006',
-      title: 'Botanical expedition drawings exhibition',
+      title: 'Science history exhibition on botanical illustration',
       status: 'REQUESTED',
     },
     submittedAt: '2026-06-01T10:40:00Z',
@@ -247,12 +247,66 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
 };
 
 export const SEED_MESSAGES: Record<string, Message[]> = {
-  'conv-1': [],
-  'conv-2': [],
-  'conv-3': [],
-  'conv-4': [],
-  'conv-5': [],
-  'conv-6': [],
+  'conv-1': [
+    {
+      id: 'msg-prop-1-initial',
+      sentAt: '2026-06-01T09:00:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-001',
+      body: 'I am requesting access to the zoology specimen catalogues from Atlantic forest surveys for comparative research on collecting routes and specimen records.',
+    },
+  ],
+  'conv-2': [
+    {
+      id: 'msg-prop-2-initial',
+      sentAt: '2026-06-01T09:20:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-002',
+      body: 'I am requesting access to botanical herbarium records of medicinal plant collections for research on classification history and documented uses.',
+    },
+  ],
+  'conv-3': [
+    {
+      id: 'msg-prop-3-initial',
+      sentAt: '2026-06-01T09:40:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-003',
+      body: 'I am requesting access to zoological field notebooks, sketches, and specimen lists for a comparative research study.',
+    },
+  ],
+  'conv-4': [
+    {
+      id: 'msg-prop-4-initial',
+      sentAt: '2026-06-01T10:00:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-004',
+      body: 'I am requesting use of early laboratory instrument materials for a science history exhibition about experimental practice and public education.',
+    },
+  ],
+  'conv-5': [
+    {
+      id: 'msg-prop-5-initial',
+      sentAt: '2026-06-01T10:20:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-005',
+      body: 'I am requesting use of expedition photography materials for a public science history exhibition on documentation and fieldwork.',
+    },
+  ],
+  'conv-6': [
+    {
+      id: 'msg-prop-6-initial',
+      sentAt: '2026-06-01T10:40:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-006',
+      body: 'I am requesting use of botanical illustration materials for a science history exhibition about observation, drawing, and botanical knowledge.',
+    },
+  ],
 };
 
 export interface MutableProjectState {
@@ -277,8 +331,8 @@ export const SEED_PROJECTS: MutableProjectState[] = [
   {
     id: 'proj-1',
     referenceNumber: 'VR-2026-001',
-    title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-    purpose: 'Academic research for doctoral dissertation.',
+    title: 'Zoology specimen catalogues from Atlantic forest surveys',
+    purpose: 'Research comparing zoological specimen catalogues and collecting routes.',
     type: 'RESEARCH',
     status: 'REQUESTED',
     result: null,
@@ -294,8 +348,8 @@ export const SEED_PROJECTS: MutableProjectState[] = [
   {
     id: 'proj-2',
     referenceNumber: 'VR-2026-002',
-    title: 'Conservation records for modern art restoration',
-    purpose: 'Research comparing restoration reports and object condition history.',
+    title: 'Botanical herbarium records of medicinal plant collections',
+    purpose: 'Research on botanical herbarium records and medicinal plant classification.',
     type: 'RESEARCH',
     status: 'REQUESTED',
     result: null,
@@ -311,8 +365,8 @@ export const SEED_PROJECTS: MutableProjectState[] = [
   {
     id: 'proj-3',
     referenceNumber: 'VR-2026-003',
-    title: 'Material analysis of 19th-century textile dyes',
-    purpose: 'Non-invasive analysis of pigment and dye samples for peer-reviewed research.',
+    title: 'Comparative study of zoological field notebooks',
+    purpose: 'Research comparing zoological field notebooks, sketches, and specimen lists.',
     type: 'RESEARCH',
     status: 'REQUESTED',
     result: null,
@@ -328,9 +382,9 @@ export const SEED_PROJECTS: MutableProjectState[] = [
   {
     id: 'proj-4',
     referenceNumber: 'VR-2026-004',
-    title: 'Field notebooks from Amazon expeditions',
-    purpose: 'Research access to notebooks, maps, and object registers for a journal article.',
-    type: 'RESEARCH',
+    title: 'Science history exhibition on early laboratory instruments',
+    purpose: 'Preparation of early laboratory instruments for a science history exhibition.',
+    type: 'EXHIBITION',
     status: 'REQUESTED',
     result: null,
     beginDate: '2026-08-10',
@@ -345,9 +399,9 @@ export const SEED_PROJECTS: MutableProjectState[] = [
   {
     id: 'proj-5',
     referenceNumber: 'VR-2026-005',
-    title: 'Glass plate negatives from the railway archive',
-    purpose: 'Condition survey and metadata review before a digitisation campaign.',
-    type: 'RESEARCH',
+    title: 'Science history exhibition on expedition photography',
+    purpose: 'Selection of expedition photographs for a public science history exhibition.',
+    type: 'EXHIBITION',
     status: 'REQUESTED',
     result: null,
     beginDate: '2026-06-15',
@@ -362,8 +416,9 @@ export const SEED_PROJECTS: MutableProjectState[] = [
   {
     id: 'proj-6',
     referenceNumber: 'VR-2026-006',
-    title: 'Botanical expedition drawings exhibition',
-    purpose: 'Selection and display of expedition drawings for a temporary exhibition.',
+    title: 'Science history exhibition on botanical illustration',
+    purpose:
+      'Selection and display of botanical illustration materials for a science history exhibition.',
     type: 'EXHIBITION',
     status: 'REQUESTED',
     result: null,
