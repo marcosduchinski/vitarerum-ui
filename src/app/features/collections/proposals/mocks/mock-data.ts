@@ -130,7 +130,24 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     submittedAt: '2026-06-01T09:00:00Z',
     watchers: [],
     conversationId: 'conv-1',
-    documents: [],
+    documents: [
+      {
+        id: 'doc-prop-1-research-outline',
+        type: 'REQUESTER_ATTACHMENT',
+        fileName: 'zoology-research-outline.pdf',
+        fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
+        submittedAt: '2026-06-01T09:00:00Z',
+        submittedBy: P['alice'],
+      },
+      {
+        id: 'doc-prop-1-catalogue-list',
+        type: 'REQUESTER_ATTACHMENT',
+        fileName: 'atlantic-forest-catalogue-list.xlsx',
+        fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
+        submittedAt: '2026-06-01T09:00:00Z',
+        submittedBy: P['alice'],
+      },
+    ],
     requestedDocuments: [],
   },
   {
@@ -184,7 +201,24 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     submittedAt: '2026-06-01T10:00:00Z',
     watchers: [],
     conversationId: 'conv-4',
-    documents: [],
+    documents: [
+      {
+        id: 'doc-prop-4-exhibition-brief',
+        type: 'REQUESTER_ATTACHMENT',
+        fileName: 'laboratory-instruments-exhibition-brief.pdf',
+        fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
+        submittedAt: '2026-06-01T10:00:00Z',
+        submittedBy: P['alice'],
+      },
+      {
+        id: 'doc-prop-4-object-list',
+        type: 'REQUESTER_ATTACHMENT',
+        fileName: 'laboratory-instruments-object-list.csv',
+        fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
+        submittedAt: '2026-06-01T10:00:00Z',
+        submittedBy: P['alice'],
+      },
+    ],
     requestedDocuments: [],
   },
   {
@@ -255,6 +289,18 @@ export const SEED_MESSAGES: Record<string, Message[]> = {
       recipient: 'collections@vitarerum.example.com',
       subject: 'Collection use request: VR-2026-001',
       body: 'I am requesting access to the zoology specimen catalogues from Atlantic forest surveys for comparative research on collecting routes and specimen records.',
+      attachments: [
+        {
+          documentId: 'doc-prop-1-research-outline',
+          fileName: 'zoology-research-outline.pdf',
+          fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
+        },
+        {
+          documentId: 'doc-prop-1-catalogue-list',
+          fileName: 'atlantic-forest-catalogue-list.xlsx',
+          fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
+        },
+      ],
     },
   ],
   'conv-2': [
@@ -285,6 +331,18 @@ export const SEED_MESSAGES: Record<string, Message[]> = {
       recipient: 'collections@vitarerum.example.com',
       subject: 'Collection use request: VR-2026-004',
       body: 'I am requesting use of early laboratory instrument materials for a science history exhibition about experimental practice and public education.',
+      attachments: [
+        {
+          documentId: 'doc-prop-4-exhibition-brief',
+          fileName: 'laboratory-instruments-exhibition-brief.pdf',
+          fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
+        },
+        {
+          documentId: 'doc-prop-4-object-list',
+          fileName: 'laboratory-instruments-object-list.csv',
+          fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
+        },
+      ],
     },
   ],
   'conv-5': [

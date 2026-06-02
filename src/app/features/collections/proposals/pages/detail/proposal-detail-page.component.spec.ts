@@ -37,10 +37,34 @@ const PROPOSAL: ProposalDetail = {
 const CONVERSATION: Conversation = {
   conversationId: 'conversation-1',
   proposalId: 'proposal-1',
-  messages: [],
+  messages: [
+    {
+      id: 'message-1',
+      sentAt: '2026-05-01T11:00:00',
+      sender: 'alice@example.test',
+      recipient: 'Collections management',
+      subject: 'Initial collection use request',
+      body: '<p>Please review this research request.</p>',
+    },
+    {
+      id: 'message-2',
+      sentAt: '2026-05-01T14:00:00',
+      sender: 'carol@example.test',
+      recipient: 'alice@example.test',
+      subject: 'Requested file response',
+      body: '<p>Attached signed response for museum review.</p>',
+      attachments: [
+        {
+          documentId: 'document-1',
+          fileName: 'signed-response.docx',
+          fileReference: 'mock-proposal-file-1',
+        },
+      ],
+    },
+  ],
   page: 0,
   size: 20,
-  totalElements: 0,
+  totalElements: 2,
   totalPages: 0,
 };
 
@@ -133,6 +157,34 @@ describe('ProposalDetailPageComponent', () => {
         { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
       ],
     }).compileComponents();
+  });
+
+  it('renders conversation messages with roles, icons, rich bodies, and attachments', async () => {
+    const fixture = TestBed.createComponent(ProposalDetailPageComponent);
+    const componentRef: ComponentRef<ProposalDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const messages = Array.from(compiled.querySelectorAll<HTMLElement>('.message'));
+
+    expect(messages).toHaveLength(2);
+    expect(messages[0].classList).toContain('message--requester');
+    expect(messages[0].querySelector('.message__avatar .pi-user')).not.toBeNull();
+    expect(messages[0].querySelector('.message__content')).not.toBeNull();
+    expect(messages[0].textContent).toContain('Requester');
+    expect(messages[0].querySelector('.message__body p')?.textContent).toContain(
+      'Please review this research request.',
+    );
+
+    expect(messages[1].classList).not.toContain('message--requester');
+    expect(messages[1].querySelector('.message__avatar .pi-briefcase')).not.toBeNull();
+    expect(messages[1].textContent).toContain('Staff');
+    expect(messages[1].textContent).toContain('signed-response.docx');
+    expect(messages[1].querySelector('.message-attachments .pi-paperclip')).not.toBeNull();
   });
 
   it('confirms assuming a submitted proposal before assigning it', async () => {

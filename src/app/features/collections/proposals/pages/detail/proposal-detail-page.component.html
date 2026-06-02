@@ -1,7 +1,5 @@
 <div class="proposal-detail">
-  <a class="proposal-detail__back" [routerLink]="backLink()">
-    ← {{ backLabel() }}
-  </a>
+  <a class="proposal-detail__back" [routerLink]="backLink()"> ← {{ backLabel() }} </a>
 
   @if (proposalResource.isLoading()) {
     <app-loading-state />
@@ -165,13 +163,31 @@
         } @else {
           <ol class="message-list" aria-label="Conversation messages">
             @for (msg of messages(); track msg.id) {
-              <li class="message">
-                <div class="message__header">
-                  <span class="message__sender">{{ msg.sender }}</span>
-                  <span class="message__date">{{ formatDateTime(msg.sentAt) }}</span>
+              <li class="message" [class.message--requester]="isRequesterMessage(msg)">
+                <div class="message__avatar" aria-hidden="true">
+                  <span [class]="messageIcon(msg)"></span>
                 </div>
-                <p class="message__subject">{{ msg.subject }}</p>
-                <p class="message__body">{{ msg.body }}</p>
+                <div class="message__content">
+                  <div class="message__header">
+                    <div>
+                      <span class="message__sender">{{ msg.sender }}</span>
+                      <span class="message__role">{{ messageRoleLabel(msg) }}</span>
+                    </div>
+                    <span class="message__date">{{ formatDateTime(msg.sentAt) }}</span>
+                  </div>
+                  <p class="message__subject">{{ msg.subject }}</p>
+                  <div class="message__body" [innerHTML]="msg.body"></div>
+                  @if (msg.attachments?.length) {
+                    <ul class="message-attachments" aria-label="Message attachments">
+                      @for (attachment of msg.attachments; track attachment.documentId) {
+                        <li>
+                          <span class="pi pi-paperclip" aria-hidden="true"></span>
+                          {{ attachment.fileName }}
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
               </li>
             }
           </ol>

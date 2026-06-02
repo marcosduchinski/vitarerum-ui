@@ -71,7 +71,10 @@ describe('ProposalApiServiceMock', () => {
   });
 
   it('starts seeded proposal conversations with the collection-use request', async () => {
-    const conversation = await firstValueFrom(service.getConversation('prop-1'));
+    const [proposal, conversation] = await Promise.all([
+      firstValueFrom(service.getProposal('prop-1')),
+      firstValueFrom(service.getConversation('prop-1')),
+    ]);
 
     expect(conversation.messages).toHaveLength(1);
     expect(conversation.messages[0]).toMatchObject({
@@ -81,6 +84,50 @@ describe('ProposalApiServiceMock', () => {
       subject: 'Collection use request: VR-2026-001',
     });
     expect(conversation.messages[0].body).toContain('zoology specimen catalogues');
+    expect(conversation.messages[0].attachments).toEqual([
+      {
+        documentId: 'doc-prop-1-research-outline',
+        fileName: 'zoology-research-outline.pdf',
+        fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
+      },
+      {
+        documentId: 'doc-prop-1-catalogue-list',
+        fileName: 'atlantic-forest-catalogue-list.xlsx',
+        fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
+      },
+    ]);
+    expect(proposal.documents.map((document) => document.id)).toEqual(
+      expect.arrayContaining(['doc-prop-1-research-outline', 'doc-prop-1-catalogue-list']),
+    );
+  });
+
+  it('includes incoming requester attachments for seeded exhibition proposals', async () => {
+    const [proposal, conversation] = await Promise.all([
+      firstValueFrom(service.getProposal('prop-4')),
+      firstValueFrom(service.getConversation('prop-4')),
+    ]);
+
+    expect(conversation.messages).toHaveLength(1);
+    expect(conversation.messages[0]).toMatchObject({
+      id: 'msg-prop-4-initial',
+      sender: 'alice@ext.example.com',
+      subject: 'Collection use request: VR-2026-004',
+    });
+    expect(conversation.messages[0].attachments).toEqual([
+      {
+        documentId: 'doc-prop-4-exhibition-brief',
+        fileName: 'laboratory-instruments-exhibition-brief.pdf',
+        fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
+      },
+      {
+        documentId: 'doc-prop-4-object-list',
+        fileName: 'laboratory-instruments-object-list.csv',
+        fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
+      },
+    ]);
+    expect(proposal.documents.map((document) => document.id)).toEqual(
+      expect.arrayContaining(['doc-prop-4-exhibition-brief', 'doc-prop-4-object-list']),
+    );
   });
 
   it('transitions to APPROVED and updates event log', async () => {

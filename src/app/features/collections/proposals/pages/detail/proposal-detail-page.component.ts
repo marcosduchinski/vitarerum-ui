@@ -26,6 +26,7 @@ import {
   ProposalForwardModalComponent,
   ProposalForwardStaffOption,
 } from '../../components/proposal-forward-modal/proposal-forward-modal.component';
+import { Message } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const TYPE_LABELS: Record<UseType, string> = {
@@ -69,9 +70,7 @@ function formatDateTime(iso: string): string {
 }
 
 function safeReturnTo(value: string | undefined): string {
-  return value?.startsWith('/p/collections/proposals')
-    ? value
-    : '/p/collections/proposals/new';
+  return value?.startsWith('/p/collections/proposals') ? value : '/p/collections/proposals/new';
 }
 
 function safeReturnLabel(value: string | undefined): string {
@@ -174,6 +173,19 @@ export class ProposalDetailPageComponent {
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
+  }
+
+  protected messageIcon(message: Message): string {
+    return this.isRequesterMessage(message) ? 'pi pi-user' : 'pi pi-briefcase';
+  }
+
+  protected messageRoleLabel(message: Message): string {
+    if (this.isRequesterMessage(message)) return 'Requester';
+    return this.proposal()?.assignedTo?.group.replace('_', ' ') ?? 'Staff';
+  }
+
+  protected isRequesterMessage(message: Message): boolean {
+    return message.sender === this.proposal()?.requestedBy.user.email;
   }
 
   protected requestAssumeConfirmation(): void {
