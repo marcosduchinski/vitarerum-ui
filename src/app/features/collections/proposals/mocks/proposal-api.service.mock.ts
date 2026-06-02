@@ -35,6 +35,7 @@ import {
 import {
   makePageFrom,
   MOCK_USERS,
+  MockProjectState,
   P,
   SEED_MESSAGES,
   SEED_PROPOSALS,
@@ -44,6 +45,7 @@ import {
 @Injectable()
 export class ProposalApiServiceMock {
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly projectState = inject(MockProjectState);
   private readonly proposals = new Map<string, ProposalDetail>(
     SEED_PROPOSALS.map((p) => [p.id, structuredClone(p)]),
   );
@@ -83,6 +85,7 @@ export class ProposalApiServiceMock {
     };
 
     this.proposals.set(id, proposal);
+    this.projectState.createRequestedProject(proposal, request, refNum);
     this.events.set(id, [
       { occurredAt: now, type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
     ]);
@@ -369,6 +372,7 @@ export class ProposalApiServiceMock {
       status: 'APPROVED',
       collectionUseProject: { ...proposal.collectionUseProject, status: 'ACCEPTED' },
     });
+    this.projectState.acceptProjectForProposal(proposal, now);
     (this.events.get(proposalId) ?? []).push(evt);
     return of({
       proposal: { id: proposalId, status: 'APPROVED', lastEvent: evt },

@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
 import { ProjectApiServiceMock } from './project-api.service.mock';
@@ -6,7 +7,11 @@ describe('ProjectApiServiceMock', () => {
   let service: ProjectApiServiceMock;
 
   beforeEach(() => {
-    service = new ProjectApiServiceMock();
+    TestBed.configureTestingModule({
+      providers: [ProjectApiServiceMock],
+    });
+
+    service = TestBed.inject(ProjectApiServiceMock);
   });
 
   it('returns seeded projects on list', async () => {
@@ -52,19 +57,20 @@ describe('ProjectApiServiceMock', () => {
     expect(page.content.every((p) => p.status === 'IN_PROGRESS')).toBe(true);
   });
 
-  it('has in-progress project examples across log types', async () => {
-    const page = await firstValueFrom(service.listProjects({ status: 'IN_PROGRESS', size: 20 }));
+  it('has requested project examples for the clean proposal flow', async () => {
+    const page = await firstValueFrom(service.listProjects({ status: 'REQUESTED', size: 20 }));
     const types = new Set(page.content.map((p) => p.type));
 
+    expect(page.totalElements).toBe(6);
     expect(types.has('RESEARCH')).toBe(true);
     expect(types.has('EXHIBITION')).toBe(true);
-    expect(types.has('OTHER')).toBe(true);
+    expect(types.has('OTHER')).toBe(false);
   });
 
-  it('filters projects by assigned staff permission', async () => {
+  it('returns no projects for assigned staff before proposals are assigned', async () => {
     const page = await firstValueFrom(service.listProjects({ assignedTo: 'perm-bob', size: 20 }));
 
-    expect(page.totalElements).toBeGreaterThan(0);
+    expect(page.totalElements).toBe(0);
     expect(page.content.every((p) => p.proposal.assignedTo?.permissionId === 'perm-bob')).toBe(
       true,
     );

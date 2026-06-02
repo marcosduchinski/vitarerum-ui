@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Page } from 'src/app/shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -21,28 +21,17 @@ import {
 import { ProjectTransitionResult } from '../services/project-api.service';
 import {
   makePageFrom,
+  MockProjectState,
   MutableProjectState,
   P,
-  SEED_PROJECT_ENTRIES,
-  SEED_PROJECT_EVENTS,
-  SEED_PROJECTS,
 } from 'src/app/features/collections/proposals/mocks/mock-data';
 
 @Injectable()
 export class ProjectApiServiceMock {
-  private readonly projects = new Map<string, MutableProjectState>(
-    SEED_PROJECTS.map((p) => [p.id, structuredClone(p)]),
-  );
-  private readonly entries = new Map<string, ProjectEntry[]>(
-    Object.entries(SEED_PROJECT_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
-  );
-  private readonly events = new Map<string, UseEvent[]>(
-    Object.entries(SEED_PROJECT_EVENTS).map(([k, v]) => [k, structuredClone(v)]),
-  );
-  private nextId = 200;
+  private readonly state = inject(MockProjectState);
 
   listProjects(query: ProjectListQuery = {}): Observable<Page<CollectionUseProjectSummary>> {
-    let items = [...this.projects.values()];
+    let items = [...this.state.projects.values()];
 
     if (query.status) items = items.filter((p) => p.status === query.status);
     if (query.type) items = items.filter((p) => p.type === query.type);
@@ -67,7 +56,7 @@ export class ProjectApiServiceMock {
   }
 
   getProject(projectId: string): Observable<CollectionUseProjectDetail> {
-    const p = this.projects.get(projectId);
+    const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     return of(this.toDetail(p));
   }
@@ -97,27 +86,27 @@ export class ProjectApiServiceMock {
   }
 
   createEntry(projectId: string, request: CreateProjectEntryRequest): Observable<ProjectEntry> {
-    const p = this.projects.get(projectId);
+    const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const entry: ProjectEntry = {
-      id: `entry-${this.nextId++}`,
+      id: this.state.nextEntryId(),
       content: request.content,
       addedAt: new Date().toISOString(),
       addedBy: P['alice'],
       attachments: [],
     };
-    const current = this.entries.get(projectId) ?? [];
+    const current = this.state.entries.get(projectId) ?? [];
     current.push(entry);
-    this.entries.set(projectId, current);
+    this.state.entries.set(projectId, current);
     p.entryTotal = current.length;
     p.entries = current;
     return of(entry);
   }
 
   listEntries(projectId: string, query: ProjectEntriesQuery = {}): Observable<ProjectEntriesPage> {
-    const p = this.projects.get(projectId);
+    const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    let items = this.entries.get(projectId) ?? [];
+    let items = this.state.entries.get(projectId) ?? [];
     if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
     return of({ ...makePageFrom(items, query), projectId });
   }
@@ -128,11 +117,11 @@ export class ProjectApiServiceMock {
     file: File,
     mediaType: MediaType,
   ): Observable<Attachment> {
-    const allEntries = this.entries.get(projectId) ?? [];
+    const allEntries = this.state.entries.get(projectId) ?? [];
     const entry = allEntries.find((e) => e.id === entryId);
     if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const attachment: Attachment = {
-      fileReference: `mock-ref-${this.nextId++}`,
+      fileReference: this.state.nextFileReference(),
       fileName: file.name,
       mediaType,
       uploadedAt: new Date().toISOString(),
@@ -143,12 +132,12 @@ export class ProjectApiServiceMock {
     };
     const idx = allEntries.findIndex((e) => e.id === entryId);
     allEntries[idx] = updatedEntry;
-    this.entries.set(projectId, allEntries);
+    this.state.entries.set(projectId, allEntries);
     return of(attachment);
   }
 
   listEvents(projectId: string, query: ProjectEventsQuery = {}): Observable<ProjectEventsPage> {
-    const evts = this.events.get(projectId) ?? [];
+    const evts = this.state.events.get(projectId) ?? [];
     return of({ ...makePageFrom(evts, query), projectId });
   }
 
@@ -187,7 +176,7 @@ export class ProjectApiServiceMock {
     eventType: UseEvent['type'],
     note: string,
   ): Observable<ProjectTransitionResult> {
-    const p = this.projects.get(projectId);
+    const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const now = new Date().toISOString();
     p.status = newStatus;
@@ -198,7 +187,9 @@ export class ProjectApiServiceMock {
       triggeredBy: P['alice'],
       note: note || null,
     };
-    (this.events.get(projectId) ?? []).push(evt);
+    const events = this.state.events.get(projectId) ?? [];
+    events.push(evt);
+    this.state.events.set(projectId, events);
     return of({
       id: projectId,
       referenceNumber: p.referenceNumber,

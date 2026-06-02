@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 
+import { ProjectApiServiceMock } from '../../projects/mocks/project-api.service.mock';
 import { ProposalApiServiceMock } from './proposal-api.service.mock';
 
 const sessionState = signal<IdentitySession | null>({
@@ -46,6 +47,7 @@ describe('ProposalApiServiceMock', () => {
     TestBed.configureTestingModule({
       providers: [
         ProposalApiServiceMock,
+        ProjectApiServiceMock,
         {
           provide: IDENTITY_SERVICE,
           useValue: identityStub,
@@ -76,6 +78,28 @@ describe('ProposalApiServiceMock', () => {
     const events = await firstValueFrom(service.listEvents('prop-3'));
     const last = events.content[events.content.length - 1];
     expect(last.type).toBe('APPROVED');
+  });
+
+  it('moves the approved proposal project into pending projects', async () => {
+    const projectService = TestBed.inject(ProjectApiServiceMock);
+
+    const before = await firstValueFrom(projectService.listProjects({ status: 'ACCEPTED' }));
+    expect(before.content.find((project) => project.id === 'proj-3')).toBeUndefined();
+
+    await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
+
+    const pending = await firstValueFrom(projectService.listProjects({ status: 'ACCEPTED' }));
+    const project = pending.content.find((item) => item.id === 'proj-3');
+
+    expect(project).toBeDefined();
+    expect(project).toMatchObject({
+      id: 'proj-3',
+      status: 'ACCEPTED',
+      proposal: {
+        id: 'prop-3',
+        status: 'APPROVED',
+      },
+    });
   });
 
   it('transitions to PENDING_DOCUMENTS via requestDocuments', async () => {
