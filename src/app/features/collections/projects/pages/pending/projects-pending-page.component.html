@@ -2,7 +2,7 @@
   <app-page-header
     eyebrow="Projects"
     title="Pending projects"
-    description="Approved collection-use projects waiting to start."
+    description="Created collection-use projects accepted from approved proposals and waiting to start."
   />
 
   @if (projectsResource.isLoading()) {
@@ -18,7 +18,7 @@
       <div class="projects-pending__meta">
         <div>
           <strong>{{ totalProjects() }} pending</strong>
-          <span>Three cards per page</span>
+          <span>Accepted projects awaiting start</span>
         </div>
         @if (totalProjects() > 0) {
           <p>{{ rangeStart() }}-{{ rangeEnd() }} of {{ totalProjects() }}</p>
@@ -59,8 +59,8 @@
         [title]="appliedSearch() ? 'No pending projects found' : 'No pending projects'"
         [message]="
           appliedSearch()
-            ? 'No approved projects match the current search.'
-            : 'There are no approved projects waiting to start.'
+            ? 'No created projects awaiting start match the current search.'
+            : 'There are no created projects awaiting start.'
         "
       />
     } @else {
@@ -69,7 +69,7 @@
           <article class="project-card">
             <header class="project-card__header">
               <p class="project-card__reference">{{ project.referenceNumber }}</p>
-              <span class="project-card__status">Pending start</span>
+              <span class="project-card__status">Created - awaiting start</span>
             </header>
 
             <h2>{{ project.title }}</h2>
@@ -144,7 +144,7 @@
           [message]="
             'This will cancel ' +
             project.referenceNumber +
-            ' before work starts and move it to completed / closed projects.'
+            ' before work starts and move it to cancelled projects.'
           "
           confirmLabel="Cancel project"
           cancelLabel="Keep pending"

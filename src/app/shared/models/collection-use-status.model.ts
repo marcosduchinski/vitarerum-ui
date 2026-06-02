@@ -9,6 +9,8 @@ export type ProposalStatus =
   | 'REJECTED'
   | 'CANCELLED';
 
+export type ProposalLifecyclePhase = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export type ProposalEventType =
   | 'SUBMITTED'
   | 'ASSIGNED'
@@ -33,6 +35,8 @@ export type UseStatus =
   | 'CLOSED';
 
 export type UseResult = 'COMPLETED' | 'CANCELLED';
+
+export type ProjectLifecyclePhase = 'CREATED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export type UseEventType =
   | 'REQUESTED'
@@ -64,6 +68,16 @@ const PROPOSAL_STATUS_PRESENTATION = {
   CANCELLED: { label: 'Cancelled', tone: 'closed' },
 } as const satisfies Record<ProposalStatus, StatusPresentation>;
 
+const PROPOSAL_LIFECYCLE_PHASES = {
+  SUBMITTED: 'SUBMITTED',
+  PENDING_DOCUMENTS: 'PENDING',
+  UNDER_REVIEW: 'PENDING',
+  PENDING_DIRECTION: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  CANCELLED: 'REJECTED',
+} as const satisfies Record<ProposalStatus, ProposalLifecyclePhase>;
+
 const USE_STATUS_PRESENTATION = {
   REQUESTED: { label: 'Requested', tone: 'submitted' },
   ACCEPTED: { label: 'Accepted', tone: 'approved' },
@@ -75,10 +89,29 @@ const USE_STATUS_PRESENTATION = {
   CLOSED: { label: 'Closed', tone: 'closed' },
 } as const satisfies Record<UseStatus, StatusPresentation>;
 
+const PROJECT_LIFECYCLE_PHASES = {
+  REQUESTED: 'CREATED',
+  ACCEPTED: 'CREATED',
+  REFUSED: 'CANCELLED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  SUSPENDED: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  CLOSED: 'COMPLETED',
+} as const satisfies Record<UseStatus, ProjectLifecyclePhase>;
+
 export function getProposalStatusPresentation(status: ProposalStatus): StatusPresentation {
   return PROPOSAL_STATUS_PRESENTATION[status];
 }
 
+export function getProposalLifecyclePhase(status: ProposalStatus): ProposalLifecyclePhase {
+  return PROPOSAL_LIFECYCLE_PHASES[status];
+}
+
 export function getUseStatusPresentation(status: UseStatus): StatusPresentation {
   return USE_STATUS_PRESENTATION[status];
+}
+
+export function getProjectLifecyclePhase(status: UseStatus): ProjectLifecyclePhase {
+  return PROJECT_LIFECYCLE_PHASES[status];
 }

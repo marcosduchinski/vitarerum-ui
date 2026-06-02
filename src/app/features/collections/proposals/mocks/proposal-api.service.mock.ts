@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { Page, PageQuery } from 'src/app/shared/models/page.model';
+import { getProposalLifecyclePhase } from 'src/app/shared/models/collection-use-status.model';
 import { Observable, of, throwError } from 'rxjs';
 
 import {
@@ -120,6 +121,8 @@ export class ProposalApiServiceMock {
     let items = [...this.proposals.values()];
 
     if (query.status) items = items.filter((p) => p.status === query.status);
+    if (query.lifecyclePhase)
+      items = items.filter((p) => getProposalLifecyclePhase(p.status) === query.lifecyclePhase);
     if (query.type) items = items.filter((p) => p.type === query.type);
     if (query.unassigned) items = items.filter((p) => p.assignedTo === null);
     if (query.assignedTo)
@@ -250,13 +253,13 @@ export class ProposalApiServiceMock {
       : this.currentPrincipal();
     const evt: ProposalEvent = {
       occurredAt: now,
-      type: 'ASSIGNED',
+      type: 'REVIEW_STARTED',
       triggeredBy: assignedTo,
       note: request.note || null,
     };
-    this.proposals.set(proposalId, { ...proposal, assignedTo });
+    this.proposals.set(proposalId, { ...proposal, status: 'UNDER_REVIEW', assignedTo });
     (this.events.get(proposalId) ?? []).push(evt);
-    return of({ id: proposalId, status: proposal.status, assignedTo, lastEvent: evt });
+    return of({ id: proposalId, status: 'UNDER_REVIEW', assignedTo, lastEvent: evt });
   }
 
   requestDocuments(

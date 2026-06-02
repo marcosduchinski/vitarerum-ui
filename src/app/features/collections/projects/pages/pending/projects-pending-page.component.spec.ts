@@ -98,7 +98,7 @@ describe('ProjectsPendingPageComponent', () => {
     document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
-  it('loads accepted projects only', async () => {
+  it('loads accepted projects as created projects awaiting start', async () => {
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -126,7 +126,8 @@ describe('ProjectsPendingPageComponent', () => {
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('2026-06-10 to 2026-06-20');
-    expect(text).toContain('Pending start');
+    expect(text).toContain('Created - awaiting start');
+    expect(text).toContain('Accepted projects awaiting start');
     expect(text).toContain('1-3 of 5');
     expect(compiled.querySelectorAll('.project-card')).toHaveLength(3);
   });
@@ -252,7 +253,7 @@ describe('ProjectsPendingPageComponent', () => {
     await fixture.whenStable();
 
     expect(projectService.started).toEqual([
-      { projectId: PROJECT.id, note: 'Started from pending projects.' },
+      { projectId: PROJECT.id, note: 'Started from created projects awaiting start.' },
     ]);
     expect(projectService.queries).toHaveLength(2);
   });
@@ -313,7 +314,7 @@ describe('ProjectsPendingPageComponent', () => {
     expect(projectService.cancelled).toEqual([]);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cancel project?');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'This will cancel VR-2026-041 before work starts and move it to completed / closed projects.',
+      'This will cancel VR-2026-041 before work starts and move it to cancelled projects.',
     );
 
     buttonByText(fixture.nativeElement, 'Cancel project').click();
@@ -323,7 +324,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.cancelled).toEqual([
-      { projectId: PROJECT.id, reason: 'Cancelled from pending projects.' },
+      { projectId: PROJECT.id, reason: 'Cancelled from created projects awaiting start.' },
     ]);
     expect(projectService.queries).toHaveLength(2);
   });

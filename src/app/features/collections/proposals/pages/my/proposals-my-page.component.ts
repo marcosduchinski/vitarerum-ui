@@ -120,6 +120,7 @@ export class ProposalsMyPageComponent {
       return firstValueFrom(
         this.proposalService.listProposals({
           assignedTo: params.assignedTo,
+          lifecyclePhase: 'PENDING',
           page: params.page,
           size: params.size,
           search: params.search,
@@ -295,7 +296,9 @@ export class ProposalsMyPageComponent {
       );
       this.forwardModalProposalId.set(null);
       this.forwardConfirmProposalId.set(null);
-      this.forwardSuccessMessage.set(`${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`);
+      this.forwardSuccessMessage.set(
+        `${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`,
+      );
       this.proposalsResource.reload();
     } catch (err) {
       this.forwardError.set(toApiError(err));

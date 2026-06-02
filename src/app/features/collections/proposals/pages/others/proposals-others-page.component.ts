@@ -91,6 +91,7 @@ export class ProposalsOthersPageComponent {
         this.proposalService.listProposals({
           page: 0,
           size: ASSIGNMENTS_FETCH_SIZE,
+          lifecyclePhase: 'PENDING',
           search: params.search,
         }),
       ).then((page) =>
@@ -108,7 +109,9 @@ export class ProposalsOthersPageComponent {
     return this.allOtherAssignments().slice(start, start + this.pageSize());
   });
   protected readonly totalProposals = computed(() => this.allOtherAssignments().length);
-  protected readonly totalPages = computed(() => Math.ceil(this.totalProposals() / this.pageSize()));
+  protected readonly totalPages = computed(() =>
+    Math.ceil(this.totalProposals() / this.pageSize()),
+  );
   protected readonly rangeStart = computed(() =>
     this.totalProposals() === 0 ? 0 : this.currentPage() * this.pageSize() + 1,
   );

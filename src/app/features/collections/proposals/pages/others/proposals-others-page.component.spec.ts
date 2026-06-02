@@ -176,6 +176,7 @@ describe('ProposalsOthersPageComponent', () => {
     expect(proposalService.queries.at(-1)).toMatchObject({
       page: 0,
       size: 500,
+      lifecyclePhase: 'PENDING',
       search: '',
     });
     expect(compiled.textContent).toContain('Photographic history of Rio de Janeiro port');
@@ -247,7 +248,9 @@ describe('ProposalsOthersPageComponent', () => {
 
     expect(proposalService.assignCalls).toEqual([]);
     expect(compiled.textContent).toContain('Assume assignment?');
-    expect(compiled.textContent).toContain('This will move VR-2026-001 from Carolina Silva to you.');
+    expect(compiled.textContent).toContain(
+      'This will move VR-2026-001 from Carolina Silva to you.',
+    );
 
     buttonByText(compiled, 'Assume assignment').click();
     fixture.detectChanges();

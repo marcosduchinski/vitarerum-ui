@@ -159,6 +159,7 @@ describe('ProposalsMyPageComponent', () => {
 
     expect(proposalService.queries.at(-1)).toMatchObject({
       assignedTo: 'permission-staff',
+      lifecyclePhase: 'PENDING',
       page: 0,
       size: 20,
       search: '',

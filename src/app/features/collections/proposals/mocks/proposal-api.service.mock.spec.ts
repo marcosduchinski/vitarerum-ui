@@ -207,13 +207,26 @@ describe('ProposalApiServiceMock', () => {
     expect(page.content.every((p) => p.status === 'SUBMITTED')).toBe(true);
   });
 
-  it('assume preserves proposal status and sets assignedTo', async () => {
+  it('filters proposals by lifecycle phase', async () => {
+    await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
+    await firstValueFrom(service.approveProposal('prop-2', { note: 'Approved' }));
+
+    const pending = await firstValueFrom(service.listProposals({ lifecyclePhase: 'PENDING' }));
+    const approved = await firstValueFrom(service.listProposals({ lifecyclePhase: 'APPROVED' }));
+
+    expect(pending.content.map((proposal) => proposal.id)).toContain('prop-1');
+    expect(pending.content.map((proposal) => proposal.id)).not.toContain('prop-2');
+    expect(approved.content.map((proposal) => proposal.id)).toContain('prop-2');
+  });
+
+  it('assume moves proposal into review and sets assignedTo', async () => {
     const result = await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
-    expect(result.status).toBe('SUBMITTED');
+    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
     expect(result.assignedTo.permissionId).toBe('perm-bob');
 
     const updated = await firstValueFrom(service.getProposal('prop-1'));
-    expect(updated.status).toBe('SUBMITTED');
+    expect(updated.status).toBe('UNDER_REVIEW');
     expect(updated.assignedTo?.permissionId).toBe('perm-bob');
   });
 
@@ -247,14 +260,15 @@ describe('ProposalApiServiceMock', () => {
     expect(page.content.find((p) => p.id === 'prop-1')).toBeUndefined();
   });
 
-  it('assign preserves status when assigning a target permission', async () => {
+  it('assigning a target permission moves proposal into review', async () => {
     const result = await firstValueFrom(
       service.assignProposal('prop-1', {
         targetPermissionId: 'perm-carol',
         note: 'Assigning to carol',
       }),
     );
-    expect(result.status).toBe('SUBMITTED');
+    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
     expect(result.assignedTo.permissionId).toBe('perm-carol');
   });
 

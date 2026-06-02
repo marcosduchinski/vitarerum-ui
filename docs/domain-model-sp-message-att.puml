@@ -15,6 +15,13 @@
       |<#E8F0FE>| New model element |
     endlegend
 
+    note as MessageAttachmentViewNote
+      Message-attachment focused view.
+      Status enums in this diagram are lifecycle phases used by the
+      proposal and project lifecycle diagrams. The canonical operational
+      status vocabulary remains in domain-model-sp.puml.
+    end note
+
     package "Identity" <<Bounded Context>> {
 
       class User {
@@ -280,6 +287,11 @@
         - fileName: String
         - fileReference: String?
       }
+
+      note right of MessageAttachment
+        References an existing Proposal.documents item.
+        It does not own or duplicate the uploaded file.
+      end note
 
       class EmailAddress <<Value Object>> {
         - value: String

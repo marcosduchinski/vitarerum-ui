@@ -2,6 +2,7 @@ import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
 import { Page, PageQuery } from 'src/app/shared/models/page.model';
 
 import {
+  ProposalLifecyclePhase,
   ProposalEventType,
   ProposalStatus,
   UseStatus,
@@ -109,6 +110,7 @@ export interface CreateProposalResponse {
 
 export interface ProposalListQuery extends PageQuery {
   readonly status?: ProposalStatus;
+  readonly lifecyclePhase?: ProposalLifecyclePhase;
   readonly type?: UseType;
   readonly assignedTo?: string;
   readonly unassigned?: boolean;

@@ -2,6 +2,24 @@
 
     skinparam linetype ortho
     skinparam packageStyle rectangle
+    skinparam class {
+      BackgroundColor<<Updated>> #E6F4EA
+      BorderColor<<Updated>> #137333
+      BackgroundColor<<New>> #E8F0FE
+      BorderColor<<New>> #1A73E8
+    }
+
+    legend right
+      |= Highlight |= Meaning |
+      |<#E6F4EA>| Updated message/document relationship |
+      |<#E8F0FE>| New model element |
+    endlegend
+
+    note as CanonicalModelNote
+      Canonical operational domain model.
+      Lifecycle diagrams may group these operational statuses into
+      derived phases, but this diagram keeps the persisted status vocabulary.
+    end note
 
     package "Identity" <<Bounded Context>> {
 
@@ -248,13 +266,13 @@
         CANCELLED
       }
 
-      class Document <<Entity>> {
+      class Document <<Entity>> <<Updated>> {
         - id: DocumentId
         - type: DocumentType
         - fileName: String
-        - fileReference: String
+        - fileReference: String?
         - submittedAt: DateTime
-        - submittedBy: PermissionId
+        - submittedBy: PermissionId?
       }
 
       class RequestedDocument <<Entity>> {
@@ -274,13 +292,20 @@
         - proposalId: ProposalId
       }
 
-      class Message <<Entity>> {
+      class Message <<Entity>> <<Updated>> {
         - id: MessageId
         - sentAt: DateTime
         - sender: EmailAddress
         - recipient: EmailAddress
         - subject: String
         - body: String
+        - attachments: List<MessageAttachment>
+      }
+
+      class MessageAttachment <<Value Object>> <<New>> {
+        - documentId: DocumentId
+        - fileName: String
+        - fileReference: String?
       }
 
       class EmailAddress <<Value Object>> {
@@ -315,7 +340,9 @@
       RequestedDocument *-- DocumentType
       Document *-- DocumentType
       Conversation *-- "0..*" Message
+      Message *-[#137333]- "0..*" MessageAttachment
       Message *-- EmailAddress
+      MessageAttachment .[#137333].> Document : references proposal document
       Proposal ..> CollectionUseProject : ref
       Conversation ..> Proposal : ref
     }

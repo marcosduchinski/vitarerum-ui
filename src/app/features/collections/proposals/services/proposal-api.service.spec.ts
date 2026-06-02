@@ -73,6 +73,7 @@ describe('ProposalApiService', () => {
     service
       .listProposals({
         status: 'UNDER_REVIEW',
+        lifecyclePhase: 'PENDING',
         type: 'RESEARCH',
         assignedTo: 'permission-1',
         dateFrom: '2026-01-01',
@@ -84,11 +85,12 @@ describe('ProposalApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/proposals?status=UNDER_REVIEW&type=RESEARCH&assignedTo=permission-1&dateFrom=2026-01-01&dateTo=2026-01-31&search=CUP&page=1&size=25',
+      'https://api.example.test/proposals?status=UNDER_REVIEW&lifecyclePhase=PENDING&type=RESEARCH&assignedTo=permission-1&dateFrom=2026-01-01&dateTo=2026-01-31&search=CUP&page=1&size=25',
     );
 
     expect(request.request.method).toBe('GET');
     expect(request.request.params.get('status')).toBe('UNDER_REVIEW');
+    expect(request.request.params.get('lifecyclePhase')).toBe('PENDING');
     expect(request.request.params.get('assignedTo')).toBe('permission-1');
     request.flush({ content: [], page: 1, size: 25, totalElements: 0, totalPages: 0 });
   });

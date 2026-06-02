@@ -23,8 +23,8 @@ import { CollectionUseProjectSummary } from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 const PAGE_SIZE = 3;
-const START_NOTE = 'Started from pending projects.';
-const CANCEL_REASON = 'Cancelled from pending projects.';
+const START_NOTE = 'Started from created projects awaiting start.';
+const CANCEL_REASON = 'Cancelled from created projects awaiting start.';
 
 const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',

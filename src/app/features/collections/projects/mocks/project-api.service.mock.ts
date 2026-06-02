@@ -62,27 +62,48 @@ export class ProjectApiServiceMock {
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, 'IN_PROGRESS', null, 'STARTED', request.note);
+    return this.transition(projectId, ['ACCEPTED'], 'IN_PROGRESS', null, 'STARTED', request.note);
   }
 
   suspendProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, 'SUSPENDED', null, 'SUSPENDED', request.reason);
+    return this.transition(
+      projectId,
+      ['IN_PROGRESS'],
+      'SUSPENDED',
+      null,
+      'SUSPENDED',
+      request.reason,
+    );
   }
 
   resumeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, 'IN_PROGRESS', null, 'RESUMED', request.note);
+    return this.transition(projectId, ['SUSPENDED'], 'IN_PROGRESS', null, 'RESUMED', request.note);
   }
 
   completeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, 'COMPLETED', 'COMPLETED', 'COMPLETED', request.note);
+    return this.transition(
+      projectId,
+      ['IN_PROGRESS'],
+      'COMPLETED',
+      'COMPLETED',
+      'COMPLETED',
+      request.note,
+    );
   }
 
   cancelProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, 'CANCELLED', 'CANCELLED', 'CANCELLED', request.reason);
+    return this.transition(
+      projectId,
+      ['ACCEPTED', 'IN_PROGRESS', 'SUSPENDED'],
+      'CANCELLED',
+      'CANCELLED',
+      'CANCELLED',
+      request.reason,
+    );
   }
 
   closeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, 'CLOSED', null, 'CLOSED', request.note);
+    return this.transition(projectId, ['COMPLETED'], 'CLOSED', null, 'CLOSED', request.note);
   }
 
   createEntry(projectId: string, request: CreateProjectEntryRequest): Observable<ProjectEntry> {
@@ -171,6 +192,7 @@ export class ProjectApiServiceMock {
 
   private transition(
     projectId: string,
+    allowedStatuses: readonly UseStatus[],
     newStatus: UseStatus,
     newResult: UseResult | null,
     eventType: UseEvent['type'],
@@ -178,6 +200,13 @@ export class ProjectApiServiceMock {
   ): Observable<ProjectTransitionResult> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    if (!allowedStatuses.includes(p.status)) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: `Project must be ${allowedStatuses.join(' or ')} to transition to ${newStatus}`,
+      }));
+    }
     const now = new Date().toISOString();
     p.status = newStatus;
     if (newResult) p.result = newResult;
