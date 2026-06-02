@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { projectLogAccessGuard } from './guards/project-log-access.guard';
+
 export const PROJECTS_ROUTES: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
   {
@@ -36,6 +38,7 @@ export const PROJECTS_ROUTES: Routes = [
   {
     path: ':id/log/research',
     title: 'Research Log',
+    canActivate: [projectLogAccessGuard],
     loadComponent: () =>
       import('./pages/log/project-research-log-page.component').then(
         (m) => m.ProjectResearchLogPageComponent,
@@ -44,6 +47,7 @@ export const PROJECTS_ROUTES: Routes = [
   {
     path: ':id/log/exhibition',
     title: 'Exhibition Log',
+    canActivate: [projectLogAccessGuard],
     loadComponent: () =>
       import('./pages/log/project-exhibition-log-page.component').then(
         (m) => m.ProjectExhibitionLogPageComponent,
@@ -52,6 +56,7 @@ export const PROJECTS_ROUTES: Routes = [
   {
     path: ':id/log/other',
     title: 'Project Log',
+    canActivate: [projectLogAccessGuard],
     loadComponent: () =>
       import('./pages/log/project-other-log-page.component').then(
         (m) => m.ProjectOtherLogPageComponent,

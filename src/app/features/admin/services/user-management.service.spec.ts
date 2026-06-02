@@ -59,6 +59,27 @@ describe('UserManagementService', () => {
     revokeRequest.flush(null);
   });
 
+  it('fetches a single user by id', () => {
+    service.getUser('user-1').subscribe();
+
+    const request = http.expectOne('https://api.example.test/users/user-1');
+
+    expect(request.request.method).toBe('GET');
+    request.flush({ id: 'user-1', name: 'Ana', email: 'ana@example.test', permissions: [] });
+  });
+
+  it('lists permissions for a user', () => {
+    service.listUserPermissions('user-1').subscribe();
+
+    const request = http.expectOne('https://api.example.test/users/user-1/permissions');
+
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      userId: 'user-1',
+      permissions: [{ permissionId: 'perm-1', group: { id: 'g-1', name: 'CURATORIAL' } }],
+    });
+  });
+
   it('lists groups and group users', () => {
     service.listGroups().subscribe();
 
