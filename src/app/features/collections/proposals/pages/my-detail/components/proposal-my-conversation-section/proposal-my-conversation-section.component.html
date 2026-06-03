@@ -42,6 +42,7 @@
     <app-error-message [apiError]="messageError()!" />
   }
 
+  @if (canReply()) {
   <form
     class="reply-composer"
     aria-label="Reply to requester"
@@ -49,10 +50,10 @@
   >
     <div class="reply-composer__header">
       <div>
-        <p class="reply-composer__eyebrow">Staff response</p>
-        <h3>Reply to requester</h3>
+        <p class="reply-composer__eyebrow">{{ replyEyebrow() }}</p>
+        <h3>{{ replyHeading() }}</h3>
       </div>
-      <span class="reply-composer__recipient"> To {{ proposal().requestedBy.user.email }} </span>
+      <span class="reply-composer__recipient"> To {{ resolvedRecipientEmail() }} </span>
     </div>
 
     <div class="reply-toolbar" aria-label="Rich text formatting">
@@ -138,4 +139,5 @@
       </button>
     </div>
   </form>
+  }
 </section>

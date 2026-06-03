@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  computed,
   effect,
   inject,
   input,
@@ -45,7 +46,15 @@ export class ProposalMyConversationSectionComponent {
   readonly sendingMessage = input.required<boolean>();
   readonly messageError = input.required<ApiError | null>();
   readonly replyResetVersion = input.required<number>();
+  readonly replyEyebrow = input('Staff response');
+  readonly replyHeading = input('Reply to requester');
+  readonly recipientEmail = input<string | null>(null);
+  readonly canReply = input(true);
   readonly replySubmitted = output<ReplyComposerPayload>();
+
+  protected readonly resolvedRecipientEmail = computed(
+    () => this.recipientEmail() ?? this.proposal().requestedBy.user.email,
+  );
 
   protected readonly selectedFiles = signal<readonly File[]>([]);
   protected readonly replyBody = signal('');

@@ -163,46 +163,19 @@
         </dl>
       </section>
 
-      <section class="detail-card" aria-labelledby="conversation-heading">
-        <h2 id="conversation-heading" class="detail-card__title">Conversation</h2>
-
-        @if (conversationResource.isLoading()) {
-          <app-loading-state label="Loading messages…" />
-        } @else if (!messages().length) {
-          <p class="detail-card__empty">No messages yet.</p>
-        } @else {
-          <ol class="message-list" aria-label="Conversation messages">
-            @for (msg of messages(); track msg.id) {
-              <li class="message" [class.message--requester]="isRequesterMessage(msg)">
-                <div class="message__avatar" aria-hidden="true">
-                  <span [class]="messageIcon(msg)"></span>
-                </div>
-                <div class="message__content">
-                  <div class="message__header">
-                    <div>
-                      <span class="message__sender">{{ msg.sender }}</span>
-                      <span class="message__role">{{ messageRoleLabel(msg) }}</span>
-                    </div>
-                    <span class="message__date">{{ formatDateTime(msg.sentAt) }}</span>
-                  </div>
-                  <p class="message__subject">{{ msg.subject }}</p>
-                  <div class="message__body" [innerHTML]="msg.body"></div>
-                  @if (msg.attachments?.length) {
-                    <ul class="message-attachments" aria-label="Message attachments">
-                      @for (attachment of msg.attachments; track attachment.documentId) {
-                        <li>
-                          <span class="pi pi-paperclip" aria-hidden="true"></span>
-                          {{ attachment.fileName }}
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
-              </li>
-            }
-          </ol>
-        }
-      </section>
+      <app-proposal-my-conversation-section
+        [proposal]="proposal()!"
+        [messages]="messages()"
+        [messagesLoading]="conversationResource.isLoading()"
+        [messageError]="messageError()"
+        [sendingMessage]="sendingMessage()"
+        [replyResetVersion]="replyResetVersion()"
+        replyEyebrow="Your response"
+        replyHeading="Reply to staff"
+        [recipientEmail]="staffRecipientEmail()"
+        [canReply]="!!proposal()!.assignedTo"
+        (replySubmitted)="sendReply($event)"
+      />
 
       <section class="detail-card watchers-card" aria-labelledby="watchers-heading">
         <h2 id="watchers-heading" class="detail-card__title">Watchers</h2>

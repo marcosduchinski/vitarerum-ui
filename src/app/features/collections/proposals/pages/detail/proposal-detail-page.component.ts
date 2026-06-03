@@ -22,7 +22,10 @@ import {
 } from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
-import { Message } from '../../models/proposal.model';
+import {
+  ProposalMyConversationSectionComponent,
+  ReplyComposerPayload,
+} from '../my-detail/components/proposal-my-conversation-section/proposal-my-conversation-section.component';
 
 interface ForwardStaffOption {
   readonly label: string;
@@ -89,6 +92,7 @@ function safeReturnLabel(value: string | undefined): string {
     ErrorMessageComponent,
     StatusChipComponent,
     ConfirmModalComponent,
+    ProposalMyConversationSectionComponent,
   ],
   templateUrl: './proposal-detail-page.component.html',
   styleUrl: './proposal-detail-page.component.scss',
@@ -162,22 +166,52 @@ export class ProposalDetailPageComponent {
   );
   protected readonly forwardNote = signal('');
   protected readonly actionError = signal<ApiError | null>(null);
+  protected readonly sendingMessage = signal(false);
+  protected readonly messageError = signal<ApiError | null>(null);
+  protected readonly replyResetVersion = signal(0);
+  protected readonly staffRecipientEmail = computed<string | null>(() => {
+    const assignedTo = this.proposal()?.assignedTo;
+    return assignedTo ? assignedTo.user.email : null;
+  });
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
   }
 
-  protected messageIcon(message: Message): string {
-    return this.isRequesterMessage(message) ? 'pi pi-user' : 'pi pi-briefcase';
-  }
+  protected async sendReply(payload: ReplyComposerPayload): Promise<void> {
+    const recipientEmail = this.proposal()?.assignedTo?.user.email;
+    if (!recipientEmail || this.sendingMessage()) return;
 
-  protected messageRoleLabel(message: Message): string {
-    if (this.isRequesterMessage(message)) return 'Requester';
-    return this.proposal()?.assignedTo?.group.replace('_', ' ') ?? 'Staff';
-  }
+    this.sendingMessage.set(true);
+    this.messageError.set(null);
 
-  protected isRequesterMessage(message: Message): boolean {
-    return message.sender === this.proposal()?.requestedBy.user.email;
+    try {
+      const uploadedDocuments = [];
+      for (const file of payload.files) {
+        uploadedDocuments.push(
+          await firstValueFrom(
+            this.proposalService.uploadDocument(this.id(), file, 'REQUESTER_ATTACHMENT'),
+          ),
+        );
+      }
+
+      await firstValueFrom(
+        this.proposalService.sendMessage(this.id(), {
+          recipient: recipientEmail,
+          subject: `Response to ${this.proposal()?.collectionUseProject.referenceNumber ?? 'proposal'}`,
+          body: payload.body,
+          documentIds: uploadedDocuments.map((d) => d.id),
+        }),
+      );
+
+      this.replyResetVersion.update((v) => v + 1);
+      this.reloadWorkflow();
+      this.conversationResource.reload();
+    } catch (err) {
+      this.messageError.set(toApiError(err));
+    } finally {
+      this.sendingMessage.set(false);
+    }
   }
 
   protected requestAssumeConfirmation(): void {
