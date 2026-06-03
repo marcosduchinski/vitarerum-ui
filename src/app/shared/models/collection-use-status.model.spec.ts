@@ -24,7 +24,7 @@ describe('collection-use status presentation', () => {
   it('maps every proposal status to the proposal lifecycle phase model', () => {
     expect(getProposalLifecyclePhase('SUBMITTED')).toBe('SUBMITTED');
     expect(getProposalLifecyclePhase('PENDING_DOCUMENTS')).toBe('PENDING');
-    expect(getProposalLifecyclePhase('UNDER_REVIEW')).toBe('PENDING');
+    expect(getProposalLifecyclePhase('PENDING')).toBe('PENDING');
     expect(getProposalLifecyclePhase('PENDING_DIRECTION')).toBe('PENDING');
     expect(getProposalLifecyclePhase('APPROVED')).toBe('APPROVED');
     expect(getProposalLifecyclePhase('REJECTED')).toBe('REJECTED');

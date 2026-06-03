@@ -14,7 +14,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class StatusChipHostComponent {
-  status: WorkflowStatus = 'UNDER_REVIEW';
+  status: WorkflowStatus = 'PENDING';
 }
 
 describe('StatusChipComponent', () => {

@@ -38,7 +38,7 @@ const EXTERNAL_SESSION: IdentitySession = {
 
 const PROPOSAL: ProposalSummary = {
   id: 'proposal-1',
-  status: 'UNDER_REVIEW',
+  status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',

@@ -259,9 +259,9 @@ export class ProposalApiServiceMock {
       triggeredBy: assignedTo,
       note: request.note || null,
     };
-    this.proposals.set(proposalId, { ...proposal, status: 'UNDER_REVIEW', assignedTo });
+    this.proposals.set(proposalId, { ...proposal, status: 'PENDING', assignedTo });
     (this.events.get(proposalId) ?? []).push(evt);
-    return of({ id: proposalId, status: 'UNDER_REVIEW', assignedTo, lastEvent: evt });
+    return of({ id: proposalId, status: 'PENDING', assignedTo, lastEvent: evt });
   }
 
   requestDocuments(
@@ -357,7 +357,7 @@ export class ProposalApiServiceMock {
     proposalId: string,
     request: ProposalNoteRequest,
   ): Observable<ProposalStatusActionResult> {
-    return this.transitionProposal(proposalId, 'UNDER_REVIEW', 'REVIEW_STARTED', request.note);
+    return this.transitionProposal(proposalId, 'PENDING', 'REVIEW_STARTED', request.note);
   }
 
   referToDirection(
@@ -376,7 +376,7 @@ export class ProposalApiServiceMock {
     proposalId: string,
     request: DirectionClarificationRequest,
   ): Observable<ProposalStatusActionResult> {
-    return this.transitionProposal(proposalId, 'UNDER_REVIEW', 'DIRECTION_CLARIFIED', request.note);
+    return this.transitionProposal(proposalId, 'PENDING', 'DIRECTION_CLARIFIED', request.note);
   }
 
   approveProposal(

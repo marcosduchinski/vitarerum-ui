@@ -17,10 +17,10 @@ describe('shared API envelopes', () => {
   it('models machine-readable API errors', () => {
     const error: ApiErrorResponse = {
       error: 'INVALID_TRANSITION',
-      message: 'Proposal must be UNDER_REVIEW to be approved',
+      message: 'Proposal must be PENDING to be approved',
     };
 
     expect(error.error).toBe('INVALID_TRANSITION');
-    expect(error.message).toContain('UNDER_REVIEW');
+    expect(error.message).toContain('PENDING');
   });
 });

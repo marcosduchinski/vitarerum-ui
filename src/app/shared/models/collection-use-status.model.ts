@@ -3,7 +3,7 @@ export type UseType = 'EXHIBITION' | 'RESEARCH' | 'OTHER';
 export type ProposalStatus =
   | 'SUBMITTED'
   | 'PENDING_DOCUMENTS'
-  | 'UNDER_REVIEW'
+  | 'PENDING'
   | 'PENDING_DIRECTION'
   | 'APPROVED'
   | 'REJECTED'
@@ -61,7 +61,7 @@ export interface StatusPresentation {
 const PROPOSAL_STATUS_PRESENTATION = {
   SUBMITTED: { label: 'Submitted', tone: 'submitted' },
   PENDING_DOCUMENTS: { label: 'Pending documents', tone: 'pending' },
-  UNDER_REVIEW: { label: 'Under review', tone: 'review' },
+  PENDING: { label: 'Pending', tone: 'review' },
   PENDING_DIRECTION: { label: 'Pending direction', tone: 'pending' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },
@@ -71,7 +71,7 @@ const PROPOSAL_STATUS_PRESENTATION = {
 const PROPOSAL_LIFECYCLE_PHASES = {
   SUBMITTED: 'SUBMITTED',
   PENDING_DOCUMENTS: 'PENDING',
-  UNDER_REVIEW: 'PENDING',
+  PENDING: 'PENDING',
   PENDING_DIRECTION: 'PENDING',
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED',

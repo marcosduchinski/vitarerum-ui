@@ -237,12 +237,12 @@ describe('ProposalApiServiceMock', () => {
 
   it('assume moves proposal into review and sets assignedTo', async () => {
     const result = await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
-    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.status).toBe('PENDING');
     expect(result.lastEvent.type).toBe('REVIEW_STARTED');
     expect(result.assignedTo.permissionId).toBe('perm-bob');
 
     const updated = await firstValueFrom(service.getProposal('prop-1'));
-    expect(updated.status).toBe('UNDER_REVIEW');
+    expect(updated.status).toBe('PENDING');
     expect(updated.assignedTo?.permissionId).toBe('perm-bob');
   });
 
@@ -283,7 +283,7 @@ describe('ProposalApiServiceMock', () => {
         note: 'Assigning to carol',
       }),
     );
-    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.status).toBe('PENDING');
     expect(result.lastEvent.type).toBe('REVIEW_STARTED');
     expect(result.assignedTo.permissionId).toBe('perm-carol');
   });

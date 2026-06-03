@@ -131,7 +131,7 @@ class ProposalApiServiceStub {
 
   assignProposal(proposalId: string, payload: { readonly note: string }) {
     this.assignCalls.push({ proposalId, payload });
-    return of({ id: proposalId, status: 'UNDER_REVIEW', assignedTo: null, lastEvent: null });
+    return of({ id: proposalId, status: 'PENDING', assignedTo: null, lastEvent: null });
   }
 
   forwardProposal(
