@@ -516,7 +516,7 @@ describe('ProposalMyDetailPageComponent', () => {
 
     const confirm = Array.from(
       compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
-    ).find((button) => button.textContent?.trim() === 'Accept assignment');
+    ).find((button) => button.textContent?.trim() === 'Accept proposal');
 
     expect(confirm).not.toBeNull();
 

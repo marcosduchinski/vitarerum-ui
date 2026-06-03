@@ -58,7 +58,7 @@ test('collections staff can work through a my-assignment detail page', async ({ 
   await expect(page.getByText('E2E response from collections staff.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Accept', exact: true }).click();
-  await page.getByRole('button', { name: 'Accept assignment', exact: true }).click();
+  await page.getByRole('button', { name: 'Accept proposal', exact: true }).click();
   await expect(page).toHaveURL(/\/p\/collections\/proposals\/approved$/);
   await expect(page.getByRole('heading', { name: 'Approved', exact: true })).toBeVisible();
 });
