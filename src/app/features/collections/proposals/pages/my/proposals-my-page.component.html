@@ -90,7 +90,7 @@
                     </a>
                   </td>
                   <td>
-                    <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
+                    <app-type-chip [type]="proposal.type" />
                   </td>
                   <td>
                     <app-status-chip kind="proposal" [status]="proposal.status" />

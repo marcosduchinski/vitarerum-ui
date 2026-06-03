@@ -14,9 +14,7 @@
         <h1 class="proposal-detail__title">{{ proposal()!.collectionUseProject.title }}</h1>
         <div class="proposal-detail__status-row">
           <app-status-chip kind="proposal" [status]="asWorkflowStatus(proposal()!.status)" />
-          <span class="proposal-detail__type-badge">
-            {{ typeLabels[proposal()!.type] }}
-          </span>
+          <app-type-chip [type]="proposal()!.type" />
         </div>
       </div>
 

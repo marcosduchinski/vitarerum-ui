@@ -155,20 +155,6 @@
   }
 }
 
-.type-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.5rem;
-  padding: 0.15rem 0.55rem;
-  border: 1px solid color-mix(in srgb, var(--status-submitted-text) 18%, transparent);
-  border-radius: 999px;
-  background: var(--status-submitted-bg);
-  color: var(--status-submitted-text);
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 .proposals-table__requester {
   display: flex;
   flex-direction: column;
@@ -207,7 +193,10 @@
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-  transition: background 120ms, border-color 120ms, color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
 
   &:hover:not(:disabled) {
     background: var(--color-panel-muted);

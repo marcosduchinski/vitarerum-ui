@@ -92,7 +92,7 @@
                     </a>
                   </td>
                   <td>
-                    <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
+                    <app-type-chip [type]="proposal.type" />
                   </td>
                   <td>
                     <div class="proposals-table__requester">
@@ -121,13 +121,17 @@
                       <button
                         type="button"
                         class="action-btn action-btn--icon"
-                        [class.action-btn--active]="actionsMenuContext()?.proposalId === proposal.id"
+                        [class.action-btn--active]="
+                          actionsMenuContext()?.proposalId === proposal.id
+                        "
                         aria-haspopup="menu"
                         (click)="
                           toggleActionsMenu(proposal.id, proposal.collectionUseProject.id);
                           rowActionsMenu.toggle($event)
                         "
-                        aria-label="More actions for {{ proposal.collectionUseProject.referenceNumber }}"
+                        aria-label="More actions for {{
+                          proposal.collectionUseProject.referenceNumber
+                        }}"
                       >
                         <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
                       </button>
@@ -140,7 +144,11 @@
         </div>
 
         @if (totalProposals() > 0) {
-          <div class="proposals-pagination" role="navigation" aria-label="Approved proposals pagination">
+          <div
+            class="proposals-pagination"
+            role="navigation"
+            aria-label="Approved proposals pagination"
+          >
             <div class="proposals-pagination__meta">
               <span class="proposals-pagination__info">
                 {{ rangeStart() }}-{{ rangeEnd() }} of {{ totalProposals() }} proposals

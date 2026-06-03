@@ -19,7 +19,7 @@ import {
   StatusChipComponent,
   WorkflowStatus,
 } from '@shared/components/status-chip/status-chip.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import {
@@ -34,12 +34,6 @@ import {
 } from './components/proposal-my-watchers-section/proposal-my-watchers-section.component';
 import { PROPOSAL_MY_DETAIL_GROUP_LABELS } from './proposal-my-detail.presentation';
 
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
-
 type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
 
 @Component({
@@ -51,6 +45,7 @@ type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
     LoadingStateComponent,
     ErrorMessageComponent,
     StatusChipComponent,
+    TypeChipComponent,
     ConfirmModalComponent,
     ProposalMyOverviewSectionComponent,
     ProposalMyConversationSectionComponent,
@@ -109,7 +104,6 @@ export class ProposalMyDetailPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly activePanel = signal<MyDetailPanel>('overview');
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);

@@ -21,7 +21,7 @@ import { ErrorMessageComponent } from '@shared/components/error-message/error-me
 import { FeedbackMessageComponent } from '@shared/components/feedback-message/feedback-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 import { Page } from '@shared/models/page.model';
 
 import { ProposalSummary } from '../../models/proposal.model';
@@ -34,12 +34,6 @@ interface ForwardStaffOption {
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External',
@@ -66,6 +60,7 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
     FeedbackMessageComponent,
     EmptyStateComponent,
     ConfirmModalComponent,
+    TypeChipComponent,
   ],
   templateUrl: './proposals-my-assignments-page.component.html',
   styleUrl: './proposals-my-assignments-page.component.scss',
@@ -139,7 +134,6 @@ export class ProposalsMyAssignmentsPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly staffOptions = computed<ForwardStaffOption[]>(() =>
     (this.usersResource.value()?.content ?? []).flatMap((user) =>

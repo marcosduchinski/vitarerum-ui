@@ -20,7 +20,7 @@ import {
   StatusChipComponent,
   WorkflowStatus,
 } from '@shared/components/status-chip/status-chip.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import {
   ProposalMyConversationSectionComponent,
@@ -32,12 +32,6 @@ interface ForwardStaffOption {
   readonly permissionId: string;
 }
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
-
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External',
@@ -91,6 +85,7 @@ function safeReturnLabel(value: string | undefined): string {
     LoadingStateComponent,
     ErrorMessageComponent,
     StatusChipComponent,
+    TypeChipComponent,
     ConfirmModalComponent,
     ProposalMyConversationSectionComponent,
   ],
@@ -150,7 +145,6 @@ export class ProposalDetailPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly groupLabels = GROUP_LABELS;
   protected readonly formatDate = formatDate;
   protected readonly formatDateTime = formatDateTime;

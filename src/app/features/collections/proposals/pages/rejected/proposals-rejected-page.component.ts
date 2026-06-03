@@ -15,7 +15,7 @@ import { ErrorMessageComponent } from '@shared/components/error-message/error-me
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import { ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
@@ -23,12 +23,6 @@ import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 const TERMINAL_FETCH_SIZE = 500;
-
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
 
 @Component({
   selector: 'app-proposals-rejected-page',
@@ -41,6 +35,7 @@ const TYPE_LABELS: Record<UseType, string> = {
     ErrorMessageComponent,
     EmptyStateComponent,
     StatusChipComponent,
+    TypeChipComponent,
   ],
   templateUrl: './proposals-rejected-page.component.html',
   styleUrl: './proposals-rejected-page.component.scss',
@@ -87,7 +82,9 @@ export class ProposalsRejectedPageComponent {
     return this.allTerminalProposals().slice(start, start + this.pageSize());
   });
   protected readonly totalProposals = computed(() => this.allTerminalProposals().length);
-  protected readonly totalPages = computed(() => Math.ceil(this.totalProposals() / this.pageSize()));
+  protected readonly totalPages = computed(() =>
+    Math.ceil(this.totalProposals() / this.pageSize()),
+  );
   protected readonly rangeStart = computed(() =>
     this.totalProposals() === 0 ? 0 : this.currentPage() * this.pageSize() + 1,
   );
@@ -99,7 +96,6 @@ export class ProposalsRejectedPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   private readonly allTerminalProposals = computed<readonly ProposalSummary[]>(

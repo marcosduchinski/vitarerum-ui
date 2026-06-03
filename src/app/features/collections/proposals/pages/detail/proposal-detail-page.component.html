@@ -12,9 +12,7 @@
         <h1 class="proposal-detail__title">{{ proposal()!.collectionUseProject.title }}</h1>
         <div class="proposal-detail__status-row">
           <app-status-chip kind="proposal" [status]="asWorkflowStatus(proposal()!.status)" />
-          <span class="proposal-detail__type-badge">
-            {{ typeLabels[proposal()!.type] }}
-          </span>
+          <app-type-chip [type]="proposal()!.type" />
         </div>
       </div>
       <aside class="proposal-actions" aria-label="Proposal actions">
@@ -91,7 +89,8 @@
     >
       <div class="forward-modal-body">
         <p class="forward-modal-body__hint">
-          {{ proposal()!.collectionUseProject.referenceNumber }} — {{ proposal()!.collectionUseProject.title }}
+          {{ proposal()!.collectionUseProject.referenceNumber }} —
+          {{ proposal()!.collectionUseProject.title }}
         </p>
         @if (staffUsersResource.isLoading()) {
           <app-loading-state label="Loading staff..." />

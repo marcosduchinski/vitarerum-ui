@@ -17,18 +17,12 @@ import { ErrorMessageComponent } from '@shared/components/error-message/error-me
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
 
 @Component({
   selector: 'app-proposals-approved-page',
@@ -42,6 +36,7 @@ const TYPE_LABELS: Record<UseType, string> = {
     ErrorMessageComponent,
     EmptyStateComponent,
     StatusChipComponent,
+    TypeChipComponent,
   ],
   templateUrl: './proposals-approved-page.component.html',
   styleUrl: './proposals-approved-page.component.scss',
@@ -88,7 +83,6 @@ export class ProposalsApprovedPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly actionsMenuContext = signal<{
     readonly projectId: string;

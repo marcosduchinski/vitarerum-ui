@@ -19,7 +19,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import { ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
@@ -27,12 +27,6 @@ import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 const ASSIGNMENTS_FETCH_SIZE = 500;
-
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
 
 @Component({
   selector: 'app-proposals-others-page',
@@ -46,6 +40,7 @@ const TYPE_LABELS: Record<UseType, string> = {
     ErrorMessageComponent,
     EmptyStateComponent,
     ConfirmModalComponent,
+    TypeChipComponent,
   ],
   templateUrl: './proposals-others-page.component.html',
   styleUrl: './proposals-others-page.component.scss',
@@ -123,7 +118,6 @@ export class ProposalsOthersPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly assumingId = signal<string | null>(null);
   protected readonly assumeConfirmProposalId = signal<string | null>(null);

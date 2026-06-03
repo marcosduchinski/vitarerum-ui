@@ -56,7 +56,11 @@
       @if (!proposals().length) {
         <app-empty-state
           [title]="appliedSearch() ? 'No proposals found' : 'No new proposals'"
-          [message]="appliedSearch() ? 'No incoming requests match the current search.' : 'All incoming requests have been assigned.'"
+          [message]="
+            appliedSearch()
+              ? 'No incoming requests match the current search.'
+              : 'All incoming requests have been assigned.'
+          "
         />
       } @else {
         <div class="proposals-table-shell">
@@ -81,58 +85,61 @@
             </thead>
             <tbody>
               @for (proposal of proposals(); track proposal.id) {
-            <tr>
-              <td class="proposals-table__ref">
-                {{ proposal.collectionUseProject.referenceNumber }}
-              </td>
-              <td>
-                <a
-                  class="proposals-table__title"
-                  [routerLink]="['../', proposal.id]"
-                  [queryParams]="{
-                    returnTo: '/p/collections/proposals/new',
-                    returnLabel: 'new proposals',
-                  }"
-                >
-                  {{ proposal.collectionUseProject.title }}
-                </a>
-              </td>
-              <td>
-                <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
-              </td>
-              <td>
-                <div class="proposals-table__requester">
-                  <span>{{ proposal.requestedBy.user.name }}</span>
-                  <span class="proposals-table__requester-email">{{ proposal.requestedBy.user.email }}</span>
-                </div>
-              </td>
-              <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
-              <td>
-                <div class="proposals-table__actions">
-                  <button
-                    type="button"
-                    class="action-btn action-btn--primary"
-                    [disabled]="assumingId() === proposal.id"
-                    (click)="requestAssumeConfirmation(proposal.id)"
-                    aria-label="Assume {{ proposal.collectionUseProject.referenceNumber }}"
-                  >
-                    {{ assumingId() === proposal.id ? 'Assuming…' : 'Assume' }}
-                  </button>
-                  <button
-                    type="button"
-                    class="action-btn action-btn--icon"
-                    [class.action-btn--active]="actionsMenuId() === proposal.id"
-                    aria-haspopup="menu"
-                    (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
-                    aria-label="More actions for {{ proposal.collectionUseProject.referenceNumber }}"
-                  >
-                    <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-          }
+                <tr>
+                  <td class="proposals-table__ref">
+                    {{ proposal.collectionUseProject.referenceNumber }}
+                  </td>
+                  <td>
+                    <a
+                      class="proposals-table__title"
+                      [routerLink]="['../', proposal.id]"
+                      [queryParams]="{
+                        returnTo: '/p/collections/proposals/new',
+                        returnLabel: 'new proposals',
+                      }"
+                    >
+                      {{ proposal.collectionUseProject.title }}
+                    </a>
+                  </td>
+                  <td>
+                    <app-type-chip [type]="proposal.type" />
+                  </td>
+                  <td>
+                    <div class="proposals-table__requester">
+                      <span>{{ proposal.requestedBy.user.name }}</span>
+                      <span class="proposals-table__requester-email">{{
+                        proposal.requestedBy.user.email
+                      }}</span>
+                    </div>
+                  </td>
+                  <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
+                  <td>
+                    <div class="proposals-table__actions">
+                      <button
+                        type="button"
+                        class="action-btn action-btn--primary"
+                        [disabled]="assumingId() === proposal.id"
+                        (click)="requestAssumeConfirmation(proposal.id)"
+                        aria-label="Assume {{ proposal.collectionUseProject.referenceNumber }}"
+                      >
+                        {{ assumingId() === proposal.id ? 'Assuming…' : 'Assume' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="action-btn action-btn--icon"
+                        [class.action-btn--active]="actionsMenuId() === proposal.id"
+                        aria-haspopup="menu"
+                        (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
+                        aria-label="More actions for {{
+                          proposal.collectionUseProject.referenceNumber
+                        }}"
+                      >
+                        <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
             </tbody>
           </table>
         </div>
@@ -145,7 +152,11 @@
               </span>
               <label class="proposals-pagination__size" for="proposals-page-size">
                 Rows
-                <select id="proposals-page-size" [value]="pageSize()" (change)="onPageSizeChange($event)">
+                <select
+                  id="proposals-page-size"
+                  [value]="pageSize()"
+                  (change)="onPageSizeChange($event)"
+                >
                   @for (size of pageSizeOptions; track size) {
                     <option [value]="size">{{ size }}</option>
                   }
@@ -218,7 +229,8 @@
       >
         <div class="forward-modal-body">
           <p class="forward-modal-body__hint">
-            {{ proposal.collectionUseProject.referenceNumber }} — {{ proposal.collectionUseProject.title }}
+            {{ proposal.collectionUseProject.referenceNumber }} —
+            {{ proposal.collectionUseProject.title }}
           </p>
           @if (staffUsersResource.isLoading()) {
             <app-loading-state label="Loading staff..." />

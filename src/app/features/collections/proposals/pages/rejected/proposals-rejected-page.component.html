@@ -42,7 +42,9 @@
       @if (!proposals().length) {
         <app-empty-state
           [title]="
-            appliedSearch() ? 'No rejected or cancelled proposals found' : 'No rejected or cancelled proposals'
+            appliedSearch()
+              ? 'No rejected or cancelled proposals found'
+              : 'No rejected or cancelled proposals'
           "
           [message]="
             appliedSearch()
@@ -94,7 +96,7 @@
                     </a>
                   </td>
                   <td>
-                    <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
+                    <app-type-chip [type]="proposal.type" />
                   </td>
                   <td>
                     <div class="proposals-table__requester">

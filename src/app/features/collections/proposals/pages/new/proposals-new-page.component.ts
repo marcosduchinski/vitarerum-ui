@@ -20,7 +20,7 @@ import { ErrorMessageComponent } from '@shared/components/error-message/error-me
 import { FeedbackMessageComponent } from '@shared/components/feedback-message/feedback-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
-import { UseType } from '@shared/models/collection-use-status.model';
+import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
@@ -31,12 +31,6 @@ interface ForwardStaffOption {
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-
-const TYPE_LABELS: Record<UseType, string> = {
-  EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
-  OTHER: 'Other',
-};
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External',
@@ -59,6 +53,7 @@ const GROUP_LABELS: Record<GroupName, string> = {
     FeedbackMessageComponent,
     EmptyStateComponent,
     ConfirmModalComponent,
+    TypeChipComponent,
   ],
   templateUrl: './proposals-new-page.component.html',
   styleUrl: './proposals-new-page.component.scss',
@@ -114,7 +109,6 @@ export class ProposalsNewPageComponent {
     ),
   );
 
-  protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   protected readonly assumingId = signal<string | null>(null);
@@ -273,7 +267,9 @@ export class ProposalsNewPageComponent {
         }),
       );
       this.forwardModalProposalId.set(null);
-      this.forwardSuccessMessage.set(`${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`);
+      this.forwardSuccessMessage.set(
+        `${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`,
+      );
       this.proposalsResource.reload();
     } catch (err) {
       this.forwardError.set(toApiError(err));

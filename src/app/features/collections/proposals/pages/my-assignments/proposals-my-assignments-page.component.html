@@ -94,7 +94,7 @@
                     </a>
                   </td>
                   <td>
-                    <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
+                    <app-type-chip [type]="proposal.type" />
                   </td>
                   <td>
                     <div class="proposals-table__requester">
@@ -212,7 +212,8 @@
       >
         <div class="forward-modal-body">
           <p class="forward-modal-body__hint">
-            {{ proposal.collectionUseProject.referenceNumber }} — {{ proposal.collectionUseProject.title }}
+            {{ proposal.collectionUseProject.referenceNumber }} —
+            {{ proposal.collectionUseProject.title }}
           </p>
           @if (usersResource.isLoading()) {
             <app-loading-state label="Loading staff..." />
