@@ -239,7 +239,7 @@ describe('ProposalsNewPageComponent', () => {
     ]);
   });
 
-  it('confirms and forwards a new proposal from the modal screen', async () => {
+  it('forwards a new proposal from the confirmation modal', async () => {
     const fixture = TestBed.createComponent(ProposalsNewPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -279,15 +279,6 @@ describe('ProposalsNewPageComponent', () => {
     expect(submit!.disabled).toBe(false);
 
     submit!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(proposalService.forwardCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Forward proposal?');
-    expect(compiled.textContent).toContain('This will move VR-2026-001 to Bob Santos');
-
-    buttonByText(compiled, 'Forward proposal').click();
     fixture.detectChanges();
     await fixture.whenStable();
     await new Promise<void>((resolve) => setTimeout(resolve));

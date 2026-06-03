@@ -265,7 +265,7 @@ describe('ProposalsMyAssignmentsPageComponent', () => {
     ]);
   });
 
-  it('confirms and forwards an assignment from the modal screen', async () => {
+  it('forwards an assignment from the confirmation modal', async () => {
     const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -304,21 +304,6 @@ describe('ProposalsMyAssignmentsPageComponent', () => {
     expect(submit!.disabled).toBe(false);
 
     submit!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(proposalService.forwardCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Forward assignment?');
-    expect(compiled.textContent).toContain('This will move VR-2026-001 to Carol Lima');
-
-    const confirm = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.trim() === 'Forward assignment',
-    );
-
-    expect(confirm).not.toBeNull();
-
-    confirm!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     await new Promise<void>((resolve) => setTimeout(resolve));

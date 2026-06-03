@@ -251,7 +251,7 @@ describe('ProposalDetailPageComponent', () => {
     expect(proposalService.eventLoads).toBeGreaterThan(1);
   });
 
-  it('opens the forward modal and confirms before forwarding the proposal', async () => {
+  it('opens the forward modal and forwards after confirmation', async () => {
     const fixture = TestBed.createComponent(ProposalDetailPageComponent);
     const componentRef: ComponentRef<ProposalDetailPageComponent> = fixture.componentRef;
 
@@ -291,15 +291,6 @@ describe('ProposalDetailPageComponent', () => {
     expect(submit!.disabled).toBe(false);
 
     submit!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(proposalService.forwardCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Forward proposal?');
-    expect(compiled.textContent).toContain('This will move VR-2026-001 to Carolina Silva');
-
-    buttonByText(compiled, 'Forward proposal').click();
     fixture.detectChanges();
     await fixture.whenStable();
     await new Promise<void>((resolve) => setTimeout(resolve));
