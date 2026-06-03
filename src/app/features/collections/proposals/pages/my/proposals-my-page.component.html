@@ -55,6 +55,7 @@
               <col class="proposals-table__col-ref" />
               <col class="proposals-table__col-title" />
               <col class="proposals-table__col-type" />
+              <col class="proposals-table__col-status" />
               <col class="proposals-table__col-requester" />
               <col class="proposals-table__col-date" />
               <col class="proposals-table__col-actions" />
@@ -64,6 +65,7 @@
                 <th scope="col">Reference</th>
                 <th scope="col">Title</th>
                 <th scope="col">Type</th>
+                <th scope="col">Status</th>
                 <th scope="col">Requested by</th>
                 <th scope="col">Submitted</th>
                 <th scope="col" class="proposals-table__actions-header">Actions</th>
@@ -89,6 +91,9 @@
                   </td>
                   <td>
                     <span class="type-badge">{{ typeLabels[proposal.type] }}</span>
+                  </td>
+                  <td>
+                    <app-status-chip kind="proposal" [status]="proposal.status" />
                   </td>
                   <td>
                     <div class="proposals-table__requester">

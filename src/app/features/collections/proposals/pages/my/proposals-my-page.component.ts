@@ -18,6 +18,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 import { Page } from '@shared/models/page.model';
 
@@ -48,6 +49,7 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
     LoadingStateComponent,
     ErrorMessageComponent,
     EmptyStateComponent,
+    StatusChipComponent,
   ],
   templateUrl: './proposals-my-page.component.html',
   styleUrl: './proposals-my-page.component.scss',
