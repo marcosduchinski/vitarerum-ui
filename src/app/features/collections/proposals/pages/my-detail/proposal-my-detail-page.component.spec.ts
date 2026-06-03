@@ -133,31 +133,31 @@ const STAFF_USERS: Page<UserDetail> = {
 };
 
 class ProposalApiServiceStub {
-  readonly approveCalls: Array<{
+  readonly approveCalls: {
     readonly proposalId: string;
     readonly payload: { readonly note: string };
-  }> = [];
-  readonly rejectCalls: Array<{
+  }[] = [];
+  readonly rejectCalls: {
     readonly proposalId: string;
     readonly payload: { readonly reason: string };
-  }> = [];
-  readonly uploadCalls: Array<{
+  }[] = [];
+  readonly uploadCalls: {
     readonly proposalId: string;
     readonly file: File;
     readonly documentType: string;
-  }> = [];
-  readonly sendMessageCalls: Array<{
+  }[] = [];
+  readonly sendMessageCalls: {
     readonly proposalId: string;
     readonly payload: SendMessageRequest;
-  }> = [];
-  readonly addWatcherCalls: Array<{
+  }[] = [];
+  readonly addWatcherCalls: {
     readonly proposalId: string;
     readonly payload: { readonly permissionId: string };
-  }> = [];
-  readonly removeWatcherCalls: Array<{
+  }[] = [];
+  readonly removeWatcherCalls: {
     readonly proposalId: string;
     readonly permissionId: string;
-  }> = [];
+  }[] = [];
   private nextDocumentId = 1;
 
   getProposal() {

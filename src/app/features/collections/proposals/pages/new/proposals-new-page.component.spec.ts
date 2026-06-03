@@ -51,14 +51,14 @@ const STAFF_USERS: Page<UserDetail> = {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
-  readonly assignCalls: Array<{
+  readonly assignCalls: {
     readonly proposalId: string;
     readonly payload: { readonly note: string };
-  }> = [];
-  readonly forwardCalls: Array<{
+  }[] = [];
+  readonly forwardCalls: {
     readonly proposalId: string;
     readonly payload: { readonly targetPermissionId: string; readonly note: string };
-  }> = [];
+  }[] = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);

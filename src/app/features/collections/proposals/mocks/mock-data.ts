@@ -257,6 +257,24 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     documents: [],
     requestedDocuments: [],
   },
+  {
+    id: 'prop-7',
+    status: 'APPROVED',
+    type: 'RESEARCH',
+    requestedBy: P['alice'],
+    assignedTo: null,
+    collectionUseProject: {
+      id: 'proj-7',
+      referenceNumber: 'VR-2026-007',
+      title: 'Photographic history of Rio de Janeiro port, 1890-1930',
+      status: 'ACCEPTED',
+    },
+    submittedAt: '2026-06-01T11:00:00Z',
+    watchers: [P['carol']],
+    conversationId: 'conv-7',
+    documents: [],
+    requestedDocuments: [],
+  },
 ];
 
 export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
@@ -277,6 +295,15 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-6': [
     { occurredAt: '2026-06-01T10:40:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+  ],
+  'prop-7': [
+    { occurredAt: '2026-06-01T11:00:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+    {
+      occurredAt: '2026-06-02T09:00:00Z',
+      type: 'APPROVED',
+      triggeredBy: P['bob'],
+      note: 'Approved for collection use.',
+    },
   ],
 };
 
@@ -363,6 +390,16 @@ export const SEED_MESSAGES: Record<string, Message[]> = {
       recipient: 'collections@vitarerum.example.com',
       subject: 'Collection use request: VR-2026-006',
       body: 'I am requesting use of botanical illustration materials for a science history exhibition about observation, drawing, and botanical knowledge.',
+    },
+  ],
+  'conv-7': [
+    {
+      id: 'msg-prop-7-initial',
+      sentAt: '2026-06-01T11:00:00Z',
+      sender: P['alice'].user.email,
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: VR-2026-007',
+      body: 'I am requesting access to photographic records documenting the Rio de Janeiro port area between 1890 and 1930.',
     },
   ],
 };
@@ -489,6 +526,23 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     entries: [],
     entryTotal: 0,
   },
+  {
+    id: 'proj-7',
+    referenceNumber: 'VR-2026-007',
+    title: 'Photographic history of Rio de Janeiro port, 1890-1930',
+    purpose: 'Research on photographic records documenting Rio de Janeiro port history.',
+    type: 'RESEARCH',
+    status: 'ACCEPTED',
+    result: null,
+    beginDate: '2026-08-01',
+    endDate: '2027-03-31',
+    requestedBy: P['alice'],
+    proposalId: 'prop-7',
+    proposalStatus: 'APPROVED',
+    proposalAssignedTo: null,
+    entries: [],
+    entryTotal: 0,
+  },
 ];
 
 export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
@@ -510,6 +564,15 @@ export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
   'proj-6': [
     { occurredAt: '2026-06-01T10:40:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
   ],
+  'proj-7': [
+    { occurredAt: '2026-06-01T11:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    {
+      occurredAt: '2026-06-02T09:00:00Z',
+      type: 'ACCEPTED',
+      triggeredBy: P['bob'],
+      note: null,
+    },
+  ],
 };
 
 export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
@@ -519,6 +582,7 @@ export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
   'proj-4': [],
   'proj-5': [],
   'proj-6': [],
+  'proj-7': [],
 };
 
 @Injectable({ providedIn: 'root' })

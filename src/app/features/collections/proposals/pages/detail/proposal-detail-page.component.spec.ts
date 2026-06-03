@@ -104,14 +104,14 @@ const STAFF_USERS: Page<UserDetail> = {
 };
 
 class ProposalApiServiceStub {
-  readonly assignCalls: Array<{
+  readonly assignCalls: {
     readonly proposalId: string;
     readonly payload: { readonly note: string };
-  }> = [];
-  readonly forwardCalls: Array<{
+  }[] = [];
+  readonly forwardCalls: {
     readonly proposalId: string;
     readonly payload: { readonly targetPermissionId: string; readonly note: string };
-  }> = [];
+  }[] = [];
   proposalLoads = 0;
   eventLoads = 0;
 

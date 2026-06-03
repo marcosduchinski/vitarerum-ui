@@ -124,6 +124,8 @@ export class ProposalApiServiceMock {
     if (query.lifecyclePhase)
       items = items.filter((p) => getProposalLifecyclePhase(p.status) === query.lifecyclePhase);
     if (query.type) items = items.filter((p) => p.type === query.type);
+    if (query.requestedBy)
+      items = items.filter((p) => p.requestedBy.permissionId === query.requestedBy);
     if (query.unassigned) items = items.filter((p) => p.assignedTo === null);
     if (query.assignedTo)
       items = items.filter((p) => p.assignedTo?.permissionId === query.assignedTo);

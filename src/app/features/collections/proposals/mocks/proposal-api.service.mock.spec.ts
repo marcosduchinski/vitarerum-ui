@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 
 import { ProjectApiServiceMock } from '../../projects/mocks/project-api.service.mock';
@@ -22,11 +23,20 @@ const sessionState = signal<IdentitySession | null>({
 const identityStub: IdentityService = {
   session: sessionState.asReadonly(),
   isAuthenticated: signal(true).asReadonly(),
-  signIn: () => {},
+  signIn: (email: string) => {
+    const session = sessionState();
+    if (session) sessionState.set({ ...session, user: { ...session.user, email } });
+  },
   signOut: () => sessionState.set(null),
   getAccessToken: () => sessionState()?.accessToken ?? null,
-  setGroup: () => {},
-  updateAvailableGroups: () => {},
+  setGroup: (group: GroupName) => {
+    const session = sessionState();
+    if (session) sessionState.set({ ...session, group });
+  },
+  updateAvailableGroups: (groups: readonly GroupName[]) => {
+    const session = sessionState();
+    if (session) sessionState.set({ ...session, availableGroups: [...groups] });
+  },
 };
 
 describe('ProposalApiServiceMock', () => {
@@ -196,6 +206,12 @@ describe('ProposalApiServiceMock', () => {
   it('filters proposals by status', async () => {
     const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED' }));
     expect(page.content.every((p) => p.status === 'SUBMITTED')).toBe(true);
+  });
+
+  it('filters proposals by requester permission', async () => {
+    const page = await firstValueFrom(service.listProposals({ requestedBy: 'perm-alice' }));
+    expect(page.content.length).toBeGreaterThan(0);
+    expect(page.content.every((p) => p.requestedBy.permissionId === 'perm-alice')).toBe(true);
   });
 
   it('unassigned filter returns only proposals with no assignedTo', async () => {

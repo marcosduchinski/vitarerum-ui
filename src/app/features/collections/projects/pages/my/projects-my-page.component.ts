@@ -11,7 +11,9 @@ import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
+import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -48,27 +50,76 @@ const TYPE_LABELS: Record<UseType, string> = {
   styleUrl: './projects-my-page.component.scss',
 })
 export class ProjectsMyPageComponent {
+  private readonly identity = inject(IDENTITY_SERVICE);
   private readonly projectService = inject(PROJECT_API_SERVICE);
+  private readonly userService = inject(USER_MANAGEMENT_SERVICE);
   private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
   protected readonly pageSize = PAGE_SIZE;
+  protected readonly isExternalRequester = computed(
+    () => this.identity.session()?.group === 'EXTERNAL',
+  );
+
+  protected readonly usersResource = resource({
+    loader: () => firstValueFrom(this.userService.listUsers({ size: 100 })),
+  });
+
+  protected readonly currentPermissionId = computed(() => {
+    const session = this.identity.session();
+    if (!session) return null;
+
+    const user = (this.usersResource.value()?.content ?? []).find(
+      (candidate) => candidate.id === session.user.id || candidate.email === session.user.email,
+    );
+
+    return (
+      user?.permissions.find((permission) => permission.group.name === session.group)
+        ?.permissionId ?? null
+    );
+  });
 
   protected readonly projectsResource = resource({
     params: () => ({
       page: this.currentPage(),
       size: this.pageSize,
       search: this.appliedSearch().trim(),
+      isExternalRequester: this.isExternalRequester(),
+      currentPermissionId: this.isExternalRequester() ? this.currentPermissionId() : null,
     }),
-    loader: ({ params }) =>
-      firstValueFrom(
+    loader: ({ params }) => {
+      if (params.isExternalRequester && !params.currentPermissionId) {
+        return Promise.resolve({
+          content: [],
+          page: params.page,
+          size: params.size,
+          totalElements: 0,
+          totalPages: 0,
+        });
+      }
+
+      if (params.isExternalRequester) {
+        return firstValueFrom(
+          this.projectService.listProjects({
+            requestedBy: params.currentPermissionId ?? undefined,
+            page: params.page,
+            size: params.size,
+            search: params.search,
+          }),
+        );
+      }
+
+      return firstValueFrom(
         this.projectService.listProjects({
           status: 'IN_PROGRESS',
-          ...params,
+          page: params.page,
+          size: params.size,
+          search: params.search,
         }),
-      ),
+      );
+    },
   });
 
   protected readonly projects = computed(() => this.projectsResource.value()?.content ?? []);
@@ -96,6 +147,23 @@ export class ProjectsMyPageComponent {
     const projectId = this.actionsMenuId();
 
     if (!projectId) return [];
+
+    if (this.isExternalRequester()) {
+      return [
+        {
+          label: 'View',
+          icon: 'pi pi-eye',
+          command: () => {
+            void this.router.navigate(['/p/collections/projects', projectId], {
+              queryParams: {
+                returnTo: '/p/collections/projects/my',
+                returnLabel: 'my projects',
+              },
+            });
+          },
+        },
+      ];
+    }
 
     return [
       {
@@ -137,6 +205,15 @@ export class ProjectsMyPageComponent {
 
   protected dateLabel(date: string): string {
     return date.slice(0, 10);
+  }
+
+  protected canLog(project: CollectionUseProjectSummary): boolean {
+    return !this.isExternalRequester() || project.status === 'IN_PROGRESS';
+  }
+
+  protected statusLabel(project: CollectionUseProjectSummary): string {
+    const normalized = project.status.replace('_', ' ').toLowerCase();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
   protected onSearchInput(event: Event): void {

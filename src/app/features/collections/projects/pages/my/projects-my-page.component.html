@@ -2,10 +2,14 @@
   <app-page-header
     eyebrow="Projects"
     title="My projects"
-    description="Collection-use projects currently in progress."
+    [description]="
+      isExternalRequester()
+        ? 'Collection-use projects submitted by you across every status.'
+        : 'Collection-use projects currently in progress.'
+    "
   />
 
-  @if (projectsResource.isLoading()) {
+  @if (usersResource.isLoading() || projectsResource.isLoading()) {
     <app-loading-state />
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="projectsResource.reload()" />
@@ -17,7 +21,7 @@
     <section class="projects-my__toolbar" aria-label="My projects summary">
       <div class="projects-my__meta">
         <div>
-          <strong>{{ totalProjects() }} active</strong>
+          <strong>{{ totalProjects() }} {{ isExternalRequester() ? 'total' : 'active' }}</strong>
           <span>Three cards per page</span>
         </div>
         @if (totalProjects() > 0) {
@@ -56,11 +60,21 @@
 
     @if (!projects().length) {
       <app-empty-state
-        [title]="appliedSearch() ? 'No projects found' : 'No active projects'"
+        [title]="
+          appliedSearch()
+            ? 'No projects found'
+            : isExternalRequester()
+              ? 'No projects'
+              : 'No active projects'
+        "
         [message]="
           appliedSearch()
-            ? 'No active projects match the current search.'
-            : 'There are no projects currently in progress.'
+            ? isExternalRequester()
+              ? 'None of your projects match the current search.'
+              : 'No active projects match the current search.'
+            : isExternalRequester()
+              ? 'You do not have collection-use projects yet.'
+              : 'There are no projects currently in progress.'
         "
       />
     } @else {
@@ -69,7 +83,7 @@
           <article class="project-card">
             <header class="project-card__header">
               <p class="project-card__reference">{{ project.referenceNumber }}</p>
-              <span class="project-card__status">In progress</span>
+              <span class="project-card__status">{{ statusLabel(project) }}</span>
             </header>
 
             <h2>{{ project.title }}</h2>
@@ -108,7 +122,10 @@
               <button
                 type="button"
                 class="action-btn action-btn--primary"
-                [disabled]="actionProjectId() === project.id"
+                [attr.title]="
+                  !canLog(project) ? 'Log is available when the project is in progress' : null
+                "
+                [disabled]="actionProjectId() === project.id || !canLog(project)"
                 (click)="log(project)"
               >
                 Log

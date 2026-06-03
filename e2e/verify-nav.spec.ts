@@ -14,7 +14,7 @@ test('EXTERNAL role shows proposals/projects sections, hides staff items', async
   await loginAs(page, 'alice@ext.example.com');
   await page.screenshot({ path: '/tmp/nav-external.png', fullPage: true });
 
-  await expect(sidebar(page).getByText('Use of Collections')).toBeVisible();
+  await expect(sidebar(page).getByText('Use of Collections', { exact: true })).toBeVisible();
   await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
   await expect(sidebar(page).getByRole('link', { name: 'Submit proposal' })).toBeVisible();
   await expect(sidebar(page).getByRole('link', { name: 'My proposals' })).toBeVisible();
@@ -31,7 +31,7 @@ test('COLLECTIONS_MANAGEMENT user sees expandable collection-use section', async
   await loginAs(page, 'bob@collections.example.com');
   await page.screenshot({ path: '/tmp/nav-staff.png', fullPage: true });
 
-  await expect(sidebar(page).getByText('Use of Collections')).toBeVisible();
+  await expect(sidebar(page).getByText('Use of Collections', { exact: true })).toBeVisible();
 
   await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
   await expect(sidebar(page).getByRole('link', { name: 'New' })).toBeVisible();
@@ -62,7 +62,7 @@ test('DIRECTION user sees proposal terminal queues without administration links'
 test('ADMINISTRATION user can reach users and groups from the sidebar', async ({ page }) => {
   await loginAs(page, 'eve@admin.example.com');
 
-  await expect(sidebar(page).getByText('Administration')).toBeVisible();
+  await expect(sidebar(page).getByText('Administration', { exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole('link', { name: 'Users' })).toBeVisible();
   await expect(sidebar(page).getByRole('link', { name: 'Groups' })).toBeVisible();
 
@@ -86,7 +86,7 @@ test('mobile 375px: hamburger toggles sidebar overlay', async ({ page }) => {
   const nav = sidebar(page);
   await expect(nav).not.toBeInViewport();
 
-  await page.getByRole('button', { name: 'Toggle navigation' }).click();
+  await page.getByRole('button', { name: 'Toggle navigation', exact: true }).click();
   await page.screenshot({ path: '/tmp/nav-mobile-open.png', fullPage: true });
   await expect(nav).toBeInViewport();
   await expect(nav.getByRole('link', { name: 'Dashboard' })).toBeVisible();
@@ -95,7 +95,7 @@ test('mobile 375px: hamburger toggles sidebar overlay', async ({ page }) => {
 test('keyboard: Tab from page body reaches focusable topbar elements', async ({ page }) => {
   await loginAs(page, 'alice@ext.example.com');
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
+  await expect(page.getByRole('link', { name: 'Skip to main content', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
   const focused = page.locator(':focus');
   await expect(focused).toBeVisible();
@@ -136,11 +136,11 @@ test('approved proposal action menu can navigate to the related project', async 
   await sidebar(page).getByRole('button', { name: 'Proposals' }).click();
   await sidebar(page).getByRole('link', { name: 'Approved' }).click();
   await expect(page).toHaveURL(/\/p\/collections\/proposals\/approved$/);
-  await expect(page.getByRole('heading', { name: 'Approved' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Approved', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: /More actions for/ }).first().click();
-  await page.getByRole('menuitem', { name: 'Go to project' }).click();
+  await page.getByRole('menuitem', { name: 'Go to project', exact: true }).click();
 
   await expect(page).toHaveURL(/\/p\/collections\/projects\/.+returnTo=%2Fp%2Fcollections%2Fproposals%2Fapproved/);
-  await expect(page.getByRole('link', { name: 'Back to approved proposals' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back to approved proposals', exact: true })).toBeVisible();
 });

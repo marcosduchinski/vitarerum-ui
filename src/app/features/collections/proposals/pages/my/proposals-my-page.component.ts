@@ -86,6 +86,9 @@ export class ProposalsMyPageComponent {
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
+  protected readonly isExternalRequester = computed(
+    () => this.identity.session()?.group === 'EXTERNAL',
+  );
 
   protected readonly usersResource = resource({
     loader: () => firstValueFrom(this.userService.listUsers({ size: 100 })),
@@ -110,16 +113,28 @@ export class ProposalsMyPageComponent {
       page: this.currentPage(),
       size: this.pageSize(),
       search: this.appliedSearch().trim(),
-      assignedTo: this.currentPermissionId(),
+      currentPermissionId: this.currentPermissionId(),
+      isExternalRequester: this.isExternalRequester(),
     }),
     loader: ({ params }) => {
-      if (!params.assignedTo) {
+      if (!params.currentPermissionId) {
         return Promise.resolve(emptyProposalPage(params.page, params.size));
+      }
+
+      if (params.isExternalRequester) {
+        return firstValueFrom(
+          this.proposalService.listProposals({
+            requestedBy: params.currentPermissionId,
+            page: params.page,
+            size: params.size,
+            search: params.search,
+          }),
+        );
       }
 
       return firstValueFrom(
         this.proposalService.listProposals({
-          assignedTo: params.assignedTo,
+          assignedTo: params.currentPermissionId,
           lifecyclePhase: 'PENDING',
           page: params.page,
           size: params.size,
@@ -163,6 +178,23 @@ export class ProposalsMyPageComponent {
     const proposalId = this.actionsMenuId();
 
     if (!proposalId) return [];
+
+    if (this.isExternalRequester()) {
+      return [
+        {
+          label: 'View details',
+          icon: 'pi pi-eye',
+          command: () => {
+            void this.router.navigate(['/p/collections/proposals', proposalId], {
+              queryParams: {
+                returnTo: '/p/collections/proposals/my',
+                returnLabel: 'my proposals',
+              },
+            });
+          },
+        },
+      ];
+    }
 
     return [
       {

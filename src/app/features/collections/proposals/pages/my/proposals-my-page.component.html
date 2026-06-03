@@ -1,8 +1,12 @@
 <div class="proposals-new">
   <app-page-header
     eyebrow="Proposals"
-    title="My assignments"
-    description="Requests currently assigned to you."
+    [title]="isExternalRequester() ? 'My proposals' : 'My assignments'"
+    [description]="
+      isExternalRequester()
+        ? 'Requests submitted by you across every status.'
+        : 'Requests currently assigned to you.'
+    "
   />
 
   @if (usersResource.isLoading() || proposalsResource.isLoading()) {
@@ -20,7 +24,10 @@
       />
     }
 
-    <section class="proposals-list-panel" aria-label="My assignments list">
+    <section
+      class="proposals-list-panel"
+      [attr.aria-label]="isExternalRequester() ? 'My proposals list' : 'My assignments list'"
+    >
       <div class="proposals-toolbar">
         <label class="proposals-search" for="proposals-search">
           <span class="pi pi-search" aria-hidden="true"></span>
@@ -31,14 +38,18 @@
             (input)="onSearchInput($event)"
             (keydown.enter)="applySearch()"
             placeholder="Search reference or title"
-            aria-label="Search my assignments"
+            [attr.aria-label]="
+              isExternalRequester() ? 'Search my proposals' : 'Search my assignments'
+            "
           />
           @if (searchDraft()) {
             <button
               type="button"
               class="proposals-search__clear"
               (click)="clearSearch()"
-              aria-label="Clear assignment search"
+              [attr.aria-label]="
+                isExternalRequester() ? 'Clear proposal search' : 'Clear assignment search'
+              "
             >
               <span class="pi pi-times" aria-hidden="true"></span>
             </button>
@@ -51,16 +62,31 @@
 
       @if (!proposals().length) {
         <app-empty-state
-          [title]="appliedSearch() ? 'No assignments found' : 'No assignments'"
+          [title]="
+            appliedSearch()
+              ? isExternalRequester()
+                ? 'No proposals found'
+                : 'No assignments found'
+              : isExternalRequester()
+                ? 'No proposals'
+                : 'No assignments'
+          "
           [message]="
             appliedSearch()
-              ? 'No assigned proposals match the current search.'
-              : 'There are no proposals assigned to you.'
+              ? isExternalRequester()
+                ? 'None of your proposals match the current search.'
+                : 'No assigned proposals match the current search.'
+              : isExternalRequester()
+                ? 'You have not submitted proposals yet.'
+                : 'There are no proposals assigned to you.'
           "
         />
       } @else {
         <div class="proposals-table-shell">
-          <table class="proposals-table" aria-label="My assignments">
+          <table
+            class="proposals-table"
+            [attr.aria-label]="isExternalRequester() ? 'My proposals' : 'My assignments'"
+          >
             <colgroup>
               <col class="proposals-table__col-ref" />
               <col class="proposals-table__col-title" />
@@ -88,7 +114,16 @@
                   <td>
                     <a
                       class="proposals-table__title"
-                      [routerLink]="['/p/collections/proposals/my', proposal.id]"
+                      [routerLink]="
+                        isExternalRequester()
+                          ? ['/p/collections/proposals', proposal.id]
+                          : ['/p/collections/proposals/my', proposal.id]
+                      "
+                      [queryParams]="
+                        isExternalRequester()
+                          ? { returnTo: '/p/collections/proposals/my', returnLabel: 'my proposals' }
+                          : null
+                      "
                     >
                       {{ proposal.collectionUseProject.title }}
                     </a>
@@ -113,14 +148,15 @@
                         [class.action-btn--active]="actionsMenuId() === proposal.id"
                         aria-haspopup="menu"
                         (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
-                        aria-label="More actions for {{ proposal.collectionUseProject.referenceNumber }}"
+                        aria-label="More actions for {{
+                          proposal.collectionUseProject.referenceNumber
+                        }}"
                       >
                         <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
                       </button>
                     </div>
                   </td>
                 </tr>
-
               }
             </tbody>
           </table>
@@ -203,14 +239,12 @@
         [proposalReference]="proposal.collectionUseProject.referenceNumber"
         [proposalTitle]="proposal.collectionUseProject.title"
         [staffOptions]="staffOptions()"
-        [targetPermissionId]="forwardTargetPermissionId()"
-        [note]="forwardNote()"
+        [(targetPermissionId)]="forwardTargetPermissionId"
+        [(note)]="forwardNote"
         [pending]="forwardPending()"
         [loadingStaff]="usersResource.isLoading()"
         [error]="forwardError()"
-        (close)="closeForwardModal()"
-        (targetPermissionIdChange)="forwardTargetPermissionId.set($event)"
-        (noteChange)="forwardNote.set($event)"
+        (dismiss)="closeForwardModal()"
         (submitForward)="requestForwardConfirmation(proposal.id)"
       />
       <app-confirm-modal

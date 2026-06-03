@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 import { UserDetail } from '@core/auth/models/user.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
@@ -101,7 +102,19 @@ class IdentityServiceStub implements IdentityService {
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = signal(true).asReadonly();
 
-  signIn(): void {}
+  signIn(email: string): void {
+    const session = this.sessionState();
+    this.sessionState.set(
+      session
+        ? { ...session, user: { ...session.user, email } }
+        : {
+            accessToken: 'token',
+            user: { id: 'signed-in-user', email, displayName: email },
+            group: null,
+            availableGroups: [],
+          },
+    );
+  }
 
   signOut(): void {
     this.sessionState.set(null);
@@ -111,17 +124,23 @@ class IdentityServiceStub implements IdentityService {
     return this.session()?.accessToken ?? null;
   }
 
-  setGroup(): void {}
+  setGroup(group: GroupName): void {
+    const session = this.sessionState();
+    if (session) this.sessionState.set({ ...session, group });
+  }
 
-  updateAvailableGroups(): void {}
+  updateAvailableGroups(groups: readonly GroupName[]): void {
+    const session = this.sessionState();
+    if (session) this.sessionState.set({ ...session, availableGroups: [...groups] });
+  }
 }
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
-  readonly assignCalls: Array<{
+  readonly assignCalls: {
     readonly proposalId: string;
     readonly payload: { readonly note: string };
-  }> = [];
+  }[] = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);

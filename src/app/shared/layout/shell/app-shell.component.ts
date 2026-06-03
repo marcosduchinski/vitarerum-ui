@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, Renderer2 } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  Renderer2,
+} from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
@@ -22,6 +29,24 @@ export class AppShellComponent {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private menuOutsideClickListener?: () => void;
+  private readonly overlayOpenSubscription = this.layoutService.overlayOpen$
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe(() => {
+      this.menuOutsideClickListener ??= this.renderer.listen(
+        'document',
+        'click',
+        (event: MouseEvent) => {
+          if (this.isOutsideClicked(event)) this.hideMenu();
+        },
+      );
+      document.body.classList.add('blocked-scroll');
+    });
+  private readonly navigationEndSubscription = this.router.events
+    .pipe(
+      filter(e => e instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef),
+    )
+    .subscribe(() => this.hideMenu());
 
   protected readonly containerClass = computed(() => {
     const state = this.layoutService.layoutState();
@@ -32,26 +57,6 @@ export class AppShellComponent {
       'layout-mobile-active': state.staticMenuMobileActive,
     };
   });
-
-  constructor() {
-    this.layoutService.overlayOpen$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuOutsideClickListener ??= this.renderer.listen(
-        'document',
-        'click',
-        (event: MouseEvent) => {
-          if (this.isOutsideClicked(event)) this.hideMenu();
-        },
-      );
-      document.body.classList.add('blocked-scroll');
-    });
-
-    this.router.events
-      .pipe(
-        filter(e => e instanceof NavigationEnd),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(() => this.hideMenu());
-  }
 
   private isOutsideClicked(event: MouseEvent): boolean {
     const sidebar = document.querySelector('.layout-sidebar');

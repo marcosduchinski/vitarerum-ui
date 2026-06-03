@@ -11,20 +11,12 @@ export class IdentityServiceImpl implements IdentityService {
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
 
-  // TODO(real-auth): replace with OIDC redirect (e.g. angular-oauth2-oidc).
-  // On callback: parse JWT → set accessToken, user, and availableGroups from the
-  // "groups" claim. The email param becomes unused once the IdP owns the flow.
+  // TODO(real-auth): trigger the configured OIDC redirect here.
+  // Until the IdP contract is implemented, the real service must not mint a
+  // client-side development token. Local demo access belongs in IdentityServiceMock.
   signIn(email: string): void {
-    this.sessionState.set({
-      accessToken: 'development-access-token',
-      user: {
-        id: 'development-user',
-        email,
-        displayName: email.split('@')[0] || 'Learning User',
-      },
-      group: null,
-      availableGroups: [],
-    });
+    void email;
+    this.sessionState.set(null);
   }
 
   signOut(): void {

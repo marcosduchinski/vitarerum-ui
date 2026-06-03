@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
 
 import { ApiError } from '@core/http/api-error.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -22,28 +22,26 @@ export class ProposalForwardModalComponent {
   readonly proposalReference = input('');
   readonly proposalTitle = input('');
   readonly staffOptions = input<readonly ProposalForwardStaffOption[]>([]);
-  readonly targetPermissionId = input('');
-  readonly note = input('');
+  readonly targetPermissionId = model('');
+  readonly note = model('');
   readonly pending = input(false);
   readonly loadingStaff = input(false);
   readonly error = input<ApiError | null>(null);
 
-  readonly close = output<void>();
-  readonly targetPermissionIdChange = output<string>();
-  readonly noteChange = output<string>();
+  readonly dismiss = output<void>();
   readonly submitForward = output<void>();
 
   protected requestClose(): void {
     if (this.pending()) return;
-    this.close.emit();
+    this.dismiss.emit();
   }
 
   protected onTargetChange(event: Event): void {
-    this.targetPermissionIdChange.emit((event.target as HTMLSelectElement).value);
+    this.targetPermissionId.set((event.target as HTMLSelectElement).value);
   }
 
   protected onNoteChange(event: Event): void {
-    this.noteChange.emit((event.target as HTMLTextAreaElement).value);
+    this.note.set((event.target as HTMLTextAreaElement).value);
   }
 
   protected submit(): void {

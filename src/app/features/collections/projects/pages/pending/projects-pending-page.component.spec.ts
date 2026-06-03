@@ -42,8 +42,8 @@ const PROJECT = PROJECTS[0];
 
 class ProjectApiServiceStub {
   readonly queries: ProjectListQuery[] = [];
-  readonly started: Array<{ projectId: string; note: string }> = [];
-  readonly cancelled: Array<{ projectId: string; reason: string }> = [];
+  readonly started: { projectId: string; note: string }[] = [];
+  readonly cancelled: { projectId: string; reason: string }[] = [];
 
   listProjects(query: ProjectListQuery = {}) {
     this.queries.push(query);

@@ -29,7 +29,6 @@ function makeRoute(projectId: string): ActivatedRouteSnapshot {
 }
 
 describe('projectLogAccessGuard', () => {
-  let router: Router;
   let identityService: { session: () => IdentitySession | null };
   let projectService: { getProject: ReturnType<typeof vi.fn> };
 
@@ -44,7 +43,7 @@ describe('projectLogAccessGuard', () => {
       ],
     });
 
-    router = TestBed.inject(Router);
+    void TestBed.inject(Router);
   });
 
   const runGuard = (route: ActivatedRouteSnapshot) =>

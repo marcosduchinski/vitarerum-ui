@@ -210,14 +210,12 @@
         [proposalReference]="proposal.collectionUseProject.referenceNumber"
         [proposalTitle]="proposal.collectionUseProject.title"
         [staffOptions]="staffOptions()"
-        [targetPermissionId]="forwardTargetPermissionId()"
-        [note]="forwardNote()"
+        [(targetPermissionId)]="forwardTargetPermissionId"
+        [(note)]="forwardNote"
         [pending]="forwardPending()"
         [loadingStaff]="staffUsersResource.isLoading()"
         [error]="forwardError()"
-        (close)="closeForwardModal()"
-        (targetPermissionIdChange)="forwardTargetPermissionId.set($event)"
-        (noteChange)="forwardNote.set($event)"
+        (dismiss)="closeForwardModal()"
         (submitForward)="requestForwardConfirmation(proposal.id)"
       />
       <app-confirm-modal
