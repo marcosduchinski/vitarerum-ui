@@ -205,36 +205,49 @@
       (onHide)="closeActionsMenu()"
     />
     @if (forwardModalProposal(); as proposal) {
-      <app-proposal-forward-modal
-        [open]="true"
-        [proposalReference]="proposal.collectionUseProject.referenceNumber"
-        [proposalTitle]="proposal.collectionUseProject.title"
-        [staffOptions]="staffOptions()"
-        [(targetPermissionId)]="forwardTargetPermissionId"
-        [(note)]="forwardNote"
-        [pending]="forwardPending()"
-        [loadingStaff]="staffUsersResource.isLoading()"
-        [error]="forwardError()"
-        (dismiss)="closeForwardModal()"
-        (submitForward)="requestForwardConfirmation(proposal.id)"
-      />
       <app-confirm-modal
-        [open]="forwardConfirmProposalId() === proposal.id"
-        title="Forward proposal?"
-        [message]="
-          'This will move ' +
-          proposal.collectionUseProject.referenceNumber +
-          ' to ' +
-          forwardTargetLabel() +
-          '.'
-        "
-        confirmLabel="Forward proposal"
-        cancelLabel="Keep editing"
+        [open]="true"
+        title="Forward proposal"
+        confirmLabel="Forward"
+        cancelLabel="Cancel"
         tone="warning"
         [pending]="forwardPending()"
+        [confirmDisabled]="!forwardTargetPermissionId() || staffUsersResource.isLoading()"
         (confirmed)="forward(proposal.id)"
-        (cancelled)="cancelForwardConfirmation()"
-      />
+        (cancelled)="closeForwardModal()"
+      >
+        <div class="forward-modal-body">
+          <p class="forward-modal-body__hint">
+            {{ proposal.collectionUseProject.referenceNumber }} — {{ proposal.collectionUseProject.title }}
+          </p>
+          @if (staffUsersResource.isLoading()) {
+            <app-loading-state label="Loading staff..." />
+          } @else {
+            <label for="forward-modal-target">Staff member</label>
+            <select
+              id="forward-modal-target"
+              [value]="forwardTargetPermissionId()"
+              (change)="onForwardTargetChange($event)"
+            >
+              <option value="" disabled>Select a staff member...</option>
+              @for (opt of staffOptions(); track opt.permissionId) {
+                <option [value]="opt.permissionId">{{ opt.label }}</option>
+              }
+            </select>
+            <label for="forward-modal-note">Note</label>
+            <textarea
+              id="forward-modal-note"
+              rows="3"
+              placeholder="Add a note (optional)..."
+              [value]="forwardNote()"
+              (input)="onForwardNoteChange($event)"
+            ></textarea>
+            @if (forwardError()) {
+              <app-error-message [apiError]="forwardError()!" />
+            }
+          }
+        </div>
+      </app-confirm-modal>
     }
     @for (proposal of proposals(); track proposal.id) {
       <app-confirm-modal

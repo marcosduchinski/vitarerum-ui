@@ -24,12 +24,13 @@ import { PageHeaderComponent } from '@shared/components/page-header/page-header.
 import { UseType } from '@shared/models/collection-use-status.model';
 import { Page } from '@shared/models/page.model';
 
-import {
-  ProposalForwardModalComponent,
-  ProposalForwardStaffOption,
-} from '../../components/proposal-forward-modal/proposal-forward-modal.component';
 import { ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
+
+interface ForwardStaffOption {
+  readonly label: string;
+  readonly permissionId: string;
+}
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
@@ -65,7 +66,6 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
     FeedbackMessageComponent,
     EmptyStateComponent,
     ConfirmModalComponent,
-    ProposalForwardModalComponent,
   ],
   templateUrl: './proposals-my-assignments-page.component.html',
   styleUrl: './proposals-my-assignments-page.component.scss',
@@ -141,7 +141,7 @@ export class ProposalsMyAssignmentsPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  protected readonly staffOptions = computed<ProposalForwardStaffOption[]>(() =>
+  protected readonly staffOptions = computed<ForwardStaffOption[]>(() =>
     (this.usersResource.value()?.content ?? []).flatMap((user) =>
       user.permissions
         .filter((permission) => permission.group.name !== 'EXTERNAL')
@@ -187,7 +187,6 @@ export class ProposalsMyAssignmentsPageComponent {
   protected readonly forwardNote = signal('');
   protected readonly forwardPending = signal(false);
   protected readonly forwardError = signal<ApiError | null>(null);
-  protected readonly forwardConfirmProposalId = signal<string | null>(null);
   protected readonly forwardSuccessMessage = signal<string | null>(null);
 
   protected prevPage(): void {
@@ -229,7 +228,6 @@ export class ProposalsMyAssignmentsPageComponent {
   protected toggleActionsMenu(proposalId: string): void {
     this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
     this.forwardModalProposalId.set(null);
-    this.forwardConfirmProposalId.set(null);
   }
 
   protected closeActionsMenu(): void {
@@ -242,12 +240,10 @@ export class ProposalsMyAssignmentsPageComponent {
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
     this.forwardError.set(null);
-    this.forwardConfirmProposalId.set(null);
   }
 
   protected closeForwardModal(): void {
     this.forwardModalProposalId.set(null);
-    this.forwardConfirmProposalId.set(null);
   }
 
   protected onForwardTargetChange(event: Event): void {
@@ -256,15 +252,6 @@ export class ProposalsMyAssignmentsPageComponent {
 
   protected onForwardNoteChange(event: Event): void {
     this.forwardNote.set((event.target as HTMLTextAreaElement).value);
-  }
-
-  protected requestForwardConfirmation(proposalId: string): void {
-    if (!this.forwardTargetPermissionId() || this.forwardPending()) return;
-    this.forwardConfirmProposalId.set(proposalId);
-  }
-
-  protected cancelForwardConfirmation(): void {
-    this.forwardConfirmProposalId.set(null);
   }
 
   protected dismissForwardSuccess(): void {
@@ -288,14 +275,12 @@ export class ProposalsMyAssignmentsPageComponent {
         }),
       );
       this.forwardModalProposalId.set(null);
-      this.forwardConfirmProposalId.set(null);
       this.forwardSuccessMessage.set(
         `${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`,
       );
       this.proposalsResource.reload();
     } catch (err) {
       this.forwardError.set(toApiError(err));
-      this.forwardConfirmProposalId.set(null);
     } finally {
       this.forwardPending.set(false);
     }

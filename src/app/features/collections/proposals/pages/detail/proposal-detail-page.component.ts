@@ -22,11 +22,12 @@ import {
 } from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
-import {
-  ProposalForwardModalComponent,
-  ProposalForwardStaffOption,
-} from '../../components/proposal-forward-modal/proposal-forward-modal.component';
 import { Message } from '../../models/proposal.model';
+
+interface ForwardStaffOption {
+  readonly label: string;
+  readonly permissionId: string;
+}
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const TYPE_LABELS: Record<UseType, string> = {
@@ -88,7 +89,6 @@ function safeReturnLabel(value: string | undefined): string {
     ErrorMessageComponent,
     StatusChipComponent,
     ConfirmModalComponent,
-    ProposalForwardModalComponent,
   ],
   templateUrl: './proposal-detail-page.component.html',
   styleUrl: './proposal-detail-page.component.scss',
@@ -130,7 +130,7 @@ export class ProposalDetailPageComponent {
     const proposal = this.proposal();
     return proposal?.status === 'SUBMITTED' && proposal.assignedTo === null;
   });
-  protected readonly staffOptions = computed<ProposalForwardStaffOption[]>(() =>
+  protected readonly staffOptions = computed<ForwardStaffOption[]>(() =>
     (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
       u.permissions
         .filter((p) => p.group.name !== 'EXTERNAL')
@@ -154,7 +154,6 @@ export class ProposalDetailPageComponent {
   protected readonly assumeConfirmOpen = signal(false);
   protected readonly forwarding = signal(false);
   protected readonly forwardModalOpen = signal(false);
-  protected readonly forwardConfirmOpen = signal(false);
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardTargetLabel = computed(
     () =>
@@ -212,7 +211,6 @@ export class ProposalDetailPageComponent {
 
   protected openForwardModal(): void {
     this.forwardModalOpen.set(true);
-    this.forwardConfirmOpen.set(false);
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
     this.actionError.set(null);
@@ -220,7 +218,6 @@ export class ProposalDetailPageComponent {
 
   protected closeForwardModal(): void {
     this.forwardModalOpen.set(false);
-    this.forwardConfirmOpen.set(false);
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
   }
@@ -231,15 +228,6 @@ export class ProposalDetailPageComponent {
 
   protected onForwardNoteChange(event: Event): void {
     this.forwardNote.set((event.target as HTMLTextAreaElement).value);
-  }
-
-  protected requestForwardConfirmation(): void {
-    if (!this.canAssign() || !this.forwardTargetPermissionId() || this.forwarding()) return;
-    this.forwardConfirmOpen.set(true);
-  }
-
-  protected cancelForwardConfirmation(): void {
-    this.forwardConfirmOpen.set(false);
   }
 
   protected async forward(): Promise<void> {
@@ -260,7 +248,6 @@ export class ProposalDetailPageComponent {
       this.reloadWorkflow();
     } catch (err) {
       this.actionError.set(toApiError(err));
-      this.forwardConfirmOpen.set(false);
     } finally {
       this.forwarding.set(false);
     }
