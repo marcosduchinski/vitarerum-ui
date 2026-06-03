@@ -12,17 +12,18 @@ export type ConfirmModalTone = 'default' | 'warning' | 'danger';
 export class ConfirmModalComponent {
   readonly open = input(false);
   readonly title = input.required<string>();
-  readonly message = input.required<string>();
+  readonly message = input('');
   readonly confirmLabel = input('Confirm');
   readonly cancelLabel = input('Cancel');
   readonly tone = input<ConfirmModalTone>('default');
   readonly pending = input(false);
+  readonly confirmDisabled = input(false);
 
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
   protected confirm(): void {
-    if (!this.pending()) {
+    if (!this.pending() && !this.confirmDisabled()) {
       this.confirmed.emit();
     }
   }

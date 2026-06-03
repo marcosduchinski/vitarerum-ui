@@ -489,27 +489,33 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const rejectToggle = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Reject'),
+    const rejectButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Reject',
     );
 
-    expect(rejectToggle).not.toBeNull();
+    expect(rejectButton).not.toBeNull();
 
-    rejectToggle!.click();
+    rejectButton!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Reject proposal'),
-    );
+    const dialog = compiled.querySelector<HTMLElement>('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog!.textContent).toContain('Reject proposal?');
 
-    expect(submit).not.toBeNull();
-    expect(submit!.disabled).toBe(true);
+    const textarea = dialog!.querySelector<HTMLTextAreaElement>('#rejection-reason');
+    const confirmBtn = Array.from(
+      dialog!.querySelectorAll<HTMLButtonElement>('button'),
+    ).find((button) => button.textContent?.trim() === 'Reject proposal');
+
+    expect(textarea).not.toBeNull();
+    expect(confirmBtn).not.toBeNull();
+    expect(confirmBtn!.disabled).toBe(true);
     expect(proposalService.rejectCalls).toEqual([]);
   });
 
-  it('confirms rejecting the assignment and navigates to the rejected list', async () => {
+  it('rejects the assignment directly from the modal and navigates to the rejected list', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
 
@@ -520,42 +526,28 @@ describe('ProposalMyDetailPageComponent', () => {
 
     const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const compiled = fixture.nativeElement as HTMLElement;
-    const rejectToggle = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Reject'),
+    const rejectButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Reject',
     );
 
-    rejectToggle!.click();
+    rejectButton!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const reason = compiled.querySelector<HTMLTextAreaElement>('#rejection-reason');
-    const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Reject proposal'),
-    );
-
-    expect(reason).not.toBeNull();
-    expect(submit).not.toBeNull();
-
-    reason!.value = 'The request does not meet collection access criteria.';
-    reason!.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
-    submit!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(proposalService.rejectCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Reject proposal?');
-
-    const confirm = Array.from(
-      compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
+    const dialog = compiled.querySelector<HTMLElement>('[role="dialog"]');
+    const textarea = dialog!.querySelector<HTMLTextAreaElement>('#rejection-reason');
+    const confirmBtn = Array.from(
+      dialog!.querySelectorAll<HTMLButtonElement>('button'),
     ).find((button) => button.textContent?.trim() === 'Reject proposal');
 
-    expect(confirm).not.toBeNull();
+    textarea!.value = 'The request does not meet collection access criteria.';
+    textarea!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
 
-    confirm!.click();
+    expect(confirmBtn!.disabled).toBe(false);
+
+    confirmBtn!.click();
     fixture.detectChanges();
     await fixture.whenStable();
 

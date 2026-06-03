@@ -44,9 +44,8 @@
           <button
             type="button"
             class="action-btn"
-            [class.action-btn--active]="rejectPanelOpen()"
             [disabled]="accepting() || rejecting()"
-            (click)="rejectPanelOpen() ? closeRejectPanel() : openRejectPanel()"
+            (click)="openRejectModal()"
           >
             <span class="pi pi-times-circle" aria-hidden="true"></span>
             Reject
@@ -59,48 +58,9 @@
       <app-error-message [apiError]="actionError()!" />
     }
 
-    @if (rejectPanelOpen()) {
-      <section class="decision-panel" aria-label="Reject proposal">
-        <div>
-          <p class="decision-panel__eyebrow">Rejection reason</p>
-          <h2>Record why this proposal is being rejected</h2>
-        </div>
-
-        <div class="decision-panel__fields">
-          <label for="rejection-reason">Reason</label>
-          <textarea
-            id="rejection-reason"
-            rows="3"
-            placeholder="Explain the rejection reason..."
-            [value]="rejectionReason()"
-            (input)="onRejectionReasonInput($event)"
-          ></textarea>
-        </div>
-
-        <div class="proposal-actions__buttons">
-          <button
-            type="button"
-            class="action-btn action-btn--primary"
-            [disabled]="!rejectionReason().trim() || rejecting()"
-            (click)="requestRejectConfirmation()"
-          >
-            {{ rejecting() ? 'Rejecting...' : 'Reject proposal' }}
-          </button>
-          <button
-            type="button"
-            class="action-btn"
-            [disabled]="rejecting()"
-            (click)="closeRejectPanel()"
-          >
-            Cancel
-          </button>
-        </div>
-      </section>
-    }
-
     <app-confirm-modal
       [open]="acceptConfirmOpen()"
-      title="Accept?"
+      title="Accept proposal?"
       [message]="
         'This will approve ' +
         proposal()!.collectionUseProject.referenceNumber +
@@ -114,20 +74,30 @@
     />
 
     <app-confirm-modal
-      [open]="rejectConfirmOpen()"
+      [open]="rejectModalOpen()"
       title="Reject proposal?"
-      [message]="
-        'This will reject ' +
-        proposal()!.collectionUseProject.referenceNumber +
-        ' using the recorded reason.'
-      "
       confirmLabel="Reject proposal"
-      cancelLabel="Keep editing"
+      cancelLabel="Cancel"
       tone="danger"
       [pending]="rejecting()"
+      [confirmDisabled]="!rejectionReason().trim()"
       (confirmed)="reject()"
-      (cancelled)="cancelRejectConfirmation()"
-    />
+      (cancelled)="closeRejectModal()"
+    >
+      <div class="reject-modal-body">
+        <p class="reject-modal-body__hint">
+          This will reject {{ proposal()!.collectionUseProject.referenceNumber }} permanently.
+        </p>
+        <label for="rejection-reason">Reason</label>
+        <textarea
+          id="rejection-reason"
+          rows="4"
+          placeholder="Explain the rejection reason..."
+          [value]="rejectionReason()"
+          (input)="onRejectionReasonInput($event)"
+        ></textarea>
+      </div>
+    </app-confirm-modal>
 
     <div class="proposal-detail__grid">
       <app-proposal-my-overview-section [proposal]="proposal()!" />

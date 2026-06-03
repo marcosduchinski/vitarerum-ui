@@ -21,7 +21,11 @@
         <h2 id="confirm-modal-title">{{ title() }}</h2>
       </header>
 
-      <p id="confirm-modal-message" class="confirm-modal__message">{{ message() }}</p>
+      @if (message()) {
+        <p id="confirm-modal-message" class="confirm-modal__message">{{ message() }}</p>
+      }
+
+      <ng-content />
 
       <footer class="confirm-modal__footer">
         <button
@@ -35,7 +39,7 @@
         <button
           type="button"
           class="confirm-modal__button confirm-modal__button--primary"
-          [disabled]="pending()"
+          [disabled]="pending() || confirmDisabled()"
           (click)="confirm()"
         >
           {{ pending() ? 'Working...' : confirmLabel() }}

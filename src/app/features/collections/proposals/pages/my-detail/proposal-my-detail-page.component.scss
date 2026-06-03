@@ -1,49 +1,33 @@
 @use '../detail/proposal-detail-page.component.scss';
 
-.decision-panel {
-  display: grid;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: var(--color-surface);
-}
-
-.decision-panel__eyebrow {
-  margin: 0 0 0.25rem;
-  color: var(--color-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.decision-panel h2 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 1rem;
-}
-
-.decision-panel__fields {
+.reject-modal-body {
   display: grid;
   gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 5rem;
+    resize: vertical;
+    padding: 0.625rem 0.75rem;
+    border: 1.5px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-panel);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.9rem;
+  }
 }
 
-.decision-panel__fields label {
-  color: var(--color-text);
+.reject-modal-body__hint {
+  margin: 0 0 0.25rem;
+  color: var(--color-subtle);
   font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.decision-panel__fields textarea {
-  width: 100%;
-  min-height: 6rem;
-  resize: vertical;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  color: var(--color-text);
-  font: inherit;
 }
 
 @media (min-width: 900px) {

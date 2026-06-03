@@ -111,8 +111,7 @@ export class ProposalMyDetailPageComponent {
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
   protected readonly acceptConfirmOpen = signal(false);
-  protected readonly rejectConfirmOpen = signal(false);
-  protected readonly rejectPanelOpen = signal(false);
+  protected readonly rejectModalOpen = signal(false);
   protected readonly rejectionReason = signal('');
   protected readonly replyResetVersion = signal(0);
   protected readonly watcherResetVersion = signal(0);
@@ -126,16 +125,15 @@ export class ProposalMyDetailPageComponent {
     return value as WorkflowStatus;
   }
 
-  protected openRejectPanel(): void {
-    this.rejectPanelOpen.set(true);
+  protected openRejectModal(): void {
+    this.rejectionReason.set('');
     this.acceptConfirmOpen.set(false);
     this.actionError.set(null);
+    this.rejectModalOpen.set(true);
   }
 
-  protected closeRejectPanel(): void {
-    this.rejectPanelOpen.set(false);
-    this.rejectConfirmOpen.set(false);
-    this.rejectionReason.set('');
+  protected closeRejectModal(): void {
+    this.rejectModalOpen.set(false);
   }
 
   protected onRejectionReasonInput(event: Event): void {
@@ -220,15 +218,6 @@ export class ProposalMyDetailPageComponent {
     this.acceptConfirmOpen.set(false);
   }
 
-  protected requestRejectConfirmation(): void {
-    if (!this.rejectionReason().trim() || this.accepting() || this.rejecting()) return;
-    this.rejectConfirmOpen.set(true);
-  }
-
-  protected cancelRejectConfirmation(): void {
-    this.rejectConfirmOpen.set(false);
-  }
-
   protected async accept(): Promise<void> {
     if (this.accepting() || this.rejecting()) return;
 
@@ -262,7 +251,7 @@ export class ProposalMyDetailPageComponent {
       await this.router.navigate(['/p/collections/proposals/rejected']);
     } catch (err) {
       this.actionError.set(toApiError(err));
-      this.rejectConfirmOpen.set(false);
+      this.rejectModalOpen.set(false);
     } finally {
       this.rejecting.set(false);
     }
