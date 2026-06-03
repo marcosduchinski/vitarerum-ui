@@ -46,8 +46,16 @@
   font: inherit;
 }
 
-.decision-panel__footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+@media (min-width: 900px) {
+  app-proposal-my-conversation-section {
+    grid-area: 1 / 2 / 4;
+  }
+
+  app-proposal-my-watchers-section {
+    grid-area: 2 / 1;
+  }
+
+  app-proposal-my-events-section {
+    grid-area: 3 / 1;
+  }
 }

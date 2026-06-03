@@ -26,7 +26,7 @@ interface StatusPresentation {
 const STATUS_PRESENTATION = {
   SUBMITTED: { label: 'Submitted', tone: 'submitted' },
   PENDING_DOCUMENTS: { label: 'Pending documents', tone: 'pending' },
-  PENDING: { label: 'Pending', tone: 'review' },
+  PENDING: { label: 'Under review', tone: 'review' },
   PENDING_DIRECTION: { label: 'Pending direction', tone: 'pending' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },

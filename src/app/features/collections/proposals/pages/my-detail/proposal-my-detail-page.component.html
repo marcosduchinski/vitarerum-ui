@@ -77,7 +77,7 @@
           ></textarea>
         </div>
 
-        <div class="decision-panel__footer">
+        <div class="proposal-actions__buttons">
           <button
             type="button"
             class="action-btn action-btn--primary"
@@ -130,285 +130,30 @@
     />
 
     <div class="proposal-detail__grid">
-      <section class="detail-card" aria-labelledby="overview-heading">
-        <h2 id="overview-heading" class="detail-card__title">Overview</h2>
-        <dl class="detail-dl">
-          <div class="detail-dl__row">
-            <dt>Requested by</dt>
-            <dd>
-              {{ proposal()!.requestedBy.user.name }}
-              <span class="detail-dl__email">{{ proposal()!.requestedBy.user.email }}</span>
-            </dd>
-          </div>
-          @if (proposal()!.assignedTo) {
-            <div class="detail-dl__row">
-              <dt>Assigned to</dt>
-              <dd>
-                {{ proposal()!.assignedTo!.user.name }}
-                <span class="detail-dl__email">{{ proposal()!.assignedTo!.user.email }}</span>
-              </dd>
-            </div>
-          } @else {
-            <div class="detail-dl__row">
-              <dt>Assigned to</dt>
-              <dd class="detail-dl__empty">Unassigned</dd>
-            </div>
-          }
-          <div class="detail-dl__row">
-            <dt>Submitted</dt>
-            <dd>{{ formatDateTime(proposal()!.submittedAt) }}</dd>
-          </div>
-          <div class="detail-dl__row">
-            <dt>Project status</dt>
-            <dd>
-              <app-status-chip
-                kind="project"
-                [status]="asWorkflowStatus(proposal()!.collectionUseProject.status)"
-              />
-            </dd>
-          </div>
-        </dl>
-      </section>
+      <app-proposal-my-overview-section [proposal]="proposal()!" />
 
-      <section class="detail-card" aria-labelledby="conversation-heading">
-        <h2 id="conversation-heading" class="detail-card__title">Conversation</h2>
+      <app-proposal-my-conversation-section
+        [proposal]="proposal()!"
+        [messages]="messages()"
+        [messagesLoading]="conversationResource.isLoading()"
+        [messageError]="messageError()"
+        [sendingMessage]="sendingMessage()"
+        [replyResetVersion]="replyResetVersion()"
+        (replySubmitted)="sendReply($event)"
+      />
 
-        @if (conversationResource.isLoading()) {
-          <app-loading-state label="Loading messages..." />
-        } @else if (!messages().length) {
-          <p class="detail-card__empty">No messages yet.</p>
-        } @else {
-          <ol class="message-list" aria-label="Conversation messages">
-            @for (msg of messages(); track msg.id) {
-              <li class="message" [class.message--requester]="isRequesterMessage(msg)">
-                <div class="message__avatar" aria-hidden="true">
-                  <span [class]="messageIcon(msg)"></span>
-                </div>
-                <div class="message__content">
-                  <div class="message__header">
-                    <div>
-                      <span class="message__sender">{{ msg.sender }}</span>
-                      <span class="message__role">{{ messageRoleLabel(msg) }}</span>
-                    </div>
-                    <span class="message__date">{{ formatDateTime(msg.sentAt) }}</span>
-                  </div>
-                  <p class="message__subject">{{ msg.subject }}</p>
-                  <div class="message__body" [innerHTML]="msg.body"></div>
-                  @if (msg.attachments?.length) {
-                    <ul class="message-attachments" aria-label="Message attachments">
-                      @for (attachment of msg.attachments; track attachment.documentId) {
-                        <li>
-                          <span class="pi pi-paperclip" aria-hidden="true"></span>
-                          {{ attachment.fileName }}
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
-              </li>
-            }
-          </ol>
-        }
+      <app-proposal-my-watchers-section
+        [watchers]="watchers()"
+        [watcherOptions]="watcherOptions()"
+        [staffLoading]="staffUsersResource.isLoading()"
+        [addingWatcher]="addingWatcher()"
+        [removingWatcherId]="removingWatcherId()"
+        [resetVersion]="watcherResetVersion()"
+        (watcherAdded)="addWatcher($event)"
+        (watcherRemoved)="removeWatcher($event)"
+      />
 
-        @if (messageError()) {
-          <app-error-message [apiError]="messageError()!" />
-        }
-
-        <form
-          class="reply-composer"
-          aria-label="Reply to requester"
-          (submit)="$event.preventDefault(); sendReply()"
-        >
-          <div class="reply-composer__header">
-            <div>
-              <p class="reply-composer__eyebrow">Staff response</p>
-              <h3>Reply to requester</h3>
-            </div>
-            <span class="reply-composer__recipient">
-              To {{ proposal()!.requestedBy.user.email }}
-            </span>
-          </div>
-
-          <div class="reply-toolbar" aria-label="Rich text formatting">
-            <button
-              type="button"
-              class="editor-btn"
-              (click)="applyEditorCommand('bold')"
-              aria-label="Bold"
-              title="Bold"
-            >
-              <strong>B</strong>
-            </button>
-            <button
-              type="button"
-              class="editor-btn"
-              (click)="applyEditorCommand('italic')"
-              aria-label="Italic"
-              title="Italic"
-            >
-              <em>I</em>
-            </button>
-            <button
-              type="button"
-              class="editor-btn"
-              (click)="applyEditorCommand('insertUnorderedList')"
-              aria-label="Bulleted list"
-              title="Bulleted list"
-            >
-              <span class="pi pi-list" aria-hidden="true"></span>
-            </button>
-            <button
-              type="button"
-              class="editor-btn"
-              (click)="clearReplyFormatting()"
-              aria-label="Clear formatting"
-              title="Clear formatting"
-            >
-              <span class="pi pi-eraser" aria-hidden="true"></span>
-            </button>
-          </div>
-
-          <div
-            #replyEditor
-            class="reply-editor"
-            contenteditable="true"
-            role="textbox"
-            aria-multiline="true"
-            aria-label="Response message"
-            data-placeholder="Write the response to the requester..."
-            (input)="onReplyInput($event)"
-          ></div>
-
-          <div class="reply-files">
-            <label class="file-picker" for="staff-response-files">
-              <span class="pi pi-paperclip" aria-hidden="true"></span>
-              Attach files
-            </label>
-            <input
-              id="staff-response-files"
-              type="file"
-              multiple
-              (change)="onFilesSelected($event)"
-            />
-            @if (selectedFiles().length) {
-              <ul class="selected-files" aria-label="Selected files">
-                @for (file of selectedFiles(); track file.name + file.size + $index) {
-                  <li>
-                    <span class="pi pi-file" aria-hidden="true"></span>
-                    {{ file.name }}
-                    <button
-                      type="button"
-                      class="selected-files__remove"
-                      (click)="removeSelectedFile($index)"
-                      aria-label="Remove {{ file.name }}"
-                    >
-                      <span class="pi pi-times" aria-hidden="true"></span>
-                    </button>
-                  </li>
-                }
-              </ul>
-            }
-          </div>
-
-          <div class="reply-composer__footer">
-            <button
-              type="submit"
-              class="action-btn action-btn--primary"
-              [disabled]="!canSendReply()"
-            >
-              <span class="pi pi-send" aria-hidden="true"></span>
-              {{ sendingMessage() ? 'Sending...' : 'Send response' }}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section class="detail-card watchers-card" aria-labelledby="watchers-heading">
-        <h2 id="watchers-heading" class="detail-card__title">Watchers</h2>
-
-        @if (!watchers().length) {
-          <p class="detail-card__empty">No watchers.</p>
-        } @else {
-          <ul class="watcher-list" aria-label="Proposal watchers">
-            @for (watcher of watchers(); track watcher.permissionId) {
-              <li class="watcher">
-                <div class="watcher__identity">
-                  <span class="watcher__name">{{ watcher.user.name }}</span>
-                  <span class="watcher__meta">
-                    {{ watcher.user.email }} - {{ groupLabels[watcher.group] }}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  class="action-btn action-btn--ghost"
-                  [disabled]="removingWatcherId() === watcher.permissionId"
-                  (click)="removeWatcher(watcher.permissionId)"
-                  aria-label="Remove watcher {{ watcher.user.name }}"
-                >
-                  <span class="pi pi-times" aria-hidden="true"></span>
-                  {{ removingWatcherId() === watcher.permissionId ? 'Removing...' : 'Remove' }}
-                </button>
-              </li>
-            }
-          </ul>
-        }
-
-        <div class="watcher-form">
-          @if (staffUsersResource.isLoading()) {
-            <app-loading-state label="Loading staff..." />
-          } @else {
-            <label for="watcher-permission">Add watcher</label>
-            <div class="watcher-form__controls">
-              <select
-                id="watcher-permission"
-                [value]="watcherPermissionId()"
-                (change)="onWatcherPermissionChange($event)"
-              >
-                <option value="" disabled selected>Select a staff member...</option>
-                @for (option of watcherOptions(); track option.permissionId) {
-                  <option [value]="option.permissionId">{{ option.label }}</option>
-                }
-              </select>
-              <button
-                type="button"
-                class="action-btn action-btn--primary"
-                [disabled]="!watcherPermissionId() || addingWatcher()"
-                (click)="addWatcher()"
-              >
-                {{ addingWatcher() ? 'Adding...' : 'Add' }}
-              </button>
-            </div>
-          }
-        </div>
-      </section>
-
-      <section class="detail-card" aria-labelledby="events-heading">
-        <h2 id="events-heading" class="detail-card__title">Event log</h2>
-
-        @if (eventsResource.isLoading()) {
-          <app-loading-state label="Loading events..." />
-        } @else if (!events().length) {
-          <p class="detail-card__empty">No events recorded.</p>
-        } @else {
-          <ol class="event-list" aria-label="Proposal events">
-            @for (event of events(); track event.occurredAt) {
-              <li class="event">
-                <div class="event__dot" aria-hidden="true"></div>
-                <div class="event__content">
-                  <div class="event__header">
-                    <span class="event__type">{{ event.type.replace('_', ' ') }}</span>
-                    <span class="event__date">{{ formatDateTime(event.occurredAt) }}</span>
-                  </div>
-                  <p class="event__actor">{{ event.triggeredBy.user.name }}</p>
-                  @if (event.note) {
-                    <p class="event__note">"{{ event.note }}"</p>
-                  }
-                </div>
-              </li>
-            }
-          </ol>
-        }
-      </section>
+      <app-proposal-my-events-section [events]="events()" [loading]="eventsResource.isLoading()" />
     </div>
   }
 </div>

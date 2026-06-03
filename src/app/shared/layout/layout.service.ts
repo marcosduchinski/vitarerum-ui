@@ -1,4 +1,5 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { computed, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 
 interface LayoutState {
@@ -8,6 +9,8 @@ interface LayoutState {
 
 @Injectable({ providedIn: 'root' })
 export class LayoutService {
+  private readonly document = inject(DOCUMENT);
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly state = signal<LayoutState>({
     staticMenuDesktopInactive: false,
     staticMenuMobileActive: false,
@@ -27,12 +30,12 @@ export class LayoutService {
 
   onMenuToggle(): void {
     if (this.isDesktop()) {
-      this.state.update(s => ({
+      this.state.update((s) => ({
         ...s,
         staticMenuDesktopInactive: !s.staticMenuDesktopInactive,
       }));
     } else {
-      this.state.update(s => ({
+      this.state.update((s) => ({
         ...s,
         staticMenuMobileActive: !s.staticMenuMobileActive,
       }));
@@ -41,7 +44,7 @@ export class LayoutService {
   }
 
   closeMenu(): void {
-    this.state.update(s => ({
+    this.state.update((s) => ({
       ...s,
       staticMenuMobileActive: false,
     }));
@@ -50,10 +53,14 @@ export class LayoutService {
   toggleDarkMode(): void {
     const next = !this.isDarkTheme();
     this.isDarkTheme.set(next);
-    document.documentElement.classList.toggle('app-dark', next);
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.document.documentElement.classList.toggle('app-dark', next);
   }
 
   isDesktop(): boolean {
-    return window.innerWidth > 991;
+    if (!isPlatformBrowser(this.platformId)) return true;
+    return this.document.defaultView?.innerWidth
+      ? this.document.defaultView.innerWidth > 991
+      : true;
   }
 }

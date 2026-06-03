@@ -2,17 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  ElementRef,
   inject,
   input,
   resource,
   signal,
-  viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
@@ -24,41 +21,24 @@ import {
 } from '@shared/components/status-chip/status-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
-import { Message } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
+import {
+  ProposalMyConversationSectionComponent,
+  ReplyComposerPayload,
+} from './components/proposal-my-conversation-section/proposal-my-conversation-section.component';
+import { ProposalMyEventsSectionComponent } from './components/proposal-my-events-section/proposal-my-events-section.component';
+import { ProposalMyOverviewSectionComponent } from './components/proposal-my-overview-section/proposal-my-overview-section.component';
+import {
+  ProposalMyWatchersSectionComponent,
+  StaffWatcherOption,
+} from './components/proposal-my-watchers-section/proposal-my-watchers-section.component';
+import { PROPOSAL_MY_DETAIL_GROUP_LABELS } from './proposal-my-detail.presentation';
 
 const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',
   RESEARCH: 'Research',
   OTHER: 'Other',
 };
-
-const GROUP_LABELS: Record<GroupName, string> = {
-  EXTERNAL: 'External',
-  COLLECTIONS_MANAGEMENT: 'Collections management',
-  CURATORIAL: 'Curatorial',
-  DIRECTION: 'Direction',
-  ADMINISTRATION: 'Administration',
-};
-
-interface StaffWatcherOption {
-  readonly label: string;
-  readonly permissionId: string;
-}
-
-function formatDateTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return iso;
-  }
-}
 
 @Component({
   selector: 'app-proposal-my-detail-page',
@@ -70,6 +50,10 @@ function formatDateTime(iso: string): string {
     ErrorMessageComponent,
     StatusChipComponent,
     ConfirmModalComponent,
+    ProposalMyOverviewSectionComponent,
+    ProposalMyConversationSectionComponent,
+    ProposalMyWatchersSectionComponent,
+    ProposalMyEventsSectionComponent,
   ],
   templateUrl: './proposal-my-detail-page.component.html',
   styleUrl: './proposal-my-detail-page.component.scss',
@@ -78,7 +62,6 @@ export class ProposalMyDetailPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
   private readonly router = inject(Router);
-  private readonly replyEditor = viewChild<ElementRef<HTMLElement>>('replyEditor');
 
   readonly id = input.required<string>();
 
@@ -110,7 +93,7 @@ export class ProposalMyDetailPageComponent {
       u.permissions
         .filter((p) => p.group.name !== 'EXTERNAL')
         .map((p) => ({
-          label: `${u.name} - ${GROUP_LABELS[p.group.name]}`,
+          label: `${u.name} - ${PROPOSAL_MY_DETAIL_GROUP_LABELS[p.group.name]}`,
           permissionId: p.permissionId,
         })),
     ),
@@ -125,18 +108,15 @@ export class ProposalMyDetailPageComponent {
   });
 
   protected readonly typeLabels = TYPE_LABELS;
-  protected readonly groupLabels = GROUP_LABELS;
-  protected readonly formatDateTime = formatDateTime;
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
   protected readonly acceptConfirmOpen = signal(false);
   protected readonly rejectConfirmOpen = signal(false);
   protected readonly rejectPanelOpen = signal(false);
   protected readonly rejectionReason = signal('');
-  protected readonly replyBody = signal('');
-  protected readonly selectedFiles = signal<readonly File[]>([]);
+  protected readonly replyResetVersion = signal(0);
+  protected readonly watcherResetVersion = signal(0);
   protected readonly sendingMessage = signal(false);
-  protected readonly watcherPermissionId = signal('');
   protected readonly addingWatcher = signal(false);
   protected readonly removingWatcherId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
@@ -162,63 +142,15 @@ export class ProposalMyDetailPageComponent {
     this.rejectionReason.set((event.target as HTMLTextAreaElement).value);
   }
 
-  protected onWatcherPermissionChange(event: Event): void {
-    this.watcherPermissionId.set((event.target as HTMLSelectElement).value);
-  }
-
-  protected messageIcon(message: Message): string {
-    return this.isRequesterMessage(message) ? 'pi pi-user' : 'pi pi-briefcase';
-  }
-
-  protected messageRoleLabel(message: Message): string {
-    if (this.isRequesterMessage(message)) return 'Requester';
-    return this.proposal()?.assignedTo?.group.replace('_', ' ') ?? 'Staff';
-  }
-
-  protected isRequesterMessage(message: Message): boolean {
-    return message.sender === this.proposal()?.requestedBy.user.email;
-  }
-
-  protected onReplyInput(event: Event): void {
-    this.replyBody.set((event.target as HTMLElement).innerHTML.trim());
-  }
-
-  protected applyEditorCommand(command: 'bold' | 'italic' | 'insertUnorderedList'): void {
-    this.replyEditor()?.nativeElement.focus();
-    document.execCommand(command, false);
-    this.syncReplyBody();
-  }
-
-  protected clearReplyFormatting(): void {
-    this.replyEditor()?.nativeElement.focus();
-    document.execCommand('removeFormat', false);
-    this.syncReplyBody();
-  }
-
-  protected onFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-    this.selectedFiles.update((current) => [...current, ...files]);
-    input.value = '';
-  }
-
-  protected removeSelectedFile(index: number): void {
-    this.selectedFiles.update((files) => files.filter((_, i) => i !== index));
-  }
-
-  protected canSendReply(): boolean {
-    return this.hasReplyContent() && !this.sendingMessage();
-  }
-
-  protected async sendReply(): Promise<void> {
-    if (!this.canSendReply()) return;
+  protected async sendReply(payload: ReplyComposerPayload): Promise<void> {
+    if (this.sendingMessage()) return;
 
     this.sendingMessage.set(true);
     this.messageError.set(null);
 
     try {
       const uploadedDocuments = [];
-      for (const file of this.selectedFiles()) {
+      for (const file of payload.files) {
         uploadedDocuments.push(
           await firstValueFrom(
             this.proposalService.uploadDocument(this.id(), file, 'STAFF_RESPONSE_ATTACHMENT'),
@@ -230,12 +162,12 @@ export class ProposalMyDetailPageComponent {
         this.proposalService.sendMessage(this.id(), {
           recipient: this.proposal()?.requestedBy.user.email ?? '',
           subject: `Response to ${this.proposal()?.collectionUseProject.referenceNumber ?? 'proposal'}`,
-          body: this.replyBody(),
+          body: payload.body,
           documentIds: uploadedDocuments.map((document) => document.id),
         }),
       );
 
-      this.clearReply();
+      this.replyResetVersion.update((version) => version + 1);
       this.proposalResource.reload();
       this.conversationResource.reload();
       this.eventsResource.reload();
@@ -246,8 +178,7 @@ export class ProposalMyDetailPageComponent {
     }
   }
 
-  protected async addWatcher(): Promise<void> {
-    const permissionId = this.watcherPermissionId();
+  protected async addWatcher(permissionId: string): Promise<void> {
     if (!permissionId || this.addingWatcher()) return;
 
     this.addingWatcher.set(true);
@@ -255,7 +186,7 @@ export class ProposalMyDetailPageComponent {
 
     try {
       await firstValueFrom(this.proposalService.addWatcher(this.id(), { permissionId }));
-      this.watcherPermissionId.set('');
+      this.watcherResetVersion.update((version) => version + 1);
       this.proposalResource.reload();
     } catch (err) {
       this.actionError.set(toApiError(err));
@@ -335,21 +266,5 @@ export class ProposalMyDetailPageComponent {
     } finally {
       this.rejecting.set(false);
     }
-  }
-
-  private syncReplyBody(): void {
-    this.replyBody.set(this.replyEditor()?.nativeElement.innerHTML.trim() ?? '');
-  }
-
-  private clearReply(): void {
-    const editor = this.replyEditor()?.nativeElement;
-    if (editor) editor.innerHTML = '';
-    this.replyBody.set('');
-    this.selectedFiles.set([]);
-  }
-
-  private hasReplyContent(): boolean {
-    const text = this.replyEditor()?.nativeElement.textContent?.trim() ?? '';
-    return text.length > 0 || this.selectedFiles().length > 0;
   }
 }

@@ -1,9 +1,11 @@
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
   inject,
+  PLATFORM_ID,
   Renderer2,
 } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
@@ -25,6 +27,8 @@ import { LayoutService } from '@layout/layout.service';
 })
 export class AppShellComponent {
   protected readonly layoutService = inject(LayoutService);
+  private readonly document = inject(DOCUMENT);
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly renderer = inject(Renderer2);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -32,6 +36,7 @@ export class AppShellComponent {
   private readonly overlayOpenSubscription = this.layoutService.overlayOpen$
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
       this.menuOutsideClickListener ??= this.renderer.listen(
         'document',
         'click',
@@ -39,11 +44,11 @@ export class AppShellComponent {
           if (this.isOutsideClicked(event)) this.hideMenu();
         },
       );
-      document.body.classList.add('blocked-scroll');
+      this.renderer.addClass(this.document.body, 'blocked-scroll');
     });
   private readonly navigationEndSubscription = this.router.events
     .pipe(
-      filter(e => e instanceof NavigationEnd),
+      filter((e) => e instanceof NavigationEnd),
       takeUntilDestroyed(this.destroyRef),
     )
     .subscribe(() => this.hideMenu());
@@ -59,8 +64,9 @@ export class AppShellComponent {
   });
 
   private isOutsideClicked(event: MouseEvent): boolean {
-    const sidebar = document.querySelector('.layout-sidebar');
-    const menuBtn = document.querySelector('.layout-menu-button');
+    if (!isPlatformBrowser(this.platformId)) return false;
+    const sidebar = this.document.querySelector('.layout-sidebar');
+    const menuBtn = this.document.querySelector('.layout-menu-button');
     const target = event.target as Node;
     return !(
       sidebar?.isSameNode(target) ||
@@ -74,6 +80,7 @@ export class AppShellComponent {
     this.layoutService.closeMenu();
     this.menuOutsideClickListener?.();
     this.menuOutsideClickListener = undefined;
-    document.body.classList.remove('blocked-scroll');
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.renderer.removeClass(this.document.body, 'blocked-scroll');
   }
 }
