@@ -40,6 +40,8 @@ const TYPE_LABELS: Record<UseType, string> = {
   OTHER: 'Other',
 };
 
+type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
+
 @Component({
   selector: 'app-proposal-my-detail-page',
   standalone: true,
@@ -108,6 +110,7 @@ export class ProposalMyDetailPageComponent {
   });
 
   protected readonly typeLabels = TYPE_LABELS;
+  protected readonly activePanel = signal<MyDetailPanel>('overview');
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
   protected readonly acceptConfirmOpen = signal(false);
@@ -123,6 +126,10 @@ export class ProposalMyDetailPageComponent {
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
+  }
+
+  protected selectPanel(panel: MyDetailPanel): void {
+    this.activePanel.set(panel);
   }
 
   protected openRejectModal(): void {

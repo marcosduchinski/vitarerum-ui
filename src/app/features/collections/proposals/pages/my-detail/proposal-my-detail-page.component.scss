@@ -4,42 +4,13 @@
   display: grid;
   gap: 0.5rem;
 
-  label {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--color-text);
-  }
-
   textarea {
-    width: 100%;
     min-height: 5rem;
     resize: vertical;
-    padding: 0.625rem 0.75rem;
-    border: 1.5px solid var(--color-line);
-    border-radius: var(--radius-sm);
-    background: var(--color-panel);
-    color: var(--color-text);
-    font: inherit;
-    font-size: 0.9rem;
   }
 }
 
 .reject-modal-body__hint {
-  margin: 0 0 0.25rem;
+  margin: 0;
   color: var(--color-subtle);
-  font-size: 0.875rem;
-}
-
-@media (min-width: 900px) {
-  app-proposal-my-conversation-section {
-    grid-area: 1 / 2 / 4;
-  }
-
-  app-proposal-my-watchers-section {
-    grid-area: 2 / 1;
-  }
-
-  app-proposal-my-events-section {
-    grid-area: 3 / 1;
-  }
 }

@@ -1,5 +1,5 @@
 import { ComponentRef } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -255,6 +255,23 @@ class UserManagementServiceStub {
   }
 }
 
+async function selectPanel(
+  fixture: ComponentFixture<ProposalMyDetailPageComponent>,
+  name: 'Overview' | 'Watchers' | 'Conversation',
+): Promise<void> {
+  const compiled = fixture.nativeElement as HTMLElement;
+  const tab = Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
+    (button) => button.textContent?.trim() === name,
+  );
+
+  expect(tab).not.toBeNull();
+
+  tab!.click();
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+}
+
 describe('ProposalMyDetailPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
 
@@ -292,14 +309,48 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('Assigned to');
     expect(compiled.textContent).toContain('Bob Santos');
     expect(compiled.textContent).toContain('Conversation');
-    expect(compiled.textContent).toContain('Initial request');
-    expect(compiled.textContent).toContain('signed-response.docx');
     expect(compiled.textContent).toContain('Watchers');
-    expect(compiled.textContent).toContain('Carolina Silva');
     expect(compiled.textContent).toContain('Event log');
     expect(compiled.textContent).toContain('SUBMITTED');
     expect(compiled.textContent).toContain('Accept');
     expect(compiled.textContent).toContain('Reject');
+    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
+      'Overview',
+    );
+    expect(compiled.querySelector('#overview-panel')).not.toBeNull();
+    expect(compiled.querySelector('#watchers-panel')).toBeNull();
+    expect(compiled.querySelector('#conversation-panel')).toBeNull();
+    expect(compiled.textContent).not.toContain('Initial request');
+    expect(compiled.textContent).not.toContain('Carolina Silva');
+  });
+
+  it('switches between overview, watchers, and conversation panels', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    await selectPanel(fixture, 'Watchers');
+
+    let compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
+      'Watchers',
+    );
+    expect(compiled.querySelector('#watchers-panel')).not.toBeNull();
+    expect(compiled.textContent).toContain('Carolina Silva');
+
+    await selectPanel(fixture, 'Conversation');
+
+    compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
+      'Conversation',
+    );
+    expect(compiled.querySelector('#conversation-panel')).not.toBeNull();
+    expect(compiled.textContent).toContain('Initial request');
+    expect(compiled.textContent).toContain('signed-response.docx');
   });
 
   it('adds and removes watchers from the assignment detail page', async () => {
@@ -310,6 +361,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Watchers');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const select = compiled.querySelector<HTMLSelectElement>('#watcher-permission');
@@ -363,6 +415,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Conversation');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const messages = Array.from(compiled.querySelectorAll<HTMLElement>('.message'));
@@ -383,6 +436,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Conversation');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const editor = compiled.querySelector<HTMLElement>('.reply-editor');
@@ -458,7 +512,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
 
     expect(proposalService.approveCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Accept assignment?');
+    expect(compiled.textContent).toContain('Accept proposal?');
 
     const confirm = Array.from(
       compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
@@ -505,9 +559,9 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(dialog!.textContent).toContain('Reject proposal?');
 
     const textarea = dialog!.querySelector<HTMLTextAreaElement>('#rejection-reason');
-    const confirmBtn = Array.from(
-      dialog!.querySelectorAll<HTMLButtonElement>('button'),
-    ).find((button) => button.textContent?.trim() === 'Reject proposal');
+    const confirmBtn = Array.from(dialog!.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Reject proposal',
+    );
 
     expect(textarea).not.toBeNull();
     expect(confirmBtn).not.toBeNull();
@@ -537,9 +591,9 @@ describe('ProposalMyDetailPageComponent', () => {
 
     const dialog = compiled.querySelector<HTMLElement>('[role="dialog"]');
     const textarea = dialog!.querySelector<HTMLTextAreaElement>('#rejection-reason');
-    const confirmBtn = Array.from(
-      dialog!.querySelectorAll<HTMLButtonElement>('button'),
-    ).find((button) => button.textContent?.trim() === 'Reject proposal');
+    const confirmBtn = Array.from(dialog!.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Reject proposal',
+    );
 
     textarea!.value = 'The request does not meet collection access criteria.';
     textarea!.dispatchEvent(new Event('input'));

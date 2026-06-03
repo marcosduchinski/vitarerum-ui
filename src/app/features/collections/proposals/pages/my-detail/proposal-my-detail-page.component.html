@@ -99,31 +99,97 @@
       </div>
     </app-confirm-modal>
 
-    <div class="proposal-detail__grid">
-      <app-proposal-my-overview-section [proposal]="proposal()!" />
+    <nav class="proposal-detail__tabs" aria-label="Assignment detail sections" role="tablist">
+      <button
+        type="button"
+        id="overview-tab"
+        class="action-btn"
+        [class.action-btn--primary]="activePanel() === 'overview'"
+        role="tab"
+        aria-controls="overview-panel"
+        [attr.aria-selected]="activePanel() === 'overview'"
+        (click)="selectPanel('overview')"
+      >
+        Overview
+      </button>
+      <button
+        type="button"
+        id="watchers-tab"
+        class="action-btn"
+        [class.action-btn--primary]="activePanel() === 'watchers'"
+        role="tab"
+        aria-controls="watchers-panel"
+        [attr.aria-selected]="activePanel() === 'watchers'"
+        (click)="selectPanel('watchers')"
+      >
+        Watchers
+      </button>
+      <button
+        type="button"
+        id="conversation-tab"
+        class="action-btn"
+        [class.action-btn--primary]="activePanel() === 'conversation'"
+        role="tab"
+        aria-controls="conversation-panel"
+        [attr.aria-selected]="activePanel() === 'conversation'"
+        (click)="selectPanel('conversation')"
+      >
+        Conversation
+      </button>
+    </nav>
 
-      <app-proposal-my-conversation-section
-        [proposal]="proposal()!"
-        [messages]="messages()"
-        [messagesLoading]="conversationResource.isLoading()"
-        [messageError]="messageError()"
-        [sendingMessage]="sendingMessage()"
-        [replyResetVersion]="replyResetVersion()"
-        (replySubmitted)="sendReply($event)"
-      />
-
-      <app-proposal-my-watchers-section
-        [watchers]="watchers()"
-        [watcherOptions]="watcherOptions()"
-        [staffLoading]="staffUsersResource.isLoading()"
-        [addingWatcher]="addingWatcher()"
-        [removingWatcherId]="removingWatcherId()"
-        [resetVersion]="watcherResetVersion()"
-        (watcherAdded)="addWatcher($event)"
-        (watcherRemoved)="removeWatcher($event)"
-      />
-
-      <app-proposal-my-events-section [events]="events()" [loading]="eventsResource.isLoading()" />
-    </div>
+    @switch (activePanel()) {
+      @case ('overview') {
+        <section
+          id="overview-panel"
+          class="proposal-detail__panel proposal-detail__panel--overview"
+          role="tabpanel"
+          aria-labelledby="overview-tab"
+        >
+          <app-proposal-my-overview-section [proposal]="proposal()!" />
+          <app-proposal-my-events-section
+            [events]="events()"
+            [loading]="eventsResource.isLoading()"
+          />
+        </section>
+      }
+      @case ('watchers') {
+        <section
+          id="watchers-panel"
+          class="proposal-detail__panel"
+          role="tabpanel"
+          aria-labelledby="watchers-tab"
+        >
+          <app-proposal-my-watchers-section
+            [watchers]="watchers()"
+            [watcherOptions]="watcherOptions()"
+            [staffLoading]="staffUsersResource.isLoading()"
+            [addingWatcher]="addingWatcher()"
+            [removingWatcherId]="removingWatcherId()"
+            [resetVersion]="watcherResetVersion()"
+            (watcherAdded)="addWatcher($event)"
+            (watcherRemoved)="removeWatcher($event)"
+          />
+        </section>
+      }
+      @case ('conversation') {
+        <section
+          id="conversation-panel"
+          class="proposal-detail__panel"
+          role="tabpanel"
+          aria-labelledby="conversation-tab"
+        >
+          <app-proposal-my-conversation-section
+            [proposal]="proposal()!"
+            [messages]="messages()"
+            [messagesLoading]="conversationResource.isLoading()"
+            [messageError]="messageError()"
+            [sendingMessage]="sendingMessage()"
+            [replyResetVersion]="replyResetVersion()"
+            (replySubmitted)="sendReply($event)"
+          />
+        </section>
+      }
+    }
   }
 </div>
