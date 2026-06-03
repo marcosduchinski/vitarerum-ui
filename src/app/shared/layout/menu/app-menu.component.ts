@@ -29,7 +29,11 @@ const COLLECTION_PROPOSALS_STAFF: MenuNode = {
   icon: 'pi pi-copy',
   items: [
     { label: 'New', icon: 'pi pi-list', routerLink: '/p/collections/proposals/new' },
-    { label: 'My assignments', icon: 'pi pi-bookmark', routerLink: '/p/collections/proposals/my' },
+    {
+      label: 'My assignments',
+      icon: 'pi pi-bookmark',
+      routerLink: '/p/collections/proposals/my-assignments',
+    },
     {
       label: "Other's assignments",
       icon: 'pi pi-bookmark',

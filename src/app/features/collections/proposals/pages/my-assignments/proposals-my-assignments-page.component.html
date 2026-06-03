@@ -1,8 +1,8 @@
 <div class="proposals-new">
   <app-page-header
     eyebrow="Proposals"
-    title="My proposals"
-    description="Requests submitted by you across every status."
+    title="My assignments"
+    description="Requests currently assigned to you."
   />
 
   @if (usersResource.isLoading() || proposalsResource.isLoading()) {
@@ -10,7 +10,17 @@
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />
   } @else {
-    <section class="proposals-list-panel" aria-label="My proposals list">
+    @if (forwardSuccessMessage(); as message) {
+      <app-feedback-message
+        title="Assignment forwarded"
+        [message]="message"
+        tone="success"
+        [dismissible]="true"
+        (dismissed)="dismissForwardSuccess()"
+      />
+    }
+
+    <section class="proposals-list-panel" aria-label="My assignments list">
       <div class="proposals-toolbar">
         <label class="proposals-search" for="proposals-search">
           <span class="pi pi-search" aria-hidden="true"></span>
@@ -21,14 +31,14 @@
             (input)="onSearchInput($event)"
             (keydown.enter)="applySearch()"
             placeholder="Search reference or title"
-            aria-label="Search my proposals"
+            aria-label="Search my assignments"
           />
           @if (searchDraft()) {
             <button
               type="button"
               class="proposals-search__clear"
               (click)="clearSearch()"
-              aria-label="Clear proposal search"
+              aria-label="Clear assignment search"
             >
               <span class="pi pi-times" aria-hidden="true"></span>
             </button>
@@ -41,16 +51,16 @@
 
       @if (!proposals().length) {
         <app-empty-state
-          [title]="appliedSearch() ? 'No proposals found' : 'No proposals'"
+          [title]="appliedSearch() ? 'No assignments found' : 'No assignments'"
           [message]="
             appliedSearch()
-              ? 'None of your proposals match the current search.'
-              : 'You have not submitted proposals yet.'
+              ? 'No assigned proposals match the current search.'
+              : 'There are no proposals assigned to you.'
           "
         />
       } @else {
         <div class="proposals-table-shell">
-          <table class="proposals-table" aria-label="My proposals">
+          <table class="proposals-table" aria-label="My assignments">
             <colgroup>
               <col class="proposals-table__col-ref" />
               <col class="proposals-table__col-title" />
@@ -78,11 +88,7 @@
                   <td>
                     <a
                       class="proposals-table__title"
-                      [routerLink]="['/p/collections/proposals', proposal.id]"
-                      [queryParams]="{
-                        returnTo: '/p/collections/proposals/my',
-                        returnLabel: 'my proposals',
-                      }"
+                      [routerLink]="['/p/collections/proposals/my-assignments', proposal.id]"
                     >
                       {{ proposal.collectionUseProject.title }}
                     </a>
@@ -122,7 +128,7 @@
         </div>
 
         @if (totalProposals() > 0) {
-          <div class="proposals-pagination" role="navigation" aria-label="Proposals pagination">
+          <div class="proposals-pagination" role="navigation" aria-label="Assignments pagination">
             <div class="proposals-pagination__meta">
               <span class="proposals-pagination__info">
                 {{ rangeStart() }}-{{ rangeEnd() }} of {{ totalProposals() }} proposals
@@ -192,5 +198,37 @@
       [appendTo]="'body'"
       (onHide)="closeActionsMenu()"
     />
+    @if (forwardModalProposal(); as proposal) {
+      <app-proposal-forward-modal
+        [open]="true"
+        [proposalReference]="proposal.collectionUseProject.referenceNumber"
+        [proposalTitle]="proposal.collectionUseProject.title"
+        [staffOptions]="staffOptions()"
+        [(targetPermissionId)]="forwardTargetPermissionId"
+        [(note)]="forwardNote"
+        [pending]="forwardPending()"
+        [loadingStaff]="usersResource.isLoading()"
+        [error]="forwardError()"
+        (dismiss)="closeForwardModal()"
+        (submitForward)="requestForwardConfirmation(proposal.id)"
+      />
+      <app-confirm-modal
+        [open]="forwardConfirmProposalId() === proposal.id"
+        title="Forward assignment?"
+        [message]="
+          'This will move ' +
+          proposal.collectionUseProject.referenceNumber +
+          ' to ' +
+          forwardTargetLabel() +
+          '.'
+        "
+        confirmLabel="Forward assignment"
+        cancelLabel="Keep editing"
+        tone="warning"
+        [pending]="forwardPending()"
+        (confirmed)="forward(proposal.id)"
+        (cancelled)="cancelForwardConfirmation()"
+      />
+    }
   }
 </div>

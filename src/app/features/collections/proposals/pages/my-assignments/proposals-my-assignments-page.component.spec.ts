@@ -12,20 +12,9 @@ import { Page } from '@shared/models/page.model';
 
 import { ProposalListQuery, ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
-import { ProposalsMyPageComponent } from './proposals-my-page.component';
+import { ProposalsMyAssignmentsPageComponent } from './proposals-my-assignments-page.component';
 
-const EXTERNAL_SESSION: IdentitySession = {
-  accessToken: 'token',
-  user: {
-    id: 'user-1',
-    email: 'alice@example.test',
-    displayName: 'Alice Ferreira',
-  },
-  group: 'EXTERNAL',
-  availableGroups: ['EXTERNAL'],
-};
-
-const STAFF_SESSION: IdentitySession = {
+const SESSION: IdentitySession = {
   accessToken: 'token',
   user: {
     id: 'staff-1',
@@ -38,14 +27,18 @@ const STAFF_SESSION: IdentitySession = {
 
 const PROPOSAL: ProposalSummary = {
   id: 'proposal-1',
-  status: 'SUBMITTED',
+  status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',
     user: { id: 'user-1', name: 'Alice Ferreira', email: 'alice@example.test' },
     group: 'EXTERNAL',
   },
-  assignedTo: null,
+  assignedTo: {
+    permissionId: 'permission-staff',
+    user: { id: 'staff-1', name: 'Bob Santos', email: 'bob@example.test' },
+    group: 'COLLECTIONS_MANAGEMENT',
+  },
   collectionUseProject: {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
@@ -79,17 +72,26 @@ const USERS: Page<UserDetail> = {
         },
       ],
     },
+    {
+      id: 'staff-2',
+      name: 'Carol Lima',
+      email: 'carol@example.test',
+      permissions: [
+        {
+          permissionId: 'permission-curatorial',
+          group: { id: 'group-curatorial', name: 'CURATORIAL' },
+        },
+      ],
+    },
   ],
   page: 0,
   size: 100,
-  totalElements: 2,
+  totalElements: 3,
   totalPages: 1,
 };
 
-let activeSession: IdentitySession = EXTERNAL_SESSION;
-
 class IdentityServiceStub implements IdentityService {
-  private readonly sessionState = signal<IdentitySession | null>(activeSession);
+  private readonly sessionState = signal<IdentitySession | null>(SESSION);
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = signal(true).asReadonly();
@@ -129,6 +131,10 @@ class IdentityServiceStub implements IdentityService {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  readonly forwardCalls: {
+    readonly proposalId: string;
+    readonly payload: { readonly targetPermissionId: string; readonly note: string };
+  }[] = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
@@ -142,6 +148,14 @@ class ProposalApiServiceStub {
       totalPages: 1,
     });
   }
+
+  forwardProposal(
+    proposalId: string,
+    payload: { readonly targetPermissionId: string; readonly note: string },
+  ) {
+    this.forwardCalls.push({ proposalId, payload });
+    return of(PROPOSAL);
+  }
 }
 
 class UserManagementServiceStub {
@@ -150,16 +164,15 @@ class UserManagementServiceStub {
   }
 }
 
-describe('ProposalsMyPageComponent', () => {
+describe('ProposalsMyAssignmentsPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
   let router: Router;
 
   beforeEach(async () => {
-    activeSession = EXTERNAL_SESSION;
     proposalService = new ProposalApiServiceStub();
 
     await TestBed.configureTestingModule({
-      imports: [ProposalsMyPageComponent],
+      imports: [ProposalsMyAssignmentsPageComponent],
       providers: [
         provideRouter([]),
         { provide: IDENTITY_SERVICE, useClass: IdentityServiceStub },
@@ -171,38 +184,24 @@ describe('ProposalsMyPageComponent', () => {
     router = TestBed.inject(Router);
   });
 
-  it('queries proposals by requestedBy for any group', async () => {
-    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+  it('lists only proposals assigned to the logged user permission', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(proposalService.queries.at(-1)).toMatchObject({
-      requestedBy: 'permission-external',
+      assignedTo: 'permission-staff',
+      lifecyclePhase: 'PENDING',
       page: 0,
       size: 20,
       search: '',
     });
-    expect(proposalService.queries.at(-1)).not.toHaveProperty('assignedTo');
-    expect(proposalService.queries.at(-1)).not.toHaveProperty('lifecyclePhase');
+    expect(proposalService.queries.at(-1)).not.toHaveProperty('requestedBy');
   });
 
-  it('also queries by requestedBy for staff groups', async () => {
-    activeSession = STAFF_SESSION;
-
-    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(proposalService.queries.at(-1)).toMatchObject({
-      requestedBy: 'permission-staff',
-    });
-    expect(proposalService.queries.at(-1)).not.toHaveProperty('assignedTo');
-  });
-
-  it('renders the proposals list with a link to the generic detail page', async () => {
-    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+  it('routes proposal rows to the staff detail page', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -210,19 +209,39 @@ describe('ProposalsMyPageComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
-    expect(compiled.textContent).toContain('My proposals');
+    expect(compiled.textContent).toContain('My assignments');
     expect(compiled.textContent).toContain('Reference');
     expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/proposal-1"]'),
+      compiled.querySelector('a[href^="/p/collections/proposals/my-assignments/proposal-1"]'),
     ).not.toBeNull();
-    expect(compiled.querySelector('a[href^="/p/collections/proposals/my/proposal-1"]')).toBeNull();
     expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });
 
-  it('navigates to the generic detail page with returnTo on view details', async () => {
+  it('shows forward and view details in the row menu', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const actionButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="More actions for VR-2026-001"]',
+    );
+
+    expect(actionButton).not.toBeNull();
+
+    actionButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('Forward');
+    expect(document.body.textContent).toContain('View details');
+  });
+
+  it('navigates to my-assignments detail on view details', async () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -240,31 +259,82 @@ describe('ProposalsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/proposals', PROPOSAL.id], {
-      queryParams: {
-        returnTo: '/p/collections/proposals/my',
-        returnLabel: 'my proposals',
-      },
-    });
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/p/collections/proposals/my-assignments',
+      PROPOSAL.id,
+    ]);
   });
 
-  it('does not show a Forward action in the row menu', async () => {
-    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+  it('confirms and forwards an assignment from the modal screen', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
+    const component = fixture.componentInstance as unknown as {
+      openForwardModal(proposalId: string): void;
+    };
     const compiled = fixture.nativeElement as HTMLElement;
-    const actionButton = compiled.querySelector<HTMLButtonElement>(
-      '[aria-label="More actions for VR-2026-001"]',
+
+    component.openForwardModal('proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const dialog = compiled.querySelector<HTMLElement>('[role="dialog"]');
+    const select = compiled.querySelector<HTMLSelectElement>('#forward-modal-target');
+    const note = compiled.querySelector<HTMLTextAreaElement>('#forward-modal-note');
+    const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Forward',
     );
 
-    actionButton!.click();
+    expect(dialog).not.toBeNull();
+    expect(dialog!.textContent).toContain('VR-2026-001');
+    expect(select).not.toBeNull();
+    expect(note).not.toBeNull();
+    expect(submit).not.toBeNull();
+    expect(submit!.disabled).toBe(true);
+
+    select!.value = 'permission-curatorial';
+    select!.dispatchEvent(new Event('change'));
+    note!.value = 'Please review the curatorial aspects.';
+    note!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(submit!.disabled).toBe(false);
+
+    submit!.click();
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
 
-    expect(document.body.textContent).not.toContain('Forward');
-    expect(document.body.textContent).toContain('View details');
+    expect(proposalService.forwardCalls).toEqual([]);
+    expect(compiled.textContent).toContain('Forward assignment?');
+    expect(compiled.textContent).toContain('This will move VR-2026-001 to Carol Lima');
+
+    const confirm = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Forward assignment',
+    );
+
+    expect(confirm).not.toBeNull();
+
+    confirm!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    expect(proposalService.forwardCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        payload: {
+          targetPermissionId: 'permission-curatorial',
+          note: 'Please review the curatorial aspects.',
+        },
+      },
+    ]);
+    expect(compiled.textContent).toContain('Assignment forwarded');
+    expect(compiled.textContent).toContain('VR-2026-001 was forwarded to Carol Lima');
   });
 });
 

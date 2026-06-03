@@ -12,15 +12,22 @@ import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
+import { FeedbackMessageComponent } from '@shared/components/feedback-message/feedback-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 import { Page } from '@shared/models/page.model';
 
+import {
+  ProposalForwardModalComponent,
+  ProposalForwardStaffOption,
+} from '../../components/proposal-forward-modal/proposal-forward-modal.component';
 import { ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
@@ -33,12 +40,20 @@ const TYPE_LABELS: Record<UseType, string> = {
   OTHER: 'Other',
 };
 
+const GROUP_LABELS: Record<GroupName, string> = {
+  EXTERNAL: 'External',
+  COLLECTIONS_MANAGEMENT: 'Collections management',
+  CURATORIAL: 'Curatorial',
+  DIRECTION: 'Direction',
+  ADMINISTRATION: 'Administration',
+};
+
 function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
   return { content: [], page, size, totalElements: 0, totalPages: 0 };
 }
 
 @Component({
-  selector: 'app-proposals-my-page',
+  selector: 'app-proposals-my-assignments-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -47,12 +62,15 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
+    FeedbackMessageComponent,
     EmptyStateComponent,
+    ConfirmModalComponent,
+    ProposalForwardModalComponent,
   ],
-  templateUrl: './proposals-my-page.component.html',
-  styleUrl: './proposals-my-page.component.scss',
+  templateUrl: './proposals-my-assignments-page.component.html',
+  styleUrl: './proposals-my-assignments-page.component.scss',
 })
-export class ProposalsMyPageComponent {
+export class ProposalsMyAssignmentsPageComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
@@ -95,7 +113,8 @@ export class ProposalsMyPageComponent {
 
       return firstValueFrom(
         this.proposalService.listProposals({
-          requestedBy: params.currentPermissionId,
+          assignedTo: params.currentPermissionId,
+          lifecyclePhase: 'PENDING',
           page: params.page,
           size: params.size,
           search: params.search,
@@ -122,6 +141,16 @@ export class ProposalsMyPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  protected readonly staffOptions = computed<ProposalForwardStaffOption[]>(() =>
+    (this.usersResource.value()?.content ?? []).flatMap((user) =>
+      user.permissions
+        .filter((permission) => permission.group.name !== 'EXTERNAL')
+        .map((permission) => ({
+          label: `${user.name} — ${GROUP_LABELS[permission.group.name]}`,
+          permissionId: permission.permissionId,
+        })),
+    ),
+  );
 
   protected readonly actionsMenuId = signal<string | null>(null);
   protected readonly rowActionItems = computed<MenuItem[]>(() => {
@@ -130,19 +159,36 @@ export class ProposalsMyPageComponent {
 
     return [
       {
+        label: 'Forward',
+        icon: 'pi pi-send',
+        command: () => this.openForwardModal(proposalId),
+      },
+      {
         label: 'View details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/proposals', proposalId], {
-            queryParams: {
-              returnTo: '/p/collections/proposals/my',
-              returnLabel: 'my proposals',
-            },
-          });
+          void this.router.navigate(['/p/collections/proposals/my-assignments', proposalId]);
         },
       },
     ];
   });
+
+  protected readonly forwardModalProposalId = signal<string | null>(null);
+  protected readonly forwardModalProposal = computed(() => {
+    const proposalId = this.forwardModalProposalId();
+    return this.proposals().find((proposal) => proposal.id === proposalId) ?? null;
+  });
+  protected readonly forwardTargetPermissionId = signal('');
+  protected readonly forwardTargetLabel = computed(
+    () =>
+      this.staffOptions().find((option) => option.permissionId === this.forwardTargetPermissionId())
+        ?.label ?? 'the selected staff member',
+  );
+  protected readonly forwardNote = signal('');
+  protected readonly forwardPending = signal(false);
+  protected readonly forwardError = signal<ApiError | null>(null);
+  protected readonly forwardConfirmProposalId = signal<string | null>(null);
+  protected readonly forwardSuccessMessage = signal<string | null>(null);
 
   protected prevPage(): void {
     this.currentPage.update((page) => Math.max(0, page - 1));
@@ -182,9 +228,76 @@ export class ProposalsMyPageComponent {
 
   protected toggleActionsMenu(proposalId: string): void {
     this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
+    this.forwardModalProposalId.set(null);
+    this.forwardConfirmProposalId.set(null);
   }
 
   protected closeActionsMenu(): void {
     this.actionsMenuId.set(null);
+  }
+
+  protected openForwardModal(proposalId: string): void {
+    this.actionsMenuId.set(null);
+    this.forwardModalProposalId.set(proposalId);
+    this.forwardTargetPermissionId.set('');
+    this.forwardNote.set('');
+    this.forwardError.set(null);
+    this.forwardConfirmProposalId.set(null);
+  }
+
+  protected closeForwardModal(): void {
+    this.forwardModalProposalId.set(null);
+    this.forwardConfirmProposalId.set(null);
+  }
+
+  protected onForwardTargetChange(event: Event): void {
+    this.forwardTargetPermissionId.set((event.target as HTMLSelectElement).value);
+  }
+
+  protected onForwardNoteChange(event: Event): void {
+    this.forwardNote.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected requestForwardConfirmation(proposalId: string): void {
+    if (!this.forwardTargetPermissionId() || this.forwardPending()) return;
+    this.forwardConfirmProposalId.set(proposalId);
+  }
+
+  protected cancelForwardConfirmation(): void {
+    this.forwardConfirmProposalId.set(null);
+  }
+
+  protected dismissForwardSuccess(): void {
+    this.forwardSuccessMessage.set(null);
+  }
+
+  protected async forward(proposalId: string): Promise<void> {
+    const targetPermissionId = this.forwardTargetPermissionId();
+    if (!targetPermissionId || this.forwardPending()) return;
+    const proposalReference =
+      this.forwardModalProposal()?.collectionUseProject.referenceNumber ?? 'The proposal';
+
+    this.forwardPending.set(true);
+    this.forwardError.set(null);
+
+    try {
+      await firstValueFrom(
+        this.proposalService.forwardProposal(proposalId, {
+          targetPermissionId,
+          note: this.forwardNote(),
+        }),
+      );
+      this.forwardModalProposalId.set(null);
+      this.forwardConfirmProposalId.set(null);
+      this.forwardSuccessMessage.set(
+        `${proposalReference} was forwarded to ${this.forwardTargetLabel()}.`,
+      );
+      this.proposalsResource.reload();
+    } catch (err) {
+      this.forwardError.set(toApiError(err));
+      this.forwardConfirmProposalId.set(null);
+    } finally {
+      this.forwardPending.set(false);
+    }
   }
 }

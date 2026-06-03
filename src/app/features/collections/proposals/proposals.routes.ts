@@ -18,12 +18,20 @@ export const PROPOSALS_ROUTES: Routes = [
   },
   {
     path: 'my',
-    title: 'My Assignments',
+    title: 'My Proposals',
     loadComponent: () =>
       import('./pages/my/proposals-my-page.component').then((m) => m.ProposalsMyPageComponent),
   },
   {
-    path: 'my/:id',
+    path: 'my-assignments',
+    title: 'My Assignments',
+    loadComponent: () =>
+      import('./pages/my-assignments/proposals-my-assignments-page.component').then(
+        (m) => m.ProposalsMyAssignmentsPageComponent,
+      ),
+  },
+  {
+    path: 'my-assignments/:id',
     title: 'My Assignment',
     loadComponent: () =>
       import('./pages/my-detail/proposal-my-detail-page.component').then(
