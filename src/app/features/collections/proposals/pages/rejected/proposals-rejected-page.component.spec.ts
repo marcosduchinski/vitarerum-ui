@@ -26,7 +26,7 @@ const REJECTED_PROPOSAL: ProposalSummary = {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
     title: 'Rejected research request',
-    status: 'REFUSED',
+    status: 'CANCELLED',
   },
   submittedAt: '2026-05-01T10:00:00',
 };

@@ -24,7 +24,7 @@ const PROPOSAL: ProposalSummary = {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
     title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-    status: 'REQUESTED',
+    status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
 };
@@ -76,7 +76,7 @@ class ProposalApiServiceStub {
 
   assignProposal(proposalId: string, payload: { readonly note: string }) {
     this.assignCalls.push({ proposalId, payload });
-    return of({ id: PROPOSAL.id, status: 'PENDING', assignedTo: null, lastEvent: null });
+    return of({ id: PROPOSAL.id, status: 'UNDER_REVIEW', assignedTo: null, lastEvent: null });
   }
 
   forwardProposal(

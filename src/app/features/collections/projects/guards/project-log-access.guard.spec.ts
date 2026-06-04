@@ -69,9 +69,9 @@ describe('projectLogAccessGuard', () => {
     expect(result).toBe(true);
   });
 
-  it('redirects researcher to project detail when project is ACCEPTED', async () => {
+  it('redirects researcher to project detail when project is CREATED', async () => {
     (identityService.session as ReturnType<typeof vi.fn>).mockReturnValue(makeSession('EXTERNAL' as GroupName));
-    projectService.getProject.mockReturnValue(of({ status: 'ACCEPTED' }));
+    projectService.getProject.mockReturnValue(of({ status: 'CREATED' }));
 
     const result = await runGuard(makeRoute('proj-1'));
 

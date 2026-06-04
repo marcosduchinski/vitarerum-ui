@@ -10,7 +10,7 @@ describe('ProjectApiServiceMock', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ProjectApiServiceMock],
+      providers: [ProjectApiServiceMock, MockProjectState],
     });
 
     service = TestBed.inject(ProjectApiServiceMock);
@@ -22,9 +22,7 @@ describe('ProjectApiServiceMock', () => {
     expect(page.totalElements).toBeGreaterThan(0);
   });
 
-  it('transitions ACCEPTED → IN_PROGRESS and updates event log', async () => {
-    state.projects.get('proj-4')!.status = 'ACCEPTED';
-
+  it('transitions CREATED → IN_PROGRESS and updates event log', async () => {
     const result = await firstValueFrom(
       service.startProject('proj-4', { note: 'Starting access.' }),
     );
@@ -38,21 +36,11 @@ describe('ProjectApiServiceMock', () => {
     expect(last.type).toBe('STARTED');
   });
 
-  it('suspends and resumes a project', async () => {
-    state.projects.get('proj-5')!.status = 'IN_PROGRESS';
+  it('rejects starting a project that is already in progress', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
 
-    const r1 = await firstValueFrom(
-      service.suspendProject('proj-5', { reason: 'Temporary hold.' }),
-    );
-    expect(r1.status).toBe('SUSPENDED');
-
-    const r2 = await firstValueFrom(service.resumeProject('proj-5', { note: 'Resuming.' }));
-    expect(r2.status).toBe('IN_PROGRESS');
-  });
-
-  it('rejects starting a project that has not been accepted', async () => {
     await expect(
-      firstValueFrom(service.startProject('proj-1', { note: 'Too early.' })),
+      firstValueFrom(service.startProject('proj-4', { note: 'Too early.' })),
     ).rejects.toMatchObject({
       status: 409,
       error: 'INVALID_TRANSITION',
@@ -60,8 +48,6 @@ describe('ProjectApiServiceMock', () => {
   });
 
   it('rejects completing a project before it is in progress', async () => {
-    state.projects.get('proj-4')!.status = 'ACCEPTED';
-
     await expect(
       firstValueFrom(service.completeProject('proj-4', { note: 'Done too early.' })),
     ).rejects.toMatchObject({
@@ -70,35 +56,34 @@ describe('ProjectApiServiceMock', () => {
     });
   });
 
-  it('closes only completed projects', async () => {
+  it('completes an in-progress project', async () => {
     state.projects.get('proj-4')!.status = 'IN_PROGRESS';
 
     const completed = await firstValueFrom(
       service.completeProject('proj-4', { note: 'Completed.' }),
     );
     expect(completed.status).toBe('COMPLETED');
-
-    const closed = await firstValueFrom(service.closeProject('proj-4', { note: 'Closed.' }));
-    expect(closed.status).toBe('CLOSED');
   });
 
-  it('rejects resuming a project that is not suspended', async () => {
-    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
-
-    await expect(
-      firstValueFrom(service.resumeProject('proj-4', { note: 'Already active.' })),
-    ).rejects.toMatchObject({
-      status: 409,
-      error: 'INVALID_TRANSITION',
-    });
-  });
-
-  it('creates an entry and lists it', async () => {
-    const entry = await firstValueFrom(service.createEntry('proj-4', { content: 'Session note.' }));
+  it('creates an object log entry and lists it', async () => {
+    const entry = await firstValueFrom(
+      service.createObjectLogEntry('proj-4', { content: 'Session note.' }),
+    );
     expect(entry.id).toBeTruthy();
     expect(entry.content).toBe('Session note.');
 
-    const page = await firstValueFrom(service.listEntries('proj-4'));
+    const page = await firstValueFrom(service.listObjectLogEntries('proj-4'));
+    expect(page.content.some((e) => e.id === entry.id)).toBe(true);
+  });
+
+  it('creates an object occurrence entry and lists it', async () => {
+    const entry = await firstValueFrom(
+      service.createObjectOccurrenceEntry('proj-4', { content: 'Occurrence note.' }),
+    );
+    expect(entry.id).toBeTruthy();
+    expect(entry.content).toBe('Occurrence note.');
+
+    const page = await firstValueFrom(service.listObjectOccurrenceEntries('proj-4'));
     expect(page.content.some((e) => e.id === entry.id)).toBe(true);
   });
 
@@ -107,14 +92,9 @@ describe('ProjectApiServiceMock', () => {
     expect(page.content.every((p) => p.status === 'IN_PROGRESS')).toBe(true);
   });
 
-  it('has requested project examples for the clean proposal flow', async () => {
-    const page = await firstValueFrom(service.listProjects({ status: 'REQUESTED', size: 20 }));
-    const types = new Set(page.content.map((p) => p.type));
-
-    expect(page.totalElements).toBe(6);
-    expect(types.has('RESEARCH')).toBe(true);
-    expect(types.has('EXHIBITION')).toBe(true);
-    expect(types.has('OTHER')).toBe(false);
+  it('has created project examples for proposals', async () => {
+    const page = await firstValueFrom(service.listProjects({ status: 'CREATED', size: 20 }));
+    expect(page.totalElements).toBeGreaterThan(0);
   });
 
   it('returns no projects for assigned staff before proposals are assigned', async () => {
@@ -126,57 +106,37 @@ describe('ProjectApiServiceMock', () => {
     );
   });
 
-  it('rejects createEntry on a CLOSED project', async () => {
-    state.projects.get('proj-4')!.status = 'CLOSED';
+  it('rejects createObjectLogEntry on a COMPLETED project', async () => {
+    state.projects.get('proj-4')!.status = 'COMPLETED';
 
     await expect(
-      firstValueFrom(service.createEntry('proj-4', { content: 'Should be rejected.' })),
+      firstValueFrom(service.createObjectLogEntry('proj-4', { content: 'Should be rejected.' })),
     ).rejects.toMatchObject({
       status: 409,
       error: 'INVALID_PROJECT_STATUS',
     });
   });
 
-  it('rejects uploadAttachment on a CLOSED project', async () => {
-    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
-    const entry = await firstValueFrom(service.createEntry('proj-4', { content: 'Entry.' }));
-
-    state.projects.get('proj-4')!.status = 'CLOSED';
+  it('rejects uploadLogEntryAttachment when entry not found', async () => {
     await expect(
       firstValueFrom(
-        service.uploadAttachment('proj-4', entry.id, new File(['x'], 'x.jpg'), 'IMAGE'),
+        service.uploadLogEntryAttachment('proj-4', 'no-such-entry', new File(['x'], 'x.jpg'), 'IMAGE'),
       ),
     ).rejects.toMatchObject({
-      status: 409,
-      error: 'INVALID_PROJECT_STATUS',
+      status: 404,
+      error: 'NOT_FOUND',
     });
-  });
-
-  it('filters entries by group', async () => {
-    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
-    await firstValueFrom(service.createEntry('proj-4', { content: 'Researcher entry.' }));
-
-    const externalOnly = await firstValueFrom(
-      service.listEntries('proj-4', { group: 'EXTERNAL' }),
-    );
-    expect(externalOnly.content.every((e) => e.addedBy.group === 'EXTERNAL')).toBe(true);
-
-    const curatorial = await firstValueFrom(
-      service.listEntries('proj-4', { group: 'CURATORIAL' }),
-    );
-    expect(curatorial.content.every((e) => e.addedBy.group === 'CURATORIAL')).toBe(true);
   });
 
   it('filters events by type', async () => {
-    state.projects.get('proj-4')!.status = 'ACCEPTED';
     await firstValueFrom(service.startProject('proj-4', { note: 'Starting.' }));
 
     const started = await firstValueFrom(service.listEvents('proj-4', { type: 'STARTED' }));
     expect(started.content.every((e) => e.type === 'STARTED')).toBe(true);
 
-    const accepted = await firstValueFrom(service.listEvents('proj-4', { type: 'ACCEPTED' }));
-    expect(accepted.content.every((e) => e.type === 'ACCEPTED')).toBe(true);
-    expect(accepted.content.some((e) => e.type === 'STARTED')).toBe(false);
+    const created = await firstValueFrom(service.listEvents('proj-4', { type: 'CREATED' }));
+    expect(created.content.every((e) => e.type === 'CREATED')).toBe(true);
+    expect(created.content.some((e) => e.type === 'STARTED')).toBe(false);
   });
 
   it('matches referenceNumber exactly, not as a prefix', async () => {

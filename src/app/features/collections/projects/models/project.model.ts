@@ -1,12 +1,11 @@
 import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
-import { GroupName } from 'src/app/core/auth/models/group-name.enum';
 import { Page, PageQuery } from 'src/app/shared/models/page.model';
+import { ObjectReference } from 'src/app/shared/models/object-reference.model';
 
 import {
   MediaType,
   ProposalStatus,
   UseEventType,
-  UseResult,
   UseStatus,
   UseType,
 } from 'src/app/shared/models/collection-use-status.model';
@@ -23,12 +22,14 @@ export interface CollectionUseProjectSummary {
   readonly referenceNumber: string;
   readonly title: string;
   readonly purpose: string;
-  readonly note?: string | null;
+  readonly requestNote?: string | null;
   readonly type: UseType;
   readonly status: UseStatus;
-  readonly result: UseResult | null;
   readonly beginDate: string;
   readonly endDate: string;
+  readonly authorisedBy?: string;
+  readonly authorisedAt?: string;
+  readonly proposalId?: string;
   readonly requestedBy?: PermissionPrincipal;
   readonly proposal: ProjectProposalSummary;
 }
@@ -40,22 +41,27 @@ export interface Attachment {
   readonly uploadedAt: string;
 }
 
-export interface ProjectEntry {
+export interface ObjectLogEntry {
   readonly id: string;
+  readonly collectionUseProjectId: string;
   readonly content: string;
   readonly addedAt: string;
-  readonly addedBy: PermissionPrincipal;
+  readonly addedBy: string;
+  readonly objects: readonly ObjectReference[];
   readonly attachments: readonly Attachment[];
 }
 
-export interface ProjectEntrySummary {
-  readonly total: number;
-  readonly latest: ProjectEntry | null;
+export interface ObjectOccurrenceEntry {
+  readonly id: string;
+  readonly collectionUseProjectId: string;
+  readonly content: string;
+  readonly addedAt: string;
+  readonly addedBy: string;
+  readonly objects: readonly ObjectReference[];
+  readonly attachments: readonly Attachment[];
 }
 
-export interface CollectionUseProjectDetail extends CollectionUseProjectSummary {
-  readonly entries: ProjectEntrySummary;
-}
+export interface CollectionUseProjectDetail extends CollectionUseProjectSummary {}
 
 export interface UseEvent {
   readonly occurredAt: string;
@@ -67,7 +73,6 @@ export interface UseEvent {
 export interface ProjectListQuery extends PageQuery {
   readonly status?: UseStatus;
   readonly type?: UseType;
-  readonly result?: UseResult;
   readonly requestedBy?: string;
   readonly assignedTo?: string;
   readonly referenceNumber?: string;
@@ -76,16 +81,23 @@ export interface ProjectListQuery extends PageQuery {
   readonly search?: string;
 }
 
-export interface ProjectEntriesQuery extends PageQuery {
+export interface ObjectLogEntriesQuery extends PageQuery {
   readonly addedBy?: string;
-  readonly group?: GroupName;
+}
+
+export interface ObjectOccurrenceEntriesQuery extends PageQuery {
+  readonly addedBy?: string;
 }
 
 export interface ProjectEventsQuery extends PageQuery {
   readonly type?: UseEventType;
 }
 
-export interface ProjectEntriesPage extends Page<ProjectEntry> {
+export interface ObjectLogEntriesPage extends Page<ObjectLogEntry> {
+  readonly projectId: string;
+}
+
+export interface ObjectOccurrenceEntriesPage extends Page<ObjectOccurrenceEntry> {
   readonly projectId: string;
 }
 
@@ -101,6 +113,12 @@ export interface ReasonRequest {
   readonly reason: string;
 }
 
-export interface CreateProjectEntryRequest {
+export interface CreateObjectLogEntryRequest {
   readonly content: string;
+  readonly objects?: readonly string[];
+}
+
+export interface CreateObjectOccurrenceEntryRequest {
+  readonly content: string;
+  readonly objects?: readonly string[];
 }

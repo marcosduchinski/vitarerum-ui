@@ -8,16 +8,11 @@ import { Observable, of, throwError } from 'rxjs';
 import {
   AddProposalWatcherRequest,
   AssignProposalRequest,
-  DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
   ProposalDecisionResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
-  ProposalStatusActionResult,
-  ReferToDirectionRequest,
-  RequestDocumentsRequest,
-  RequestDocumentsResult,
 } from '../models/proposal-actions.model';
 import {
   Conversation,
@@ -77,13 +72,13 @@ export class ProposalApiServiceMock {
         id: projectId,
         referenceNumber: refNum,
         title: request.title,
-        status: 'REQUESTED',
+        status: 'CREATED',
       },
       submittedAt: now,
       watchers: [],
       conversationId: convId,
       documents: [],
-      requestedDocuments: [],
+      requestedObjects: [],
     };
 
     this.proposals.set(id, proposal);
@@ -109,7 +104,7 @@ export class ProposalApiServiceMock {
         title: request.title,
         purpose: request.purpose,
         type: request.type,
-        status: 'REQUESTED',
+        status: 'CREATED',
         beginDate: request.beginDate,
         endDate: request.endDate,
       },
@@ -167,15 +162,14 @@ export class ProposalApiServiceMock {
       fileName: _file.name,
       fileReference: `mock-proposal-file-${this.nextId++}`,
       submittedAt: now,
-      submittedBy: P['alice'],
+      submittedByPermissionId: this.currentPrincipal().permissionId,
     };
     const updated: ProposalDetail = { ...proposal, documents: [...proposal.documents, doc] };
     this.proposals.set(proposalId, updated);
-    const evts = this.events.get(proposalId) ?? [];
-    evts.push({
+    this.pushEvent(proposalId, {
       occurredAt: now,
       type: 'DOCUMENTS_SUBMITTED',
-      triggeredBy: P['alice'],
+      triggeredBy: this.currentPrincipal(),
       note: null,
     });
     return of(doc);
@@ -215,15 +209,15 @@ export class ProposalApiServiceMock {
     const msg: Message = {
       id: `msg-${this.nextId++}`,
       sentAt: new Date().toISOString(),
-      sender: proposal.assignedTo?.user.email ?? P['bob'].user.email,
+      sender: this.currentPrincipal().user.email,
       recipient: request.recipient,
       subject: request.subject,
       body: request.body,
-      attachments,
+      attachments: attachments.length > 0 ? attachments : undefined,
     };
-    const msgs = this.messages.get(proposal.conversationId) ?? [];
-    msgs.push(msg);
-    this.messages.set(proposal.conversationId, msgs);
+    const convMsgs = this.messages.get(proposal.conversationId) ?? [];
+    convMsgs.push(msg);
+    this.messages.set(proposal.conversationId, convMsgs);
     return of(msg);
   }
 
@@ -255,47 +249,13 @@ export class ProposalApiServiceMock {
       : this.currentPrincipal();
     const evt: ProposalEvent = {
       occurredAt: now,
-      type: 'REVIEW_STARTED',
+      type: 'ASSIGNED',
       triggeredBy: assignedTo,
       note: request.note || null,
     };
-    this.proposals.set(proposalId, { ...proposal, status: 'PENDING', assignedTo });
-    (this.events.get(proposalId) ?? []).push(evt);
-    return of({ id: proposalId, status: 'PENDING', assignedTo, lastEvent: evt });
-  }
-
-  requestDocuments(
-    proposalId: string,
-    request: RequestDocumentsRequest,
-  ): Observable<RequestDocumentsResult> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    const now = new Date().toISOString();
-    const newDocs = request.requiredDocuments.map((d, i) => ({
-      id: `rdoc-${this.nextId++}-${i}`,
-      type: d.type,
-      description: d.description,
-      requestedAt: now,
-      requestedBy: P['bob'],
-    }));
-    const evt: ProposalEvent = {
-      occurredAt: now,
-      type: 'DOCUMENTS_REQUESTED',
-      triggeredBy: P['bob'],
-      note: request.note || null,
-    };
-    this.proposals.set(proposalId, {
-      ...proposal,
-      status: 'PENDING_DOCUMENTS',
-      requestedDocuments: [...proposal.requestedDocuments, ...newDocs],
-    });
-    (this.events.get(proposalId) ?? []).push(evt);
-    return of({
-      id: proposalId,
-      status: 'PENDING_DOCUMENTS',
-      requestedDocuments: newDocs,
-      lastEvent: evt,
-    });
+    this.proposals.set(proposalId, { ...proposal, status: 'UNDER_REVIEW', assignedTo });
+    this.pushEvent(proposalId, evt);
+    return of({ id: proposalId, status: 'UNDER_REVIEW', assignedTo, lastEvent: evt });
   }
 
   forwardProposal(
@@ -313,7 +273,7 @@ export class ProposalApiServiceMock {
       note: request.note || null,
     };
     this.proposals.set(proposalId, { ...proposal, assignedTo });
-    (this.events.get(proposalId) ?? []).push(evt);
+    this.pushEvent(proposalId, evt);
     return of({ id: proposalId, status: proposal.status, assignedTo, lastEvent: evt });
   }
 
@@ -353,32 +313,6 @@ export class ProposalApiServiceMock {
     return of(undefined);
   }
 
-  startReview(
-    proposalId: string,
-    request: ProposalNoteRequest,
-  ): Observable<ProposalStatusActionResult> {
-    return this.transitionProposal(proposalId, 'PENDING', 'REVIEW_STARTED', request.note);
-  }
-
-  referToDirection(
-    proposalId: string,
-    request: ReferToDirectionRequest,
-  ): Observable<ProposalStatusActionResult> {
-    return this.transitionProposal(
-      proposalId,
-      'PENDING_DIRECTION',
-      'REFERRED_TO_DIRECTION',
-      request.note,
-    );
-  }
-
-  clarifyDirection(
-    proposalId: string,
-    request: DirectionClarificationRequest,
-  ): Observable<ProposalStatusActionResult> {
-    return this.transitionProposal(proposalId, 'PENDING', 'DIRECTION_CLARIFIED', request.note);
-  }
-
   approveProposal(
     proposalId: string,
     request: ProposalNoteRequest,
@@ -395,13 +329,13 @@ export class ProposalApiServiceMock {
     this.proposals.set(proposalId, {
       ...proposal,
       status: 'APPROVED',
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'ACCEPTED' },
+      collectionUseProject: { ...proposal.collectionUseProject, status: 'CREATED' },
     });
     this.projectState.acceptProjectForProposal(proposal, now);
-    (this.events.get(proposalId) ?? []).push(evt);
+    this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'APPROVED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'ACCEPTED' },
+      collectionUseProject: { ...proposal.collectionUseProject, status: 'CREATED' },
     });
   }
 
@@ -421,12 +355,12 @@ export class ProposalApiServiceMock {
     this.proposals.set(proposalId, {
       ...proposal,
       status: 'REJECTED',
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'REFUSED' },
+      collectionUseProject: { ...proposal.collectionUseProject, status: 'CANCELLED' },
     });
-    (this.events.get(proposalId) ?? []).push(evt);
+    this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'REJECTED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'REFUSED' },
+      collectionUseProject: { ...proposal.collectionUseProject, status: 'CANCELLED' },
     });
   }
 
@@ -448,35 +382,17 @@ export class ProposalApiServiceMock {
       status: 'CANCELLED',
       collectionUseProject: { ...proposal.collectionUseProject, status: 'CANCELLED' },
     });
-    (this.events.get(proposalId) ?? []).push(evt);
+    this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'CANCELLED', lastEvent: evt },
-      collectionUseProject: {
-        ...proposal.collectionUseProject,
-        status: 'CANCELLED',
-        result: 'CANCELLED',
-      },
+      collectionUseProject: { ...proposal.collectionUseProject, status: 'CANCELLED' },
     });
   }
 
-  private transitionProposal(
-    proposalId: string,
-    newStatus: ProposalDetail['status'],
-    eventType: ProposalEvent['type'],
-    note: string,
-  ): Observable<ProposalStatusActionResult> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    const now = new Date().toISOString();
-    const evt: ProposalEvent = {
-      occurredAt: now,
-      type: eventType,
-      triggeredBy: P['carol'],
-      note: note || null,
-    };
-    this.proposals.set(proposalId, { ...proposal, status: newStatus });
-    (this.events.get(proposalId) ?? []).push(evt);
-    return of({ id: proposalId, status: newStatus, lastEvent: evt });
+  private pushEvent(proposalId: string, evt: ProposalEvent): void {
+    const evts = this.events.get(proposalId) ?? [];
+    evts.push(evt);
+    this.events.set(proposalId, evts);
   }
 
   private currentPrincipal(): PermissionPrincipal {
@@ -508,11 +424,7 @@ export class ProposalApiServiceMock {
 
     return {
       permissionId,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
+      user: { id: user.id, name: user.name, email: user.email },
       group: permission.group.name,
     };
   }

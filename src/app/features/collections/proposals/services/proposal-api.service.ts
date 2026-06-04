@@ -10,16 +10,11 @@ import { Observable } from 'rxjs';
 import {
   AddProposalWatcherRequest,
   AssignProposalRequest,
-  DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
   ProposalDecisionResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
-  ProposalStatusActionResult,
-  ReferToDirectionRequest,
-  RequestDocumentsRequest,
-  RequestDocumentsResult,
 } from '../models/proposal-actions.model';
 import {
   Conversation,
@@ -97,16 +92,6 @@ export class ProposalApiService {
     );
   }
 
-  requestDocuments(
-    proposalId: string,
-    request: RequestDocumentsRequest,
-  ): Observable<RequestDocumentsResult> {
-    return this.http.post<RequestDocumentsResult>(
-      this.url(`/proposals/${proposalId}/request-documents`),
-      request,
-    );
-  }
-
   forwardProposal(
     proposalId: string,
     request: ForwardProposalRequest,
@@ -129,36 +114,6 @@ export class ProposalApiService {
 
   removeWatcher(proposalId: string, permissionId: string): Observable<void> {
     return this.http.delete<void>(this.url(`/proposals/${proposalId}/watchers/${permissionId}`));
-  }
-
-  startReview(
-    proposalId: string,
-    request: ProposalNoteRequest,
-  ): Observable<ProposalStatusActionResult> {
-    return this.http.post<ProposalStatusActionResult>(
-      this.url(`/proposals/${proposalId}/start-review`),
-      request,
-    );
-  }
-
-  referToDirection(
-    proposalId: string,
-    request: ReferToDirectionRequest,
-  ): Observable<ProposalStatusActionResult> {
-    return this.http.post<ProposalStatusActionResult>(
-      this.url(`/proposals/${proposalId}/refer-to-direction`),
-      request,
-    );
-  }
-
-  clarifyDirection(
-    proposalId: string,
-    request: DirectionClarificationRequest,
-  ): Observable<ProposalStatusActionResult> {
-    return this.http.post<ProposalStatusActionResult>(
-      this.url(`/proposals/${proposalId}/direction-clarification`),
-      request,
-    );
   }
 
   approveProposal(

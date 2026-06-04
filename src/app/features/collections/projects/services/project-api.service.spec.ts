@@ -32,7 +32,6 @@ describe('ProjectApiService', () => {
       .listProjects({
         status: 'IN_PROGRESS',
         type: 'RESEARCH',
-        result: 'COMPLETED',
         requestedBy: 'user-1',
         assignedTo: 'permission-1',
         referenceNumber: 'CUP-2026-0001',
@@ -45,7 +44,7 @@ describe('ProjectApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&result=COMPLETED&requestedBy=user-1&assignedTo=permission-1&referenceNumber=CUP-2026-0001&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
+      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&requestedBy=user-1&assignedTo=permission-1&referenceNumber=CUP-2026-0001&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
     );
 
     expect(request.request.method).toBe('GET');
@@ -53,56 +52,57 @@ describe('ProjectApiService', () => {
     request.flush({ content: [], page: 3, size: 15, totalElements: 0, totalPages: 0 });
   });
 
-  it('creates entries and closes projects with typed bodies', () => {
-    service.createEntry('project-1', { content: 'Entry note' }).subscribe();
+  it('creates object log entries and completes projects', () => {
+    service.createObjectLogEntry('project-1', { content: 'Log entry note' }).subscribe();
 
-    const entryRequest = http.expectOne('https://api.example.test/collection-use-projects/project-1/entries');
+    const entryRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/log-entries',
+    );
 
     expect(entryRequest.request.method).toBe('POST');
-    expect(entryRequest.request.body).toEqual({ content: 'Entry note' });
+    expect(entryRequest.request.body).toEqual({ content: 'Log entry note' });
     entryRequest.flush({
       id: 'entry-1',
-      content: 'Entry note',
+      collectionUseProjectId: 'project-1',
+      content: 'Log entry note',
       addedAt: '2026-06-01T10:00:00',
-      addedBy: {
-        permissionId: 'permission-1',
-        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
-        group: 'CURATORIAL',
-      },
+      addedBy: 'permission-1',
+      objects: [],
       attachments: [],
     });
 
-    service.closeProject('project-1', { note: 'Closed' }).subscribe();
+    service.completeProject('project-1', { note: 'Completed' }).subscribe();
 
-    const closeRequest = http.expectOne('https://api.example.test/collection-use-projects/project-1/close');
+    const completeRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/complete',
+    );
 
-    expect(closeRequest.request.method).toBe('POST');
-    expect(closeRequest.request.body).toEqual({ note: 'Closed' });
-    closeRequest.flush({
+    expect(completeRequest.request.method).toBe('POST');
+    expect(completeRequest.request.body).toEqual({ note: 'Completed' });
+    completeRequest.flush({
       id: 'project-1',
       referenceNumber: 'CUP-2026-0001',
-      status: 'CLOSED',
-      result: 'COMPLETED',
+      status: 'COMPLETED',
       lastEvent: {
         occurredAt: '2026-07-15T10:00:00',
-        type: 'CLOSED',
+        type: 'COMPLETED',
         triggeredBy: {
           permissionId: 'permission-1',
           user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
           group: 'COLLECTIONS_MANAGEMENT',
         },
-        note: 'Closed',
+        note: 'Completed',
       },
     });
   });
 
-  it('uploads project attachments as multipart form data', () => {
+  it('uploads log entry attachments as multipart form data', () => {
     const file = new File(['image'], 'photo.jpg', { type: 'image/jpeg' });
 
-    service.uploadAttachment('project-1', 'entry-1', file, 'IMAGE').subscribe();
+    service.uploadLogEntryAttachment('project-1', 'entry-1', file, 'IMAGE').subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects/project-1/entries/entry-1/attachments',
+      'https://api.example.test/collection-use-projects/project-1/log-entries/entry-1/attachments',
     );
 
     expect(request.request.method).toBe('POST');

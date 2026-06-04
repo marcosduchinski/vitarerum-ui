@@ -20,7 +20,7 @@ import { ProposalMyDetailPageComponent } from './proposal-my-detail-page.compone
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
-  status: 'PENDING',
+  status: 'UNDER_REVIEW',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',
@@ -36,7 +36,7 @@ const PROPOSAL: ProposalDetail = {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
     title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-    status: 'REQUESTED',
+    status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
   watchers: [
@@ -48,7 +48,7 @@ const PROPOSAL: ProposalDetail = {
   ],
   conversationId: 'conversation-1',
   documents: [],
-  requestedDocuments: [],
+  requestedObjects: [],
 };
 
 const CONVERSATION: Conversation = {
@@ -179,7 +179,7 @@ class ProposalApiServiceStub {
       fileName: file.name,
       fileReference: `mock-file-reference/${file.name}`,
       submittedAt: '2026-05-02T10:00:00',
-      submittedBy: PROPOSAL.assignedTo ?? undefined,
+      submittedByPermissionId: PROPOSAL.assignedTo?.permissionId ?? '',
     };
 
     this.uploadCalls.push({ proposalId, file, documentType });
@@ -214,7 +214,7 @@ class ProposalApiServiceStub {
       },
       collectionUseProject: {
         ...PROPOSAL.collectionUseProject,
-        status: 'ACCEPTED' as const,
+        status: 'CREATED' as const,
       },
     });
   }
@@ -229,7 +229,7 @@ class ProposalApiServiceStub {
       },
       collectionUseProject: {
         ...PROPOSAL.collectionUseProject,
-        status: 'REFUSED' as const,
+        status: 'CANCELLED' as const,
       },
     });
   }

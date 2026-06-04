@@ -14,22 +14,22 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class StatusChipHostComponent {
-  status: WorkflowStatus = 'PENDING';
+  status: WorkflowStatus = 'UNDER_REVIEW';
 }
 
 describe('StatusChipComponent', () => {
   it('maps workflow statuses to labels and tones', () => {
-    expect(getWorkflowStatusPresentation('PENDING_DOCUMENTS')).toEqual({
-      label: 'Pending documents',
-      tone: 'pending',
+    expect(getWorkflowStatusPresentation('SUBMITTED')).toEqual({
+      label: 'Submitted',
+      tone: 'submitted',
     });
     expect(getWorkflowStatusPresentation('IN_PROGRESS')).toEqual({
       label: 'In progress',
       tone: 'review',
     });
-    expect(getWorkflowStatusPresentation('REFUSED')).toEqual({
-      label: 'Refused',
-      tone: 'rejected',
+    expect(getWorkflowStatusPresentation('CREATED')).toEqual({
+      label: 'Created',
+      tone: 'submitted',
     });
   });
 

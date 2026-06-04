@@ -1,5 +1,4 @@
 import {
-  getProjectLifecyclePhase,
   getProposalLifecyclePhase,
   getProposalStatusPresentation,
   getUseStatusPresentation,
@@ -11,9 +10,9 @@ describe('collection-use status presentation', () => {
       label: 'Submitted',
       tone: 'submitted',
     });
-    expect(getProposalStatusPresentation('PENDING_DIRECTION')).toEqual({
-      label: 'Pending direction',
-      tone: 'pending',
+    expect(getProposalStatusPresentation('UNDER_REVIEW')).toEqual({
+      label: 'Under review',
+      tone: 'review',
     });
     expect(getProposalStatusPresentation('REJECTED')).toEqual({
       label: 'Rejected',
@@ -23,37 +22,28 @@ describe('collection-use status presentation', () => {
 
   it('maps every proposal status to the proposal lifecycle phase model', () => {
     expect(getProposalLifecyclePhase('SUBMITTED')).toBe('SUBMITTED');
-    expect(getProposalLifecyclePhase('PENDING_DOCUMENTS')).toBe('PENDING');
-    expect(getProposalLifecyclePhase('PENDING')).toBe('PENDING');
-    expect(getProposalLifecyclePhase('PENDING_DIRECTION')).toBe('PENDING');
+    expect(getProposalLifecyclePhase('UNDER_REVIEW')).toBe('PENDING');
     expect(getProposalLifecyclePhase('APPROVED')).toBe('APPROVED');
     expect(getProposalLifecyclePhase('REJECTED')).toBe('REJECTED');
     expect(getProposalLifecyclePhase('CANCELLED')).toBe('REJECTED');
   });
 
   it('maps project statuses to stable labels and tones', () => {
-    expect(getUseStatusPresentation('REFUSED')).toEqual({
-      label: 'Refused',
-      tone: 'rejected',
+    expect(getUseStatusPresentation('CREATED')).toEqual({
+      label: 'Created',
+      tone: 'submitted',
     });
     expect(getUseStatusPresentation('IN_PROGRESS')).toEqual({
       label: 'In progress',
       tone: 'review',
     });
-    expect(getUseStatusPresentation('CLOSED')).toEqual({
-      label: 'Closed',
+    expect(getUseStatusPresentation('COMPLETED')).toEqual({
+      label: 'Completed',
+      tone: 'approved',
+    });
+    expect(getUseStatusPresentation('CANCELLED')).toEqual({
+      label: 'Cancelled',
       tone: 'closed',
     });
-  });
-
-  it('maps every project status to the project lifecycle phase model', () => {
-    expect(getProjectLifecyclePhase('REQUESTED')).toBe('CREATED');
-    expect(getProjectLifecyclePhase('ACCEPTED')).toBe('CREATED');
-    expect(getProjectLifecyclePhase('REFUSED')).toBe('CANCELLED');
-    expect(getProjectLifecyclePhase('IN_PROGRESS')).toBe('IN_PROGRESS');
-    expect(getProjectLifecyclePhase('SUSPENDED')).toBe('IN_PROGRESS');
-    expect(getProjectLifecyclePhase('COMPLETED')).toBe('COMPLETED');
-    expect(getProjectLifecyclePhase('CANCELLED')).toBe('CANCELLED');
-    expect(getProjectLifecyclePhase('CLOSED')).toBe('COMPLETED');
   });
 });

@@ -7,6 +7,7 @@ import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 
 import { ProjectApiServiceMock } from '../../projects/mocks/project-api.service.mock';
+import { MockProjectState } from './mock-data';
 import { ProposalApiServiceMock } from './proposal-api.service.mock';
 
 const sessionState = signal<IdentitySession | null>({
@@ -58,6 +59,7 @@ describe('ProposalApiServiceMock', () => {
       providers: [
         ProposalApiServiceMock,
         ProjectApiServiceMock,
+        MockProjectState,
         {
           provide: IDENTITY_SERVICE,
           useValue: identityStub,
@@ -143,7 +145,7 @@ describe('ProposalApiServiceMock', () => {
   it('transitions to APPROVED and updates event log', async () => {
     const result = await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
     expect(result.proposal.status).toBe('APPROVED');
-    expect(result.collectionUseProject.status).toBe('ACCEPTED');
+    expect(result.collectionUseProject.status).toBe('CREATED');
 
     const events = await firstValueFrom(service.listEvents('prop-3'));
     const last = events.content[events.content.length - 1];
@@ -153,37 +155,23 @@ describe('ProposalApiServiceMock', () => {
   it('moves the approved proposal project into pending projects', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
 
-    const before = await firstValueFrom(projectService.listProjects({ status: 'ACCEPTED' }));
-    expect(before.content.find((project) => project.id === 'proj-3')).toBeUndefined();
+    const before = await firstValueFrom(projectService.listProjects({ status: 'CREATED' }));
+    const beforeCount = before.content.length;
 
     await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
 
-    const pending = await firstValueFrom(projectService.listProjects({ status: 'ACCEPTED' }));
-    const project = pending.content.find((item) => item.id === 'proj-3');
+    const after = await firstValueFrom(projectService.listProjects({ status: 'CREATED' }));
+    const project = after.content.find((item) => item.id === 'proj-3');
 
-    expect(project).toBeDefined();
+    expect(after.content.length).toBe(beforeCount);
     expect(project).toMatchObject({
       id: 'proj-3',
-      status: 'ACCEPTED',
+      status: 'CREATED',
       proposal: {
         id: 'prop-3',
         status: 'APPROVED',
       },
     });
-  });
-
-  it('transitions to PENDING_DOCUMENTS via requestDocuments', async () => {
-    const result = await firstValueFrom(
-      service.requestDocuments('prop-1', {
-        requiredDocuments: [{ type: 'FORM_A', description: 'Fill in form A' }],
-        note: 'Please submit',
-      }),
-    );
-    expect(result.status).toBe('PENDING_DOCUMENTS');
-    expect(result.requestedDocuments.length).toBe(1);
-
-    const updated = await firstValueFrom(service.getProposal('prop-1'));
-    expect(updated.status).toBe('PENDING_DOCUMENTS');
   });
 
   it('creates a new proposal and lists it', async () => {
@@ -237,12 +225,12 @@ describe('ProposalApiServiceMock', () => {
 
   it('assume moves proposal into review and sets assignedTo', async () => {
     const result = await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
-    expect(result.status).toBe('PENDING');
-    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
+    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.lastEvent.type).toBe('ASSIGNED');
     expect(result.assignedTo.permissionId).toBe('perm-bob');
 
     const updated = await firstValueFrom(service.getProposal('prop-1'));
-    expect(updated.status).toBe('PENDING');
+    expect(updated.status).toBe('UNDER_REVIEW');
     expect(updated.assignedTo?.permissionId).toBe('perm-bob');
   });
 
@@ -283,8 +271,8 @@ describe('ProposalApiServiceMock', () => {
         note: 'Assigning to carol',
       }),
     );
-    expect(result.status).toBe('PENDING');
-    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
+    expect(result.status).toBe('UNDER_REVIEW');
+    expect(result.lastEvent.type).toBe('ASSIGNED');
     expect(result.assignedTo.permissionId).toBe('perm-carol');
   });
 

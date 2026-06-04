@@ -7,8 +7,8 @@ import { PROJECT_API_SERVICE } from '../services/project-api.service';
 
 /**
  * Blocks researcher access to project log pages for non-IN_PROGRESS projects.
- * Staff (any non-EXTERNAL group) always pass through — the backend enforces the
- * CLOSED write guard for them.
+ * Staff (any non-EXTERNAL group) always pass through — the backend enforces its
+ * own write guards for completed and cancelled projects.
  */
 export const projectLogAccessGuard: CanActivateFn = async (route) => {
   const identity = inject(IDENTITY_SERVICE);

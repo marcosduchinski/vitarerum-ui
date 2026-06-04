@@ -4,7 +4,11 @@ import { GroupMembership, PermissionPrincipal } from 'src/app/core/auth/models/p
 import { UserDetail } from 'src/app/core/auth/models/user.model';
 import { Page, PageQuery } from 'src/app/shared/models/page.model';
 
-import { ProjectEntry, UseEvent } from 'src/app/features/collections/projects/models/project.model';
+import {
+  ObjectLogEntry,
+  ObjectOccurrenceEntry,
+  UseEvent,
+} from 'src/app/features/collections/projects/models/project.model';
 import {
   CreateProposalRequest,
   Message,
@@ -125,7 +129,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-1',
       referenceNumber: 'VR-2026-001',
       title: 'Zoology specimen catalogues from Atlantic forest surveys',
-      status: 'REQUESTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T09:00:00Z',
     watchers: [],
@@ -137,7 +141,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'zoology-research-outline.pdf',
         fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
         submittedAt: '2026-06-01T09:00:00Z',
-        submittedBy: P['alice'],
+        submittedByPermissionId: 'perm-alice',
       },
       {
         id: 'doc-prop-1-catalogue-list',
@@ -145,10 +149,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'atlantic-forest-catalogue-list.xlsx',
         fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
         submittedAt: '2026-06-01T09:00:00Z',
-        submittedBy: P['alice'],
+        submittedByPermissionId: 'perm-alice',
       },
     ],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
   {
     id: 'prop-2',
@@ -160,13 +164,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-2',
       referenceNumber: 'VR-2026-002',
       title: 'Botanical herbarium records of medicinal plant collections',
-      status: 'REQUESTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T09:20:00Z',
     watchers: [],
     conversationId: 'conv-2',
     documents: [],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
   {
     id: 'prop-3',
@@ -178,13 +182,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-3',
       referenceNumber: 'VR-2026-003',
       title: 'Comparative study of zoological field notebooks',
-      status: 'REQUESTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T09:40:00Z',
     watchers: [],
     conversationId: 'conv-3',
     documents: [],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
   {
     id: 'prop-4',
@@ -196,7 +200,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-4',
       referenceNumber: 'VR-2026-004',
       title: 'Science history exhibition on early laboratory instruments',
-      status: 'REQUESTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T10:00:00Z',
     watchers: [],
@@ -208,7 +212,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'laboratory-instruments-exhibition-brief.pdf',
         fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
         submittedAt: '2026-06-01T10:00:00Z',
-        submittedBy: P['alice'],
+        submittedByPermissionId: 'perm-alice',
       },
       {
         id: 'doc-prop-4-object-list',
@@ -216,10 +220,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'laboratory-instruments-object-list.csv',
         fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
         submittedAt: '2026-06-01T10:00:00Z',
-        submittedBy: P['alice'],
+        submittedByPermissionId: 'perm-alice',
       },
     ],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
   {
     id: 'prop-5',
@@ -231,13 +235,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-5',
       referenceNumber: 'VR-2026-005',
       title: 'Science history exhibition on expedition photography',
-      status: 'REQUESTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T10:20:00Z',
     watchers: [],
     conversationId: 'conv-5',
     documents: [],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
   {
     id: 'prop-6',
@@ -249,13 +253,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-6',
       referenceNumber: 'VR-2026-006',
       title: 'Science history exhibition on botanical illustration',
-      status: 'REQUESTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T10:40:00Z',
     watchers: [],
     conversationId: 'conv-6',
     documents: [],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
   {
     id: 'prop-7',
@@ -267,13 +271,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       id: 'proj-7',
       referenceNumber: 'VR-2026-007',
       title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-      status: 'ACCEPTED',
+      status: 'CREATED',
     },
     submittedAt: '2026-06-01T11:00:00Z',
     watchers: [P['carol']],
     conversationId: 'conv-7',
     documents: [],
-    requestedDocuments: [],
+    requestedObjects: [],
   },
 ];
 
@@ -411,15 +415,12 @@ export interface MutableProjectState {
   purpose: string;
   type: 'EXHIBITION' | 'RESEARCH' | 'OTHER';
   status: import('src/app/shared/models/collection-use-status.model').UseStatus;
-  result: import('src/app/shared/models/collection-use-status.model').UseResult | null;
   beginDate: string;
   endDate: string;
   requestedBy: PermissionPrincipal;
   proposalId: string;
   proposalStatus: import('src/app/shared/models/collection-use-status.model').ProposalStatus;
   proposalAssignedTo: PermissionPrincipal | null;
-  entries: import('src/app/features/collections/projects/models/project.model').ProjectEntry[];
-  entryTotal: number;
 }
 
 export const SEED_PROJECTS: MutableProjectState[] = [
@@ -429,16 +430,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     title: 'Zoology specimen catalogues from Atlantic forest surveys',
     purpose: 'Research comparing zoological specimen catalogues and collecting routes.',
     type: 'RESEARCH',
-    status: 'REQUESTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-06-01',
     endDate: '2026-12-31',
     requestedBy: P['alice'],
     proposalId: 'prop-1',
     proposalStatus: 'SUBMITTED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
   {
     id: 'proj-2',
@@ -446,16 +444,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     title: 'Botanical herbarium records of medicinal plant collections',
     purpose: 'Research on botanical herbarium records and medicinal plant classification.',
     type: 'RESEARCH',
-    status: 'REQUESTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-07-15',
     endDate: '2027-01-31',
     requestedBy: P['alice'],
     proposalId: 'prop-2',
     proposalStatus: 'SUBMITTED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
   {
     id: 'proj-3',
@@ -463,16 +458,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     title: 'Comparative study of zoological field notebooks',
     purpose: 'Research comparing zoological field notebooks, sketches, and specimen lists.',
     type: 'RESEARCH',
-    status: 'REQUESTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-09-01',
     endDate: '2027-02-28',
     requestedBy: P['alice'],
     proposalId: 'prop-3',
     proposalStatus: 'SUBMITTED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
   {
     id: 'proj-4',
@@ -480,16 +472,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     title: 'Science history exhibition on early laboratory instruments',
     purpose: 'Preparation of early laboratory instruments for a science history exhibition.',
     type: 'EXHIBITION',
-    status: 'REQUESTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-08-10',
     endDate: '2027-01-15',
     requestedBy: P['alice'],
     proposalId: 'prop-4',
     proposalStatus: 'SUBMITTED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
   {
     id: 'proj-5',
@@ -497,16 +486,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     title: 'Science history exhibition on expedition photography',
     purpose: 'Selection of expedition photographs for a public science history exhibition.',
     type: 'EXHIBITION',
-    status: 'REQUESTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-06-15',
     endDate: '2026-09-30',
     requestedBy: P['alice'],
     proposalId: 'prop-5',
     proposalStatus: 'SUBMITTED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
   {
     id: 'proj-6',
@@ -515,16 +501,13 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     purpose:
       'Selection and display of botanical illustration materials for a science history exhibition.',
     type: 'EXHIBITION',
-    status: 'REQUESTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-07-01',
     endDate: '2026-10-15',
     requestedBy: P['alice'],
     proposalId: 'prop-6',
     proposalStatus: 'SUBMITTED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
   {
     id: 'proj-7',
@@ -532,50 +515,42 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     title: 'Photographic history of Rio de Janeiro port, 1890-1930',
     purpose: 'Research on photographic records documenting Rio de Janeiro port history.',
     type: 'RESEARCH',
-    status: 'ACCEPTED',
-    result: null,
+    status: 'CREATED',
     beginDate: '2026-08-01',
     endDate: '2027-03-31',
     requestedBy: P['alice'],
     proposalId: 'prop-7',
     proposalStatus: 'APPROVED',
     proposalAssignedTo: null,
-    entries: [],
-    entryTotal: 0,
   },
 ];
 
 export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
   'proj-1': [
-    { occurredAt: '2026-06-01T09:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T09:00:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
   ],
   'proj-2': [
-    { occurredAt: '2026-06-01T09:20:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T09:20:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
   ],
   'proj-3': [
-    { occurredAt: '2026-06-01T09:40:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T09:40:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
   ],
   'proj-4': [
-    { occurredAt: '2026-06-01T10:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T10:00:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
   ],
   'proj-5': [
-    { occurredAt: '2026-06-01T10:20:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T10:20:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
   ],
   'proj-6': [
-    { occurredAt: '2026-06-01T10:40:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T10:40:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
   ],
   'proj-7': [
-    { occurredAt: '2026-06-01T11:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
-    {
-      occurredAt: '2026-06-02T09:00:00Z',
-      type: 'ACCEPTED',
-      triggeredBy: P['bob'],
-      note: null,
-    },
+    { occurredAt: '2026-06-01T11:00:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-02T09:00:00Z', type: 'CREATED', triggeredBy: P['bob'], note: null },
   ],
 };
 
-export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
+export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
   'proj-1': [],
   'proj-2': [],
   'proj-3': [],
@@ -585,13 +560,36 @@ export const SEED_PROJECT_ENTRIES: Record<string, ProjectEntry[]> = {
   'proj-7': [],
 };
 
-@Injectable({ providedIn: 'root' })
+export const SEED_PROJECT_OCCURRENCE_ENTRIES: Record<string, ObjectOccurrenceEntry[]> = {
+  'proj-1': [],
+  'proj-2': [],
+  'proj-3': [],
+  'proj-4': [],
+  'proj-5': [],
+  'proj-6': [],
+  'proj-7': [],
+};
+
+export const SEED_PROJECT_OBJECTS: Record<string, never[]> = {
+  'proj-1': [],
+  'proj-2': [],
+  'proj-3': [],
+  'proj-4': [],
+  'proj-5': [],
+  'proj-6': [],
+  'proj-7': [],
+};
+
+@Injectable()
 export class MockProjectState {
   readonly projects = new Map<string, MutableProjectState>(
     SEED_PROJECTS.map((p) => [p.id, structuredClone(p)]),
   );
-  readonly entries = new Map<string, ProjectEntry[]>(
-    Object.entries(SEED_PROJECT_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
+  readonly logEntries = new Map<string, ObjectLogEntry[]>(
+    Object.entries(SEED_PROJECT_LOG_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
+  );
+  readonly occurrenceEntries = new Map<string, ObjectOccurrenceEntry[]>(
+    Object.entries(SEED_PROJECT_OCCURRENCE_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
   );
   readonly events = new Map<string, UseEvent[]>(
     Object.entries(SEED_PROJECT_EVENTS).map(([k, v]) => [k, structuredClone(v)]),
@@ -609,23 +607,21 @@ export class MockProjectState {
       title: request.title,
       purpose: request.purpose,
       type: request.type,
-      status: 'REQUESTED',
-      result: null,
+      status: 'CREATED',
       beginDate: request.beginDate,
       endDate: request.endDate,
       requestedBy: proposal.requestedBy,
       proposalId: proposal.id,
       proposalStatus: proposal.status,
       proposalAssignedTo: proposal.assignedTo,
-      entries: [],
-      entryTotal: 0,
     };
     this.projects.set(project.id, project);
-    this.entries.set(project.id, []);
+    this.logEntries.set(project.id, []);
+    this.occurrenceEntries.set(project.id, []);
     this.events.set(project.id, [
       {
         occurredAt: proposal.submittedAt,
-        type: 'REQUESTED',
+        type: 'CREATED',
         triggeredBy: proposal.requestedBy,
         note: null,
       },
@@ -639,14 +635,13 @@ export class MockProjectState {
     const project = this.projects.get(proposal.collectionUseProject.id);
     if (!project) return null;
 
-    project.status = 'ACCEPTED';
-    project.result = null;
+    project.status = 'CREATED';
     project.proposalStatus = 'APPROVED';
     project.proposalAssignedTo = proposal.assignedTo;
 
     const event: UseEvent = {
       occurredAt,
-      type: 'ACCEPTED',
+      type: 'CREATED',
       triggeredBy: P['carol'],
       note: null,
     };
@@ -674,6 +669,6 @@ export function makePageFrom<T>(items: readonly T[], query: PageQuery): Page<T> 
     page,
     size,
     totalElements: items.length,
-    totalPages: Math.max(1, Math.ceil(items.length / size)),
+    totalPages: items.length === 0 ? 0 : Math.ceil(items.length / size),
   };
 }

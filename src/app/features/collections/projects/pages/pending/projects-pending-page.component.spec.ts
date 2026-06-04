@@ -17,8 +17,7 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 5 
       : 'Conservation study for ceramic collection',
   purpose: 'Document handling requirements before the conservation work starts.',
   type: 'RESEARCH',
-  status: 'ACCEPTED',
-  result: null,
+  status: 'CREATED',
   beginDate: '2026-06-10',
   endDate: '2026-06-20',
   requestedBy: {
@@ -104,7 +103,7 @@ describe('ProjectsPendingPageComponent', () => {
     await fixture.whenStable();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 0,
       size: 3,
       search: '',
@@ -144,7 +143,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 1,
       size: 3,
       search: '',
@@ -160,7 +159,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 1,
       size: 3,
       search: '',
@@ -172,7 +171,7 @@ describe('ProjectsPendingPageComponent', () => {
     await fixture.whenStable();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 1,
       size: 3,
       search: '',
@@ -184,7 +183,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 0,
       size: 3,
       search: '',
@@ -218,7 +217,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 0,
       size: 3,
       search: 'railway',
@@ -232,7 +231,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'ACCEPTED',
+      status: 'CREATED',
       page: 0,
       size: 3,
       search: '',

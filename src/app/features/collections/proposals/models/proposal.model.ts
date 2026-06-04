@@ -1,5 +1,6 @@
 import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
 import { Page, PageQuery } from 'src/app/shared/models/page.model';
+import { ObjectReference } from 'src/app/shared/models/object-reference.model';
 
 import {
   ProposalLifecyclePhase,
@@ -28,12 +29,12 @@ export interface ProposalSummary {
   readonly submittedAt: string;
 }
 
-export interface RequestedDocument {
-  readonly id: string;
-  readonly type: DocumentType;
+export interface RequestedObject {
+  readonly objectReference: ObjectReference;
+  readonly category: string;
   readonly description: string;
   readonly requestedAt: string;
-  readonly requestedBy: PermissionPrincipal;
+  readonly requestedBy: string;
 }
 
 export interface Document {
@@ -42,14 +43,14 @@ export interface Document {
   readonly fileName: string;
   readonly fileReference?: string;
   readonly submittedAt: string;
-  readonly submittedBy?: PermissionPrincipal;
+  readonly submittedByPermissionId: string;
 }
 
 export interface ProposalDetail extends ProposalSummary {
   readonly watchers: readonly PermissionPrincipal[];
   readonly conversationId: string;
   readonly documents: readonly Document[];
-  readonly requestedDocuments: readonly RequestedDocument[];
+  readonly requestedObjects: readonly RequestedObject[];
 }
 
 export interface ProposalEvent {
@@ -100,7 +101,7 @@ export interface CreateProposalResponse {
     readonly referenceNumber: string;
     readonly title: string;
     readonly purpose: string;
-    readonly note?: string | null;
+    readonly requestNote?: string | null;
     readonly type: UseType;
     readonly status: UseStatus;
     readonly beginDate: string;

@@ -27,7 +27,7 @@ const SESSION: IdentitySession = {
 
 const OTHER_PROPOSAL: ProposalSummary = {
   id: 'proposal-other',
-  status: 'PENDING',
+  status: 'UNDER_REVIEW',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',
@@ -43,7 +43,7 @@ const OTHER_PROPOSAL: ProposalSummary = {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
     title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-    status: 'REQUESTED',
+    status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
 };

@@ -25,7 +25,7 @@ const PROPOSAL: ProposalDetail = {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
     title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-    status: 'REQUESTED',
+    status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
   watchers: [
@@ -37,7 +37,7 @@ const PROPOSAL: ProposalDetail = {
   ],
   conversationId: 'conversation-1',
   documents: [],
-  requestedDocuments: [],
+  requestedObjects: [],
 };
 
 const CONVERSATION: Conversation = {
@@ -131,7 +131,7 @@ class ProposalApiServiceStub {
 
   assignProposal(proposalId: string, payload: { readonly note: string }) {
     this.assignCalls.push({ proposalId, payload });
-    return of({ id: proposalId, status: 'PENDING', assignedTo: null, lastEvent: null });
+    return of({ id: proposalId, status: 'UNDER_REVIEW', assignedTo: null, lastEvent: null });
   }
 
   forwardProposal(

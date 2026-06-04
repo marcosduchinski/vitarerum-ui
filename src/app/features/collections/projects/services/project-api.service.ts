@@ -10,24 +10,27 @@ import {
   Attachment,
   CollectionUseProjectDetail,
   CollectionUseProjectSummary,
-  CreateProjectEntryRequest,
+  CreateObjectLogEntryRequest,
+  CreateObjectOccurrenceEntryRequest,
   NoteRequest,
-  ProjectEntriesPage,
-  ProjectEntriesQuery,
+  ObjectLogEntriesPage,
+  ObjectLogEntriesQuery,
+  ObjectLogEntry,
+  ObjectOccurrenceEntriesPage,
+  ObjectOccurrenceEntriesQuery,
+  ObjectOccurrenceEntry,
   ProjectEventsPage,
   ProjectEventsQuery,
-  ProjectEntry,
   ProjectListQuery,
   ReasonRequest,
   UseEvent,
 } from '../models/project.model';
-import { MediaType, UseResult, UseStatus } from 'src/app/shared/models/collection-use-status.model';
+import { MediaType, UseStatus } from 'src/app/shared/models/collection-use-status.model';
 
 export interface ProjectTransitionResult {
   readonly id: string;
   readonly referenceNumber: string;
   readonly status: UseStatus;
-  readonly result?: UseResult;
   readonly lastEvent: UseEvent;
 }
 
@@ -55,24 +58,7 @@ export class ProjectApiService {
     );
   }
 
-  suspendProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
-    return this.http.post<ProjectTransitionResult>(
-      this.url(`/collection-use-projects/${projectId}/suspend`),
-      request,
-    );
-  }
-
-  resumeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.http.post<ProjectTransitionResult>(
-      this.url(`/collection-use-projects/${projectId}/resume`),
-      request,
-    );
-  }
-
-  completeProject(
-    projectId: string,
-    request: NoteRequest,
-  ): Observable<ProjectTransitionResult> {
+  completeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
     return this.http.post<ProjectTransitionResult>(
       this.url(`/collection-use-projects/${projectId}/complete`),
       request,
@@ -86,24 +72,27 @@ export class ProjectApiService {
     );
   }
 
-  closeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.http.post<ProjectTransitionResult>(
-      this.url(`/collection-use-projects/${projectId}/close`),
+  createObjectLogEntry(
+    projectId: string,
+    request: CreateObjectLogEntryRequest,
+  ): Observable<ObjectLogEntry> {
+    return this.http.post<ObjectLogEntry>(
+      this.url(`/collection-use-projects/${projectId}/log-entries`),
       request,
     );
   }
 
-  createEntry(projectId: string, request: CreateProjectEntryRequest): Observable<ProjectEntry> {
-    return this.http.post<ProjectEntry>(this.url(`/collection-use-projects/${projectId}/entries`), request);
+  listObjectLogEntries(
+    projectId: string,
+    query: ObjectLogEntriesQuery = {},
+  ): Observable<ObjectLogEntriesPage> {
+    return this.http.get<ObjectLogEntriesPage>(
+      this.url(`/collection-use-projects/${projectId}/log-entries`),
+      { params: buildHttpParams(query) },
+    );
   }
 
-  listEntries(projectId: string, query: ProjectEntriesQuery = {}): Observable<ProjectEntriesPage> {
-    return this.http.get<ProjectEntriesPage>(this.url(`/collection-use-projects/${projectId}/entries`), {
-      params: buildHttpParams(query),
-    });
-  }
-
-  uploadAttachment(
+  uploadLogEntryAttachment(
     projectId: string,
     entryId: string,
     file: File,
@@ -114,7 +103,43 @@ export class ProjectApiService {
     body.append('mediaType', mediaType);
 
     return this.http.post<Attachment>(
-      this.url(`/collection-use-projects/${projectId}/entries/${entryId}/attachments`),
+      this.url(`/collection-use-projects/${projectId}/log-entries/${entryId}/attachments`),
+      body,
+    );
+  }
+
+  createObjectOccurrenceEntry(
+    projectId: string,
+    request: CreateObjectOccurrenceEntryRequest,
+  ): Observable<ObjectOccurrenceEntry> {
+    return this.http.post<ObjectOccurrenceEntry>(
+      this.url(`/collection-use-projects/${projectId}/occurrence-entries`),
+      request,
+    );
+  }
+
+  listObjectOccurrenceEntries(
+    projectId: string,
+    query: ObjectOccurrenceEntriesQuery = {},
+  ): Observable<ObjectOccurrenceEntriesPage> {
+    return this.http.get<ObjectOccurrenceEntriesPage>(
+      this.url(`/collection-use-projects/${projectId}/occurrence-entries`),
+      { params: buildHttpParams(query) },
+    );
+  }
+
+  uploadOccurrenceEntryAttachment(
+    projectId: string,
+    entryId: string,
+    file: File,
+    mediaType: MediaType,
+  ): Observable<Attachment> {
+    const body = new FormData();
+    body.append('file', file);
+    body.append('mediaType', mediaType);
+
+    return this.http.post<Attachment>(
+      this.url(`/collection-use-projects/${projectId}/occurrence-entries/${entryId}/attachments`),
       body,
     );
   }

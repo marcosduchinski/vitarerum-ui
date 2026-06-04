@@ -65,7 +65,7 @@ export class ProjectsPendingPageComponent {
     loader: ({ params }) =>
       firstValueFrom(
         this.projectService.listProjects({
-          status: 'ACCEPTED',
+          status: 'CREATED',
           ...params,
         }),
       ),

@@ -2,16 +2,20 @@ import { inject, Injectable } from '@angular/core';
 import { Page } from 'src/app/shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
-import { MediaType, UseResult, UseStatus } from 'src/app/shared/models/collection-use-status.model';
+import { MediaType, UseStatus } from 'src/app/shared/models/collection-use-status.model';
 import {
   Attachment,
   CollectionUseProjectDetail,
   CollectionUseProjectSummary,
-  CreateProjectEntryRequest,
+  CreateObjectLogEntryRequest,
+  CreateObjectOccurrenceEntryRequest,
   NoteRequest,
-  ProjectEntriesPage,
-  ProjectEntriesQuery,
-  ProjectEntry,
+  ObjectLogEntriesPage,
+  ObjectLogEntriesQuery,
+  ObjectLogEntry,
+  ObjectOccurrenceEntriesPage,
+  ObjectOccurrenceEntriesQuery,
+  ObjectOccurrenceEntry,
   ProjectEventsPage,
   ProjectEventsQuery,
   ProjectListQuery,
@@ -35,7 +39,6 @@ export class ProjectApiServiceMock {
 
     if (query.status) items = items.filter((p) => p.status === query.status);
     if (query.type) items = items.filter((p) => p.type === query.type);
-    if (query.result) items = items.filter((p) => p.result === query.result);
     if (query.requestedBy)
       items = items.filter((p) => p.requestedBy.permissionId === query.requestedBy);
     if (query.assignedTo)
@@ -58,89 +61,67 @@ export class ProjectApiServiceMock {
   getProject(projectId: string): Observable<CollectionUseProjectDetail> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    return of(this.toDetail(p));
+    return of(this.toSummary(p));
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['ACCEPTED'], 'IN_PROGRESS', null, 'STARTED', request.note);
-  }
-
-  suspendProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
-    return this.transition(
-      projectId,
-      ['IN_PROGRESS'],
-      'SUSPENDED',
-      null,
-      'SUSPENDED',
-      request.reason,
-    );
-  }
-
-  resumeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['SUSPENDED'], 'IN_PROGRESS', null, 'RESUMED', request.note);
+    return this.transition(projectId, ['CREATED'], 'IN_PROGRESS', 'STARTED', request.note);
   }
 
   completeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(
-      projectId,
-      ['IN_PROGRESS'],
-      'COMPLETED',
-      'COMPLETED',
-      'COMPLETED',
-      request.note,
-    );
+    return this.transition(projectId, ['IN_PROGRESS'], 'COMPLETED', 'COMPLETED', request.note);
   }
 
   cancelProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
     return this.transition(
       projectId,
-      ['ACCEPTED', 'IN_PROGRESS', 'SUSPENDED'],
-      'CANCELLED',
+      ['CREATED', 'IN_PROGRESS'],
       'CANCELLED',
       'CANCELLED',
       request.reason,
     );
   }
 
-  closeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['COMPLETED'], 'CLOSED', null, 'CLOSED', request.note);
-  }
-
-  createEntry(projectId: string, request: CreateProjectEntryRequest): Observable<ProjectEntry> {
+  createObjectLogEntry(
+    projectId: string,
+    request: CreateObjectLogEntryRequest,
+  ): Observable<ObjectLogEntry> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (p.status === 'CLOSED') {
+    if (p.status === 'COMPLETED' || p.status === 'CANCELLED') {
       return throwError(() => ({
         status: 409,
         error: 'INVALID_PROJECT_STATUS',
-        message: 'Entries cannot be added to a CLOSED project',
+        message: 'Entries cannot be added to a completed or cancelled project',
       }));
     }
-    const entry: ProjectEntry = {
+    const entry: ObjectLogEntry = {
       id: this.state.nextEntryId(),
+      collectionUseProjectId: projectId,
       content: request.content,
       addedAt: new Date().toISOString(),
-      addedBy: P['alice'],
+      addedBy: P['alice'].permissionId,
+      objects: [],
       attachments: [],
     };
-    const current = this.state.entries.get(projectId) ?? [];
+    const current = this.state.logEntries.get(projectId) ?? [];
     current.push(entry);
-    this.state.entries.set(projectId, current);
-    p.entryTotal = current.length;
-    p.entries = current;
+    this.state.logEntries.set(projectId, current);
     return of(entry);
   }
 
-  listEntries(projectId: string, query: ProjectEntriesQuery = {}): Observable<ProjectEntriesPage> {
+  listObjectLogEntries(
+    projectId: string,
+    query: ObjectLogEntriesQuery = {},
+  ): Observable<ObjectLogEntriesPage> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    let items = this.state.entries.get(projectId) ?? [];
-    if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
-    if (query.group) items = items.filter((e) => e.addedBy.group === query.group);
+    let items = this.state.logEntries.get(projectId) ?? [];
+    if (query.addedBy) items = items.filter((e) => e.addedBy === query.addedBy);
     return of({ ...makePageFrom(items, query), projectId });
   }
 
-  uploadAttachment(
+  uploadLogEntryAttachment(
     projectId: string,
     entryId: string,
     file: File,
@@ -148,14 +129,7 @@ export class ProjectApiServiceMock {
   ): Observable<Attachment> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (p.status === 'CLOSED') {
-      return throwError(() => ({
-        status: 409,
-        error: 'INVALID_PROJECT_STATUS',
-        message: 'Attachments cannot be added to a CLOSED project',
-      }));
-    }
-    const allEntries = this.state.entries.get(projectId) ?? [];
+    const allEntries = this.state.logEntries.get(projectId) ?? [];
     const entry = allEntries.find((e) => e.id === entryId);
     if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     const attachment: Attachment = {
@@ -164,14 +138,49 @@ export class ProjectApiServiceMock {
       mediaType,
       uploadedAt: new Date().toISOString(),
     };
-    const updatedEntry: ProjectEntry = {
-      ...entry,
-      attachments: [...entry.attachments, attachment],
-    };
     const idx = allEntries.findIndex((e) => e.id === entryId);
-    allEntries[idx] = updatedEntry;
-    this.state.entries.set(projectId, allEntries);
+    allEntries[idx] = { ...entry, attachments: [...entry.attachments, attachment] };
+    this.state.logEntries.set(projectId, allEntries);
     return of(attachment);
+  }
+
+  createObjectOccurrenceEntry(
+    projectId: string,
+    request: CreateObjectOccurrenceEntryRequest,
+  ): Observable<ObjectOccurrenceEntry> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    if (p.status === 'COMPLETED' || p.status === 'CANCELLED') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_PROJECT_STATUS',
+        message: 'Entries cannot be added to a completed or cancelled project',
+      }));
+    }
+    const entry: ObjectOccurrenceEntry = {
+      id: this.state.nextEntryId(),
+      collectionUseProjectId: projectId,
+      content: request.content,
+      addedAt: new Date().toISOString(),
+      addedBy: P['alice'].permissionId,
+      objects: [],
+      attachments: [],
+    };
+    const current = this.state.occurrenceEntries.get(projectId) ?? [];
+    current.push(entry);
+    this.state.occurrenceEntries.set(projectId, current);
+    return of(entry);
+  }
+
+  listObjectOccurrenceEntries(
+    projectId: string,
+    query: ObjectOccurrenceEntriesQuery = {},
+  ): Observable<ObjectOccurrenceEntriesPage> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    let items = this.state.occurrenceEntries.get(projectId) ?? [];
+    if (query.addedBy) items = items.filter((e) => e.addedBy === query.addedBy);
+    return of({ ...makePageFrom(items, query), projectId });
   }
 
   listEvents(projectId: string, query: ProjectEventsQuery = {}): Observable<ProjectEventsPage> {
@@ -188,7 +197,6 @@ export class ProjectApiServiceMock {
       purpose: p.purpose,
       type: p.type,
       status: p.status,
-      result: p.result,
       beginDate: p.beginDate,
       endDate: p.endDate,
       requestedBy: p.requestedBy,
@@ -200,19 +208,10 @@ export class ProjectApiServiceMock {
     };
   }
 
-  private toDetail(p: MutableProjectState): CollectionUseProjectDetail {
-    const latest = p.entries.length > 0 ? p.entries[p.entries.length - 1] : null;
-    return {
-      ...this.toSummary(p),
-      entries: { total: p.entryTotal, latest },
-    };
-  }
-
   private transition(
     projectId: string,
     allowedStatuses: readonly UseStatus[],
     newStatus: UseStatus,
-    newResult: UseResult | null,
     eventType: UseEvent['type'],
     note: string,
   ): Observable<ProjectTransitionResult> {
@@ -227,7 +226,6 @@ export class ProjectApiServiceMock {
     }
     const now = new Date().toISOString();
     p.status = newStatus;
-    if (newResult) p.result = newResult;
     const evt: UseEvent = {
       occurredAt: now,
       type: eventType,
@@ -237,12 +235,6 @@ export class ProjectApiServiceMock {
     const events = this.state.events.get(projectId) ?? [];
     events.push(evt);
     this.state.events.set(projectId, events);
-    return of({
-      id: projectId,
-      referenceNumber: p.referenceNumber,
-      status: newStatus,
-      result: newResult ?? undefined,
-      lastEvent: evt,
-    });
+    return of({ id: projectId, referenceNumber: p.referenceNumber, status: newStatus, lastEvent: evt });
   }
 }

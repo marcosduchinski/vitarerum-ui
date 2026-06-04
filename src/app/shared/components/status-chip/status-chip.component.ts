@@ -4,19 +4,13 @@ export type WorkflowStatusKind = 'proposal' | 'project';
 
 export type WorkflowStatus =
   | 'SUBMITTED'
-  | 'PENDING_DOCUMENTS'
-  | 'PENDING'
-  | 'PENDING_DIRECTION'
+  | 'UNDER_REVIEW'
   | 'APPROVED'
   | 'REJECTED'
   | 'CANCELLED'
-  | 'REQUESTED'
-  | 'ACCEPTED'
-  | 'REFUSED'
+  | 'CREATED'
   | 'IN_PROGRESS'
-  | 'SUSPENDED'
-  | 'COMPLETED'
-  | 'CLOSED';
+  | 'COMPLETED';
 
 interface StatusPresentation {
   label: string;
@@ -25,19 +19,13 @@ interface StatusPresentation {
 
 const STATUS_PRESENTATION = {
   SUBMITTED: { label: 'Submitted', tone: 'submitted' },
-  PENDING_DOCUMENTS: { label: 'Pending documents', tone: 'pending' },
-  PENDING: { label: 'Under review', tone: 'review' },
-  PENDING_DIRECTION: { label: 'Pending direction', tone: 'pending' },
+  UNDER_REVIEW: { label: 'Under review', tone: 'review' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },
   CANCELLED: { label: 'Cancelled', tone: 'closed' },
-  REQUESTED: { label: 'Requested', tone: 'submitted' },
-  ACCEPTED: { label: 'Accepted', tone: 'approved' },
-  REFUSED: { label: 'Refused', tone: 'rejected' },
+  CREATED: { label: 'Created', tone: 'submitted' },
   IN_PROGRESS: { label: 'In progress', tone: 'review' },
-  SUSPENDED: { label: 'Suspended', tone: 'pending' },
   COMPLETED: { label: 'Completed', tone: 'approved' },
-  CLOSED: { label: 'Closed', tone: 'closed' },
 } as const satisfies Record<WorkflowStatus, StatusPresentation>;
 
 export function getWorkflowStatusPresentation(status: WorkflowStatus): StatusPresentation {

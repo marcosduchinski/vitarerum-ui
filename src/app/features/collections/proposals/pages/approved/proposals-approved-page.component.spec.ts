@@ -26,7 +26,7 @@ const APPROVED_PROPOSAL: ProposalSummary = {
     id: 'project-1',
     referenceNumber: 'VR-2026-001',
     title: 'Approved research request',
-    status: 'ACCEPTED',
+    status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
 };
