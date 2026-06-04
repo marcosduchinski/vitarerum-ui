@@ -8,6 +8,9 @@ export class AppConfigService {
 
   async load(): Promise<void> {
     const response = await fetch('/config/environment.json');
+    if (!response.ok) {
+      throw new Error(`[AppConfig] Failed to load: ${response.status} ${response.statusText}`);
+    }
     this.config = (await response.json()) as AppConfig;
   }
 

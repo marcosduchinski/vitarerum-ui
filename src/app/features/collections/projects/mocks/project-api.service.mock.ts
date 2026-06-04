@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { Page } from 'src/app/shared/models/page.model';
+import { Page } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
-import { MediaType, UseStatus } from 'src/app/shared/models/collection-use-status.model';
+import { MediaType, UseStatus } from '@shared/models/collection-use-status.model';
 import {
   Attachment,
   CollectionUseProjectDetail,
@@ -28,7 +28,7 @@ import {
   MockProjectState,
   MutableProjectState,
   P,
-} from 'src/app/features/collections/proposals/mocks/mock-data';
+} from '@features/collections/proposals/mocks/mock-data';
 
 @Injectable()
 export class ProjectApiServiceMock {
@@ -61,7 +61,7 @@ export class ProjectApiServiceMock {
   getProject(projectId: string): Observable<CollectionUseProjectDetail> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    return of(this.toSummary(p));
+    return of(this.toDetail(p));
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
@@ -183,6 +183,29 @@ export class ProjectApiServiceMock {
     return of({ ...makePageFrom(items, query), projectId });
   }
 
+  uploadOccurrenceEntryAttachment(
+    projectId: string,
+    entryId: string,
+    file: File,
+    mediaType: MediaType,
+  ): Observable<Attachment> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const allEntries = this.state.occurrenceEntries.get(projectId) ?? [];
+    const entry = allEntries.find((e) => e.id === entryId);
+    if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const attachment: Attachment = {
+      fileReference: this.state.nextFileReference(),
+      fileName: file.name,
+      mediaType,
+      uploadedAt: new Date().toISOString(),
+    };
+    const idx = allEntries.findIndex((e) => e.id === entryId);
+    allEntries[idx] = { ...entry, attachments: [...entry.attachments, attachment] };
+    this.state.occurrenceEntries.set(projectId, allEntries);
+    return of(attachment);
+  }
+
   listEvents(projectId: string, query: ProjectEventsQuery = {}): Observable<ProjectEventsPage> {
     let evts = this.state.events.get(projectId) ?? [];
     if (query.type) evts = evts.filter((e) => e.type === query.type);
@@ -206,6 +229,10 @@ export class ProjectApiServiceMock {
         assignedTo: p.proposalAssignedTo,
       },
     };
+  }
+
+  private toDetail(p: MutableProjectState): CollectionUseProjectDetail {
+    return this.toSummary(p);
   }
 
   private transition(

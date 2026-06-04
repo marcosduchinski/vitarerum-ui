@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
-import { Page, PageQuery } from 'src/app/shared/models/page.model';
-import { getProposalLifecyclePhase } from 'src/app/shared/models/collection-use-status.model';
+import { Page, PageQuery } from '@shared/models/page.model';
+import { getProposalLifecyclePhase } from '@shared/models/collection-use-status.model';
 import { Observable, of, throwError } from 'rxjs';
 
 import {

@@ -20,7 +20,7 @@ const MOCK_ACCOUNTS: Record<string, MockAccount> = {
   'greg@collections.example.com':{ id: 'u-greg',  name: 'Greg Viana',    groups: ['COLLECTIONS_MANAGEMENT'] },
 };
 
-const UNKNOWN_ACCOUNT: Omit<MockAccount, 'id'> = { name: '', groups: ['EXTERNAL'] };
+const UNKNOWN_ACCOUNT: MockAccount = { id: 'mock-user', name: '', groups: ['EXTERNAL'] };
 
 @Injectable()
 export class IdentityServiceMock implements IdentityService {
@@ -35,7 +35,7 @@ export class IdentityServiceMock implements IdentityService {
     this.sessionState.set({
       accessToken: 'mock-access-token',
       user: {
-        id: (account as MockAccount).id ?? 'mock-user',
+        id: account.id,
         email,
         displayName: account.name || email.split('@')[0] || 'Learning User',
       },

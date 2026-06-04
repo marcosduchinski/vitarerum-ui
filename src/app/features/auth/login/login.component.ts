@@ -49,7 +49,7 @@ export class LoginComponent {
     this.passwordTouched.set(true);
   }
 
-  protected submit(event: Event): void {
+  protected async submit(event: Event): Promise<void> {
     event.preventDefault();
     if (this.loading()) return;
     this.submitted.set(true);
@@ -58,7 +58,13 @@ export class LoginComponent {
     this.loading.set(true);
     this.loginError.set(false);
 
-    this.identity.signIn(this.email());
-    void this.router.navigateByUrl('/p/dashboard');
+    try {
+      this.identity.signIn(this.email());
+      await this.router.navigateByUrl('/p/dashboard');
+    } catch {
+      this.loginError.set(true);
+    } finally {
+      this.loading.set(false);
+    }
   }
 }

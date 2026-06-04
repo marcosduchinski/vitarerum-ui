@@ -2,7 +2,7 @@
   <app-page-header
     eyebrow="Projects"
     title="Pending projects"
-    description="Created collection-use projects accepted from approved proposals and waiting to start."
+    description="Collection-use projects created from approved proposals and waiting to start."
   />
 
   @if (projectsResource.isLoading()) {
@@ -18,7 +18,7 @@
       <div class="projects-pending__meta">
         <div>
           <strong>{{ totalProjects() }} pending</strong>
-          <span>Accepted projects awaiting start</span>
+          <span>Created projects awaiting start</span>
         </div>
         @if (totalProjects() > 0) {
           <p>{{ rangeStart() }}-{{ rangeEnd() }} of {{ totalProjects() }}</p>

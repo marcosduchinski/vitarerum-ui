@@ -1,6 +1,7 @@
 import { inject, Provider } from '@angular/core';
 import { USE_MOCK_API } from '@core/config/app-config.model';
 import { ProposalApiServiceMock } from '../../features/collections/proposals/mocks/proposal-api.service.mock';
+import { MockProjectState } from '../../features/collections/proposals/mocks/mock-data';
 import { ProjectApiServiceMock } from '../../features/collections/projects/mocks/project-api.service.mock';
 import {
   PROJECT_API_SERVICE,
@@ -13,6 +14,7 @@ import {
 
 export function provideCollectionUse(): Provider[] {
   return [
+    MockProjectState,
     ProposalApiService,
     ProposalApiServiceMock,
     {

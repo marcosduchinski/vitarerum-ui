@@ -1,6 +1,6 @@
-import { PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
-import { Page, PageQuery } from 'src/app/shared/models/page.model';
-import { ObjectReference } from 'src/app/shared/models/object-reference.model';
+import { PermissionPrincipal } from '@core/auth/models/permission.model';
+import { Page, PageQuery } from '@shared/models/page.model';
+import { ObjectReference } from '@shared/models/object-reference.model';
 
 import {
   ProposalLifecyclePhase,
@@ -8,7 +8,7 @@ import {
   ProposalStatus,
   UseStatus,
   UseType,
-} from 'src/app/shared/models/collection-use-status.model';
+} from '@shared/models/collection-use-status.model';
 
 export type DocumentType = string;
 

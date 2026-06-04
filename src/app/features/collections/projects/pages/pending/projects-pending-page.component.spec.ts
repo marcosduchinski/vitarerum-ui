@@ -126,7 +126,7 @@ describe('ProjectsPendingPageComponent', () => {
     expect(text).toContain('Bob Santos');
     expect(text).toContain('2026-06-10 to 2026-06-20');
     expect(text).toContain('Created - awaiting start');
-    expect(text).toContain('Accepted projects awaiting start');
+    expect(text).toContain('Created projects awaiting start');
     expect(text).toContain('1-3 of 5');
     expect(compiled.querySelectorAll('.project-card')).toHaveLength(3);
   });

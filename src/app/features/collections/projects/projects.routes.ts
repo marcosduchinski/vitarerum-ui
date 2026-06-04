@@ -26,7 +26,6 @@ export const PROJECTS_ROUTES: Routes = [
         (m) => m.ProjectsInProgressPageComponent,
       ),
   },
-  { path: 'suspended', redirectTo: '/p/dashboard' },
   {
     path: 'completed',
     title: 'Completed Projects',

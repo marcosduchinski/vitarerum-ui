@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Group } from 'src/app/core/auth/models/group.model';
-import { GroupMembership, PermissionPrincipal } from 'src/app/core/auth/models/permission.model';
-import { UserDetail } from 'src/app/core/auth/models/user.model';
-import { Page, PageQuery } from 'src/app/shared/models/page.model';
+import { Group } from '@core/auth/models/group.model';
+import { GroupMembership, PermissionPrincipal } from '@core/auth/models/permission.model';
+import { UserDetail } from '@core/auth/models/user.model';
+import { Page, PageQuery } from '@shared/models/page.model';
 
 import {
   ObjectLogEntry,
   ObjectOccurrenceEntry,
   UseEvent,
-} from 'src/app/features/collections/projects/models/project.model';
+} from '@features/collections/projects/models/project.model';
 import {
   CreateProposalRequest,
   Message,
@@ -414,12 +414,12 @@ export interface MutableProjectState {
   title: string;
   purpose: string;
   type: 'EXHIBITION' | 'RESEARCH' | 'OTHER';
-  status: import('src/app/shared/models/collection-use-status.model').UseStatus;
+  status: import('@shared/models/collection-use-status.model').UseStatus;
   beginDate: string;
   endDate: string;
   requestedBy: PermissionPrincipal;
   proposalId: string;
-  proposalStatus: import('src/app/shared/models/collection-use-status.model').ProposalStatus;
+  proposalStatus: import('@shared/models/collection-use-status.model').ProposalStatus;
   proposalAssignedTo: PermissionPrincipal | null;
 }
 
