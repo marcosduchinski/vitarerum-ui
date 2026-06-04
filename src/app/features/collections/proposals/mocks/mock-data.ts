@@ -546,7 +546,6 @@ export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
   ],
   'proj-7': [
     { occurredAt: '2026-06-01T11:00:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
-    { occurredAt: '2026-06-02T09:00:00Z', type: 'CREATED', triggeredBy: P['bob'], note: null },
   ],
 };
 
@@ -635,19 +634,11 @@ export class MockProjectState {
     const project = this.projects.get(proposal.collectionUseProject.id);
     if (!project) return null;
 
-    project.status = 'CREATED';
+    // Proposal approval updates project metadata but does not change UseStatus:
+    // the project stays CREATED until staff explicitly starts it via startProject().
     project.proposalStatus = 'APPROVED';
     project.proposalAssignedTo = proposal.assignedTo;
 
-    const event: UseEvent = {
-      occurredAt,
-      type: 'CREATED',
-      triggeredBy: P['carol'],
-      note: null,
-    };
-    const currentEvents = this.events.get(project.id) ?? [];
-    currentEvents.push(event);
-    this.events.set(project.id, currentEvents);
     return project;
   }
 

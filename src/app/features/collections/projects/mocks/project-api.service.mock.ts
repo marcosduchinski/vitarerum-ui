@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { Page } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -33,6 +34,7 @@ import {
 @Injectable()
 export class ProjectApiServiceMock {
   private readonly state = inject(MockProjectState);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   listProjects(query: ProjectListQuery = {}): Observable<Page<CollectionUseProjectSummary>> {
     let items = [...this.state.projects.values()];
@@ -100,7 +102,7 @@ export class ProjectApiServiceMock {
       collectionUseProjectId: projectId,
       content: request.content,
       addedAt: new Date().toISOString(),
-      addedBy: P['alice'].permissionId,
+      addedBy: this.currentPermissionId(),
       objects: [],
       attachments: [],
     };
@@ -162,7 +164,7 @@ export class ProjectApiServiceMock {
       collectionUseProjectId: projectId,
       content: request.content,
       addedAt: new Date().toISOString(),
-      addedBy: P['alice'].permissionId,
+      addedBy: this.currentPermissionId(),
       objects: [],
       attachments: [],
     };
@@ -256,12 +258,30 @@ export class ProjectApiServiceMock {
     const evt: UseEvent = {
       occurredAt: now,
       type: eventType,
-      triggeredBy: P['alice'],
+      triggeredBy: this.currentPrincipal(),
       note: note || null,
     };
     const events = this.state.events.get(projectId) ?? [];
     events.push(evt);
     this.state.events.set(projectId, events);
     return of({ id: projectId, referenceNumber: p.referenceNumber, status: newStatus, lastEvent: evt });
+  }
+
+  private currentPermissionId(): string {
+    const session = this.identity.session();
+    return session
+      ? (Object.values(P).find(
+          (p) => p.user.id === session.user.id || p.user.email === session.user.email,
+        )?.permissionId ?? P['alice'].permissionId)
+      : P['alice'].permissionId;
+  }
+
+  private currentPrincipal() {
+    const session = this.identity.session();
+    return session
+      ? (Object.values(P).find(
+          (p) => p.user.id === session.user.id || p.user.email === session.user.email,
+        ) ?? P['alice'])
+      : P['alice'];
   }
 }

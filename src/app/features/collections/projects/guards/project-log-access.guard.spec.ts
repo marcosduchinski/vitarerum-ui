@@ -51,6 +51,21 @@ describe('projectLogAccessGuard', () => {
       projectLogAccessGuard(route, {} as RouterStateSnapshot),
     );
 
+  it('redirects to dashboard when session has no group assigned', async () => {
+    (identityService.session as ReturnType<typeof vi.fn>).mockReturnValue({
+      accessToken: 'tok',
+      user: { id: 'u-1', email: 'test@example.com', displayName: 'Test' },
+      group: null,
+      availableGroups: [],
+    });
+
+    const result = await runGuard(makeRoute('proj-1'));
+
+    expect(result).toBeInstanceOf(UrlTree);
+    expect((result as UrlTree).toString()).toContain('/p/dashboard');
+    expect(projectService.getProject).not.toHaveBeenCalled();
+  });
+
   it('allows staff through without checking project status', async () => {
     (identityService.session as ReturnType<typeof vi.fn>).mockReturnValue(makeSession('CURATORIAL' as GroupName));
 

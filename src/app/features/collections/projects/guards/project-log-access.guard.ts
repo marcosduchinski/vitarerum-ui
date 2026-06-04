@@ -16,6 +16,7 @@ export const projectLogAccessGuard: CanActivateFn = async (route) => {
   const router = inject(Router);
 
   const group = identity.session()?.group;
+  if (!group) return router.createUrlTree(['/p/dashboard']);
   if (group !== 'EXTERNAL') return true;
 
   const projectId = route.paramMap.get('id');

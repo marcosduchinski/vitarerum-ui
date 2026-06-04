@@ -250,7 +250,7 @@ export class ProposalApiServiceMock {
     const evt: ProposalEvent = {
       occurredAt: now,
       type: 'ASSIGNED',
-      triggeredBy: assignedTo,
+      triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };
     this.proposals.set(proposalId, { ...proposal, status: 'UNDER_REVIEW', assignedTo });

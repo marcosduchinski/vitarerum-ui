@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { MockProjectState } from '../../proposals/mocks/mock-data';
 import { ProjectApiServiceMock } from './project-api.service.mock';
 
@@ -10,7 +12,27 @@ describe('ProjectApiServiceMock', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ProjectApiServiceMock, MockProjectState],
+      providers: [
+        ProjectApiServiceMock,
+        MockProjectState,
+        {
+          provide: IDENTITY_SERVICE,
+          useValue: {
+            session: signal({
+              accessToken: 'mock-token',
+              user: { id: 'u-alice', email: 'alice@ext.example.com', displayName: 'Alice' },
+              group: 'EXTERNAL',
+              availableGroups: ['EXTERNAL'],
+            }).asReadonly(),
+            isAuthenticated: signal(true).asReadonly(),
+            signIn: () => {},
+            signOut: () => {},
+            getAccessToken: () => 'mock-token',
+            setGroup: () => {},
+            updateAvailableGroups: () => {},
+          },
+        },
+      ],
     });
 
     service = TestBed.inject(ProjectApiServiceMock);

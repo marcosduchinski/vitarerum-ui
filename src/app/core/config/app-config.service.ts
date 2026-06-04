@@ -7,7 +7,12 @@ export class AppConfigService {
   private config: AppConfig | null = null;
 
   async load(): Promise<void> {
-    const response = await fetch('/config/environment.json');
+    let response: Response;
+    try {
+      response = await fetch('/config/environment.json');
+    } catch {
+      throw new Error('[AppConfig] Network error: could not reach configuration endpoint');
+    }
     if (!response.ok) {
       throw new Error(`[AppConfig] Failed to load: ${response.status} ${response.statusText}`);
     }
