@@ -14,7 +14,9 @@ export class AppConfigService {
       throw new Error('[AppConfig] Network error: could not reach configuration endpoint');
     }
     if (!response.ok) {
-      throw new Error(`[AppConfig] Failed to load: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `[AppConfig] Failed to load configuration: HTTP ${response.status} ${response.statusText}`,
+      );
     }
     this.config = (await response.json()) as AppConfig;
   }
