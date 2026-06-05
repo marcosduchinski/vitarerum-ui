@@ -1,0 +1,123 @@
+.log-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.log-panel {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  padding: 1.25rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-panel);
+
+  &__title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text);
+  }
+
+  &__list {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  &__entry {
+    padding: 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  &__entry-content {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  &__entry-meta {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--color-subtle);
+  }
+
+  &__entry-objects {
+    margin: 0.25rem 0 0;
+    padding: 0 0 0 1rem;
+    font-size: 0.75rem;
+    color: var(--color-subtle);
+    list-style: disc;
+  }
+
+  &__inv {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.8em;
+  }
+
+  &__form {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  &__form-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-subtle);
+  }
+
+  &__textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+  }
+
+  &__submit {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.95rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+  }
+}

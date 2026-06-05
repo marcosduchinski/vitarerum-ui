@@ -1,0 +1,110 @@
+<div class="log-panels">
+  <section class="log-panel" aria-labelledby="log-entries-heading">
+    <h2 id="log-entries-heading" class="log-panel__title">Object log</h2>
+
+    @if (logResource.isLoading()) {
+      <app-loading-state />
+    } @else if (logError()) {
+      <app-error-message [apiError]="logError()!" (retry)="logResource.reload()" />
+    } @else if (!logEntries().length) {
+      <app-empty-state title="No log entries" message="No log entries have been added yet." />
+    } @else {
+      <ul class="log-panel__list" aria-label="Object log entries">
+        @for (entry of logEntries(); track entry.id) {
+          <li class="log-panel__entry">
+            <p class="log-panel__entry-content">{{ entry.content }}</p>
+            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy }}</p>
+            @if (entry.objects.length) {
+              <ul class="log-panel__entry-objects">
+                @for (obj of entry.objects; track obj.inventoryNumber) {
+                  <li>
+                    <span class="log-panel__inv">{{ obj.inventoryNumber }}</span>
+                    @if (obj.displayTitle) {<span> — {{ obj.displayTitle }}</span>}
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <form class="log-panel__form" (submit)="addLogEntry($event)">
+      <label class="log-panel__form-label" for="log-content">New log entry</label>
+      <textarea
+        id="log-content"
+        class="log-panel__textarea"
+        rows="3"
+        [value]="logContent()"
+        (input)="onLogContentInput($event)"
+        placeholder="Describe the activity or observation…"
+      ></textarea>
+      @if (logSubmitError()) {
+        <app-error-message [apiError]="logSubmitError()!" />
+      }
+      <button
+        type="submit"
+        class="log-panel__submit"
+        [disabled]="logSubmitting() || !logContent().trim()"
+      >
+        {{ logSubmitting() ? 'Adding…' : 'Add entry' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="log-panel" aria-labelledby="occurrence-entries-heading">
+    <h2 id="occurrence-entries-heading" class="log-panel__title">Object occurrences</h2>
+
+    @if (occurrenceResource.isLoading()) {
+      <app-loading-state />
+    } @else if (occurrenceError()) {
+      <app-error-message [apiError]="occurrenceError()!" (retry)="occurrenceResource.reload()" />
+    } @else if (!occurrenceEntries().length) {
+      <app-empty-state
+        title="No occurrence entries"
+        message="No occurrence entries have been added yet."
+      />
+    } @else {
+      <ul class="log-panel__list" aria-label="Object occurrence entries">
+        @for (entry of occurrenceEntries(); track entry.id) {
+          <li class="log-panel__entry">
+            <p class="log-panel__entry-content">{{ entry.content }}</p>
+            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy }}</p>
+            @if (entry.objects.length) {
+              <ul class="log-panel__entry-objects">
+                @for (obj of entry.objects; track obj.inventoryNumber) {
+                  <li>
+                    <span class="log-panel__inv">{{ obj.inventoryNumber }}</span>
+                    @if (obj.displayTitle) {<span> — {{ obj.displayTitle }}</span>}
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <form class="log-panel__form" (submit)="addOccurrenceEntry($event)">
+      <label class="log-panel__form-label" for="occurrence-content">New occurrence entry</label>
+      <textarea
+        id="occurrence-content"
+        class="log-panel__textarea"
+        rows="3"
+        [value]="occurrenceContent()"
+        (input)="onOccurrenceContentInput($event)"
+        placeholder="Describe the occurrence or incident…"
+      ></textarea>
+      @if (occurrenceSubmitError()) {
+        <app-error-message [apiError]="occurrenceSubmitError()!" />
+      }
+      <button
+        type="submit"
+        class="log-panel__submit"
+        [disabled]="occurrenceSubmitting() || !occurrenceContent().trim()"
+      >
+        {{ occurrenceSubmitting() ? 'Adding…' : 'Add entry' }}
+      </button>
+    </form>
+  </section>
+</div>

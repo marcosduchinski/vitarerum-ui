@@ -2,12 +2,10 @@
   <app-page-header
     eyebrow="Projects"
     title="Project log"
-    description="This project log page is intentionally blank for now."
+    description="Object log and occurrence records for this project."
   >
     <a class="back-link" routerLink="/p/collections/projects/my">Back to my projects</a>
   </app-page-header>
 
-  <section class="project-log__placeholder" aria-label="Project log placeholder">
-    <p>{{ id() }}</p>
-  </section>
+  <app-project-object-log-panel [projectId]="id()" />
 </div>

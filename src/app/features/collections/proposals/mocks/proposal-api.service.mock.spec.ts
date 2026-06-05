@@ -7,7 +7,7 @@ import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 
 import { ProjectApiServiceMock } from '../../projects/mocks/project-api.service.mock';
-import { MockProjectState } from './mock-data';
+import { MOCK_SEED, MockProjectState, TEST_SEED } from './mock-data';
 import { ProposalApiServiceMock } from './proposal-api.service.mock';
 
 const sessionState = signal<IdentitySession | null>({
@@ -60,10 +60,8 @@ describe('ProposalApiServiceMock', () => {
         ProposalApiServiceMock,
         ProjectApiServiceMock,
         MockProjectState,
-        {
-          provide: IDENTITY_SERVICE,
-          useValue: identityStub,
-        },
+        { provide: MOCK_SEED, useValue: TEST_SEED },
+        { provide: IDENTITY_SERVICE, useValue: identityStub },
       ],
     });
 

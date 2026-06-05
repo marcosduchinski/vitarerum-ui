@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable, InjectionToken } from '@angular/core';
 import { Group } from '@core/auth/models/group.model';
 import { GroupMembership, PermissionPrincipal } from '@core/auth/models/permission.model';
 import { UserDetail } from '@core/auth/models/user.model';
@@ -277,13 +277,13 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     documents: [],
     requestedObjects: [],
   },
-  // prop-6: CANCELLED — hugo, withdrew before review
+  // prop-6: REJECTED — hugo, botanical herbarium; bob assigned and rejected (scope too broad)
   {
     id: 'prop-6',
-    status: 'CANCELLED',
+    status: 'REJECTED',
     type: 'RESEARCH',
     requestedBy: P['hugo'],
-    assignedTo: null,
+    assignedTo: P['bob'],
     collectionUseProject: {
       id: 'proj-6',
       referenceNumber: 'VR-2026-006',
@@ -363,11 +363,12 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-6': [
     { occurredAt: '2026-06-01T11:30:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-02T11:30:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-03T09:00:00Z',
-      type: 'CANCELLED',
-      triggeredBy: P['hugo'],
-      note: 'Research focus has changed; withdrawing this request.',
+      type: 'REJECTED',
+      triggeredBy: P['bob'],
+      note: 'The scope of this request covers material that spans multiple departments and exceeds current access arrangements.',
     },
   ],
   'prop-7': [
@@ -582,8 +583,8 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     endDate: '2027-01-31',
     requestedBy: P['hugo'],
     proposalId: 'prop-6',
-    proposalStatus: 'CANCELLED',
-    proposalAssignedTo: null,
+    proposalStatus: 'REJECTED',
+    proposalAssignedTo: P['bob'],
   },
   {
     id: 'proj-7',
@@ -701,19 +702,43 @@ export const SEED_PROJECT_OBJECTS: Record<string, never[]> = {
   'proj-7': [],
 };
 
+export interface MockSeed {
+  readonly proposals?: readonly ProposalDetail[];
+  readonly proposalEvents?: Record<string, ProposalEvent[]>;
+  readonly messages?: Record<string, Message[]>;
+  readonly projects?: readonly MutableProjectState[];
+  readonly projectEvents?: Record<string, UseEvent[]>;
+  readonly logEntries?: Record<string, ObjectLogEntry[]>;
+  readonly occurrenceEntries?: Record<string, ObjectOccurrenceEntry[]>;
+}
+
+export const MOCK_SEED = new InjectionToken<MockSeed>('MOCK_SEED');
+
+export const TEST_SEED: MockSeed = {
+  proposals: SEED_PROPOSALS,
+  proposalEvents: SEED_PROPOSAL_EVENTS,
+  messages: SEED_MESSAGES,
+  projects: SEED_PROJECTS,
+  projectEvents: SEED_PROJECT_EVENTS,
+  logEntries: SEED_PROJECT_LOG_ENTRIES,
+  occurrenceEntries: SEED_PROJECT_OCCURRENCE_ENTRIES,
+};
+
 @Injectable()
 export class MockProjectState {
+  private readonly seed = inject(MOCK_SEED, { optional: true });
+
   readonly projects = new Map<string, MutableProjectState>(
-    SEED_PROJECTS.map((p) => [p.id, structuredClone(p)]),
+    (this.seed?.projects ?? []).map((p) => [p.id, structuredClone(p)]),
   );
   readonly logEntries = new Map<string, ObjectLogEntry[]>(
-    Object.entries(SEED_PROJECT_LOG_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
+    Object.entries(this.seed?.logEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   readonly occurrenceEntries = new Map<string, ObjectOccurrenceEntry[]>(
-    Object.entries(SEED_PROJECT_OCCURRENCE_ENTRIES).map(([k, v]) => [k, structuredClone(v)]),
+    Object.entries(this.seed?.occurrenceEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   readonly events = new Map<string, UseEvent[]>(
-    Object.entries(SEED_PROJECT_EVENTS).map(([k, v]) => [k, structuredClone(v)]),
+    Object.entries(this.seed?.projectEvents ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   private nextId = 200;
 

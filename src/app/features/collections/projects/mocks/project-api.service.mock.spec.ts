@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
-import { MockProjectState } from '../../proposals/mocks/mock-data';
+import { MOCK_SEED, MockProjectState, TEST_SEED } from '../../proposals/mocks/mock-data';
 import { ProjectApiServiceMock } from './project-api.service.mock';
 
 describe('ProjectApiServiceMock', () => {
@@ -15,6 +15,7 @@ describe('ProjectApiServiceMock', () => {
       providers: [
         ProjectApiServiceMock,
         MockProjectState,
+        { provide: MOCK_SEED, useValue: TEST_SEED },
         {
           provide: IDENTITY_SERVICE,
           useValue: {
@@ -96,6 +97,18 @@ describe('ProjectApiServiceMock', () => {
 
     const page = await firstValueFrom(service.listObjectLogEntries('proj-4'));
     expect(page.content.some((e) => e.id === entry.id)).toBe(true);
+  });
+
+  it('creates an object log entry with objects and preserves them', async () => {
+    const entry = await firstValueFrom(
+      service.createObjectLogEntry('proj-4', {
+        content: 'Handled specimens.',
+        objects: ['INV-001', 'INV-002'],
+      }),
+    );
+    expect(entry.objects).toHaveLength(2);
+    expect(entry.objects[0].inventoryNumber).toBe('INV-001');
+    expect(entry.objects[1].inventoryNumber).toBe('INV-002');
   });
 
   it('creates an object occurrence entry and lists it', async () => {

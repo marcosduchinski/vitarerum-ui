@@ -103,7 +103,13 @@ export class ProjectApiServiceMock {
       content: request.content,
       addedAt: new Date().toISOString(),
       addedBy: this.currentPermissionId(),
-      objects: [],
+      objects:
+        request.objects?.map((inv) => ({
+          inventoryNumber: inv,
+          displayTitle: null,
+          objectName: null,
+          briefDescriptionSnapshot: null,
+        })) ?? [],
       attachments: [],
     };
     const current = this.state.logEntries.get(projectId) ?? [];
@@ -165,7 +171,13 @@ export class ProjectApiServiceMock {
       content: request.content,
       addedAt: new Date().toISOString(),
       addedBy: this.currentPermissionId(),
-      objects: [],
+      objects:
+        request.objects?.map((inv) => ({
+          inventoryNumber: inv,
+          displayTitle: null,
+          objectName: null,
+          briefDescriptionSnapshot: null,
+        })) ?? [],
       attachments: [],
     };
     const current = this.state.occurrenceEntries.get(projectId) ?? [];

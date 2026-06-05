@@ -31,26 +31,25 @@ import {
 } from '../models/proposal.model';
 import {
   makePageFrom,
+  MOCK_SEED,
   MOCK_USERS,
   MockProjectState,
   P,
-  SEED_MESSAGES,
-  SEED_PROPOSALS,
-  SEED_PROPOSAL_EVENTS,
 } from './mock-data';
 
 @Injectable()
 export class ProposalApiServiceMock {
+  private readonly seed = inject(MOCK_SEED, { optional: true });
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly projectState = inject(MockProjectState);
   private readonly proposals = new Map<string, ProposalDetail>(
-    SEED_PROPOSALS.map((p) => [p.id, structuredClone(p)]),
+    (this.seed?.proposals ?? []).map((p) => [p.id, structuredClone(p)]),
   );
   private readonly events = new Map<string, ProposalEvent[]>(
-    Object.entries(SEED_PROPOSAL_EVENTS).map(([k, v]) => [k, structuredClone(v)]),
+    Object.entries(this.seed?.proposalEvents ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   private readonly messages = new Map<string, Message[]>(
-    Object.entries(SEED_MESSAGES).map(([k, v]) => [k, structuredClone(v)]),
+    Object.entries(this.seed?.messages ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   private nextId = 100;
 
