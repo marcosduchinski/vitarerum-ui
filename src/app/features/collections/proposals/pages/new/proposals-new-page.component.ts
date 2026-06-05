@@ -89,7 +89,9 @@ export class ProposalsNewPageComponent {
     () => this.proposalsResource.value()?.totalElements ?? 0,
   );
   protected readonly totalPages = computed(() => this.proposalsResource.value()?.totalPages ?? 0);
-  protected readonly rangeStart = computed(() => this.currentPage() * this.pageSize() + 1);
+  protected readonly rangeStart = computed(() =>
+    this.totalProposals() === 0 ? 0 : this.currentPage() * this.pageSize() + 1,
+  );
   protected readonly rangeEnd = computed(() =>
     Math.min((this.currentPage() + 1) * this.pageSize(), this.totalProposals()),
   );
@@ -261,7 +263,7 @@ export class ProposalsNewPageComponent {
     this.forwardError.set(null);
     try {
       await firstValueFrom(
-        this.proposalService.forwardProposal(proposalId, {
+        this.proposalService.assignProposal(proposalId, {
           targetPermissionId,
           note: this.forwardNote(),
         }),

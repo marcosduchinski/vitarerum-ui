@@ -53,11 +53,7 @@ class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
   readonly assignCalls: {
     readonly proposalId: string;
-    readonly payload: { readonly note: string };
-  }[] = [];
-  readonly forwardCalls: {
-    readonly proposalId: string;
-    readonly payload: { readonly targetPermissionId: string; readonly note: string };
+    readonly payload: { readonly targetPermissionId?: string; readonly note: string };
   }[] = [];
 
   listProposals(query: ProposalListQuery = {}) {
@@ -74,17 +70,12 @@ class ProposalApiServiceStub {
     });
   }
 
-  assignProposal(proposalId: string, payload: { readonly note: string }) {
+  assignProposal(
+    proposalId: string,
+    payload: { readonly targetPermissionId?: string; readonly note: string },
+  ) {
     this.assignCalls.push({ proposalId, payload });
     return of({ id: PROPOSAL.id, status: 'UNDER_REVIEW', assignedTo: null, lastEvent: null });
-  }
-
-  forwardProposal(
-    proposalId: string,
-    payload: { readonly targetPermissionId: string; readonly note: string },
-  ) {
-    this.forwardCalls.push({ proposalId, payload });
-    return of({ id: PROPOSAL.id, status: 'SUBMITTED', assignedTo: null, lastEvent: null });
   }
 }
 
@@ -284,7 +275,7 @@ describe('ProposalsNewPageComponent', () => {
     await new Promise<void>((resolve) => setTimeout(resolve));
     fixture.detectChanges();
 
-    expect(proposalService.forwardCalls).toEqual([
+    expect(proposalService.assignCalls).toEqual([
       {
         proposalId: 'proposal-1',
         payload: {

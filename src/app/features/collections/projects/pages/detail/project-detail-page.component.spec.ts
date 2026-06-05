@@ -1,11 +1,17 @@
-import { ComponentRef } from '@angular/core';
+import { ComponentRef, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { CollectionUseProjectDetail, ProjectEventsPage } from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 import { ProjectDetailPageComponent } from './project-detail-page.component';
+
+class IdentityServiceStub {
+  readonly session = signal<{ group: string } | null>({ group: 'COLLECTIONS_MANAGEMENT' }).asReadonly();
+  readonly isAuthenticated = signal(true).asReadonly();
+}
 
 const PROJECT: CollectionUseProjectDetail = {
   id: 'proj-12',
@@ -65,6 +71,7 @@ describe('ProjectDetailPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: PROJECT_API_SERVICE, useClass: ProjectApiServiceStub },
+        { provide: IDENTITY_SERVICE, useClass: IdentityServiceStub },
       ],
     }).compileComponents();
   });

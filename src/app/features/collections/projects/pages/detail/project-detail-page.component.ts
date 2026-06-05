@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
@@ -78,6 +79,7 @@ const COMPLETE_NOTE = 'Completed from project detail.';
 export class ProjectDetailPageComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
   private readonly router = inject(Router);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   readonly id = input.required<string>();
   readonly returnTo = input<string>();
@@ -114,9 +116,11 @@ export class ProjectDetailPageComponent {
   protected readonly canCancel = computed(
     () => this.project()?.status === 'CREATED' || this.project()?.status === 'IN_PROGRESS',
   );
-  protected readonly canLog = computed(
-    () => this.project()?.status === 'IN_PROGRESS' || this.project()?.status === 'COMPLETED',
-  );
+  protected readonly canLog = computed(() => {
+    const status = this.project()?.status;
+    const isExternal = this.identity.session()?.group === 'EXTERNAL';
+    return isExternal ? status === 'IN_PROGRESS' : status === 'IN_PROGRESS' || status === 'COMPLETED';
+  });
 
   protected readonly acting = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
@@ -181,6 +185,7 @@ export class ProjectDetailPageComponent {
       await this.router.navigate(['/p/collections/projects/cancelled']);
     } catch (err) {
       this.actionError.set(toApiError(err));
+    } finally {
       this.cancelConfirmOpen.set(false);
       this.acting.set(false);
     }
