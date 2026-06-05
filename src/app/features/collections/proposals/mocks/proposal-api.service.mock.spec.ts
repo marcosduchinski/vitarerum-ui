@@ -328,4 +328,39 @@ describe('ProposalApiServiceMock', () => {
       firstValueFrom(service.removeWatcher('prop-1', 'perm-carol')),
     ).rejects.toMatchObject({ status: 404, error: 'WATCHER_NOT_FOUND' });
   });
+
+  it('syncs UNDER_REVIEW proposal status to the associated project on assume', async () => {
+    const projectService = TestBed.inject(ProjectApiServiceMock);
+
+    await firstValueFrom(service.assignProposal('prop-1', { note: '' }));
+
+    const project = await firstValueFrom(projectService.getProject('proj-1'));
+    expect(project.proposal.status).toBe('UNDER_REVIEW');
+  });
+
+  it('propagates proposal REJECTED status to the associated project and cancels it', async () => {
+    const projectService = TestBed.inject(ProjectApiServiceMock);
+
+    await firstValueFrom(service.rejectProposal('prop-2', { reason: 'Not viable' }));
+
+    const project = await firstValueFrom(projectService.getProject('proj-2'));
+    expect(project.proposal.status).toBe('REJECTED');
+    expect(project.status).toBe('CANCELLED');
+
+    const events = await firstValueFrom(projectService.listEvents('proj-2'));
+    expect(events.content.at(-1)?.type).toBe('PROJECT_CANCELLED');
+  });
+
+  it('propagates proposal CANCELLED status to the associated project and cancels it', async () => {
+    const projectService = TestBed.inject(ProjectApiServiceMock);
+
+    await firstValueFrom(service.cancelProposal('prop-1', { reason: 'Withdrawn' }));
+
+    const project = await firstValueFrom(projectService.getProject('proj-1'));
+    expect(project.proposal.status).toBe('CANCELLED');
+    expect(project.status).toBe('CANCELLED');
+
+    const events = await firstValueFrom(projectService.listEvents('proj-1'));
+    expect(events.content.at(-1)?.type).toBe('PROJECT_CANCELLED');
+  });
 });

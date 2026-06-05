@@ -3,6 +3,7 @@ import { Group } from '@core/auth/models/group.model';
 import { GroupMembership, PermissionPrincipal } from '@core/auth/models/permission.model';
 import { UserDetail } from '@core/auth/models/user.model';
 import { Page, PageQuery } from '@shared/models/page.model';
+import { ProposalStatus } from '@shared/models/collection-use-status.model';
 
 import {
   ObjectLogEntry,
@@ -787,6 +788,31 @@ export class MockProjectState {
     project.proposalAssignedTo = proposal.assignedTo;
 
     return project;
+  }
+
+  syncProposalStatus(
+    proposalId: string,
+    proposalStatus: ProposalStatus,
+    proposalAssignedTo: PermissionPrincipal | null,
+    triggeredBy: PermissionPrincipal,
+  ): void {
+    const project = [...this.projects.values()].find((p) => p.proposalId === proposalId);
+    if (!project) return;
+
+    project.proposalStatus = proposalStatus;
+    project.proposalAssignedTo = proposalAssignedTo;
+
+    if (proposalStatus === 'REJECTED' || proposalStatus === 'CANCELLED') {
+      project.status = 'CANCELLED';
+      const events = this.events.get(project.id) ?? [];
+      events.push({
+        occurredAt: new Date().toISOString(),
+        type: 'PROJECT_CANCELLED',
+        triggeredBy,
+        note: null,
+      });
+      this.events.set(project.id, events);
+    }
   }
 
   nextEntryId(): string {
