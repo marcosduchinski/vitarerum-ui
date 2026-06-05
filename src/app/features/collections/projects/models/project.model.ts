@@ -79,6 +79,7 @@ export interface ProjectListQuery extends PageQuery {
   readonly dateFrom?: string;
   readonly dateTo?: string;
   readonly search?: string;
+  readonly proposalApproved?: boolean;
 }
 
 export interface ObjectLogEntriesQuery extends PageQuery {

@@ -30,24 +30,48 @@
           }
         </div>
         <div class="proposal-actions__buttons">
-          <button
-            type="button"
-            class="action-btn action-btn--primary"
-            [disabled]="accepting() || rejecting()"
-            (click)="requestAcceptConfirmation()"
-          >
-            <span class="pi pi-check-circle" aria-hidden="true"></span>
-            {{ accepting() ? 'Accepting...' : 'Accept' }}
-          </button>
-          <button
-            type="button"
-            class="action-btn"
-            [disabled]="accepting() || rejecting()"
-            (click)="openRejectModal()"
-          >
-            <span class="pi pi-times-circle" aria-hidden="true"></span>
-            Reject
-          </button>
+          @if (canDecide()) {
+            <button
+              type="button"
+              class="action-btn action-btn--primary"
+              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              (click)="requestAcceptConfirmation()"
+            >
+              <span class="pi pi-check-circle" aria-hidden="true"></span>
+              {{ accepting() ? 'Accepting...' : 'Accept' }}
+            </button>
+            <button
+              type="button"
+              class="action-btn"
+              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              (click)="openRejectModal()"
+            >
+              <span class="pi pi-times-circle" aria-hidden="true"></span>
+              Reject
+            </button>
+            <button
+              type="button"
+              class="action-btn"
+              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              (click)="openForwardModal()"
+            >
+              <span class="pi pi-send" aria-hidden="true"></span>
+              {{ forwarding() ? 'Forwarding...' : 'Forward' }}
+            </button>
+            <button
+              type="button"
+              class="action-btn"
+              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              (click)="openRequestDocsModal()"
+            >
+              <span class="pi pi-file" aria-hidden="true"></span>
+              {{ requestingDocs() ? 'Requesting...' : 'Request docs' }}
+            </button>
+          } @else {
+            <p class="proposal-actions__status-note">
+              No actions available for this status.
+            </p>
+          }
         </div>
       </aside>
     </header>
@@ -55,6 +79,74 @@
     @if (actionError()) {
       <app-error-message [apiError]="actionError()!" />
     }
+
+    <app-confirm-modal
+      [open]="forwardModalOpen()"
+      title="Forward proposal"
+      confirmLabel="Forward"
+      cancelLabel="Cancel"
+      tone="warning"
+      [pending]="forwarding()"
+      [confirmDisabled]="!forwardTargetPermissionId() || staffUsersResource.isLoading()"
+      (confirmed)="forward()"
+      (cancelled)="closeForwardModal()"
+    >
+      <div class="forward-modal-body">
+        <p>
+          {{ proposal()!.collectionUseProject.referenceNumber }} —
+          {{ proposal()!.collectionUseProject.title }}
+        </p>
+        @if (staffUsersResource.isLoading()) {
+          <app-loading-state label="Loading staff..." />
+        } @else {
+          <label for="my-detail-forward-target">Staff member</label>
+          <select
+            id="my-detail-forward-target"
+            [value]="forwardTargetPermissionId()"
+            (change)="onForwardTargetChange($event)"
+          >
+            <option value="" disabled>Select a staff member...</option>
+            @for (opt of staffOptions(); track opt.permissionId) {
+              <option [value]="opt.permissionId">{{ opt.label }}</option>
+            }
+          </select>
+          <label for="my-detail-forward-note">Note</label>
+          <textarea
+            id="my-detail-forward-note"
+            rows="3"
+            placeholder="Add a note (optional)..."
+            [value]="forwardNote()"
+            (input)="onForwardNoteChange($event)"
+          ></textarea>
+        }
+      </div>
+    </app-confirm-modal>
+
+    <app-confirm-modal
+      [open]="requestDocsModalOpen()"
+      title="Request documents"
+      confirmLabel="Send request"
+      cancelLabel="Cancel"
+      [pending]="requestingDocs()"
+      (confirmed)="requestDocuments()"
+      (cancelled)="closeRequestDocsModal()"
+    >
+      <div class="request-docs-modal-body">
+        <p>
+          Request additional documents from
+          {{ proposal()!.requestedBy.user.name }} for
+          {{ proposal()!.collectionUseProject.referenceNumber }}.
+        </p>
+        <label for="my-detail-request-docs-note">Message to requester</label>
+        <textarea
+          id="my-detail-request-docs-note"
+          rows="4"
+          placeholder="Describe what documents are needed..."
+          [value]="requestDocsNote()"
+          (input)="onRequestDocsNoteChange($event)"
+        ></textarea>
+      </div>
+    </app-confirm-modal>
 
     <app-confirm-modal
       [open]="acceptConfirmOpen()"

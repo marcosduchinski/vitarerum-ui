@@ -45,6 +45,7 @@ export class ProjectApiServiceMock {
       items = items.filter((p) => p.requestedBy.permissionId === query.requestedBy);
     if (query.assignedTo)
       items = items.filter((p) => p.proposalAssignedTo?.permissionId === query.assignedTo);
+    if (query.proposalApproved) items = items.filter((p) => p.proposalStatus === 'APPROVED');
     if (query.referenceNumber) {
       const q = query.referenceNumber.toLowerCase();
       items = items.filter((p) => p.referenceNumber.toLowerCase() === q);

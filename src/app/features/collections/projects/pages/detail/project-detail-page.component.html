@@ -1,13 +1,200 @@
 <div class="project-detail">
-  <app-page-header
-    eyebrow="Projects"
-    title="Project detail"
-    description="This project detail page is intentionally blank for now."
-  >
-    <a class="back-link" [routerLink]="backLink()">{{ backLabel() }}</a>
-  </app-page-header>
+  <a class="project-detail__back" [routerLink]="backLink()">← {{ backLabel() }}</a>
 
-  <section class="project-detail__placeholder" aria-label="Project detail placeholder">
-    <p>{{ id() }}</p>
-  </section>
+  @if (projectResource.isLoading()) {
+    <app-loading-state />
+  } @else if (projectError()) {
+    <app-error-message [apiError]="projectError()!" (retry)="projectResource.reload()" />
+  } @else if (project()) {
+    <header class="project-detail__header">
+      <div class="project-detail__header-meta">
+        <p class="project-detail__ref">{{ project()!.referenceNumber }}</p>
+        <h1 class="project-detail__title">{{ project()!.title }}</h1>
+        <div class="project-detail__status-row">
+          <app-status-chip kind="project" [status]="asWorkflowStatus(project()!.status)" />
+          <app-type-chip [type]="project()!.type" />
+        </div>
+      </div>
+
+      <aside class="project-actions" aria-label="Project actions">
+        <div class="project-actions__buttons">
+          @if (canStart()) {
+            <button
+              type="button"
+              class="action-btn action-btn--primary"
+              [disabled]="acting()"
+              (click)="openStartConfirm()"
+            >
+              <span class="pi pi-play" aria-hidden="true"></span>
+              {{ acting() ? 'Starting...' : 'Start project' }}
+            </button>
+          }
+          @if (canComplete()) {
+            <button
+              type="button"
+              class="action-btn action-btn--primary"
+              [disabled]="acting()"
+              (click)="openCompleteConfirm()"
+            >
+              <span class="pi pi-check-circle" aria-hidden="true"></span>
+              {{ acting() ? 'Completing...' : 'Complete project' }}
+            </button>
+            <a
+              class="action-btn"
+              [routerLink]="['/p/collections/projects', id(), 'log', logRoute()]"
+            >
+              <span class="pi pi-file-edit" aria-hidden="true"></span>
+              Add log entry
+            </a>
+          }
+          @if (project()!.status === 'COMPLETED') {
+            <a
+              class="action-btn action-btn--primary"
+              [routerLink]="['/p/collections/projects', id(), 'log', logRoute()]"
+            >
+              <span class="pi pi-file-edit" aria-hidden="true"></span>
+              Add log entry
+            </a>
+          }
+          @if (canCancel()) {
+            <button
+              type="button"
+              class="action-btn action-btn--danger"
+              [disabled]="acting()"
+              (click)="openCancelConfirm()"
+            >
+              <span class="pi pi-times-circle" aria-hidden="true"></span>
+              Cancel project
+            </button>
+          }
+        </div>
+      </aside>
+    </header>
+
+    @if (actionError()) {
+      <app-error-message [apiError]="actionError()!" />
+    }
+
+    <app-confirm-modal
+      [open]="startConfirmOpen()"
+      title="Start project?"
+      [message]="'This will move ' + project()!.referenceNumber + ' to in progress.'"
+      confirmLabel="Start project"
+      cancelLabel="Not yet"
+      tone="warning"
+      [pending]="acting()"
+      (confirmed)="start()"
+      (cancelled)="closeStartConfirm()"
+    />
+
+    <app-confirm-modal
+      [open]="completeConfirmOpen()"
+      title="Complete project?"
+      [message]="'This will mark ' + project()!.referenceNumber + ' as completed.'"
+      confirmLabel="Complete project"
+      cancelLabel="Keep in progress"
+      [pending]="acting()"
+      (confirmed)="complete()"
+      (cancelled)="closeCompleteConfirm()"
+    />
+
+    <app-confirm-modal
+      [open]="cancelConfirmOpen()"
+      title="Cancel project?"
+      [message]="'This will cancel ' + project()!.referenceNumber + ' and cannot be undone.'"
+      confirmLabel="Cancel project"
+      cancelLabel="Keep project"
+      tone="danger"
+      [pending]="acting()"
+      (confirmed)="cancel()"
+      (cancelled)="closeCancelConfirm()"
+    />
+
+    <div class="project-detail__grid">
+      <section class="detail-card" aria-labelledby="project-overview-heading">
+        <h2 id="project-overview-heading" class="detail-card__title">Overview</h2>
+        <dl class="detail-dl">
+          <div class="detail-dl__row">
+            <dt>Purpose</dt>
+            <dd>{{ project()!.purpose }}</dd>
+          </div>
+          <div class="detail-dl__row">
+            <dt>Dates</dt>
+            <dd>{{ formatDate(project()!.beginDate) }} – {{ formatDate(project()!.endDate) }}</dd>
+          </div>
+          <div class="detail-dl__row">
+            <dt>Requested by</dt>
+            <dd>
+              @if (project()!.requestedBy; as requester) {
+                {{ requester.user.name }}
+                <span class="detail-dl__email">{{ requester.user.email }}</span>
+              } @else {
+                <span class="detail-dl__empty">—</span>
+              }
+            </dd>
+          </div>
+          <div class="detail-dl__row">
+            <dt>Assigned staff</dt>
+            <dd>
+              @if (project()!.proposal.assignedTo) {
+                {{ project()!.proposal.assignedTo!.user.name }}
+                <span class="detail-dl__email">{{ project()!.proposal.assignedTo!.user.email }}</span>
+              } @else {
+                <span class="detail-dl__empty">Unassigned</span>
+              }
+            </dd>
+          </div>
+          <div class="detail-dl__row">
+            <dt>Proposal status</dt>
+            <dd>
+              <app-status-chip kind="proposal" [status]="asWorkflowStatus(project()!.proposal.status)" />
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-card" aria-labelledby="project-log-heading">
+        <h2 id="project-log-heading" class="detail-card__title">Object log</h2>
+        @if (canLog()) {
+          <a
+            class="action-btn action-btn--primary"
+            [routerLink]="['/p/collections/projects', id(), 'log', logRoute()]"
+          >
+            <span class="pi pi-arrow-right" aria-hidden="true"></span>
+            Open log
+          </a>
+        } @else {
+          <p class="detail-card__empty">Log is available once the project is in progress.</p>
+        }
+      </section>
+
+      <section class="detail-card" aria-labelledby="project-events-heading">
+        <h2 id="project-events-heading" class="detail-card__title">Event log</h2>
+
+        @if (eventsResource.isLoading()) {
+          <app-loading-state label="Loading events…" />
+        } @else if (!events().length) {
+          <p class="detail-card__empty">No events recorded.</p>
+        } @else {
+          <ol class="event-list" aria-label="Project events">
+            @for (event of events(); track event.occurredAt) {
+              <li class="event">
+                <div class="event__dot" aria-hidden="true"></div>
+                <div class="event__content">
+                  <div class="event__header">
+                    <span class="event__type">{{ event.type.replace('_', ' ') }}</span>
+                    <span class="event__date">{{ formatDateTime(event.occurredAt) }}</span>
+                  </div>
+                  <p class="event__actor">{{ event.triggeredBy.user.name }}</p>
+                  @if (event.note) {
+                    <p class="event__note">"{{ event.note }}"</p>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    </div>
+  }
 </div>

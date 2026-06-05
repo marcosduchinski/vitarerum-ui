@@ -4,7 +4,8 @@
   note right of Submitted
     status: SUBMITTED
     event: SUBMITTED
-    visibility: New Assignments list (for curators and collections managers) and My proposals list (for external requesters)
+    visibility: New Assignments list (for curators and collections managers) and
+    My proposals list (for external requesters)
   end note
 
   Submitted --> Pending : Proposal is assumed by \n a curator or a collections manager \n and enters review process

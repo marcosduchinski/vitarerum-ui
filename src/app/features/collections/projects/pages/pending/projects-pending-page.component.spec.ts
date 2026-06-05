@@ -103,7 +103,7 @@ describe('ProjectsPendingPageComponent', () => {
     await fixture.whenStable();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 0,
       size: 3,
       search: '',
@@ -143,7 +143,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 1,
       size: 3,
       search: '',
@@ -159,7 +159,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 1,
       size: 3,
       search: '',
@@ -171,7 +171,7 @@ describe('ProjectsPendingPageComponent', () => {
     await fixture.whenStable();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 1,
       size: 3,
       search: '',
@@ -183,7 +183,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 0,
       size: 3,
       search: '',
@@ -217,7 +217,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 0,
       size: 3,
       search: 'railway',
@@ -231,7 +231,7 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'CREATED',
+      status: 'CREATED', proposalApproved: true,
       page: 0,
       size: 3,
       search: '',

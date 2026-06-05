@@ -66,6 +66,7 @@ export class ProjectsPendingPageComponent {
       firstValueFrom(
         this.projectService.listProjects({
           status: 'CREATED',
+          proposalApproved: true,
           ...params,
         }),
       ),

@@ -1,35 +1,53 @@
+@use '../../../proposals/pages/detail/proposal-detail-page.component.scss';
+
 .project-detail {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
   align-content: start;
 }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: none;
+.project-detail__back {
+  @extend .proposal-detail__back;
+}
 
-  &:hover {
-    background: var(--color-panel-muted);
+.project-detail__header {
+  @extend .proposal-detail__header;
+}
+
+.project-detail__ref {
+  @extend .proposal-detail__ref;
+}
+
+.project-detail__title {
+  @extend .proposal-detail__title;
+}
+
+.project-detail__status-row {
+  @extend .proposal-detail__status-row;
+}
+
+.project-actions {
+  @extend .proposal-actions;
+}
+
+.project-actions__buttons {
+  @extend .proposal-actions__buttons;
+}
+
+.project-detail__grid {
+  display: grid;
+  gap: 1.5rem;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 18rem 1fr;
   }
 }
 
-.project-detail__placeholder {
-  padding: 1rem;
-  border: 1px dashed var(--color-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-panel);
-  color: var(--color-subtle);
+.action-btn--danger {
+  border-color: var(--color-danger, #e53935);
+  color: var(--color-danger, #e53935);
 
-  p {
-    margin: 0;
-    font-size: 0.875rem;
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-danger, #e53935) 8%, var(--color-panel));
   }
 }

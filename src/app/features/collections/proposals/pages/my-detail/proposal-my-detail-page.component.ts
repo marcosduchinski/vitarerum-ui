@@ -107,9 +107,16 @@ export class ProposalMyDetailPageComponent {
   protected readonly activePanel = signal<MyDetailPanel>('overview');
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
+  protected readonly forwarding = signal(false);
+  protected readonly requestingDocs = signal(false);
   protected readonly acceptConfirmOpen = signal(false);
   protected readonly rejectModalOpen = signal(false);
+  protected readonly forwardModalOpen = signal(false);
+  protected readonly requestDocsModalOpen = signal(false);
   protected readonly rejectionReason = signal('');
+  protected readonly forwardTargetPermissionId = signal('');
+  protected readonly forwardNote = signal('');
+  protected readonly requestDocsNote = signal('');
   protected readonly replyResetVersion = signal(0);
   protected readonly watcherResetVersion = signal(0);
   protected readonly sendingMessage = signal(false);
@@ -117,6 +124,13 @@ export class ProposalMyDetailPageComponent {
   protected readonly removingWatcherId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly messageError = signal<ApiError | null>(null);
+
+  protected readonly canDecide = computed(() => this.proposal()?.status === 'UNDER_REVIEW');
+  protected readonly forwardTargetLabel = computed(
+    () =>
+      this.staffOptions().find((o) => o.permissionId === this.forwardTargetPermissionId())?.label ??
+      'the selected staff member',
+  );
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
@@ -139,6 +153,79 @@ export class ProposalMyDetailPageComponent {
 
   protected onRejectionReasonInput(event: Event): void {
     this.rejectionReason.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected openForwardModal(): void {
+    this.forwardTargetPermissionId.set('');
+    this.forwardNote.set('');
+    this.actionError.set(null);
+    this.forwardModalOpen.set(true);
+  }
+
+  protected closeForwardModal(): void {
+    this.forwardModalOpen.set(false);
+  }
+
+  protected onForwardTargetChange(event: Event): void {
+    this.forwardTargetPermissionId.set((event.target as HTMLSelectElement).value);
+  }
+
+  protected onForwardNoteChange(event: Event): void {
+    this.forwardNote.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected async forward(): Promise<void> {
+    const targetPermissionId = this.forwardTargetPermissionId();
+    if (!targetPermissionId || this.forwarding()) return;
+
+    this.forwarding.set(true);
+    this.actionError.set(null);
+
+    try {
+      await firstValueFrom(
+        this.proposalService.forwardProposal(this.id(), { targetPermissionId, note: this.forwardNote() }),
+      );
+      this.forwardModalOpen.set(false);
+      this.proposalResource.reload();
+      this.eventsResource.reload();
+    } catch (err) {
+      this.actionError.set(toApiError(err));
+    } finally {
+      this.forwarding.set(false);
+    }
+  }
+
+  protected openRequestDocsModal(): void {
+    this.requestDocsNote.set('');
+    this.actionError.set(null);
+    this.requestDocsModalOpen.set(true);
+  }
+
+  protected closeRequestDocsModal(): void {
+    this.requestDocsModalOpen.set(false);
+  }
+
+  protected onRequestDocsNoteChange(event: Event): void {
+    this.requestDocsNote.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected async requestDocuments(): Promise<void> {
+    if (this.requestingDocs()) return;
+
+    this.requestingDocs.set(true);
+    this.actionError.set(null);
+
+    try {
+      await firstValueFrom(
+        this.proposalService.requestDocuments(this.id(), { note: this.requestDocsNote() }),
+      );
+      this.requestDocsModalOpen.set(false);
+      this.eventsResource.reload();
+    } catch (err) {
+      this.actionError.set(toApiError(err));
+    } finally {
+      this.requestingDocs.set(false);
+    }
   }
 
   protected async sendReply(payload: ReplyComposerPayload): Promise<void> {
