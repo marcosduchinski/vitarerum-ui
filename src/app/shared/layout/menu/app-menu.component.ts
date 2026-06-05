@@ -13,7 +13,7 @@ const HOME: MenuNode = {
 
 const COLLECTION_PROPOSALS_EXTERNAL: MenuNode = {
   label: 'Proposals',
-  icon: 'pi pi-copy',
+  icon: 'pi pi-file-edit',
   items: [
     {
       label: 'Submit proposal',
@@ -26,17 +26,17 @@ const COLLECTION_PROPOSALS_EXTERNAL: MenuNode = {
 
 const COLLECTION_PROPOSALS_STAFF: MenuNode = {
   label: 'Proposals',
-  icon: 'pi pi-copy',
+  icon: 'pi pi-file-edit',
   items: [
-    { label: 'New', icon: 'pi pi-list', routerLink: '/p/collections/proposals/new' },
+    { label: 'New', icon: 'pi pi-inbox', routerLink: '/p/collections/proposals/new' },
     {
       label: 'My assignments',
-      icon: 'pi pi-bookmark',
+      icon: 'pi pi-user',
       routerLink: '/p/collections/proposals/my-assignments',
     },
     {
       label: "Other's assignments",
-      icon: 'pi pi-bookmark',
+      icon: 'pi pi-users',
       routerLink: '/p/collections/proposals/others',
     },
     {
@@ -54,7 +54,7 @@ const COLLECTION_PROPOSALS_STAFF: MenuNode = {
 
 const COLLECTION_PROJECTS_EXTERNAL: MenuNode = {
   label: 'Projects',
-  icon: 'pi pi-server',
+  icon: 'pi pi-briefcase',
   items: [
     { label: 'My projects', icon: 'pi pi-th-large', routerLink: '/p/collections/projects/my' },
   ],
@@ -62,13 +62,13 @@ const COLLECTION_PROJECTS_EXTERNAL: MenuNode = {
 
 const COLLECTION_PROJECTS_STAFF: MenuNode = {
   label: 'Projects',
-  icon: 'pi pi-server',
+  icon: 'pi pi-briefcase',
   items: [
     { label: 'My projects', icon: 'pi pi-th-large', routerLink: '/p/collections/projects/my' },
     { label: 'Pending', icon: 'pi pi-clock', routerLink: '/p/collections/projects/pending' },
     {
       label: 'In progress',
-      icon: 'pi pi-th-large',
+      icon: 'pi pi-play',
       routerLink: '/p/collections/projects/in-progress',
     },
     {
