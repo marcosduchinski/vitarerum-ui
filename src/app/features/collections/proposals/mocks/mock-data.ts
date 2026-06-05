@@ -323,11 +323,11 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-2': [
     { occurredAt: '2026-06-01T09:30:00Z', type: 'SUBMITTED', triggeredBy: P['iris'], note: null },
-    { occurredAt: '2026-06-02T09:00:00Z', type: 'ASSIGNED', triggeredBy: P['greg'], note: null },
+    { occurredAt: '2026-06-02T09:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['greg'], note: null },
   ],
   'prop-3': [
     { occurredAt: '2026-06-01T10:00:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-02T09:30:00Z', type: 'ASSIGNED', triggeredBy: P['fran'], note: null },
+    { occurredAt: '2026-06-02T09:30:00Z', type: 'REVIEW_STARTED', triggeredBy: P['fran'], note: null },
     {
       occurredAt: '2026-06-02T14:00:00Z',
       type: 'FORWARDED',
@@ -343,7 +343,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-4': [
     { occurredAt: '2026-06-01T10:30:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
-    { occurredAt: '2026-06-02T10:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-06-02T10:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-03T11:00:00Z',
       type: 'APPROVED',
@@ -353,7 +353,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-5': [
     { occurredAt: '2026-06-01T11:00:00Z', type: 'SUBMITTED', triggeredBy: P['iris'], note: null },
-    { occurredAt: '2026-06-02T10:30:00Z', type: 'ASSIGNED', triggeredBy: P['greg'], note: null },
+    { occurredAt: '2026-06-02T10:30:00Z', type: 'REVIEW_STARTED', triggeredBy: P['greg'], note: null },
     {
       occurredAt: '2026-06-03T14:00:00Z',
       type: 'REJECTED',
@@ -363,7 +363,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-6': [
     { occurredAt: '2026-06-01T11:30:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-02T11:30:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-06-02T11:30:00Z', type: 'REVIEW_STARTED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-03T09:00:00Z',
       type: 'REJECTED',
@@ -373,7 +373,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-7': [
     { occurredAt: '2026-06-01T12:00:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-02T11:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-06-02T11:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-02T15:00:00Z',
       type: 'FORWARDED',
@@ -604,47 +604,47 @@ export const SEED_PROJECTS: MutableProjectState[] = [
 
 export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
   'proj-1': [
-    { occurredAt: '2026-06-01T09:00:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T09:00:00Z', type: 'PENDING', triggeredBy: P['alice'], note: null },
   ],
   'proj-2': [
-    { occurredAt: '2026-06-01T09:30:00Z', type: 'CREATED', triggeredBy: P['iris'], note: null },
+    { occurredAt: '2026-06-01T09:30:00Z', type: 'PENDING', triggeredBy: P['iris'], note: null },
   ],
   'proj-3': [
-    { occurredAt: '2026-06-01T10:00:00Z', type: 'CREATED', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-01T10:00:00Z', type: 'PENDING', triggeredBy: P['hugo'], note: null },
     {
       occurredAt: '2026-06-03T10:30:00Z',
-      type: 'STARTED',
+      type: 'PROJECT_STARTED',
       triggeredBy: P['carol'],
       note: 'Initiating research access.',
     },
   ],
   'proj-4': [
-    { occurredAt: '2026-06-01T10:30:00Z', type: 'CREATED', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T10:30:00Z', type: 'PENDING', triggeredBy: P['alice'], note: null },
   ],
   'proj-5': [
-    { occurredAt: '2026-06-01T11:00:00Z', type: 'CREATED', triggeredBy: P['iris'], note: null },
+    { occurredAt: '2026-06-01T11:00:00Z', type: 'PENDING', triggeredBy: P['iris'], note: null },
     {
       occurredAt: '2026-06-03T14:30:00Z',
-      type: 'CANCELLED',
+      type: 'PROJECT_CANCELLED',
       triggeredBy: P['greg'],
       note: 'Cancelled following rejection of the associated proposal.',
     },
   ],
   'proj-6': [
-    { occurredAt: '2026-06-01T11:30:00Z', type: 'CREATED', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-01T11:30:00Z', type: 'PENDING', triggeredBy: P['hugo'], note: null },
     {
       occurredAt: '2026-06-03T09:30:00Z',
-      type: 'CANCELLED',
+      type: 'PROJECT_CANCELLED',
       triggeredBy: P['hugo'],
       note: 'Cancelled following withdrawal of the proposal.',
     },
   ],
   'proj-7': [
-    { occurredAt: '2026-06-01T12:00:00Z', type: 'CREATED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-04T10:30:00Z', type: 'STARTED', triggeredBy: P['dan'], note: null },
+    { occurredAt: '2026-06-01T12:00:00Z', type: 'PENDING', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-04T10:30:00Z', type: 'PROJECT_STARTED', triggeredBy: P['dan'], note: null },
     {
       occurredAt: '2026-06-05T09:00:00Z',
-      type: 'COMPLETED',
+      type: 'PROJECT_COMPLETED',
       triggeredBy: P['dan'],
       note: 'Research access completed successfully.',
     },
@@ -767,7 +767,7 @@ export class MockProjectState {
     this.events.set(project.id, [
       {
         occurredAt: proposal.submittedAt,
-        type: 'CREATED',
+        type: 'PENDING',
         triggeredBy: proposal.requestedBy,
         note: null,
       },

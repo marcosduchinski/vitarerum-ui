@@ -65,7 +65,7 @@ export class ProposalApiServiceMock {
       id,
       status: 'SUBMITTED',
       type: request.type,
-      requestedBy: P['alice'],
+      requestedBy: this.currentPrincipal(),
       assignedTo: null,
       collectionUseProject: {
         id: projectId,
@@ -83,7 +83,7 @@ export class ProposalApiServiceMock {
     this.proposals.set(id, proposal);
     this.projectState.createRequestedProject(proposal, request, refNum);
     this.events.set(id, [
-      { occurredAt: now, type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
+      { occurredAt: now, type: 'SUBMITTED', triggeredBy: this.currentPrincipal(), note: null },
     ]);
     this.messages.set(convId, []);
 
@@ -174,6 +174,18 @@ export class ProposalApiServiceMock {
     return of(doc);
   }
 
+  requestDocuments(proposalId: string, request: ProposalNoteRequest): Observable<void> {
+    const proposal = this.proposals.get(proposalId);
+    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    this.pushEvent(proposalId, {
+      occurredAt: new Date().toISOString(),
+      type: 'DOCUMENTS_REQUESTED',
+      triggeredBy: this.currentPrincipal(),
+      note: request.note || null,
+    });
+    return of(undefined);
+  }
+
   listDocuments(proposalId: string): Observable<ProposalDocumentsResponse> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
@@ -248,7 +260,7 @@ export class ProposalApiServiceMock {
       : this.currentPrincipal();
     const evt: ProposalEvent = {
       occurredAt: now,
-      type: 'ASSIGNED',
+      type: 'REVIEW_STARTED',
       triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };

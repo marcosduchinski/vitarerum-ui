@@ -67,11 +67,11 @@ export class ProjectApiServiceMock {
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['CREATED'], 'IN_PROGRESS', 'STARTED', request.note);
+    return this.transition(projectId, ['CREATED'], 'IN_PROGRESS', 'PROJECT_STARTED', request.note);
   }
 
   completeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['IN_PROGRESS'], 'COMPLETED', 'COMPLETED', request.note);
+    return this.transition(projectId, ['IN_PROGRESS'], 'COMPLETED', 'PROJECT_COMPLETED', request.note);
   }
 
   cancelProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
@@ -79,7 +79,7 @@ export class ProjectApiServiceMock {
       projectId,
       ['CREATED', 'IN_PROGRESS'],
       'CANCELLED',
-      'CANCELLED',
+      'PROJECT_CANCELLED',
       request.reason,
     );
   }
@@ -90,11 +90,11 @@ export class ProjectApiServiceMock {
   ): Observable<ObjectLogEntry> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (p.status === 'COMPLETED' || p.status === 'CANCELLED') {
+    if (p.status === 'CANCELLED') {
       return throwError(() => ({
         status: 409,
         error: 'INVALID_PROJECT_STATUS',
-        message: 'Entries cannot be added to a completed or cancelled project',
+        message: 'Entries cannot be added to a cancelled project',
       }));
     }
     const entry: ObjectLogEntry = {
@@ -158,11 +158,11 @@ export class ProjectApiServiceMock {
   ): Observable<ObjectOccurrenceEntry> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (p.status === 'COMPLETED' || p.status === 'CANCELLED') {
+    if (p.status === 'CANCELLED') {
       return throwError(() => ({
         status: 409,
         error: 'INVALID_PROJECT_STATUS',
-        message: 'Entries cannot be added to a completed or cancelled project',
+        message: 'Entries cannot be added to a cancelled project',
       }));
     }
     const entry: ObjectOccurrenceEntry = {

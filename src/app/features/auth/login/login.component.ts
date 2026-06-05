@@ -14,8 +14,8 @@ export class LoginComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly router = inject(Router);
 
-  protected readonly email = signal('');
-  protected readonly password = signal('');
+  protected readonly email = signal('alice@ext.example.com');
+  protected readonly password = signal('password');
   protected readonly loading = signal(false);
   protected readonly loginError = signal(false);
   private readonly submitted = signal(false);

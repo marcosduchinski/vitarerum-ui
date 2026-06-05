@@ -59,6 +59,10 @@ export class ProposalApiService {
     return this.http.post<Document>(this.url(`/proposals/${proposalId}/documents`), body);
   }
 
+  requestDocuments(proposalId: string, request: ProposalNoteRequest): Observable<void> {
+    return this.http.post<void>(this.url(`/proposals/${proposalId}/request-documents`), request);
+  }
+
   listDocuments(proposalId: string): Observable<ProposalDocumentsResponse> {
     return this.http.get<ProposalDocumentsResponse>(this.url(`/proposals/${proposalId}/documents`));
   }

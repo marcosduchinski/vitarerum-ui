@@ -35,14 +35,18 @@ export class ProposalSubmitPageComponent {
 
   protected readonly useTypes = USE_TYPES;
 
-  protected readonly title = signal('');
-  protected readonly type = signal<UseType | ''>('');
-  protected readonly purpose = signal('');
-  protected readonly beginDate = signal('');
-  protected readonly endDate = signal('');
-  protected readonly recipient = signal('');
-  protected readonly subject = signal('');
-  protected readonly body = signal('');
+  protected readonly title = signal('Palaeontology specimen records from late Cretaceous excavations');
+  protected readonly type = signal<UseType | ''>('RESEARCH');
+  protected readonly purpose = signal(
+    'Comparative research on palaeontology specimen records and excavation documentation from late Cretaceous periods across South American sites.',
+  );
+  protected readonly beginDate = signal('2026-07-01');
+  protected readonly endDate = signal('2026-12-31');
+  protected readonly recipient = signal('collections@vitarerum.example.com');
+  protected readonly subject = signal('Collection use request: palaeontology specimen records');
+  protected readonly body = signal(
+    'I am requesting access to palaeontology specimen records from late Cretaceous excavations for a comparative study on collection methods and documentation practices across South American sites.',
+  );
 
   protected readonly submitted = signal(false);
   protected readonly submitting = signal(false);

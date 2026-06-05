@@ -11,7 +11,7 @@ export type ProposalLifecyclePhase = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJ
 
 export type ProposalEventType =
   | 'SUBMITTED'
-  | 'ASSIGNED'
+  | 'REVIEW_STARTED'
   | 'FORWARDED'
   | 'DOCUMENTS_REQUESTED'
   | 'DOCUMENTS_SUBMITTED'
@@ -23,10 +23,10 @@ export type ProposalEventType =
 export type UseStatus = 'CREATED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export type UseEventType =
-  | 'CREATED'
-  | 'STARTED'
-  | 'COMPLETED'
-  | 'CANCELLED'
+  | 'PENDING'
+  | 'PROJECT_STARTED'
+  | 'PROJECT_COMPLETED'
+  | 'PROJECT_CANCELLED'
   | 'LOGGED_UPDATE'
   | 'LOGGED_INCIDENT';
 

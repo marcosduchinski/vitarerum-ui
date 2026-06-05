@@ -214,7 +214,7 @@ describe('ProposalApiServiceMock', () => {
   it('assume moves proposal into review and sets assignedTo', async () => {
     const result = await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
     expect(result.status).toBe('UNDER_REVIEW');
-    expect(result.lastEvent.type).toBe('ASSIGNED');
+    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
     expect(result.assignedTo.permissionId).toBe('perm-bob');
 
     const updated = await firstValueFrom(service.getProposal('prop-1'));
@@ -260,7 +260,7 @@ describe('ProposalApiServiceMock', () => {
       }),
     );
     expect(result.status).toBe('UNDER_REVIEW');
-    expect(result.lastEvent.type).toBe('ASSIGNED');
+    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
     expect(result.assignedTo.permissionId).toBe('perm-carol');
   });
 

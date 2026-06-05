@@ -56,7 +56,7 @@ describe('ProjectApiServiceMock', () => {
 
     const events = await firstValueFrom(service.listEvents('proj-4'));
     const last = events.content[events.content.length - 1];
-    expect(last.type).toBe('STARTED');
+    expect(last.type).toBe('PROJECT_STARTED');
   });
 
   it('rejects starting a project that is already in progress', async () => {
@@ -141,8 +141,17 @@ describe('ProjectApiServiceMock', () => {
     );
   });
 
-  it('rejects createObjectLogEntry on a COMPLETED project', async () => {
+  it('allows createObjectLogEntry on a COMPLETED project (post-completion entries)', async () => {
     state.projects.get('proj-4')!.status = 'COMPLETED';
+
+    const entry = await firstValueFrom(
+      service.createObjectLogEntry('proj-4', { content: 'Final report entry.' }),
+    );
+    expect(entry.content).toBe('Final report entry.');
+  });
+
+  it('rejects createObjectLogEntry on a CANCELLED project', async () => {
+    state.projects.get('proj-4')!.status = 'CANCELLED';
 
     await expect(
       firstValueFrom(service.createObjectLogEntry('proj-4', { content: 'Should be rejected.' })),
@@ -166,12 +175,12 @@ describe('ProjectApiServiceMock', () => {
   it('filters events by type', async () => {
     await firstValueFrom(service.startProject('proj-4', { note: 'Starting.' }));
 
-    const started = await firstValueFrom(service.listEvents('proj-4', { type: 'STARTED' }));
-    expect(started.content.every((e) => e.type === 'STARTED')).toBe(true);
+    const started = await firstValueFrom(service.listEvents('proj-4', { type: 'PROJECT_STARTED' }));
+    expect(started.content.every((e) => e.type === 'PROJECT_STARTED')).toBe(true);
 
-    const created = await firstValueFrom(service.listEvents('proj-4', { type: 'CREATED' }));
-    expect(created.content.every((e) => e.type === 'CREATED')).toBe(true);
-    expect(created.content.some((e) => e.type === 'STARTED')).toBe(false);
+    const pending = await firstValueFrom(service.listEvents('proj-4', { type: 'PENDING' }));
+    expect(pending.content.every((e) => e.type === 'PENDING')).toBe(true);
+    expect(pending.content.some((e) => e.type === 'PROJECT_STARTED')).toBe(false);
   });
 
   it('matches referenceNumber exactly, not as a prefix', async () => {

@@ -35,6 +35,14 @@ export const PROJECTS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'cancelled',
+    title: 'Cancelled Projects',
+    loadComponent: () =>
+      import('./pages/cancelled/projects-cancelled-page.component').then(
+        (m) => m.ProjectsCancelledPageComponent,
+      ),
+  },
+  {
     path: ':id/log/research',
     title: 'Research Log',
     canActivate: [projectLogAccessGuard],
