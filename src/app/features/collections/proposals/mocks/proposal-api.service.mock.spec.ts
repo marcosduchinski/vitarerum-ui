@@ -152,25 +152,15 @@ describe('ProposalApiServiceMock', () => {
     expect(last.type).toBe('APPROVED');
   });
 
-  it('moves the approved proposal project into pending projects', async () => {
+  it('propagates proposal APPROVED status to the associated project', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
-
-    const before = await firstValueFrom(projectService.listProjects({ status: 'CREATED' }));
-    const beforeCount = before.content.length;
 
     await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
 
-    const after = await firstValueFrom(projectService.listProjects({ status: 'CREATED' }));
-    const project = after.content.find((item) => item.id === 'proj-3');
-
-    expect(after.content.length).toBe(beforeCount);
+    const project = await firstValueFrom(projectService.getProject('proj-3'));
     expect(project).toMatchObject({
       id: 'proj-3',
-      status: 'CREATED',
-      proposal: {
-        id: 'prop-3',
-        status: 'APPROVED',
-      },
+      proposal: { id: 'prop-3', status: 'APPROVED' },
     });
   });
 

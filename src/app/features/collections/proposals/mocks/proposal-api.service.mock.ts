@@ -269,7 +269,7 @@ export class ProposalApiServiceMock {
     const evt: ProposalEvent = {
       occurredAt: now,
       type: 'FORWARDED',
-      triggeredBy: P['bob'],
+      triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };
     this.proposals.set(proposalId, { ...proposal, assignedTo });
@@ -323,7 +323,7 @@ export class ProposalApiServiceMock {
     const evt: ProposalEvent = {
       occurredAt: now,
       type: 'APPROVED',
-      triggeredBy: P['carol'],
+      triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };
     this.proposals.set(proposalId, {
@@ -349,7 +349,7 @@ export class ProposalApiServiceMock {
     const evt: ProposalEvent = {
       occurredAt: now,
       type: 'REJECTED',
-      triggeredBy: P['bob'],
+      triggeredBy: this.currentPrincipal(),
       note: request.reason,
     };
     this.proposals.set(proposalId, {
@@ -374,7 +374,7 @@ export class ProposalApiServiceMock {
     const evt: ProposalEvent = {
       occurredAt: now,
       type: 'CANCELLED',
-      triggeredBy: P['alice'],
+      triggeredBy: this.currentPrincipal(),
       note: request.reason,
     };
     this.proposals.set(proposalId, {

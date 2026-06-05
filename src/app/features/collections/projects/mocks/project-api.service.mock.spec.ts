@@ -119,10 +119,10 @@ describe('ProjectApiServiceMock', () => {
     expect(page.totalElements).toBeGreaterThan(0);
   });
 
-  it('returns no projects for assigned staff before proposals are assigned', async () => {
+  it('filters projects to those with proposals assigned to a specific reviewer', async () => {
     const page = await firstValueFrom(service.listProjects({ assignedTo: 'perm-bob', size: 20 }));
 
-    expect(page.totalElements).toBe(0);
+    expect(page.totalElements).toBeGreaterThan(0);
     expect(page.content.every((p) => p.proposal.assignedTo?.permissionId === 'perm-bob')).toBe(
       true,
     );

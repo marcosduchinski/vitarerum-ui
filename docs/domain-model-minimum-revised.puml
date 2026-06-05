@@ -21,6 +21,10 @@ package "Shared Kernel" <<Shared Kernel>> {
         class EmailAddress <<Value Object>> #e0afea {
         - value: String
         }
+
+         class FileReference <<Value Object>> #e0afea {
+                - value: String
+                }
 }
 
 
@@ -112,7 +116,6 @@ package "User Request" <<Bounded Context>> {
 
 
         Document *-- DocumentType
-        Document ..> FileReference
         Document ..> Permission : submittedByPermissionId
 
         ' ------------------------------------------------------------
@@ -192,9 +195,7 @@ package "User Request" <<Bounded Context>> {
 
 package "Collection Use" <<Bounded Context>> {
 
-        class FileReference <<Value Object>> #e0afea {
-        - value: String
-        }
+
 
         ' ------------------------------------------------------------
         ' CollectionUseProject aggregate
@@ -290,8 +291,6 @@ package "Collection Use" <<Bounded Context>> {
 
         ObjectLogEntry *-- "0..*" Attachment
         ObjectOccurrenceEntry *-- "0..*" Attachment
-
-        Attachment ..> FileReference
 
         ObjectLogEntry ..> CollectionUseProject : collectionUseProjectId
         ObjectOccurrenceEntry ..> CollectionUseProject : collectionUseProjectId
