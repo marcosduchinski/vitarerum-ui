@@ -76,6 +76,11 @@ const COLLECTION_PROJECTS_STAFF: MenuNode = {
       icon: 'pi pi-check',
       routerLink: '/p/collections/projects/completed',
     },
+    {
+      label: 'Cancelled',
+      icon: 'pi pi-times-circle',
+      routerLink: '/p/collections/projects/cancelled',
+    },
   ],
 };
 
