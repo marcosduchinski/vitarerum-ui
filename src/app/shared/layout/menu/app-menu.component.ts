@@ -28,7 +28,7 @@ const COLLECTION_PROPOSALS_STAFF: MenuNode = {
   label: 'Proposals',
   icon: 'pi pi-file-edit',
   items: [
-    { label: 'New assignments', icon: 'pi pi-inbox', routerLink: '/p/collections/proposals/new' },
+    { label: 'New proposals', icon: 'pi pi-inbox', routerLink: '/p/collections/proposals/new' },
     {
       label: 'My assignments',
       icon: 'pi pi-user',

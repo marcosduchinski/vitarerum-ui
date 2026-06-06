@@ -166,7 +166,7 @@ package "User Request" <<Bounded Context>> {
 
         enum ProposalEventType #ffeead {
         SUBMITTED
-        ASSIGNED
+        REVIEW_STARTED
         FORWARDED
         DOCUMENTS_REQUESTED
         DOCUMENTS_SUBMITTED
@@ -236,10 +236,10 @@ package "Collection Use" <<Bounded Context>> {
         }
 
         enum UseEventType #ff6f69 {
-        CREATED
-        STARTED
-        COMPLETED
-        CANCELLED
+        PENDING
+        PROJECT_STARTED
+        PROJECT_COMPLETED
+        PROJECT_CANCELLED
         LOGGED_UPDATE
         LOGGED_INCIDENT
         }
@@ -284,8 +284,9 @@ package "Collection Use" <<Bounded Context>> {
         }
 
         enum MediaType #ffb7b2 {
-        PDF
+        DOCUMENT
         IMAGE
+        VIDEO
         OTHER
         }
 
