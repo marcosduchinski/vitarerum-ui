@@ -4,7 +4,7 @@
 
 ### `POST /proposals`
 
-**Description** — Researcher submits a first contact request. Atomically creates a `Proposal` in `SUBMITTED` status, a `CollectionUseProject` in `REQUESTED` status, and an empty `Conversation`. The caller's `PermissionId` (as `EXTERNAL` group member) is recorded as `requestedBy`. The submitted purpose is stored on the project.
+**Description** — Researcher submits a first contact request. Atomically creates a `Proposal` in `SUBMITTED` status, a `CollectionUseProject` in `CREATED` status, and an empty `Conversation`. The caller's `PermissionId` (as `EXTERNAL` group member) is recorded as `requestedBy`. The submitted purpose is stored on the project.
 
 **Request body**
 ```json
@@ -41,9 +41,9 @@
     "referenceNumber": "CUP-2025-0042",
     "title": "string",
     "purpose": "string",
-    "note": null,
+    "requestNote": null,
     "type": "RESEARCH",
-    "status": "REQUESTED",
+    "status": "CREATED",
     "beginDate": "2025-06-01",
     "endDate": "2025-06-30"
   },
@@ -74,7 +74,7 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
-  "status": "PENDING_DOCUMENTS",
+  "status": "UNDER_REVIEW",
   "type": "RESEARCH",
   "requestedBy": {
     "permissionId": "uuid",
@@ -109,7 +109,7 @@ proposalId : UUID (required)
     "id": "uuid",
     "referenceNumber": "CUP-2025-0042",
     "title": "string",
-    "status": "REQUESTED"
+    "status": "CREATED"
   },
   "conversationId": "uuid",
   "documents": [
@@ -117,24 +117,22 @@ proposalId : UUID (required)
       "id": "uuid",
       "type": "RESEARCH_FORM",
       "fileName": "research_form.docx",
-      "submittedAt": "2025-01-16T09:00:00"
+      "submittedAt": "2025-01-16T09:00:00",
+      "submittedByPermissionId": "uuid"
     }
   ],
-  "requestedDocuments": [
+  "requestedObjects": [
     {
-      "id": "uuid",
-      "type": "RESEARCH_FORM",
+      "objectReference": {
+        "inventoryNumber": "string",
+        "displayTitle": "string",
+        "objectName": "string",
+        "briefDescriptionSnapshot": "string"
+      },
+      "category": "string",
       "description": "string",
       "requestedAt": "2025-01-16T09:00:00",
-      "requestedBy": {
-        "permissionId": "uuid",
-        "user": {
-          "id": "uuid",
-          "name": "string",
-          "email": "string"
-        },
-        "group": "COLLECTIONS_MANAGEMENT"
-      }
+      "requestedBy": "uuid"
     }
   ],
   "submittedAt": "2025-01-15T10:30:00"
@@ -163,7 +161,7 @@ proposalId : UUID (required)
 
 **Description** — Uploads a file to the proposal's shared document store. Documents serve three distinct roles: (1) **solicitation/supporting files** attached to the initial message by the researcher at submission time, (2) **formally requested documents** submitted by the researcher in response to a staff `request-documents` action, and (3) **staff response files** uploaded by staff to attach to their conversation messages. All three roles use this same endpoint. The `documentType` string identifies the category. Transitions the proposal event log with a `DOCUMENTS_SUBMITTED` event when the upload is in response to a document request.
 
-Status rules by actor: the researcher may upload when the proposal is `SUBMITTED`, `PENDING_DOCUMENTS`, or `UNDER_REVIEW`; staff may upload at any non-terminal status. Format restrictions apply per `documentType` — there is no global format constraint at this endpoint.
+Status rules by actor: the researcher may upload when the proposal is `SUBMITTED` or `UNDER_REVIEW`; staff may upload at any non-terminal status. Format restrictions apply per `documentType` — there is no global format constraint at this endpoint.
 
 **Path parameters**
 ```
@@ -184,23 +182,7 @@ documentType : String  (required) e.g. "RESEARCH_FORM", "IDENTIFICATION", "INSTI
   "fileName": "research_form.docx",
   "fileReference": "string",
   "submittedAt": "2025-01-16T09:00:00",
-  "submittedBy": {
-    "permissionId": "uuid",
-    "user": {
-      "id": "uuid",
-      "name": "string",
-      "email": "string"
-    },
-    "group": "EXTERNAL"
-  }
-}
-```
-
-**Response `409 Conflict`**
-```json
-{
-  "error": "DOCUMENTS_NOT_REQUESTED",
-  "message": "Proposal is not in PENDING_DOCUMENTS status"
+  "submittedByPermissionId": "uuid"
 }
 ```
 
@@ -234,15 +216,7 @@ proposalId : UUID (required)
       "fileName": "research_form.docx",
       "fileReference": "string",
       "submittedAt": "2025-01-16T09:00:00",
-      "submittedBy": {
-        "permissionId": "uuid",
-        "user": {
-          "id": "uuid",
-          "name": "string",
-          "email": "string"
-        },
-        "group": "EXTERNAL"
-      }
+      "submittedByPermissionId": "uuid"
     }
   ]
 }
@@ -286,7 +260,7 @@ size : Integer (default 20)
     },
     {
       "occurredAt": "2025-01-16T08:45:00",
-      "type": "ASSIGNED",
+      "type": "REVIEW_STARTED",
       "triggeredBy": {
         "permissionId": "uuid",
         "user": {

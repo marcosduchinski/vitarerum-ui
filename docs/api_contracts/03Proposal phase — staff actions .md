@@ -12,7 +12,7 @@ status          : ProposalStatus       (optional) filter by operational status
 lifecyclePhase  : ProposalLifecyclePhase (optional) SUBMITTED | PENDING | APPROVED | REJECTED
                                          groups multiple operational statuses into a phase:
                                          SUBMITTED  → SUBMITTED
-                                         PENDING    → PENDING_DOCUMENTS | UNDER_REVIEW | PENDING_DIRECTION
+                                         PENDING    → UNDER_REVIEW
                                          APPROVED   → APPROVED
                                          REJECTED   → REJECTED | CANCELLED
 type            : UseType              (optional) EXHIBITION | RESEARCH | OTHER
@@ -31,7 +31,7 @@ size            : Integer              (default 20)
   "content": [
     {
       "id": "uuid",
-      "status": "PENDING_DOCUMENTS",
+      "status": "UNDER_REVIEW",
       "type": "RESEARCH",
       "requestedBy": {
         "permissionId": "uuid",
@@ -55,7 +55,7 @@ size            : Integer              (default 20)
         "id": "uuid",
         "referenceNumber": "CUP-2025-0042",
         "title": "string",
-        "status": "REQUESTED"
+        "status": "CREATED"
       },
       "submittedAt": "2025-01-15T10:30:00"
     }
@@ -129,7 +129,7 @@ proposalId : UUID (required)
 
 ### `POST /proposals/{proposalId}/request-documents`
 
-**Description** — Attendant formally requests the institutional documents from the researcher. Stores the requested document list on the proposal, transitions the proposal from `SUBMITTED` or `UNDER_REVIEW` to `PENDING_DOCUMENTS`, and records a `DOCUMENTS_REQUESTED` `ProposalEvent`.
+**Description** — Attendant formally requests supplementary documents from the researcher. Records a `DOCUMENTS_REQUESTED` `ProposalEvent`. The note explains what is being requested.
 
 **Path parameters**
 ```
@@ -139,16 +139,6 @@ proposalId : UUID (required)
 **Request body**
 ```json
 {
-  "requiredDocuments": [
-    {
-      "type": "RESEARCH_FORM",
-      "description": "string"
-    },
-    {
-      "type": "INSTITUTION_LETTER",
-      "description": "string"
-    }
-  ],
   "note": "string"
 }
 ```
@@ -157,24 +147,7 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
-  "status": "PENDING_DOCUMENTS",
-  "requestedDocuments": [
-    {
-      "id": "uuid",
-      "type": "RESEARCH_FORM",
-      "description": "string",
-      "requestedAt": "2025-01-16T09:00:00",
-      "requestedBy": {
-        "permissionId": "uuid",
-        "user": {
-          "id": "uuid",
-          "name": "string",
-          "email": "string"
-        },
-        "group": "COLLECTIONS_MANAGEMENT"
-      }
-    }
-  ],
+  "status": "UNDER_REVIEW",
   "lastEvent": {
     "occurredAt": "2025-01-16T09:00:00",
     "type": "DOCUMENTS_REQUESTED",
@@ -260,9 +233,11 @@ proposalId : UUID (required)
 
 ---
 
-### `POST /proposals/{proposalId}/start-review`
+### `POST /proposals/{proposalId}/start-review` _(not yet implemented)_
 
-**Description** — Attendant formally begins the review of the submitted documents. Transitions the proposal from `PENDING_DOCUMENTS` to `UNDER_REVIEW`. Records a `REVIEW_STARTED` `ProposalEvent`.
+> **Not yet implemented** — this endpoint is planned but not available in the current application.
+
+**Description** — Attendant formally begins the review of submitted documents after a documents request. Records a `REVIEW_STARTED` `ProposalEvent`.
 
 **Path parameters**
 ```
@@ -308,9 +283,11 @@ proposalId : UUID (required)
 
 ---
 
-### `POST /proposals/{proposalId}/refer-to-direction`
+### `POST /proposals/{proposalId}/refer-to-direction` _(not yet implemented)_
 
-**Description** — Curator escalates the proposal to direction for clarification before making a final decision. Transitions from `UNDER_REVIEW` to `PENDING_DIRECTION`. Records a `REFERRED_TO_DIRECTION` `ProposalEvent`. Only available to `CURATORIAL` group members.
+> **Not yet implemented** — this endpoint is planned but not available in the current application.
+
+**Description** — Curator escalates the proposal to direction for clarification before making a final decision. Records a `REFERRED_TO_DIRECTION` `ProposalEvent`. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
@@ -365,9 +342,11 @@ proposalId : UUID (required)
 
 ---
 
-### `POST /proposals/{proposalId}/direction-clarification`
+### `POST /proposals/{proposalId}/direction-clarification` _(not yet implemented)_
 
-**Description** — A direction member provides the requested clarification. Transitions the proposal from `PENDING_DIRECTION` back to `UNDER_REVIEW`. Records a `DIRECTION_CLARIFIED` `ProposalEvent`. Only available to `DIRECTION` group members.
+> **Not yet implemented** — this endpoint is planned but not available in the current application.
+
+**Description** — A direction member provides the requested clarification. Records a `DIRECTION_CLARIFIED` `ProposalEvent`. Only available to `DIRECTION` group members.
 
 **Path parameters**
 ```
@@ -424,7 +403,7 @@ proposalId : UUID (required)
 
 ### `POST /proposals/{proposalId}/approve`
 
-**Description** — Curator approves the proposal. Transitions the proposal to `APPROVED` and the linked `CollectionUseProject` to `ACCEPTED`. Records an `APPROVED` `ProposalEvent` and an `ACCEPTED` `UseEvent`. Only available to `CURATORIAL` group members.
+**Description** — Curator approves the proposal. Transitions the proposal to `APPROVED`; the linked `CollectionUseProject` remains `CREATED` (ready to start). Records an `APPROVED` `ProposalEvent` and a `PENDING` `UseEvent`. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
@@ -462,7 +441,7 @@ proposalId : UUID (required)
   "collectionUseProject": {
     "id": "uuid",
     "referenceNumber": "CUP-2025-0042",
-    "status": "ACCEPTED"
+    "status": "CREATED"
   }
 }
 ```
@@ -487,7 +466,7 @@ proposalId : UUID (required)
 
 ### `POST /proposals/{proposalId}/reject`
 
-**Description** — Curator rejects the proposal. Transitions the proposal to `REJECTED` and the linked `CollectionUseProject` to `REFUSED`. Records a `REJECTED` `ProposalEvent` and a `REFUSED` `UseEvent`. A reason is mandatory. Only available to `CURATORIAL` group members.
+**Description** — Curator rejects the proposal. Transitions the proposal to `REJECTED` and the linked `CollectionUseProject` to `CANCELLED`. Records a `REJECTED` `ProposalEvent` and a `PROJECT_CANCELLED` `UseEvent`. A reason is mandatory. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
@@ -525,7 +504,7 @@ proposalId : UUID (required)
   "collectionUseProject": {
     "id": "uuid",
     "referenceNumber": "CUP-2025-0042",
-    "status": "REFUSED"
+    "status": "CANCELLED"
   }
 }
 ```
