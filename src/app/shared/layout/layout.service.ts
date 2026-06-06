@@ -1,8 +1,7 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { computed, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { fromEvent, startWith } from 'rxjs';
-import { Subject } from 'rxjs';
+import { fromEvent, startWith, Subject } from 'rxjs';
 
 interface LayoutState {
   staticMenuDesktopInactive: boolean;

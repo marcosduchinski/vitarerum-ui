@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 
@@ -13,6 +13,7 @@ import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 export class LoginComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly email = signal('alice@ext.example.com');
   protected readonly password = signal('password');
@@ -60,7 +61,9 @@ export class LoginComponent {
 
     try {
       this.identity.signIn(this.email());
-      await this.router.navigateByUrl('/p/dashboard');
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      const destination = returnUrl?.startsWith('/p/') ? returnUrl : '/p/dashboard';
+      await this.router.navigateByUrl(destination);
     } catch {
       this.loginError.set(true);
     } finally {

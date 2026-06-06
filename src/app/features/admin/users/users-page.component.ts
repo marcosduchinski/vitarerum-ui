@@ -61,7 +61,9 @@ export class UsersPageComponent {
   protected readonly totalUsers = computed(() => this.usersResource.value()?.totalElements ?? 0);
   protected readonly totalPages = computed(() => this.usersResource.value()?.totalPages ?? 0);
 
-  protected readonly rangeStart = computed(() => this.currentPage() * PAGE_SIZE + 1);
+  protected readonly rangeStart = computed(() =>
+    this.totalUsers() === 0 ? 0 : this.currentPage() * PAGE_SIZE + 1,
+  );
   protected readonly rangeEnd = computed(() =>
     Math.min((this.currentPage() + 1) * PAGE_SIZE, this.totalUsers()),
   );
@@ -78,6 +80,6 @@ export class UsersPageComponent {
   }
 
   protected nextPage(): void {
-    this.currentPage.update(p => p + 1);
+    this.currentPage.update(p => Math.min(Math.max(0, this.totalPages() - 1), p + 1));
   }
 }

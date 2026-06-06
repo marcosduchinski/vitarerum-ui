@@ -13,7 +13,7 @@ export const sessionExpiredInterceptor: HttpInterceptorFn = (request, next) => {
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
         identity.signOut();
-        void router.navigateByUrl('/login');
+        router.navigateByUrl('/login').catch(console.error);
       }
 
       return throwError(() => error);

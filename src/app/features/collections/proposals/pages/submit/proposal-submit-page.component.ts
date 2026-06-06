@@ -121,7 +121,7 @@ export class ProposalSubmitPageComponent {
         }),
       );
 
-      void this.router.navigate(['/p/collections/proposals', response.proposal.id], {
+      await this.router.navigate(['/p/collections/proposals', response.proposal.id], {
         queryParams: {
           returnTo: '/p/collections/proposals/submit',
           returnLabel: 'submit proposal',
@@ -129,6 +129,7 @@ export class ProposalSubmitPageComponent {
       });
     } catch (err) {
       this.submitError.set(toApiError(err));
+    } finally {
       this.submitting.set(false);
     }
   }

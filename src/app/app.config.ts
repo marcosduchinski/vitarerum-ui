@@ -10,6 +10,16 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+import { API_BASE_URL, USE_MOCK_API } from '@core/config/app-config.model';
+import { AppConfigService } from '@core/config/app-config.service';
+import { authInterceptor } from '@core/auth/auth.interceptor';
+import { sessionExpiredInterceptor } from '@core/auth/session-expired.interceptor';
+import { provideCollectionUse } from '@core/providers/provide-collection-use';
+import { provideIdentity } from '@core/providers/provide-identity';
+import { provideUserManagement } from '@core/providers/provide-user-management';
+import { providePrimeNG } from 'primeng/config';
+
+import { routes } from './app.routes';
 
 const VitarerumPreset = definePreset(Aura, {
   semantic: {
@@ -38,16 +48,6 @@ const VitarerumPreset = definePreset(Aura, {
     },
   },
 });
-import { API_BASE_URL, USE_MOCK_API } from '@core/config/app-config.model';
-import { AppConfigService } from '@core/config/app-config.service';
-import { authInterceptor } from '@core/auth/auth.interceptor';
-import { sessionExpiredInterceptor } from '@core/auth/session-expired.interceptor';
-import { provideCollectionUse } from '@core/providers/provide-collection-use';
-import { provideIdentity } from '@core/providers/provide-identity';
-import { provideUserManagement } from '@core/providers/provide-user-management';
-import { providePrimeNG } from 'primeng/config';
-
-import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
