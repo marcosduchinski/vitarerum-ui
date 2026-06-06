@@ -10,7 +10,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
-import { API_BASE_URL, USE_MOCK_API } from '@core/config/app-config.model';
+import { API_BASE_URL, USE_MOCK_API, USE_MOCK_AUTH } from '@core/config/app-config.model';
 import { AppConfigService } from '@core/config/app-config.service';
 import { authInterceptor } from '@core/auth/auth.interceptor';
 import { sessionExpiredInterceptor } from '@core/auth/session-expired.interceptor';
@@ -73,6 +73,13 @@ export const appConfig: ApplicationConfig = {
     {
       provide: USE_MOCK_API,
       useFactory: (config: AppConfigService) => config.get('use-mock-api'),
+      deps: [AppConfigService],
+    },
+    {
+      provide: USE_MOCK_AUTH,
+      // Falls back to use-mock-api when the key is absent, preserving older config files.
+      useFactory: (config: AppConfigService) =>
+        config.get('use-mock-auth') ?? config.get('use-mock-api'),
       deps: [AppConfigService],
     },
     provideIdentity(),
