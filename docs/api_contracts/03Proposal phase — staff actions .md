@@ -16,6 +16,7 @@ lifecyclePhase  : ProposalLifecyclePhase (optional) SUBMITTED | PENDING | APPROV
                                          APPROVED   → APPROVED
                                          REJECTED   → REJECTED | CANCELLED
 type            : UseType              (optional) EXHIBITION | RESEARCH | OTHER
+requestedBy     : UUID                 (optional) filter by researcher userId
 assignedTo      : UUID                 (optional) filter by attendant permissionId
 unassigned      : Boolean              (optional) when true, returns only proposals with no assignedTo
 dateFrom        : LocalDate            (optional) filter by submission date range
@@ -143,27 +144,7 @@ proposalId : UUID (required)
 }
 ```
 
-**Response `200 OK`**
-```json
-{
-  "id": "uuid",
-  "status": "UNDER_REVIEW",
-  "lastEvent": {
-    "occurredAt": "2025-01-16T09:00:00",
-    "type": "DOCUMENTS_REQUESTED",
-    "triggeredBy": {
-      "permissionId": "uuid",
-      "user": {
-        "id": "uuid",
-        "name": "string",
-        "email": "string"
-      },
-      "group": "COLLECTIONS_MANAGEMENT"
-    },
-    "note": "string"
-  }
-}
-```
+**Response `204 No Content`** — the `DOCUMENTS_REQUESTED` event is recorded; no response body is returned.
 
 **Response `409 Conflict`**
 ```json
@@ -441,6 +422,7 @@ proposalId : UUID (required)
   "collectionUseProject": {
     "id": "uuid",
     "referenceNumber": "CUP-2025-0042",
+    "title": "string",
     "status": "CREATED"
   }
 }
@@ -504,6 +486,7 @@ proposalId : UUID (required)
   "collectionUseProject": {
     "id": "uuid",
     "referenceNumber": "CUP-2025-0042",
+    "title": "string",
     "status": "CANCELLED"
   }
 }
@@ -575,6 +558,7 @@ proposalId : UUID (required)
   "collectionUseProject": {
     "id": "uuid",
     "referenceNumber": "CUP-2025-0042",
+    "title": "string",
     "status": "CANCELLED"
   }
 }

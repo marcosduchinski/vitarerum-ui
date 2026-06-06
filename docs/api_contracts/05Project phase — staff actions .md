@@ -13,6 +13,7 @@ type           : UseType    (optional) EXHIBITION | RESEARCH | OTHER
 requestedBy    : UUID       (optional) filter by researcher userId
 assignedTo     : UUID       (optional) filter by proposal attendant permissionId
 referenceNumber: String     (optional) exact match on reference number (use `search` for partial lookup)
+proposalApproved: Boolean    (optional) when true, returns only projects whose proposal is approved
 dateFrom       : LocalDate  (optional) filter by begin date
 dateTo         : LocalDate  (optional)
 search         : String     (optional) search by title or reference number
@@ -112,16 +113,6 @@ projectId : UUID (required)
       },
       "group": "CURATORIAL"
     }
-  },
-  "entries": {
-    "total": 4,
-    "latest": {
-      "id": "uuid",
-      "content": "string",
-      "addedAt": "2025-06-03T14:00:00",
-      "addedBy": "uuid",
-      "attachments": []
-    }
   }
 }
 ```
@@ -196,7 +187,6 @@ projectId : UUID (required)
 **Query parameters**
 ```
 addedBy : UUID      (optional) filter by permissionId
-group   : GroupName (optional) filter entries by the group of who added them
 page    : Integer   (default 0)
 size    : Integer   (default 20)
 ```
@@ -344,7 +334,6 @@ projectId : UUID (required)
 **Query parameters**
 ```
 addedBy : UUID      (optional) filter by permissionId
-group   : GroupName (optional) filter entries by the group of who added them
 page    : Integer   (default 0)
 size    : Integer   (default 20)
 ```
@@ -562,7 +551,7 @@ A few conventions worth noting across this group:
 
 **Staff entry constraint differs from researcher** — the researcher may only add entries while `IN_PROGRESS`; staff may add entries at any non-`CANCELLED` status. This reflects the domain rule that the institution retains the right to annotate the record throughout its lifetime — before the visit, during, and after conclusion.
 
-**Two distinct entry resources** — `log-entries` capture activity notes and object references; `occurrence-entries` capture structured object occurrence records. Both follow the same shape, and both gain the staff-only `addedBy` and `group` query filters on their `GET` endpoints.
+**Two distinct entry resources** — `log-entries` capture activity notes and object references; `occurrence-entries` capture structured object occurrence records. Both follow the same shape, and both gain the staff-only `addedBy` query filter on their `GET` endpoints.
 
 **`addedBy` is a bare permission id** — entry responses return `addedBy` as a UUID string (the caller's `permissionId`), not a nested principal object.
 

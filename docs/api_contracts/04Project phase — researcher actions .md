@@ -8,13 +8,14 @@
 
 **Query parameters**
 ```
-status   : UseStatus  (optional) filter by status
-type     : UseType    (optional) EXHIBITION | RESEARCH | OTHER
-dateFrom : LocalDate  (optional) filter by begin date
-dateTo   : LocalDate  (optional)
-search   : String     (optional) search by title or reference number
-page     : Integer    (default 0)
-size     : Integer    (default 20)
+status          : UseStatus  (optional) filter by status
+type            : UseType    (optional) EXHIBITION | RESEARCH | OTHER
+proposalApproved: Boolean    (optional) when true, returns only projects whose proposal is approved
+dateFrom        : LocalDate  (optional) filter by begin date
+dateTo          : LocalDate  (optional)
+search          : String     (optional) search by title or reference number
+page            : Integer    (default 0)
+size            : Integer    (default 20)
 ```
 
 **Response `200 OK`**
@@ -71,16 +72,6 @@ projectId : UUID (required)
     "id": "uuid",
     "status": "APPROVED",
     "submittedAt": "2025-01-15T10:30:00"
-  },
-  "entries": {
-    "total": 4,
-    "latest": {
-      "id": "uuid",
-      "content": "string",
-      "addedAt": "2025-06-03T14:00:00",
-      "addedBy": "uuid",
-      "attachments": []
-    }
   }
 }
 ```
