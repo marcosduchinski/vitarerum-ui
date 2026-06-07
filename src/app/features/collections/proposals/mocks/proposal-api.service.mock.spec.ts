@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
+import { LoginRequest } from '@core/auth/models/login.model';
 
 import { ProjectApiServiceMock } from '../../projects/mocks/project-api.service.mock';
 import { MOCK_SEED, MockProjectState, TEST_SEED } from './mock-data';
@@ -24,12 +25,15 @@ const sessionState = signal<IdentitySession | null>({
 const identityStub: IdentityService = {
   session: sessionState.asReadonly(),
   isAuthenticated: signal(true).asReadonly(),
-  signIn: (email: string) => {
+  signIn: async (credentials: LoginRequest) => {
     const session = sessionState();
-    if (session) sessionState.set({ ...session, user: { ...session.user, email } });
+    if (session) {
+      sessionState.set({ ...session, user: { ...session.user, email: credentials.email } });
+    }
   },
   signOut: () => sessionState.set(null),
   getAccessToken: () => sessionState()?.accessToken ?? null,
+  getPermissionId: () => null,
   setGroup: (group: GroupName) => {
     const session = sessionState();
     if (session) sessionState.set({ ...session, group });

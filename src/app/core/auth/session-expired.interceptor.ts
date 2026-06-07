@@ -11,7 +11,10 @@ export const sessionExpiredInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(request).pipe(
     catchError((error: unknown) => {
-      if (error instanceof HttpErrorResponse && error.status === 401) {
+      // A 401 from the login endpoint means bad credentials, not an expired
+      // session — let the login page surface it instead of redirecting.
+      const isLoginRequest = request.url.includes('/auth/login');
+      if (error instanceof HttpErrorResponse && error.status === 401 && !isLoginRequest) {
         identity.signOut();
         router.navigateByUrl('/login').catch(console.error);
       }

@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
+import { LoginRequest } from '@core/auth/models/login.model';
 import { UserDetail } from '@core/auth/models/user.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
@@ -102,7 +103,8 @@ class IdentityServiceStub implements IdentityService {
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = signal(true).asReadonly();
 
-  signIn(email: string): void {
+  async signIn(credentials: LoginRequest): Promise<void> {
+    const { email } = credentials;
     const session = this.sessionState();
     this.sessionState.set(
       session
@@ -122,6 +124,10 @@ class IdentityServiceStub implements IdentityService {
 
   getAccessToken(): string | null {
     return this.session()?.accessToken ?? null;
+  }
+
+  getPermissionId(): string | null {
+    return null;
   }
 
   setGroup(group: GroupName): void {

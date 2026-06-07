@@ -60,7 +60,7 @@ export class LoginComponent {
     this.loginError.set(false);
 
     try {
-      this.identity.signIn(this.email());
+      await this.identity.signIn({ email: this.email(), password: this.password() });
       const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
       const destination = returnUrl?.startsWith('/p/') ? returnUrl : '/p/dashboard';
       await this.router.navigateByUrl(destination);

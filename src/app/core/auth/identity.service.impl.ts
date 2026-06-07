@@ -1,41 +1,68 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
+import { AuthApiService } from './auth-api.service';
 import { IdentityService } from './identity.service';
 import { GroupName } from './models/group-name.enum';
 import { IdentitySession } from './models/identity-session.model';
+import { LoginRequest } from './models/login.model';
+import { clearSession, readSession, writeSession } from './session-storage.util';
 
 @Injectable()
 export class IdentityServiceImpl implements IdentityService {
-  private readonly sessionState = signal<IdentitySession | null>(null);
+  private readonly authApi = inject(AuthApiService);
+  // Rehydrate from storage on construction so a page refresh keeps the session.
+  private readonly sessionState = signal<IdentitySession | null>(readSession());
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
 
-  // TODO(real-auth): trigger the configured OIDC redirect here.
-  // Until the IdP contract is implemented, the real service must not mint a
-  // client-side development token. Local demo access belongs in IdentityServiceMock.
-  signIn(email: string): void {
-    void email;
-    this.sessionState.set(null);
+  async signIn(credentials: LoginRequest): Promise<void> {
+    const response = await firstValueFrom(this.authApi.login(credentials));
+    this.setSession({
+      accessToken: response.accessToken,
+      user: response.user,
+      permissions: response.permissions,
+      availableGroups: response.permissions.map((permission) => permission.group),
+      group: response.permissions[0]?.group ?? null,
+    });
   }
 
   signOut(): void {
-    this.sessionState.set(null);
+    this.setSession(null);
   }
 
   getAccessToken(): string | null {
     return this.session()?.accessToken ?? null;
   }
 
+  getPermissionId(): string | null {
+    const session = this.session();
+    if (session === null) {
+      return null;
+    }
+
+    return session.permissions?.find((p) => p.group === session.group)?.permissionId ?? null;
+  }
+
   setGroup(group: GroupName): void {
     const session = this.session();
-    if (session) {
-      this.sessionState.set({ ...session, group });
+    if (session && session.availableGroups.includes(group)) {
+      this.setSession({ ...session, group });
     }
   }
 
-  // In production, available groups come from the JWT — no client-side update needed.
+  // Available groups come from the login response; no client-side update needed.
   updateAvailableGroups(groups: readonly GroupName[]): void {
     void groups;
+  }
+
+  private setSession(session: IdentitySession | null): void {
+    this.sessionState.set(session);
+    if (session === null) {
+      clearSession();
+    } else {
+      writeSession(session);
+    }
   }
 }

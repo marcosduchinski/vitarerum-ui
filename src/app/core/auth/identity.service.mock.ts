@@ -2,12 +2,17 @@ import { computed, Injectable, signal } from '@angular/core';
 
 import { IdentityService } from './identity.service';
 import { GroupName } from './models/group-name.enum';
-import { IdentitySession } from './models/identity-session.model';
+import { IdentitySession, SessionPermission } from './models/identity-session.model';
+import { LoginRequest } from './models/login.model';
 
 interface MockAccount {
   readonly id: string;
   readonly name: string;
   readonly groups: readonly GroupName[];
+}
+
+function mockPermissions(accountId: string, groups: readonly GroupName[]): SessionPermission[] {
+  return groups.map((group) => ({ permissionId: `perm-${accountId}-${group}`, group }));
 }
 
 const MOCK_ACCOUNTS: Record<string, MockAccount> = {
@@ -29,7 +34,9 @@ export class IdentityServiceMock implements IdentityService {
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
 
-  signIn(email: string): void {
+  // Password is ignored in the mock; identity is selected purely by email.
+  async signIn(credentials: LoginRequest): Promise<void> {
+    const { email } = credentials;
     const account = MOCK_ACCOUNTS[email] ?? UNKNOWN_ACCOUNT;
     const availableGroups = account.groups;
     this.sessionState.set({
@@ -41,6 +48,7 @@ export class IdentityServiceMock implements IdentityService {
       },
       group: availableGroups[0],
       availableGroups,
+      permissions: mockPermissions(account.id, availableGroups),
     });
   }
 
@@ -50,6 +58,15 @@ export class IdentityServiceMock implements IdentityService {
 
   getAccessToken(): string | null {
     return this.session()?.accessToken ?? null;
+  }
+
+  getPermissionId(): string | null {
+    const session = this.session();
+    if (session === null) {
+      return null;
+    }
+
+    return session.permissions?.find((p) => p.group === session.group)?.permissionId ?? null;
   }
 
   setGroup(group: GroupName): void {
@@ -66,6 +83,11 @@ export class IdentityServiceMock implements IdentityService {
     const group = groups.includes(session.group as GroupName)
       ? session.group
       : (groups[0] ?? null);
-    this.sessionState.set({ ...session, group, availableGroups: groups });
+    this.sessionState.set({
+      ...session,
+      group,
+      availableGroups: groups,
+      permissions: mockPermissions(session.user.id, groups),
+    });
   }
 }

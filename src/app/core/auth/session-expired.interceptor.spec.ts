@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 
 import { provideIdentity } from '@core/providers/provide-identity';
-import { USE_MOCK_API } from '@core/config/app-config.model';
+import { USE_MOCK_API, USE_MOCK_AUTH } from '@core/config/app-config.model';
 import { IDENTITY_SERVICE } from './identity.service';
 import { sessionExpiredInterceptor } from './session-expired.interceptor';
 import { HttpClient } from '@angular/common/http';
@@ -23,6 +23,7 @@ describe('sessionExpiredInterceptor', () => {
         provideHttpClientTesting(),
         provideIdentity(),
         { provide: USE_MOCK_API, useValue: true },
+        { provide: USE_MOCK_AUTH, useValue: true },
       ],
     });
 
@@ -36,7 +37,7 @@ describe('sessionExpiredInterceptor', () => {
   it('signs out and navigates to /login on 401', async () => {
     const identity = TestBed.inject(IDENTITY_SERVICE);
     // Sign in first so there is a session to expire
-    identity.signIn('alice@example.com');
+    await identity.signIn({ email: 'alice@example.com', password: 'pw' });
     expect(identity.isAuthenticated()).toBe(true);
 
     const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
@@ -52,7 +53,7 @@ describe('sessionExpiredInterceptor', () => {
 
   it('passes non-401 errors through without signing out', async () => {
     const identity = TestBed.inject(IDENTITY_SERVICE);
-    identity.signIn('alice@example.com');
+    await identity.signIn({ email: 'alice@example.com', password: 'pw' });
 
     let caughtStatus: number | undefined;
     http.get('/api/proposals').subscribe({ error: (e: { status: number }) => { caughtStatus = e.status; } });
@@ -62,5 +63,22 @@ describe('sessionExpiredInterceptor', () => {
 
     expect(identity.isAuthenticated()).toBe(true);
     expect(caughtStatus).toBe(403);
+  });
+
+  it('does not sign out on a 401 from the login endpoint', async () => {
+    const identity = TestBed.inject(IDENTITY_SERVICE);
+    await identity.signIn({ email: 'alice@example.com', password: 'pw' });
+
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    http.post('/auth/login', {}).subscribe({ error: (e: unknown) => void e });
+    httpMock
+      .expectOne('/auth/login')
+      .flush({ message: 'Invalid' }, { status: 401, statusText: 'Unauthorized' });
+
+    await Promise.resolve();
+
+    expect(identity.isAuthenticated()).toBe(true);
+    expect(navigateSpy).not.toHaveBeenCalled();
   });
 });

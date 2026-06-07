@@ -34,8 +34,8 @@ describe('identity guards', () => {
     expect(router.serializeUrl(result as UrlTree)).toBe('/login?returnUrl=%2Fp%2Fdashboard');
   });
 
-  it('allows authenticated users into protected routes', () => {
-    identity.signIn('learner@example.com');
+  it('allows authenticated users into protected routes', async () => {
+    await identity.signIn({ email: 'learner@example.com', password: 'pw' });
 
     const result = TestBed.runInInjectionContext(() =>
       authGuard({} as ActivatedRouteSnapshot, { url: '/p/dashboard' } as RouterStateSnapshot),
@@ -44,8 +44,8 @@ describe('identity guards', () => {
     expect(result).toBe(true);
   });
 
-  it('redirects authenticated users away from login', () => {
-    identity.signIn('learner@example.com');
+  it('redirects authenticated users away from login', async () => {
+    await identity.signIn({ email: 'learner@example.com', password: 'pw' });
 
     const result = TestBed.runInInjectionContext(() =>
       unauthenticatedGuard({} as ActivatedRouteSnapshot, { url: '/login' } as RouterStateSnapshot),
