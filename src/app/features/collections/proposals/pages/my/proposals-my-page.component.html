@@ -5,7 +5,7 @@
     description="Requests submitted by you across every status."
   />
 
-  @if (usersResource.isLoading() || proposalsResource.isLoading()) {
+  @if (proposalsResource.isLoading()) {
     <app-loading-state />
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />

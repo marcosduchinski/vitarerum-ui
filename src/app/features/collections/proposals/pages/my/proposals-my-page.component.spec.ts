@@ -7,8 +7,6 @@ import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 import { LoginRequest } from '@core/auth/models/login.model';
-import { UserDetail } from '@core/auth/models/user.model';
-import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
 
 import { ProposalListQuery, ProposalSummary } from '../../models/proposal.model';
@@ -24,6 +22,7 @@ const EXTERNAL_SESSION: IdentitySession = {
   },
   group: 'EXTERNAL',
   availableGroups: ['EXTERNAL'],
+  permissions: [{ permissionId: 'permission-external', group: 'EXTERNAL' }],
 };
 
 const STAFF_SESSION: IdentitySession = {
@@ -35,6 +34,7 @@ const STAFF_SESSION: IdentitySession = {
   },
   group: 'COLLECTIONS_MANAGEMENT',
   availableGroups: ['COLLECTIONS_MANAGEMENT'],
+  permissions: [{ permissionId: 'permission-staff', group: 'COLLECTIONS_MANAGEMENT' }],
 };
 
 const PROPOSAL: ProposalSummary = {
@@ -54,37 +54,6 @@ const PROPOSAL: ProposalSummary = {
     status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
-};
-
-const USERS: Page<UserDetail> = {
-  content: [
-    {
-      id: 'user-1',
-      name: 'Alice Ferreira',
-      email: 'alice@example.test',
-      permissions: [
-        {
-          permissionId: 'permission-external',
-          group: { id: 'group-external', name: 'EXTERNAL' },
-        },
-      ],
-    },
-    {
-      id: 'staff-1',
-      name: 'Bob Santos',
-      email: 'bob@example.test',
-      permissions: [
-        {
-          permissionId: 'permission-staff',
-          group: { id: 'group-collections', name: 'COLLECTIONS_MANAGEMENT' },
-        },
-      ],
-    },
-  ],
-  page: 0,
-  size: 100,
-  totalElements: 2,
-  totalPages: 1,
 };
 
 let activeSession: IdentitySession = EXTERNAL_SESSION;
@@ -119,7 +88,8 @@ class IdentityServiceStub implements IdentityService {
   }
 
   getPermissionId(): string | null {
-    return null;
+    const session = this.sessionState();
+    return session?.permissions?.find((p) => p.group === session.group)?.permissionId ?? null;
   }
 
   setGroup(group: GroupName): void {
@@ -150,12 +120,6 @@ class ProposalApiServiceStub {
   }
 }
 
-class UserManagementServiceStub {
-  listUsers() {
-    return of(USERS);
-  }
-}
-
 describe('ProposalsMyPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
   let router: Router;
@@ -170,7 +134,6 @@ describe('ProposalsMyPageComponent', () => {
         provideRouter([]),
         { provide: IDENTITY_SERVICE, useClass: IdentityServiceStub },
         { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
-        { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
       ],
     }).compileComponents();
 

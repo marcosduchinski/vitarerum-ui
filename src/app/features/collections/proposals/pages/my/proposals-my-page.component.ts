@@ -13,7 +13,6 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
-import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
@@ -52,7 +51,6 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
 export class ProposalsMyPageComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
-  private readonly userService = inject(USER_MANAGEMENT_SERVICE);
   private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
@@ -60,23 +58,7 @@ export class ProposalsMyPageComponent {
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
 
-  protected readonly usersResource = resource({
-    loader: () => firstValueFrom(this.userService.listUsers({ size: 100 })),
-  });
-
-  protected readonly currentPermissionId = computed(() => {
-    const session = this.identity.session();
-    if (!session) return null;
-
-    const user = (this.usersResource.value()?.content ?? []).find(
-      (candidate) => candidate.id === session.user.id || candidate.email === session.user.email,
-    );
-
-    return (
-      user?.permissions.find((permission) => permission.group.name === session.group)
-        ?.permissionId ?? null
-    );
-  });
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
 
   protected readonly proposalsResource = resource({
     params: () => ({
@@ -113,7 +95,7 @@ export class ProposalsMyPageComponent {
     Math.min((this.currentPage() + 1) * this.pageSize(), this.totalProposals()),
   );
   protected readonly listError = computed<ApiError | null>(() => {
-    const err = this.proposalsResource.error() ?? this.usersResource.error();
+    const err = this.proposalsResource.error();
     return err ? toApiError(err) : null;
   });
 
