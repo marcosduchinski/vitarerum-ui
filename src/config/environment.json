@@ -3,5 +3,5 @@
   "app-version": "0.0.0",
   "api-base-url": "http://127.0.0.1:8000/api/v1",
   "use-mock-api": false,
-  "use-mock-auth": true
+  "use-mock-auth": false
 }

@@ -3,7 +3,6 @@ import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 
-import { USE_MOCK_API } from '@core/config/app-config.model';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { LayoutService } from '@layout/layout.service';
@@ -29,7 +28,6 @@ export class AppTopbarComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly router = inject(Router);
 
-  protected readonly isMock = inject(USE_MOCK_API);
   protected readonly session = this.identity.session;
   protected readonly currentGroup = computed(() => this.session()?.group ?? null);
 
@@ -38,7 +36,7 @@ export class AppTopbarComponent {
   );
 
   protected readonly showSwitcher = computed(
-    () => this.isMock && this.availableGroups().length > 0,
+    () => this.availableGroups().length > 1,
   );
 
   protected readonly userMenuItems = computed<MenuItem[]>(() => {
