@@ -53,25 +53,15 @@ export class ProposalsRejectedPageComponent {
       search: this.appliedSearch().trim(),
     }),
     loader: ({ params }) =>
-      Promise.all([
-        firstValueFrom(
-          this.proposalService.listProposals({
-            status: 'REJECTED',
-            page: 0,
-            size: TERMINAL_FETCH_SIZE,
-            search: params.search,
-          }),
-        ),
-        firstValueFrom(
-          this.proposalService.listProposals({
-            status: 'CANCELLED',
-            page: 0,
-            size: TERMINAL_FETCH_SIZE,
-            search: params.search,
-          }),
-        ),
-      ]).then(([rejected, cancelled]) =>
-        [...rejected.content, ...cancelled.content].sort((left, right) =>
+      firstValueFrom(
+        this.proposalService.listProposals({
+          status: 'REJECTED',
+          page: 0,
+          size: TERMINAL_FETCH_SIZE,
+          search: params.search,
+        }),
+      ).then((rejected) =>
+        [...rejected.content].sort((left, right) =>
           right.submittedAt.localeCompare(left.submittedAt),
         ),
       ),

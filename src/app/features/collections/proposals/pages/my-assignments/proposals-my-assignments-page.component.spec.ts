@@ -28,7 +28,7 @@ const SESSION: IdentitySession = {
 
 const PROPOSAL: ProposalSummary = {
   id: 'proposal-1',
-  status: 'UNDER_REVIEW',
+  status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',
@@ -198,7 +198,7 @@ describe('ProposalsMyAssignmentsPageComponent', () => {
 
     expect(proposalService.queries.at(-1)).toMatchObject({
       assignedTo: 'permission-staff',
-      lifecyclePhase: 'PENDING',
+      status: 'PENDING',
       page: 0,
       size: 20,
       search: '',

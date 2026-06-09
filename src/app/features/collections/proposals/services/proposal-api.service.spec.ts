@@ -72,8 +72,7 @@ describe('ProposalApiService', () => {
   it('lists proposals with filters', () => {
     service
       .listProposals({
-        status: 'UNDER_REVIEW',
-        lifecyclePhase: 'PENDING',
+        status: 'PENDING',
         type: 'RESEARCH',
         requestedBy: 'permission-external',
         assignedTo: 'permission-1',
@@ -86,12 +85,11 @@ describe('ProposalApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/proposals?status=UNDER_REVIEW&lifecyclePhase=PENDING&type=RESEARCH&requestedBy=permission-external&assignedTo=permission-1&dateFrom=2026-01-01&dateTo=2026-01-31&search=CUP&page=1&size=25',
+      'https://api.example.test/proposals?status=PENDING&type=RESEARCH&requestedBy=permission-external&assignedTo=permission-1&dateFrom=2026-01-01&dateTo=2026-01-31&search=CUP&page=1&size=25',
     );
 
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.get('status')).toBe('UNDER_REVIEW');
-    expect(request.request.params.get('lifecyclePhase')).toBe('PENDING');
+    expect(request.request.params.get('status')).toBe('PENDING');
     expect(request.request.params.get('requestedBy')).toBe('permission-external');
     expect(request.request.params.get('assignedTo')).toBe('permission-1');
     request.flush({ content: [], page: 1, size: 25, totalElements: 0, totalPages: 0 });
@@ -120,12 +118,19 @@ describe('ProposalApiService', () => {
   });
 
   it('posts proposal decision actions to documented endpoints', () => {
-    service.approveProposal('proposal-1', { note: 'Approved' }).subscribe();
+    const approveBody = {
+      title: 'Specimen study',
+      purpose: 'Research',
+      beginDate: '2026-06-01',
+      endDate: '2026-06-30',
+      note: 'Approved',
+    };
+    service.approveProposal('proposal-1', approveBody).subscribe();
 
     const request = http.expectOne('https://api.example.test/proposals/proposal-1/approve');
 
     expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({ note: 'Approved' });
+    expect(request.request.body).toEqual(approveBody);
     request.flush({
       proposal: { id: 'proposal-1', status: 'APPROVED', lastEvent: null },
       collectionUseProject: {

@@ -1,34 +1,25 @@
 export type UseType = 'EXHIBITION' | 'RESEARCH' | 'OTHER';
 
-export type ProposalStatus =
-  | 'SUBMITTED'
-  | 'UNDER_REVIEW'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'CANCELLED';
-
-export type ProposalLifecyclePhase = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ProposalStatus = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export type ProposalEventType =
   | 'SUBMITTED'
-  | 'REVIEW_STARTED'
+  | 'ASSIGNED'
   | 'FORWARDED'
   | 'DOCUMENTS_REQUESTED'
   | 'DOCUMENTS_SUBMITTED'
+  | 'REVIEW_STARTED'
   | 'REFERRED_TO_DIRECTION'
+  | 'DIRECTION_CLARIFIED'
   | 'APPROVED'
   | 'REJECTED'
   | 'CANCELLED';
 
 export type UseStatus = 'CREATED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
-export type UseEventType =
-  | 'PENDING'
-  | 'PROJECT_STARTED'
-  | 'PROJECT_COMPLETED'
-  | 'PROJECT_CANCELLED'
-  | 'LOGGED_UPDATE'
-  | 'LOGGED_INCIDENT';
+export type UseResult = 'COMPLETED' | 'CANCELLED';
+
+export type UseEventType = 'REQUESTED' | 'STARTED' | 'COMPLETED' | 'CANCELLED';
 
 export type MediaType = 'DOCUMENT' | 'IMAGE' | 'VIDEO' | 'OTHER';
 
@@ -41,19 +32,10 @@ export interface StatusPresentation {
 
 const PROPOSAL_STATUS_PRESENTATION = {
   SUBMITTED: { label: 'Submitted', tone: 'submitted' },
-  UNDER_REVIEW: { label: 'Under review', tone: 'review' },
+  PENDING: { label: 'Under review', tone: 'review' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },
-  CANCELLED: { label: 'Cancelled', tone: 'closed' },
 } as const satisfies Record<ProposalStatus, StatusPresentation>;
-
-const PROPOSAL_LIFECYCLE_PHASES = {
-  SUBMITTED: 'SUBMITTED',
-  UNDER_REVIEW: 'PENDING',
-  APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED',
-  CANCELLED: 'REJECTED',
-} as const satisfies Record<ProposalStatus, ProposalLifecyclePhase>;
 
 const USE_STATUS_PRESENTATION = {
   CREATED: { label: 'Created', tone: 'submitted' },
@@ -64,10 +46,6 @@ const USE_STATUS_PRESENTATION = {
 
 export function getProposalStatusPresentation(status: ProposalStatus): StatusPresentation {
   return PROPOSAL_STATUS_PRESENTATION[status];
-}
-
-export function getProposalLifecyclePhase(status: ProposalStatus): ProposalLifecyclePhase {
-  return PROPOSAL_LIFECYCLE_PHASES[status];
 }
 
 export function getUseStatusPresentation(status: UseStatus): StatusPresentation {

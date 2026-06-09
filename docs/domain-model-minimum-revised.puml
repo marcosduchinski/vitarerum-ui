@@ -1,0 +1,329 @@
+@startuml MUHNAC-CollectionUse-Implemented
+
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+' ============================================================
+' Implemented domain model
+' Source: app/use_of_collections/domain/models.py and enums.py
+' Note: this file keeps its historical name, but mirrors the implemented model.
+' ============================================================
+
+' ============================================================
+' Shared Kernel
+' ============================================================
+
+package "Shared Kernel" <<Shared Kernel>> {
+
+        class ReferenceNumber <<Value Object>> #e0afea {
+        - value: String
+        }
+
+        class EmailAddress <<Value Object>> #e0afea {
+        - value: String
+        }
+
+        class DocumentType <<Value Object>> #e0afea {
+        - value: String
+        }
+
+        class ObjectReference <<Value Object>> #e0afea {
+        - inventoryNumber: String
+        - displayTitle: String?
+        - objectName: String?
+        - briefDescriptionSnapshot: String?
+        }
+
+        class MessageAttachment <<Value Object>> #e0afea {
+        - documentId: DocumentId
+        - fileName: String
+        }
+}
+
+
+' ============================================================
+' Identity & Access
+' ============================================================
+
+package "Identity & Access" <<Bounded Context>> {
+
+        class User <<Aggregate Root>> #87bdd8 {
+        - id: UserId
+        - name: String
+        - email: String
+        - passwordHash: String
+        }
+
+        class Group <<Aggregate Root>> #87bdd8 {
+        - id: GroupId
+        - name: GroupName
+        }
+
+        class Permission <<Aggregate Root>> #87bdd8 {
+        - id: PermissionId
+        - userId: UserId
+        - groupId: GroupId
+        - user: User?
+        - group: Group?
+        }
+
+        enum GroupName #87bdd8 {
+        EXTERNAL
+        CURATORIAL
+        COLLECTIONS_MANAGEMENT
+        DIRECTION
+        ADMINISTRATION
+        }
+
+        Permission ..> User : userId
+        Permission ..> Group : groupId
+}
+
+
+' ============================================================
+' User Request
+' ============================================================
+
+package "User Request" <<Bounded Context>> {
+
+        class Proposal <<Aggregate Root>> #ffeead {
+        - id: ProposalId
+        - collectionUseProjectId: CollectionUseProjectId
+        - type: UseType
+        - status: ProposalStatus
+        - requestedBy: PermissionId
+        - submittedAt: DateTime
+        - assignedTo: PermissionId?
+        - watchers: List<PermissionId>
+        - events: List<ProposalEvent>
+        - requestedDocuments: List<RequestedDocument>
+        - requestedObjects: List<RequestedObject>
+        - documents: List<Document>
+        + recordSubmitted(...)
+        + assign(...)
+        + requestDocuments(...)
+        + addRequestedObjects(...)
+        + submitDocuments(...)
+        + forward(...)
+        + referToDirection(...)
+        + directionClarify(...)
+        + approve(...)
+        + reject(...)
+        }
+
+        enum UseType #ffeead {
+        EXHIBITION
+        RESEARCH
+        OTHER
+        }
+
+        enum ProposalStatus #ffeead {
+        SUBMITTED
+        PENDING
+        APPROVED
+        REJECTED
+        }
+
+        class ProposalEvent <<Value Object>> #ffeead {
+        - occurredAt: DateTime
+        - type: ProposalEventType
+        - triggeredBy: PermissionId
+        - note: String?
+        }
+
+        enum ProposalEventType #ffeead {
+        SUBMITTED
+        ASSIGNED
+        FORWARDED
+        DOCUMENTS_REQUESTED
+        DOCUMENTS_SUBMITTED
+        REVIEW_STARTED
+        REFERRED_TO_DIRECTION
+        DIRECTION_CLARIFIED
+        APPROVED
+        REJECTED
+        CANCELLED
+        }
+
+        class RequestedDocument <<Entity>> #ffeead {
+        - id: RequestedDocumentId
+        - type: DocumentType
+        - description: String
+        - requestedAt: DateTime
+        - requestedBy: PermissionId
+        }
+
+        class RequestedObject <<Entity>> #ffeead {
+        - id: RequestedObjectId
+        - objectReference: ObjectReference
+        - category: String
+        - description: String
+        - requestedAt: DateTime
+        - requestedBy: PermissionId
+        }
+
+        class Document <<Entity>> #c7ceea {
+        - id: DocumentId
+        - type: DocumentType
+        - fileName: String
+        - fileReference: String
+        - submittedAt: DateTime
+        - submittedBy: PermissionId
+        }
+
+        class Conversation <<Aggregate Root>> #96ceb4 {
+        - id: ConversationId
+        - proposalId: ProposalId
+        - messages: List<Message>
+        - externalMessageId: String?
+        + start(...)
+        + addMessage(...)
+        }
+
+        class Message <<Entity>> #96ceb4 {
+        - id: MessageId
+        - sentAt: DateTime
+        - sender: EmailAddress
+        - recipient: EmailAddress
+        - subject: String
+        - body: String
+        - attachments: List<MessageAttachment>
+        }
+
+        Proposal *-- "0..*" ProposalEvent
+        Proposal *-- "0..*" RequestedDocument
+        Proposal *-- "0..*" RequestedObject
+        Proposal *-- "0..*" Document
+
+        RequestedDocument *-- DocumentType
+        RequestedObject *-- ObjectReference
+        Document *-- DocumentType
+
+        Proposal ..> Permission : requestedBy
+        Proposal ..> Permission : assignedTo
+        Proposal ..> Permission : watcher ids
+        Proposal ..> CollectionUseProject : collectionUseProjectId
+        ProposalEvent ..> Permission : triggeredBy
+        RequestedDocument ..> Permission : requestedBy
+        RequestedObject ..> Permission : requestedBy
+        Document ..> Permission : submittedBy
+
+        Conversation *-- "1..*" Message
+        Conversation ..> Proposal : proposalId
+        Message *-- "0..*" MessageAttachment
+        Message ..> EmailAddress : sender
+        Message ..> EmailAddress : recipient
+        MessageAttachment ..> Document : documentId
+}
+
+
+' ============================================================
+' Collection Use
+' ============================================================
+
+package "Collection Use" <<Bounded Context>> {
+
+        class CollectionUseProject <<Aggregate Root>> #ff6f69 {
+        - id: CollectionUseProjectId
+        - referenceNumber: ReferenceNumber
+        - title: String
+        - purpose: String
+        - type: UseType
+        - status: UseStatus
+        - beginDate: LocalDate
+        - endDate: LocalDate
+        - proposalId: ProposalId?
+        - requestNote: String?
+        - note: String?
+        - result: UseResult?
+        - authorisedBy: PermissionId?
+        - authorisedAt: DateTime?
+        - events: List<UseEvent>
+        + recordRequested(...)
+        + recordStarted(...)
+        + recordCompleted(...)
+        + recordCancelled(...)
+        }
+
+        enum UseStatus #ff6f69 {
+        CREATED
+        IN_PROGRESS
+        COMPLETED
+        CANCELLED
+        }
+
+        enum UseResult #ff6f69 {
+        COMPLETED
+        CANCELLED
+        }
+
+        class UseEvent <<Value Object>> #ff6f69 {
+        - occurredAt: DateTime
+        - type: UseEventType
+        - triggeredBy: PermissionId
+        - note: String?
+        }
+
+        enum UseEventType #ff6f69 {
+        REQUESTED
+        STARTED
+        COMPLETED
+        CANCELLED
+        }
+
+        class Attachment <<Value Object>> #ffb7b2 {
+        - fileReference: String
+        - fileName: String
+        - mediaType: MediaType
+        - uploadedAt: DateTime
+        }
+
+        enum MediaType #ffb7b2 {
+        DOCUMENT
+        IMAGE
+        VIDEO
+        OTHER
+        }
+
+        class ObjectLogEntry <<Aggregate Root>> #ffb7b2 {
+        - id: ObjectLogEntryId
+        - collectionUseProjectId: CollectionUseProjectId
+        - content: String
+        - addedAt: DateTime
+        - addedBy: PermissionId
+        - attachments: List<Attachment>
+        - objects: List<ObjectReference>
+        + addAttachment(...)
+        }
+
+        class ObjectOccurrenceEntry <<Aggregate Root>> #ffb7b2 {
+        - id: ObjectOccurrenceEntryId
+        - collectionUseProjectId: CollectionUseProjectId
+        - content: String
+        - addedAt: DateTime
+        - addedBy: PermissionId
+        - attachments: List<Attachment>
+        - objects: List<ObjectReference>
+        + addAttachment(...)
+        }
+
+        CollectionUseProject *-- ReferenceNumber
+        CollectionUseProject *-- "0..*" UseEvent
+        CollectionUseProject ..> Proposal : proposalId
+        CollectionUseProject ..> Permission : authorisedBy
+        UseEvent ..> Permission : triggeredBy
+
+        ObjectLogEntry *-- "0..*" Attachment
+        ObjectLogEntry *-- "0..*" ObjectReference
+        ObjectLogEntry ..> CollectionUseProject : collectionUseProjectId
+        ObjectLogEntry ..> Permission : addedBy
+
+        ObjectOccurrenceEntry *-- "0..*" Attachment
+        ObjectOccurrenceEntry *-- "0..*" ObjectReference
+        ObjectOccurrenceEntry ..> CollectionUseProject : collectionUseProjectId
+        ObjectOccurrenceEntry ..> Permission : addedBy
+}
+
+@enduml

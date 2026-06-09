@@ -75,7 +75,7 @@ class ProposalApiServiceStub {
     payload: { readonly targetPermissionId?: string; readonly note: string },
   ) {
     this.assignCalls.push({ proposalId, payload });
-    return of({ id: PROPOSAL.id, status: 'UNDER_REVIEW', assignedTo: null, lastEvent: null });
+    return of({ id: PROPOSAL.id, status: 'PENDING', assignedTo: null, lastEvent: null });
   }
 }
 

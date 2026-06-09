@@ -151,17 +151,42 @@
     <app-confirm-modal
       [open]="acceptConfirmOpen()"
       title="Accept proposal?"
-      [message]="
-        'This will approve ' +
-        proposal()!.collectionUseProject.referenceNumber +
-        ' and move it to approved proposals.'
-      "
       confirmLabel="Accept proposal"
       cancelLabel="Review again"
       [pending]="accepting()"
+      [confirmDisabled]="!approveReady()"
       (confirmed)="accept()"
       (cancelled)="cancelAcceptConfirmation()"
-    />
+    >
+      <div class="accept-modal-body">
+        <p class="accept-modal-body__hint">
+          Approving creates the project for
+          {{ proposal()!.collectionUseProject.referenceNumber }}. Confirm its parameters.
+        </p>
+        <label for="approve-purpose">Purpose</label>
+        <textarea
+          id="approve-purpose"
+          rows="3"
+          placeholder="Describe the approved use..."
+          [value]="approvePurpose()"
+          (input)="onApprovePurposeInput($event)"
+        ></textarea>
+        <label for="approve-begin-date">Begin date</label>
+        <input
+          id="approve-begin-date"
+          type="date"
+          [value]="approveBeginDate()"
+          (input)="onApproveBeginDateInput($event)"
+        />
+        <label for="approve-end-date">End date</label>
+        <input
+          id="approve-end-date"
+          type="date"
+          [value]="approveEndDate()"
+          (input)="onApproveEndDateInput($event)"
+        />
+      </div>
+    </app-confirm-modal>
 
     <app-confirm-modal
       [open]="rejectModalOpen()"

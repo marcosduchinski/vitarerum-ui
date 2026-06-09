@@ -28,7 +28,7 @@ const SESSION: IdentitySession = {
 
 const OTHER_PROPOSAL: ProposalSummary = {
   id: 'proposal-other',
-  status: 'UNDER_REVIEW',
+  status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',
@@ -201,7 +201,7 @@ describe('ProposalsOthersPageComponent', () => {
     expect(proposalService.queries.at(-1)).toMatchObject({
       page: 0,
       size: 500,
-      lifecyclePhase: 'PENDING',
+      status: 'PENDING',
       search: '',
     });
     expect(compiled.textContent).toContain('Photographic history of Rio de Janeiro port');

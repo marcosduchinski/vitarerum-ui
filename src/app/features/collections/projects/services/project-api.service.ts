@@ -25,12 +25,13 @@ import {
   ReasonRequest,
   UseEvent,
 } from '../models/project.model';
-import { MediaType, UseStatus } from '@shared/models/collection-use-status.model';
+import { MediaType, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
 
 export interface ProjectTransitionResult {
   readonly id: string;
   readonly referenceNumber: string;
   readonly status: UseStatus;
+  readonly result: UseResult | null;
   readonly lastEvent: UseEvent;
 }
 

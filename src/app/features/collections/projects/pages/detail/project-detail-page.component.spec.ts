@@ -43,7 +43,7 @@ const EVENTS_PAGE: ProjectEventsPage = {
   content: [
     {
       occurredAt: '2026-06-01T09:00:00Z',
-      type: 'PENDING',
+      type: 'REQUESTED',
       triggeredBy: PROJECT.requestedBy!,
       note: null,
     },
@@ -89,7 +89,7 @@ describe('ProjectDetailPageComponent', () => {
     expect(text).toContain('Atlantic forest zoology specimens');
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
-    expect(text).toContain('PENDING');
+    expect(text).toContain('REQUESTED');
   });
 
   it('shows Start project button when CREATED', async () => {

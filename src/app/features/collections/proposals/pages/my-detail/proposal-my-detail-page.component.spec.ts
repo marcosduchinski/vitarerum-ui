@@ -16,11 +16,12 @@ import {
   SendMessageRequest,
 } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
+import { ApproveProposalRequest } from '../../models/proposal-actions.model';
 import { ProposalMyDetailPageComponent } from './proposal-my-detail-page.component';
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
-  status: 'UNDER_REVIEW',
+  status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',
@@ -74,7 +75,6 @@ const CONVERSATION: Conversation = {
         {
           documentId: 'document-1',
           fileName: 'signed-response.docx',
-          fileReference: 'mock-proposal-file-1',
         },
       ],
     },
@@ -135,7 +135,7 @@ const STAFF_USERS: Page<UserDetail> = {
 class ProposalApiServiceStub {
   readonly approveCalls: {
     readonly proposalId: string;
-    readonly payload: { readonly note: string };
+    readonly payload: ApproveProposalRequest;
   }[] = [];
   readonly rejectCalls: {
     readonly proposalId: string;
@@ -179,7 +179,7 @@ class ProposalApiServiceStub {
       fileName: file.name,
       fileReference: `mock-file-reference/${file.name}`,
       submittedAt: '2026-05-02T10:00:00',
-      submittedByPermissionId: PROPOSAL.assignedTo?.permissionId ?? '',
+      submittedBy: PROPOSAL.assignedTo ?? PROPOSAL.requestedBy,
     };
 
     this.uploadCalls.push({ proposalId, file, documentType });
@@ -204,7 +204,7 @@ class ProposalApiServiceStub {
     return of(message);
   }
 
-  approveProposal(proposalId: string, payload: { readonly note: string }) {
+  approveProposal(proposalId: string, payload: ApproveProposalRequest) {
     this.approveCalls.push({ proposalId, payload });
     return of({
       proposal: {
@@ -514,6 +514,17 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(proposalService.approveCalls).toEqual([]);
     expect(compiled.textContent).toContain('Accept proposal?');
 
+    const purpose = compiled.querySelector<HTMLTextAreaElement>('#approve-purpose')!;
+    purpose.value = 'Approved research access';
+    purpose.dispatchEvent(new Event('input'));
+    const begin = compiled.querySelector<HTMLInputElement>('#approve-begin-date')!;
+    begin.value = '2026-06-01';
+    begin.dispatchEvent(new Event('input'));
+    const end = compiled.querySelector<HTMLInputElement>('#approve-end-date')!;
+    end.value = '2026-06-30';
+    end.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
     const confirm = Array.from(
       compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
     ).find((button) => button.textContent?.trim() === 'Accept proposal');
@@ -527,7 +538,13 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(proposalService.approveCalls).toEqual([
       {
         proposalId: 'proposal-1',
-        payload: { note: 'Accepted from my assignment detail.' },
+        payload: {
+          title: 'Photographic history of Rio de Janeiro port, 1890-1930',
+          purpose: 'Approved research access',
+          beginDate: '2026-06-01',
+          endDate: '2026-06-30',
+          note: 'Accepted from my assignment detail.',
+        },
       },
     ]);
     expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/proposals/approved']);

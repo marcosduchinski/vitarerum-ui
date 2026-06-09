@@ -6,7 +6,7 @@ import { ProposalMyOverviewSectionComponent } from './proposal-my-overview-secti
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
-  status: 'UNDER_REVIEW',
+  status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
     permissionId: 'permission-external',

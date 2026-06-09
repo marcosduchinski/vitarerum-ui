@@ -172,7 +172,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'zoology-research-outline.pdf',
         fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
         submittedAt: '2026-06-01T09:00:00Z',
-        submittedByPermissionId: 'perm-alice',
+        submittedBy: P['alice'],
       },
       {
         id: 'doc-prop-1-catalogue-list',
@@ -180,15 +180,15 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'atlantic-forest-catalogue-list.xlsx',
         fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
         submittedAt: '2026-06-01T09:00:00Z',
-        submittedByPermissionId: 'perm-alice',
+        submittedBy: P['alice'],
       },
     ],
     requestedObjects: [],
   },
-  // prop-2: UNDER_REVIEW — iris, exhibition, assigned to greg
+  // prop-2: PENDING — iris, exhibition, assigned to greg
   {
     id: 'prop-2',
-    status: 'UNDER_REVIEW',
+    status: 'PENDING',
     type: 'EXHIBITION',
     requestedBy: P['iris'],
     assignedTo: P['greg'],
@@ -246,7 +246,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'laboratory-instruments-exhibition-brief.pdf',
         fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
         submittedAt: '2026-06-01T10:30:00Z',
-        submittedByPermissionId: 'perm-alice',
+        submittedBy: P['alice'],
       },
       {
         id: 'doc-prop-4-object-list',
@@ -254,7 +254,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
         fileName: 'laboratory-instruments-object-list.csv',
         fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
         submittedAt: '2026-06-01T10:30:00Z',
-        submittedByPermissionId: 'perm-alice',
+        submittedBy: P['alice'],
       },
     ],
     requestedObjects: [],
@@ -324,11 +324,11 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-2': [
     { occurredAt: '2026-06-01T09:30:00Z', type: 'SUBMITTED', triggeredBy: P['iris'], note: null },
-    { occurredAt: '2026-06-02T09:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['greg'], note: null },
+    { occurredAt: '2026-06-02T09:00:00Z', type: 'ASSIGNED', triggeredBy: P['greg'], note: null },
   ],
   'prop-3': [
     { occurredAt: '2026-06-01T10:00:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-02T09:30:00Z', type: 'REVIEW_STARTED', triggeredBy: P['fran'], note: null },
+    { occurredAt: '2026-06-02T09:30:00Z', type: 'ASSIGNED', triggeredBy: P['fran'], note: null },
     {
       occurredAt: '2026-06-02T14:00:00Z',
       type: 'FORWARDED',
@@ -344,7 +344,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-4': [
     { occurredAt: '2026-06-01T10:30:00Z', type: 'SUBMITTED', triggeredBy: P['alice'], note: null },
-    { occurredAt: '2026-06-02T10:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-06-02T10:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-03T11:00:00Z',
       type: 'APPROVED',
@@ -354,7 +354,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-5': [
     { occurredAt: '2026-06-01T11:00:00Z', type: 'SUBMITTED', triggeredBy: P['iris'], note: null },
-    { occurredAt: '2026-06-02T10:30:00Z', type: 'REVIEW_STARTED', triggeredBy: P['greg'], note: null },
+    { occurredAt: '2026-06-02T10:30:00Z', type: 'ASSIGNED', triggeredBy: P['greg'], note: null },
     {
       occurredAt: '2026-06-03T14:00:00Z',
       type: 'REJECTED',
@@ -364,7 +364,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-6': [
     { occurredAt: '2026-06-01T11:30:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-02T11:30:00Z', type: 'REVIEW_STARTED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-06-02T11:30:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-03T09:00:00Z',
       type: 'REJECTED',
@@ -374,7 +374,7 @@ export const SEED_PROPOSAL_EVENTS: Record<string, ProposalEvent[]> = {
   ],
   'prop-7': [
     { occurredAt: '2026-06-01T12:00:00Z', type: 'SUBMITTED', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-02T11:00:00Z', type: 'REVIEW_STARTED', triggeredBy: P['bob'], note: null },
+    { occurredAt: '2026-06-02T11:00:00Z', type: 'ASSIGNED', triggeredBy: P['bob'], note: null },
     {
       occurredAt: '2026-06-02T15:00:00Z',
       type: 'FORWARDED',
@@ -403,12 +403,10 @@ export const SEED_MESSAGES: Record<string, Message[]> = {
         {
           documentId: 'doc-prop-1-research-outline',
           fileName: 'zoology-research-outline.pdf',
-          fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
         },
         {
           documentId: 'doc-prop-1-catalogue-list',
           fileName: 'atlantic-forest-catalogue-list.xlsx',
-          fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
         },
       ],
     },
@@ -445,12 +443,10 @@ export const SEED_MESSAGES: Record<string, Message[]> = {
         {
           documentId: 'doc-prop-4-exhibition-brief',
           fileName: 'laboratory-instruments-exhibition-brief.pdf',
-          fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
         },
         {
           documentId: 'doc-prop-4-object-list',
           fileName: 'laboratory-instruments-object-list.csv',
-          fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
         },
       ],
     },
@@ -494,6 +490,8 @@ export interface MutableProjectState {
   purpose: string;
   type: 'EXHIBITION' | 'RESEARCH' | 'OTHER';
   status: import('@shared/models/collection-use-status.model').UseStatus;
+  result?: import('@shared/models/collection-use-status.model').UseResult | null;
+  note?: string | null;
   beginDate: string;
   endDate: string;
   requestedBy: PermissionPrincipal;
@@ -528,7 +526,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     endDate: '2026-10-15',
     requestedBy: P['iris'],
     proposalId: 'prop-2',
-    proposalStatus: 'UNDER_REVIEW',
+    proposalStatus: 'PENDING',
     proposalAssignedTo: P['greg'],
   },
   {
@@ -566,6 +564,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     purpose: 'Selection of expedition photographs for a public science history exhibition.',
     type: 'EXHIBITION',
     status: 'CANCELLED',
+    result: 'CANCELLED',
     beginDate: '2026-06-15',
     endDate: '2026-09-30',
     requestedBy: P['iris'],
@@ -580,6 +579,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     purpose: 'Research on botanical herbarium records and medicinal plant classification.',
     type: 'RESEARCH',
     status: 'CANCELLED',
+    result: 'CANCELLED',
     beginDate: '2026-07-15',
     endDate: '2027-01-31',
     requestedBy: P['hugo'],
@@ -594,6 +594,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     purpose: 'Research on photographic records documenting Rio de Janeiro port history.',
     type: 'RESEARCH',
     status: 'COMPLETED',
+    result: 'COMPLETED',
     beginDate: '2026-06-01',
     endDate: '2026-06-05',
     requestedBy: P['hugo'],
@@ -605,47 +606,47 @@ export const SEED_PROJECTS: MutableProjectState[] = [
 
 export const SEED_PROJECT_EVENTS: Record<string, UseEvent[]> = {
   'proj-1': [
-    { occurredAt: '2026-06-01T09:00:00Z', type: 'PENDING', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T09:00:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
   ],
   'proj-2': [
-    { occurredAt: '2026-06-01T09:30:00Z', type: 'PENDING', triggeredBy: P['iris'], note: null },
+    { occurredAt: '2026-06-01T09:30:00Z', type: 'REQUESTED', triggeredBy: P['iris'], note: null },
   ],
   'proj-3': [
-    { occurredAt: '2026-06-01T10:00:00Z', type: 'PENDING', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-01T10:00:00Z', type: 'REQUESTED', triggeredBy: P['hugo'], note: null },
     {
       occurredAt: '2026-06-03T10:30:00Z',
-      type: 'PROJECT_STARTED',
+      type: 'STARTED',
       triggeredBy: P['carol'],
       note: 'Initiating research access.',
     },
   ],
   'proj-4': [
-    { occurredAt: '2026-06-01T10:30:00Z', type: 'PENDING', triggeredBy: P['alice'], note: null },
+    { occurredAt: '2026-06-01T10:30:00Z', type: 'REQUESTED', triggeredBy: P['alice'], note: null },
   ],
   'proj-5': [
-    { occurredAt: '2026-06-01T11:00:00Z', type: 'PENDING', triggeredBy: P['iris'], note: null },
+    { occurredAt: '2026-06-01T11:00:00Z', type: 'REQUESTED', triggeredBy: P['iris'], note: null },
     {
       occurredAt: '2026-06-03T14:30:00Z',
-      type: 'PROJECT_CANCELLED',
+      type: 'CANCELLED',
       triggeredBy: P['greg'],
       note: 'Cancelled following rejection of the associated proposal.',
     },
   ],
   'proj-6': [
-    { occurredAt: '2026-06-01T11:30:00Z', type: 'PENDING', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-01T11:30:00Z', type: 'REQUESTED', triggeredBy: P['hugo'], note: null },
     {
       occurredAt: '2026-06-03T09:30:00Z',
-      type: 'PROJECT_CANCELLED',
+      type: 'CANCELLED',
       triggeredBy: P['hugo'],
       note: 'Cancelled following withdrawal of the proposal.',
     },
   ],
   'proj-7': [
-    { occurredAt: '2026-06-01T12:00:00Z', type: 'PENDING', triggeredBy: P['hugo'], note: null },
-    { occurredAt: '2026-06-04T10:30:00Z', type: 'PROJECT_STARTED', triggeredBy: P['dan'], note: null },
+    { occurredAt: '2026-06-01T12:00:00Z', type: 'REQUESTED', triggeredBy: P['hugo'], note: null },
+    { occurredAt: '2026-06-04T10:30:00Z', type: 'STARTED', triggeredBy: P['dan'], note: null },
     {
       occurredAt: '2026-06-05T09:00:00Z',
-      type: 'PROJECT_COMPLETED',
+      type: 'COMPLETED',
       triggeredBy: P['dan'],
       note: 'Research access completed successfully.',
     },
@@ -662,7 +663,7 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
       content:
         'Reviewed the zoological field notebooks. First batch of 12 notebooks identified and compared with Atlantic forest specimen records.',
       addedAt: '2026-06-04T11:00:00Z',
-      addedBy: 'perm-carol',
+      addedBy: P['carol'],
       objects: [],
       attachments: [],
     },
@@ -672,7 +673,7 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
       content:
         'Photographic documentation of three field sketches completed. Cross-referenced with catalogue references and updated the shared inventory list.',
       addedAt: '2026-06-05T09:30:00Z',
-      addedBy: 'perm-carol',
+      addedBy: P['carol'],
       objects: [],
       attachments: [],
     },
@@ -768,7 +769,7 @@ export class MockProjectState {
     this.events.set(project.id, [
       {
         occurredAt: proposal.submittedAt,
-        type: 'PENDING',
+        type: 'REQUESTED',
         triggeredBy: proposal.requestedBy,
         note: null,
       },
@@ -802,12 +803,13 @@ export class MockProjectState {
     project.proposalStatus = proposalStatus;
     project.proposalAssignedTo = proposalAssignedTo;
 
-    if (proposalStatus === 'REJECTED' || proposalStatus === 'CANCELLED') {
+    if (proposalStatus === 'REJECTED') {
       project.status = 'CANCELLED';
+      project.result = 'CANCELLED';
       const events = this.events.get(project.id) ?? [];
       events.push({
         occurredAt: new Date().toISOString(),
-        type: 'PROJECT_CANCELLED',
+        type: 'CANCELLED',
         triggeredBy,
         note: null,
       });

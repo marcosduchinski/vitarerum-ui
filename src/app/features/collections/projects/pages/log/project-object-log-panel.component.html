@@ -13,7 +13,7 @@
         @for (entry of logEntries(); track entry.id) {
           <li class="log-panel__entry">
             <p class="log-panel__entry-content">{{ entry.content }}</p>
-            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy }}</p>
+            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy.user.name }}</p>
             @if (entry.objects.length) {
               <ul class="log-panel__entry-objects">
                 @for (obj of entry.objects; track obj.inventoryNumber) {
@@ -69,7 +69,7 @@
         @for (entry of occurrenceEntries(); track entry.id) {
           <li class="log-panel__entry">
             <p class="log-panel__entry-content">{{ entry.content }}</p>
-            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy }}</p>
+            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy.user.name }}</p>
             @if (entry.objects.length) {
               <ul class="log-panel__entry-objects">
                 @for (obj of entry.objects; track obj.inventoryNumber) {

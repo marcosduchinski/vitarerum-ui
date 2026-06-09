@@ -3,7 +3,7 @@ import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { Page } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
-import { MediaType, UseStatus } from '@shared/models/collection-use-status.model';
+import { MediaType, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
 import {
   Attachment,
   CollectionUseProjectDetail,
@@ -45,11 +45,6 @@ export class ProjectApiServiceMock {
       items = items.filter((p) => p.requestedBy.permissionId === query.requestedBy);
     if (query.assignedTo)
       items = items.filter((p) => p.proposalAssignedTo?.permissionId === query.assignedTo);
-    if (query.proposalApproved) items = items.filter((p) => p.proposalStatus === 'APPROVED');
-    if (query.referenceNumber) {
-      const q = query.referenceNumber.toLowerCase();
-      items = items.filter((p) => p.referenceNumber.toLowerCase() === q);
-    }
     if (query.search) {
       const q = query.search.toLowerCase();
       items = items.filter(
@@ -68,11 +63,11 @@ export class ProjectApiServiceMock {
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['CREATED'], 'IN_PROGRESS', 'PROJECT_STARTED', request.note);
+    return this.transition(projectId, ['CREATED'], 'IN_PROGRESS', 'STARTED', request.note);
   }
 
   completeProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
-    return this.transition(projectId, ['IN_PROGRESS'], 'COMPLETED', 'PROJECT_COMPLETED', request.note);
+    return this.transition(projectId, ['IN_PROGRESS'], 'COMPLETED', 'COMPLETED', request.note);
   }
 
   cancelProject(projectId: string, request: ReasonRequest): Observable<ProjectTransitionResult> {
@@ -80,7 +75,7 @@ export class ProjectApiServiceMock {
       projectId,
       ['CREATED', 'IN_PROGRESS'],
       'CANCELLED',
-      'PROJECT_CANCELLED',
+      'CANCELLED',
       request.reason,
     );
   }
@@ -103,7 +98,7 @@ export class ProjectApiServiceMock {
       collectionUseProjectId: projectId,
       content: request.content,
       addedAt: new Date().toISOString(),
-      addedBy: this.currentPermissionId(),
+      addedBy: this.currentPrincipal(),
       objects:
         request.objects?.map((inv) => ({
           inventoryNumber: inv,
@@ -126,7 +121,7 @@ export class ProjectApiServiceMock {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     let items = this.state.logEntries.get(projectId) ?? [];
-    if (query.addedBy) items = items.filter((e) => e.addedBy === query.addedBy);
+    if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
     return of({ ...makePageFrom(items, query), projectId });
   }
 
@@ -171,7 +166,7 @@ export class ProjectApiServiceMock {
       collectionUseProjectId: projectId,
       content: request.content,
       addedAt: new Date().toISOString(),
-      addedBy: this.currentPermissionId(),
+      addedBy: this.currentPrincipal(),
       objects:
         request.objects?.map((inv) => ({
           inventoryNumber: inv,
@@ -194,7 +189,7 @@ export class ProjectApiServiceMock {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     let items = this.state.occurrenceEntries.get(projectId) ?? [];
-    if (query.addedBy) items = items.filter((e) => e.addedBy === query.addedBy);
+    if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
     return of({ ...makePageFrom(items, query), projectId });
   }
 
@@ -233,8 +228,10 @@ export class ProjectApiServiceMock {
       referenceNumber: p.referenceNumber,
       title: p.title,
       purpose: p.purpose,
+      note: p.note ?? null,
       type: p.type,
       status: p.status,
+      result: p.result ?? null,
       beginDate: p.beginDate,
       endDate: p.endDate,
       requestedBy: p.requestedBy,
@@ -268,6 +265,9 @@ export class ProjectApiServiceMock {
     }
     const now = new Date().toISOString();
     p.status = newStatus;
+    const result: UseResult | null =
+      newStatus === 'COMPLETED' ? 'COMPLETED' : newStatus === 'CANCELLED' ? 'CANCELLED' : null;
+    p.result = result;
     const evt: UseEvent = {
       occurredAt: now,
       type: eventType,
@@ -277,16 +277,13 @@ export class ProjectApiServiceMock {
     const events = this.state.events.get(projectId) ?? [];
     events.push(evt);
     this.state.events.set(projectId, events);
-    return of({ id: projectId, referenceNumber: p.referenceNumber, status: newStatus, lastEvent: evt });
-  }
-
-  private currentPermissionId(): string {
-    const session = this.identity.session();
-    return session
-      ? (Object.values(P).find(
-          (p) => p.user.id === session.user.id || p.user.email === session.user.email,
-        )?.permissionId ?? P['alice'].permissionId)
-      : P['alice'].permissionId;
+    return of({
+      id: projectId,
+      referenceNumber: p.referenceNumber,
+      status: newStatus,
+      result,
+      lastEvent: evt,
+    });
   }
 
   private currentPrincipal() {

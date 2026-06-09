@@ -109,7 +109,7 @@ export class ProposalsMyAssignmentsPageComponent {
       return firstValueFrom(
         this.proposalService.listProposals({
           assignedTo: params.currentPermissionId,
-          lifecyclePhase: 'PENDING',
+          status: 'PENDING',
           page: params.page,
           size: params.size,
           search: params.search,

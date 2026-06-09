@@ -3,7 +3,6 @@ import { Page, PageQuery } from '@shared/models/page.model';
 import { ObjectReference } from '@shared/models/object-reference.model';
 
 import {
-  ProposalLifecyclePhase,
   ProposalEventType,
   ProposalStatus,
   UseStatus,
@@ -30,11 +29,20 @@ export interface ProposalSummary {
 }
 
 export interface RequestedObject {
+  readonly id: string;
   readonly objectReference: ObjectReference;
   readonly category: string;
   readonly description: string;
   readonly requestedAt: string;
-  readonly requestedBy: string;
+  readonly requestedBy: PermissionPrincipal;
+}
+
+export interface RequestedDocument {
+  readonly id: string;
+  readonly type: DocumentType;
+  readonly description: string;
+  readonly requestedAt: string;
+  readonly requestedBy: PermissionPrincipal;
 }
 
 export interface Document {
@@ -43,13 +51,15 @@ export interface Document {
   readonly fileName: string;
   readonly fileReference?: string;
   readonly submittedAt: string;
-  readonly submittedByPermissionId: string;
+  readonly submittedBy: PermissionPrincipal;
 }
 
 export interface ProposalDetail extends ProposalSummary {
   readonly watchers: readonly PermissionPrincipal[];
   readonly conversationId: string;
   readonly documents: readonly Document[];
+  // Optional during migration; populated by mocks/contract and made required in the contract step.
+  readonly requestedDocuments?: readonly RequestedDocument[];
   readonly requestedObjects: readonly RequestedObject[];
 }
 
@@ -73,7 +83,6 @@ export interface Message {
 export interface MessageAttachment {
   readonly documentId: string;
   readonly fileName: string;
-  readonly fileReference?: string;
 }
 
 export interface Conversation {
@@ -86,37 +95,39 @@ export interface Conversation {
   readonly totalPages: number;
 }
 
+export interface CreateProposalRequestObject {
+  readonly inventoryNumber: string;
+  readonly category?: string;
+  readonly description?: string;
+}
+
 export interface CreateProposalRequest {
   readonly title: string;
   readonly type: UseType;
   readonly purpose: string;
   readonly beginDate: string;
   readonly endDate: string;
+  // Conversation seed (Business Rule 01 — every proposal opens with an email).
+  // All optional: recipient defaults to collections@…, subject falls back to title,
+  // body falls back to purpose.
+  readonly initialMessageRecipient?: string;
+  readonly initialMessageSubject?: string;
+  readonly initialMessageBody?: string;
+  readonly requestedObjects?: readonly CreateProposalRequestObject[];
 }
 
+// Contract: POST /proposals returns only the proposal summary + conversationId.
+// No CollectionUseProject is created at submit — it is materialised on approval.
 export interface CreateProposalResponse {
   readonly proposal: Omit<ProposalSummary, 'collectionUseProject'>;
-  readonly collectionUseProject: {
-    readonly id: string;
-    readonly referenceNumber: string;
-    readonly title: string;
-    readonly purpose: string;
-    readonly requestNote?: string | null;
-    readonly type: UseType;
-    readonly status: UseStatus;
-    readonly beginDate: string;
-    readonly endDate: string;
-  };
   readonly conversationId: string;
 }
 
 export interface ProposalListQuery extends PageQuery {
   readonly status?: ProposalStatus;
-  readonly lifecyclePhase?: ProposalLifecyclePhase;
   readonly type?: UseType;
   readonly requestedBy?: string;
   readonly assignedTo?: string;
-  readonly unassigned?: boolean;
   readonly dateFrom?: string;
   readonly dateTo?: string;
   readonly search?: string;

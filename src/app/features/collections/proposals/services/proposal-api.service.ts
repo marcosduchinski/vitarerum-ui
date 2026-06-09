@@ -9,12 +9,17 @@ import { Observable } from 'rxjs';
 
 import {
   AddProposalWatcherRequest,
+  AddRequestedObjectsRequest,
+  ApproveProposalRequest,
   AssignProposalRequest,
+  DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
   ProposalDecisionResult,
+  ProposalEventResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
+  ReferToDirectionRequest,
 } from '../models/proposal-actions.model';
 import {
   Conversation,
@@ -49,6 +54,16 @@ export class ProposalApiService {
 
   getProposal(proposalId: string): Observable<ProposalDetail> {
     return this.http.get<ProposalDetail>(this.url(`/proposals/${proposalId}`));
+  }
+
+  addRequestedObjects(
+    proposalId: string,
+    request: AddRequestedObjectsRequest,
+  ): Observable<ProposalDetail> {
+    return this.http.post<ProposalDetail>(
+      this.url(`/proposals/${proposalId}/requested-objects`),
+      request,
+    );
   }
 
   uploadDocument(proposalId: string, file: File, documentType: string): Observable<Document> {
@@ -106,6 +121,26 @@ export class ProposalApiService {
     );
   }
 
+  referToDirection(
+    proposalId: string,
+    request: ReferToDirectionRequest,
+  ): Observable<ProposalEventResult> {
+    return this.http.post<ProposalEventResult>(
+      this.url(`/proposals/${proposalId}/refer-to-direction`),
+      request,
+    );
+  }
+
+  directionClarification(
+    proposalId: string,
+    request: DirectionClarificationRequest,
+  ): Observable<ProposalEventResult> {
+    return this.http.post<ProposalEventResult>(
+      this.url(`/proposals/${proposalId}/direction-clarification`),
+      request,
+    );
+  }
+
   addWatcher(
     proposalId: string,
     request: AddProposalWatcherRequest,
@@ -122,7 +157,7 @@ export class ProposalApiService {
 
   approveProposal(
     proposalId: string,
-    request: ProposalNoteRequest,
+    request: ApproveProposalRequest,
   ): Observable<ProposalDecisionResult> {
     return this.http.post<ProposalDecisionResult>(
       this.url(`/proposals/${proposalId}/approve`),
@@ -136,16 +171,6 @@ export class ProposalApiService {
   ): Observable<ProposalDecisionResult> {
     return this.http.post<ProposalDecisionResult>(
       this.url(`/proposals/${proposalId}/reject`),
-      request,
-    );
-  }
-
-  cancelProposal(
-    proposalId: string,
-    request: ProposalReasonRequest,
-  ): Observable<ProposalDecisionResult> {
-    return this.http.post<ProposalDecisionResult>(
-      this.url(`/proposals/${proposalId}/cancel`),
       request,
     );
   }

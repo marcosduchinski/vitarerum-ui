@@ -56,7 +56,7 @@ describe('ProjectApiServiceMock', () => {
 
     const events = await firstValueFrom(service.listEvents('proj-4'));
     const last = events.content[events.content.length - 1];
-    expect(last.type).toBe('PROJECT_STARTED');
+    expect(last.type).toBe('STARTED');
   });
 
   it('rejects starting a project that is already in progress', async () => {
@@ -175,26 +175,12 @@ describe('ProjectApiServiceMock', () => {
   it('filters events by type', async () => {
     await firstValueFrom(service.startProject('proj-4', { note: 'Starting.' }));
 
-    const started = await firstValueFrom(service.listEvents('proj-4', { type: 'PROJECT_STARTED' }));
-    expect(started.content.every((e) => e.type === 'PROJECT_STARTED')).toBe(true);
+    const started = await firstValueFrom(service.listEvents('proj-4', { type: 'STARTED' }));
+    expect(started.content.every((e) => e.type === 'STARTED')).toBe(true);
 
-    const pending = await firstValueFrom(service.listEvents('proj-4', { type: 'PENDING' }));
-    expect(pending.content.every((e) => e.type === 'PENDING')).toBe(true);
-    expect(pending.content.some((e) => e.type === 'PROJECT_STARTED')).toBe(false);
+    const pending = await firstValueFrom(service.listEvents('proj-4', { type: 'REQUESTED' }));
+    expect(pending.content.every((e) => e.type === 'REQUESTED')).toBe(true);
+    expect(pending.content.some((e) => e.type === 'STARTED')).toBe(false);
   });
 
-  it('matches referenceNumber exactly, not as a prefix', async () => {
-    const allProjects = await firstValueFrom(service.listProjects({ size: 50 }));
-    const first = allProjects.content[0];
-
-    const exact = await firstValueFrom(
-      service.listProjects({ referenceNumber: first.referenceNumber }),
-    );
-    expect(exact.totalElements).toBe(1);
-
-    const prefix = await firstValueFrom(
-      service.listProjects({ referenceNumber: first.referenceNumber.slice(0, 3) }),
-    );
-    expect(prefix.totalElements).toBe(0);
-  });
 });

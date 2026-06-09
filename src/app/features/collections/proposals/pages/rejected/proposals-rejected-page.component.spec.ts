@@ -31,32 +31,13 @@ const REJECTED_PROPOSAL: ProposalSummary = {
   submittedAt: '2026-05-01T10:00:00',
 };
 
-const CANCELLED_PROPOSAL: ProposalSummary = {
-  ...REJECTED_PROPOSAL,
-  id: 'proposal-cancelled',
-  status: 'CANCELLED',
-  collectionUseProject: {
-    ...REJECTED_PROPOSAL.collectionUseProject,
-    id: 'project-2',
-    referenceNumber: 'VR-2026-002',
-    title: 'Cancelled exhibition request',
-    status: 'CANCELLED',
-  },
-  submittedAt: '2026-05-03T10:00:00',
-};
-
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
     const size = query.size ?? 20;
-    const content =
-      query.status === 'REJECTED'
-        ? [REJECTED_PROPOSAL]
-        : query.status === 'CANCELLED'
-          ? [CANCELLED_PROPOSAL]
-          : [];
+    const content = query.status === 'REJECTED' ? [REJECTED_PROPOSAL] : [];
 
     return of<Page<ProposalSummary>>({
       content,
@@ -83,7 +64,7 @@ describe('ProposalsRejectedPageComponent', () => {
     }).compileComponents();
   });
 
-  it('fetches rejected and cancelled proposals separately', async () => {
+  it('fetches rejected proposals', async () => {
     const fixture = TestBed.createComponent(ProposalsRejectedPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -92,12 +73,11 @@ describe('ProposalsRejectedPageComponent', () => {
     expect(proposalService.queries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ status: 'REJECTED', page: 0, size: 500, search: '' }),
-        expect.objectContaining({ status: 'CANCELLED', page: 0, size: 500, search: '' }),
       ]),
     );
   });
 
-  it('renders merged terminal proposals with status chips and detail actions', async () => {
+  it('renders rejected proposals with status chips and detail actions', async () => {
     const fixture = TestBed.createComponent(ProposalsRejectedPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -107,15 +87,10 @@ describe('ProposalsRejectedPageComponent', () => {
 
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('Rejected research request');
-    expect(compiled.textContent).toContain('Cancelled exhibition request');
     expect(compiled.textContent).toContain('Rejected');
-    expect(compiled.textContent).toContain('Cancelled');
     expect(compiled.textContent).toContain('View details');
     expect(
       compiled.querySelector('a[href^="/p/collections/proposals/proposal-rejected"]'),
-    ).not.toBeNull();
-    expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/proposal-cancelled"]'),
     ).not.toBeNull();
   });
 });

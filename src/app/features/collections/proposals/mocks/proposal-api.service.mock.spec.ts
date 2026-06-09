@@ -102,12 +102,10 @@ describe('ProposalApiServiceMock', () => {
       {
         documentId: 'doc-prop-1-research-outline',
         fileName: 'zoology-research-outline.pdf',
-        fileReference: 'mock-proposal-file/zoology-research-outline.pdf',
       },
       {
         documentId: 'doc-prop-1-catalogue-list',
         fileName: 'atlantic-forest-catalogue-list.xlsx',
-        fileReference: 'mock-proposal-file/atlantic-forest-catalogue-list.xlsx',
       },
     ]);
     expect(proposal.documents.map((document) => document.id)).toEqual(
@@ -131,12 +129,10 @@ describe('ProposalApiServiceMock', () => {
       {
         documentId: 'doc-prop-4-exhibition-brief',
         fileName: 'laboratory-instruments-exhibition-brief.pdf',
-        fileReference: 'mock-proposal-file/laboratory-instruments-exhibition-brief.pdf',
       },
       {
         documentId: 'doc-prop-4-object-list',
         fileName: 'laboratory-instruments-object-list.csv',
-        fileReference: 'mock-proposal-file/laboratory-instruments-object-list.csv',
       },
     ]);
     expect(proposal.documents.map((document) => document.id)).toEqual(
@@ -145,7 +141,7 @@ describe('ProposalApiServiceMock', () => {
   });
 
   it('transitions to APPROVED and updates event log', async () => {
-    const result = await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
+    const result = await firstValueFrom(service.approveProposal('prop-3', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Looks good' }));
     expect(result.proposal.status).toBe('APPROVED');
     expect(result.collectionUseProject.status).toBe('CREATED');
 
@@ -157,7 +153,7 @@ describe('ProposalApiServiceMock', () => {
   it('propagates proposal APPROVED status to the associated project', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
 
-    await firstValueFrom(service.approveProposal('prop-3', { note: 'Looks good' }));
+    await firstValueFrom(service.approveProposal('prop-3', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Looks good' }));
 
     const project = await firstValueFrom(projectService.getProject('proj-3'));
     expect(project).toMatchObject({
@@ -194,21 +190,19 @@ describe('ProposalApiServiceMock', () => {
     expect(page.content.every((p) => p.requestedBy.permissionId === 'perm-alice')).toBe(true);
   });
 
-  it('unassigned filter returns only proposals with no assignedTo', async () => {
-    const page = await firstValueFrom(
-      service.listProposals({ status: 'SUBMITTED', unassigned: true }),
-    );
+  it('SUBMITTED list contains only unassigned proposals', async () => {
+    const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED' }));
     expect(page.content.length).toBeGreaterThan(0);
     expect(page.content.every((p) => p.assignedTo === null)).toBe(true);
     expect(page.content.every((p) => p.status === 'SUBMITTED')).toBe(true);
   });
 
-  it('filters proposals by lifecycle phase', async () => {
+  it('filters proposals by status', async () => {
     await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
-    await firstValueFrom(service.approveProposal('prop-2', { note: 'Approved' }));
+    await firstValueFrom(service.approveProposal('prop-2', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Approved' }));
 
-    const pending = await firstValueFrom(service.listProposals({ lifecyclePhase: 'PENDING' }));
-    const approved = await firstValueFrom(service.listProposals({ lifecyclePhase: 'APPROVED' }));
+    const pending = await firstValueFrom(service.listProposals({ status: 'PENDING' }));
+    const approved = await firstValueFrom(service.listProposals({ status: 'APPROVED' }));
 
     expect(pending.content.map((proposal) => proposal.id)).toContain('prop-1');
     expect(pending.content.map((proposal) => proposal.id)).not.toContain('prop-2');
@@ -217,12 +211,12 @@ describe('ProposalApiServiceMock', () => {
 
   it('assume moves proposal into review and sets assignedTo', async () => {
     const result = await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
-    expect(result.status).toBe('UNDER_REVIEW');
-    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
+    expect(result.status).toBe('PENDING');
+    expect(result.lastEvent.type).toBe('ASSIGNED');
     expect(result.assignedTo.permissionId).toBe('perm-bob');
 
     const updated = await firstValueFrom(service.getProposal('prop-1'));
-    expect(updated.status).toBe('UNDER_REVIEW');
+    expect(updated.status).toBe('PENDING');
     expect(updated.assignedTo?.permissionId).toBe('perm-bob');
   });
 
@@ -250,9 +244,7 @@ describe('ProposalApiServiceMock', () => {
   it('assume removes proposal from the unassigned-SUBMITTED list', async () => {
     await firstValueFrom(service.assignProposal('prop-1', { note: '' }));
 
-    const page = await firstValueFrom(
-      service.listProposals({ status: 'SUBMITTED', unassigned: true }),
-    );
+    const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED' }));
     expect(page.content.find((p) => p.id === 'prop-1')).toBeUndefined();
   });
 
@@ -263,8 +255,8 @@ describe('ProposalApiServiceMock', () => {
         note: 'Assigning to carol',
       }),
     );
-    expect(result.status).toBe('UNDER_REVIEW');
-    expect(result.lastEvent.type).toBe('REVIEW_STARTED');
+    expect(result.status).toBe('PENDING');
+    expect(result.lastEvent.type).toBe('ASSIGNED');
     expect(result.assignedTo.permissionId).toBe('perm-carol');
   });
 
@@ -333,13 +325,13 @@ describe('ProposalApiServiceMock', () => {
     ).rejects.toMatchObject({ status: 404, error: 'WATCHER_NOT_FOUND' });
   });
 
-  it('syncs UNDER_REVIEW proposal status to the associated project on assume', async () => {
+  it('syncs PENDING proposal status to the associated project on assume', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
 
     await firstValueFrom(service.assignProposal('prop-1', { note: '' }));
 
     const project = await firstValueFrom(projectService.getProject('proj-1'));
-    expect(project.proposal.status).toBe('UNDER_REVIEW');
+    expect(project.proposal.status).toBe('PENDING');
   });
 
   it('propagates proposal REJECTED status to the associated project and cancels it', async () => {
@@ -352,19 +344,6 @@ describe('ProposalApiServiceMock', () => {
     expect(project.status).toBe('CANCELLED');
 
     const events = await firstValueFrom(projectService.listEvents('proj-2'));
-    expect(events.content.at(-1)?.type).toBe('PROJECT_CANCELLED');
-  });
-
-  it('propagates proposal CANCELLED status to the associated project and cancels it', async () => {
-    const projectService = TestBed.inject(ProjectApiServiceMock);
-
-    await firstValueFrom(service.cancelProposal('prop-1', { reason: 'Withdrawn' }));
-
-    const project = await firstValueFrom(projectService.getProject('proj-1'));
-    expect(project.proposal.status).toBe('CANCELLED');
-    expect(project.status).toBe('CANCELLED');
-
-    const events = await firstValueFrom(projectService.listEvents('proj-1'));
-    expect(events.content.at(-1)?.type).toBe('PROJECT_CANCELLED');
+    expect(events.content.at(-1)?.type).toBe('CANCELLED');
   });
 });

@@ -76,7 +76,9 @@ export class ProposalsNewPageComponent {
     }),
     loader: ({ params }) =>
       firstValueFrom(
-        this.proposalService.listProposals({ status: 'SUBMITTED', unassigned: true, ...params }),
+        // SUBMITTED proposals are by definition not yet assigned (assignment moves them
+        // to PENDING), so status alone identifies the unassigned inbox.
+        this.proposalService.listProposals({ status: 'SUBMITTED', ...params }),
       ),
   });
 

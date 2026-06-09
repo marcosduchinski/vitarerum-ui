@@ -34,7 +34,6 @@ describe('ProjectApiService', () => {
         type: 'RESEARCH',
         requestedBy: 'user-1',
         assignedTo: 'permission-1',
-        referenceNumber: 'CUP-2026-0001',
         dateFrom: '2026-06-01',
         dateTo: '2026-06-30',
         search: 'specimen',
@@ -44,11 +43,11 @@ describe('ProjectApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&requestedBy=user-1&assignedTo=permission-1&referenceNumber=CUP-2026-0001&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
+      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&requestedBy=user-1&assignedTo=permission-1&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
     );
 
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.get('referenceNumber')).toBe('CUP-2026-0001');
+    expect(request.request.params.get('assignedTo')).toBe('permission-1');
     request.flush({ content: [], page: 3, size: 15, totalElements: 0, totalPages: 0 });
   });
 

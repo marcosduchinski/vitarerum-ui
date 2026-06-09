@@ -6,6 +6,7 @@ import {
   MediaType,
   ProposalStatus,
   UseEventType,
+  UseResult,
   UseStatus,
   UseType,
 } from '@shared/models/collection-use-status.model';
@@ -22,15 +23,18 @@ export interface CollectionUseProjectSummary {
   readonly referenceNumber: string;
   readonly title: string;
   readonly purpose: string;
-  readonly requestNote?: string | null;
+  readonly note?: string | null;
   readonly type: UseType;
   readonly status: UseStatus;
+  // COMPLETED or CANCELLED once the project reaches a terminal outcome, otherwise null.
+  readonly result?: UseResult | null;
   readonly beginDate: string;
   readonly endDate: string;
-  readonly authorisedBy?: string;
-  readonly authorisedAt?: string;
+  // Populated only for staff callers; nullable and not yet set by any flow.
+  readonly authorisedBy?: PermissionPrincipal | null;
+  readonly authorisedAt?: string | null;
   readonly proposalId?: string;
-  readonly requestedBy?: PermissionPrincipal;
+  readonly requestedBy?: PermissionPrincipal | null;
   readonly proposal: ProjectProposalSummary;
 }
 
@@ -46,7 +50,7 @@ export interface ObjectLogEntry {
   readonly collectionUseProjectId: string;
   readonly content: string;
   readonly addedAt: string;
-  readonly addedBy: string;
+  readonly addedBy: PermissionPrincipal;
   readonly objects: readonly ObjectReference[];
   readonly attachments: readonly Attachment[];
 }
@@ -56,7 +60,7 @@ export interface ObjectOccurrenceEntry {
   readonly collectionUseProjectId: string;
   readonly content: string;
   readonly addedAt: string;
-  readonly addedBy: string;
+  readonly addedBy: PermissionPrincipal;
   readonly objects: readonly ObjectReference[];
   readonly attachments: readonly Attachment[];
 }
@@ -73,13 +77,13 @@ export interface UseEvent {
 export interface ProjectListQuery extends PageQuery {
   readonly status?: UseStatus;
   readonly type?: UseType;
-  readonly requestedBy?: string;
-  readonly assignedTo?: string;
-  readonly referenceNumber?: string;
   readonly dateFrom?: string;
   readonly dateTo?: string;
   readonly search?: string;
-  readonly proposalApproved?: boolean;
+  // Client-side scoping helpers. The backend auto-scopes non-staff callers by the
+  // acting permission, so these are honoured by the mock and ignored server-side.
+  readonly requestedBy?: string;
+  readonly assignedTo?: string;
 }
 
 export interface ObjectLogEntriesQuery extends PageQuery {

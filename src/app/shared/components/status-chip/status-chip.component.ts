@@ -4,7 +4,7 @@ export type WorkflowStatusKind = 'proposal' | 'project';
 
 export type WorkflowStatus =
   | 'SUBMITTED'
-  | 'UNDER_REVIEW'
+  | 'PENDING'
   | 'APPROVED'
   | 'REJECTED'
   | 'CANCELLED'
@@ -19,7 +19,7 @@ interface StatusPresentation {
 
 const STATUS_PRESENTATION = {
   SUBMITTED: { label: 'Submitted', tone: 'submitted' },
-  UNDER_REVIEW: { label: 'Under review', tone: 'review' },
+  PENDING: { label: 'Under review', tone: 'review' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },
   CANCELLED: { label: 'Cancelled', tone: 'closed' },

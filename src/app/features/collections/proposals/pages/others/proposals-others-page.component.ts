@@ -86,7 +86,7 @@ export class ProposalsOthersPageComponent {
         this.proposalService.listProposals({
           page: 0,
           size: ASSIGNMENTS_FETCH_SIZE,
-          lifecyclePhase: 'PENDING',
+          status: 'PENDING',
           search: params.search,
         }),
       ).then((page) =>

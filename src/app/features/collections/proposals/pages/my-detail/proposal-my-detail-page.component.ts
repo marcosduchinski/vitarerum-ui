@@ -114,6 +114,10 @@ export class ProposalMyDetailPageComponent {
   protected readonly forwardModalOpen = signal(false);
   protected readonly requestDocsModalOpen = signal(false);
   protected readonly rejectionReason = signal('');
+  // Approve materialises the project — the curator confirms its parameters here.
+  protected readonly approvePurpose = signal('');
+  protected readonly approveBeginDate = signal('');
+  protected readonly approveEndDate = signal('');
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardNote = signal('');
   protected readonly requestDocsNote = signal('');
@@ -125,7 +129,13 @@ export class ProposalMyDetailPageComponent {
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly messageError = signal<ApiError | null>(null);
 
-  protected readonly canDecide = computed(() => this.proposal()?.status === 'UNDER_REVIEW');
+  protected readonly canDecide = computed(() => this.proposal()?.status === 'PENDING');
+  protected readonly approveReady = computed(
+    () =>
+      this.approvePurpose().trim().length > 0 &&
+      this.approveBeginDate().length > 0 &&
+      this.approveEndDate().length > 0,
+  );
   protected readonly forwardTargetLabel = computed(
     () =>
       this.staffOptions().find((o) => o.permissionId === this.forwardTargetPermissionId())?.label ??
@@ -299,6 +309,10 @@ export class ProposalMyDetailPageComponent {
 
   protected requestAcceptConfirmation(): void {
     if (this.accepting() || this.rejecting()) return;
+    this.approvePurpose.set('');
+    this.approveBeginDate.set('');
+    this.approveEndDate.set('');
+    this.actionError.set(null);
     this.acceptConfirmOpen.set(true);
   }
 
@@ -306,8 +320,20 @@ export class ProposalMyDetailPageComponent {
     this.acceptConfirmOpen.set(false);
   }
 
+  protected onApprovePurposeInput(event: Event): void {
+    this.approvePurpose.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected onApproveBeginDateInput(event: Event): void {
+    this.approveBeginDate.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onApproveEndDateInput(event: Event): void {
+    this.approveEndDate.set((event.target as HTMLInputElement).value);
+  }
+
   protected async accept(): Promise<void> {
-    if (this.accepting() || this.rejecting()) return;
+    if (this.accepting() || this.rejecting() || !this.approveReady()) return;
 
     this.accepting.set(true);
     this.actionError.set(null);
@@ -315,6 +341,10 @@ export class ProposalMyDetailPageComponent {
     try {
       await firstValueFrom(
         this.proposalService.approveProposal(this.id(), {
+          title: this.proposal()?.collectionUseProject?.title ?? '',
+          purpose: this.approvePurpose().trim(),
+          beginDate: this.approveBeginDate(),
+          endDate: this.approveEndDate(),
           note: 'Accepted from my assignment detail.',
         }),
       );

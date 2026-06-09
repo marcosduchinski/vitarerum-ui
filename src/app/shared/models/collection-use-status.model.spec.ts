@@ -1,5 +1,4 @@
 import {
-  getProposalLifecyclePhase,
   getProposalStatusPresentation,
   getUseStatusPresentation,
 } from './collection-use-status.model';
@@ -10,7 +9,7 @@ describe('collection-use status presentation', () => {
       label: 'Submitted',
       tone: 'submitted',
     });
-    expect(getProposalStatusPresentation('UNDER_REVIEW')).toEqual({
+    expect(getProposalStatusPresentation('PENDING')).toEqual({
       label: 'Under review',
       tone: 'review',
     });
@@ -18,14 +17,6 @@ describe('collection-use status presentation', () => {
       label: 'Rejected',
       tone: 'rejected',
     });
-  });
-
-  it('maps every proposal status to the proposal lifecycle phase model', () => {
-    expect(getProposalLifecyclePhase('SUBMITTED')).toBe('SUBMITTED');
-    expect(getProposalLifecyclePhase('UNDER_REVIEW')).toBe('PENDING');
-    expect(getProposalLifecyclePhase('APPROVED')).toBe('APPROVED');
-    expect(getProposalLifecyclePhase('REJECTED')).toBe('REJECTED');
-    expect(getProposalLifecyclePhase('CANCELLED')).toBe('REJECTED');
   });
 
   it('maps project statuses to stable labels and tones', () => {

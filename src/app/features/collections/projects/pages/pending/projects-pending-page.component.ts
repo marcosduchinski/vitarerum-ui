@@ -64,9 +64,10 @@ export class ProjectsPendingPageComponent {
     }),
     loader: ({ params }) =>
       firstValueFrom(
+        // A project only exists once its proposal is approved, so CREATED already
+        // means "pending" — no proposal-approval filter is needed (or in the contract).
         this.projectService.listProjects({
           status: 'CREATED',
-          proposalApproved: true,
           ...params,
         }),
       ),
