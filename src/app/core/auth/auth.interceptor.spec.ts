@@ -12,6 +12,7 @@ function createIdentity(session: IdentitySession | null): IdentityService {
   return {
     session: state.asReadonly(),
     isAuthenticated: signal(session !== null).asReadonly(),
+    isStaff: signal(session !== null && session.group !== 'EXTERNAL').asReadonly(),
     signIn: async () => {},
     signOut: () => state.set(null),
     getAccessToken: () => state()?.accessToken ?? null,

@@ -33,6 +33,10 @@ export class IdentityServiceMock implements IdentityService {
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
+  readonly isStaff = computed(() => {
+    const group = this.session()?.group;
+    return group != null && group !== 'EXTERNAL';
+  });
 
   // Password is ignored in the mock; identity is selected purely by email.
   async signIn(credentials: LoginRequest): Promise<void> {

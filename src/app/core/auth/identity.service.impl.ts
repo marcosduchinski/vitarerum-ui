@@ -16,6 +16,10 @@ export class IdentityServiceImpl implements IdentityService {
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
+  readonly isStaff = computed(() => {
+    const group = this.session()?.group;
+    return group != null && group !== 'EXTERNAL';
+  });
 
   async signIn(credentials: LoginRequest): Promise<void> {
     const response = await firstValueFrom(this.authApi.login(credentials));

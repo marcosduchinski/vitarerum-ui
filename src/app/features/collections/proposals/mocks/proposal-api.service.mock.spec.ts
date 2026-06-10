@@ -25,6 +25,7 @@ const sessionState = signal<IdentitySession | null>({
 const identityStub: IdentityService = {
   session: sessionState.asReadonly(),
   isAuthenticated: signal(true).asReadonly(),
+  isStaff: signal(true).asReadonly(),
   signIn: async (credentials: LoginRequest) => {
     const session = sessionState();
     if (session) {

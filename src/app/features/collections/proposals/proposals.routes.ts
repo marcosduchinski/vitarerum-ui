@@ -1,10 +1,13 @@
 import { Routes } from '@angular/router';
 
+import { staffGuard } from '@core/guards/staff.guard';
+
 export const PROPOSALS_ROUTES: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'new' },
   {
     path: 'new',
     title: 'New Proposals',
+    canMatch: [staffGuard],
     loadComponent: () =>
       import('./pages/new/proposals-new-page.component').then((m) => m.ProposalsNewPageComponent),
   },
@@ -25,6 +28,7 @@ export const PROPOSALS_ROUTES: Routes = [
   {
     path: 'my-assignments',
     title: 'My Assignments',
+    canMatch: [staffGuard],
     loadComponent: () =>
       import('./pages/my-assignments/proposals-my-assignments-page.component').then(
         (m) => m.ProposalsMyAssignmentsPageComponent,
@@ -33,6 +37,7 @@ export const PROPOSALS_ROUTES: Routes = [
   {
     path: 'my-assignments/:id',
     title: 'My Assignment',
+    canMatch: [staffGuard],
     loadComponent: () =>
       import('./pages/my-detail/proposal-my-detail-page.component').then(
         (m) => m.ProposalMyDetailPageComponent,
@@ -41,6 +46,7 @@ export const PROPOSALS_ROUTES: Routes = [
   {
     path: 'others',
     title: "Other's Assignments",
+    canMatch: [staffGuard],
     loadComponent: () =>
       import('./pages/others/proposals-others-page.component').then(
         (m) => m.ProposalsOthersPageComponent,
@@ -49,6 +55,7 @@ export const PROPOSALS_ROUTES: Routes = [
   {
     path: 'approved',
     title: 'Approved Proposals',
+    canMatch: [staffGuard],
     loadComponent: () =>
       import('./pages/approved/proposals-approved-page.component').then(
         (m) => m.ProposalsApprovedPageComponent,
@@ -57,6 +64,7 @@ export const PROPOSALS_ROUTES: Routes = [
   {
     path: 'rejected',
     title: 'Rejected / Cancelled Proposals',
+    canMatch: [staffGuard],
     loadComponent: () =>
       import('./pages/rejected/proposals-rejected-page.component').then(
         (m) => m.ProposalsRejectedPageComponent,

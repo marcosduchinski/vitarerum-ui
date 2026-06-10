@@ -1,8 +1,9 @@
-import { ComponentRef } from '@angular/core';
+import { ComponentRef, signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { UserDetail } from '@core/auth/models/user.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
@@ -152,9 +153,12 @@ class UserManagementServiceStub {
 
 describe('ProposalDetailPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
+  let identityIsStaff: WritableSignal<boolean>;
 
   beforeEach(async () => {
     proposalService = new ProposalApiServiceStub();
+    // Default to a staff viewer; the external-viewer test flips this to false.
+    identityIsStaff = signal(true);
 
     await TestBed.configureTestingModule({
       imports: [ProposalDetailPageComponent],
@@ -162,6 +166,7 @@ describe('ProposalDetailPageComponent', () => {
         provideRouter([]),
         { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
         { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
+        { provide: IDENTITY_SERVICE, useValue: { isStaff: identityIsStaff.asReadonly() } },
       ],
     }).compileComponents();
   });
@@ -214,6 +219,28 @@ describe('ProposalDetailPageComponent', () => {
         (button) => button.textContent?.trim() === 'Add',
       ),
     ).toBe(false);
+  });
+
+  it('hides the decision desk (assume/forward) from external viewers', async () => {
+    identityIsStaff.set(false);
+
+    const fixture = TestBed.createComponent(ProposalDetailPageComponent);
+    const componentRef: ComponentRef<ProposalDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.textContent).not.toContain('Decision desk');
+    expect(
+      Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).some(
+        (button) => button.textContent?.trim() === 'Assume',
+      ),
+    ).toBe(false);
+    expect(compiled.textContent).toContain('No routing action is available for this status.');
   });
 
   it('confirms assuming a submitted proposal before assigning it', async () => {

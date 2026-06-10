@@ -10,6 +10,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
@@ -95,6 +96,7 @@ function safeReturnLabel(value: string | undefined): string {
 export class ProposalDetailPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   readonly id = input.required<string>();
   readonly returnTo = input<string>();
@@ -125,9 +127,14 @@ export class ProposalDetailPageComponent {
   protected readonly messages = computed(() => this.conversationResource.value()?.messages ?? []);
   protected readonly events = computed(() => this.eventsResource.value()?.content ?? []);
   protected readonly watchers = computed(() => this.proposal()?.watchers ?? []);
+  // Routing actions (assume/forward) are staff-only. This shared detail page is
+  // reachable by external researchers via their own proposals, so gate on isStaff
+  // in addition to the proposal being in an assignable state.
   protected readonly canAssign = computed(() => {
     const proposal = this.proposal();
-    return proposal?.status === 'SUBMITTED' && proposal.assignedTo === null;
+    return (
+      this.identity.isStaff() && proposal?.status === 'SUBMITTED' && proposal.assignedTo === null
+    );
   });
   protected readonly staffOptions = computed<ForwardStaffOption[]>(() =>
     (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>

@@ -1,6 +1,6 @@
 import { Router, provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { of } from 'rxjs';
 
 import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
@@ -102,6 +102,10 @@ class IdentityServiceStub implements IdentityService {
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = signal(true).asReadonly();
+  readonly isStaff = computed(() => {
+    const group = this.session()?.group;
+    return group != null && group !== 'EXTERNAL';
+  });
 
   async signIn(credentials: LoginRequest): Promise<void> {
     const { email } = credentials;
