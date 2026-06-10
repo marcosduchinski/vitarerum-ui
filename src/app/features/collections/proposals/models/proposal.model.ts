@@ -28,6 +28,10 @@ export interface ProposalSummary {
   readonly title: string;
   readonly status: ProposalStatus;
   readonly type: UseType;
+  // Requested use period (YYYY-MM-DD). Optional during contract rollout; the
+  // backend now returns these on every proposal shape.
+  readonly beginDate?: string;
+  readonly endDate?: string;
   readonly requestedBy: PermissionPrincipal;
   readonly assignedTo: PermissionPrincipal | null;
   readonly collectionUseProject: ProposalProjectSummary;

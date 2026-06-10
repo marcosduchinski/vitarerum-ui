@@ -314,9 +314,12 @@ export class ProposalMyDetailPageComponent {
 
   protected requestAcceptConfirmation(): void {
     if (this.accepting() || this.rejecting()) return;
+    const proposal = this.proposal();
+    // Pre-fill the project period from the proposal's requested use period so
+    // the curator confirms/adjusts rather than re-typing from scratch.
     this.approvePurpose.set('');
-    this.approveBeginDate.set('');
-    this.approveEndDate.set('');
+    this.approveBeginDate.set(proposal?.beginDate ?? '');
+    this.approveEndDate.set(proposal?.endDate ?? '');
     this.actionError.set(null);
     this.acceptConfirmOpen.set(true);
   }

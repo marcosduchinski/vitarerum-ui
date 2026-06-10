@@ -25,6 +25,8 @@ const PROPOSAL: ProposalDetail = {
   title: 'Photographic history of Rio de Janeiro port, 1890-1930',
   status: 'PENDING',
   type: 'RESEARCH',
+  beginDate: '2026-07-01',
+  endDate: '2026-12-31',
   requestedBy: {
     permissionId: 'permission-external',
     user: { id: 'user-1', name: 'Alice Ferreira', email: 'alice@example.test' },
@@ -515,6 +517,10 @@ describe('ProposalMyDetailPageComponent', () => {
 
     expect(proposalService.approveCalls).toEqual([]);
     expect(compiled.textContent).toContain('Accept proposal?');
+
+    // The project period is pre-filled from the proposal's requested use period.
+    expect(compiled.querySelector<HTMLInputElement>('#approve-begin-date')!.value).toBe('2026-07-01');
+    expect(compiled.querySelector<HTMLInputElement>('#approve-end-date')!.value).toBe('2026-12-31');
 
     const purpose = compiled.querySelector<HTMLTextAreaElement>('#approve-purpose')!;
     purpose.value = 'Approved research access';

@@ -39,6 +39,8 @@ size     : Integer     (default 20)
         "referenceNumber": "VRP-20250115-0001",
         "title": "string",
         "status": "APPROVED",
+        "beginDate": "2025-06-01",
+        "endDate": "2025-06-30",
         "submittedAt": "2025-01-15T10:30:00",
         "assignedTo": {
           "permissionId": "uuid",
@@ -99,6 +101,8 @@ projectId : UUID (required)
     "referenceNumber": "VRP-20250115-0001",
     "title": "string",
     "status": "APPROVED",
+    "beginDate": "2025-06-01",
+    "endDate": "2025-06-30",
     "submittedAt": "2025-01-15T10:30:00",
     "assignedTo": {
       "permissionId": "uuid",

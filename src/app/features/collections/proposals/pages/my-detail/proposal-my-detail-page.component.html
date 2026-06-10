@@ -171,20 +171,26 @@
           [value]="approvePurpose()"
           (input)="onApprovePurposeInput($event)"
         ></textarea>
-        <label for="approve-begin-date">Begin date</label>
-        <input
-          id="approve-begin-date"
-          type="date"
-          [value]="approveBeginDate()"
-          (input)="onApproveBeginDateInput($event)"
-        />
-        <label for="approve-end-date">End date</label>
-        <input
-          id="approve-end-date"
-          type="date"
-          [value]="approveEndDate()"
-          (input)="onApproveEndDateInput($event)"
-        />
+        <div class="accept-modal-body__dates">
+          <div class="accept-modal-body__field">
+            <label for="approve-begin-date">Begin date</label>
+            <input
+              id="approve-begin-date"
+              type="date"
+              [value]="approveBeginDate()"
+              (input)="onApproveBeginDateInput($event)"
+            />
+          </div>
+          <div class="accept-modal-body__field">
+            <label for="approve-end-date">End date</label>
+            <input
+              id="approve-end-date"
+              type="date"
+              [value]="approveEndDate()"
+              (input)="onApproveEndDateInput($event)"
+            />
+          </div>
+        </div>
       </div>
     </app-confirm-modal>
 

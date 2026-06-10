@@ -12,7 +12,7 @@ status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECT
 type        : UseType          (optional) EXHIBITION | RESEARCH | OTHER
 requested_by: UUID             (optional) filter by researcher (honoured for staff only)
 assigned_to : UUID             (optional) filter by attendant permissionId
-date_from   : LocalDate        (optional) filter by submission date range
+date_from   : LocalDate        (optional) filter by requested begin date range
 date_to     : LocalDate        (optional)
 search      : String           (optional) search by title or reference number
 page        : Integer          (default 0)
@@ -29,6 +29,8 @@ size        : Integer          (default 20)
       "title": "string",
       "status": "PENDING",
       "type": "RESEARCH",
+      "beginDate": "2025-06-01",
+      "endDate": "2025-06-30",
       "requestedBy": {
         "permissionId": "uuid",
         "user": {
@@ -87,6 +89,8 @@ Both fields are optional. When `targetPermissionId` is omitted the caller is ass
   "referenceNumber": "VRP-20250115-0001",
   "title": "string",
   "status": "PENDING",
+  "beginDate": "2025-06-01",
+  "endDate": "2025-06-30",
   "assignedTo": {
     "permissionId": "uuid",
     "user": {
@@ -152,6 +156,8 @@ proposalId : UUID (required)
   "referenceNumber": "VRP-20250115-0001",
   "title": "string",
   "status": "PENDING",
+  "beginDate": "2025-06-01",
+  "endDate": "2025-06-30",
   "lastEvent": {
     "occurredAt": "2025-01-16T09:00:00",
     "type": "DOCUMENTS_REQUESTED",
@@ -205,6 +211,8 @@ proposalId : UUID (required)
   "referenceNumber": "VRP-20250115-0001",
   "title": "string",
   "status": "PENDING",
+  "beginDate": "2025-06-01",
+  "endDate": "2025-06-30",
   "assignedTo": {
     "permissionId": "uuid",
     "user": {
@@ -259,6 +267,8 @@ proposalId : UUID (required)
   "referenceNumber": "VRP-20250115-0001",
   "title": "string",
   "status": "PENDING",
+  "beginDate": "2025-06-01",
+  "endDate": "2025-06-30",
   "lastEvent": {
     "occurredAt": "2025-01-19T11:00:00",
     "type": "REFERRED_TO_DIRECTION",
@@ -320,6 +330,8 @@ proposalId : UUID (required)
   "referenceNumber": "VRP-20250115-0001",
   "title": "string",
   "status": "PENDING",
+  "beginDate": "2025-06-01",
+  "endDate": "2025-06-30",
   "lastEvent": {
     "occurredAt": "2025-01-20T09:30:00",
     "type": "DIRECTION_CLARIFIED",
@@ -385,6 +397,8 @@ proposalId : UUID (required)
     "referenceNumber": "VRP-20250115-0001",
     "title": "string",
     "status": "APPROVED",
+    "beginDate": "2025-06-01",
+    "endDate": "2025-06-30",
     "assignedTo": null,
     "lastEvent": {
       "occurredAt": "2025-01-21T15:00:00",
@@ -461,6 +475,8 @@ proposalId : UUID (required)
   "referenceNumber": "VRP-20250115-0001",
   "title": "string",
   "status": "REJECTED",
+  "beginDate": "2025-06-01",
+  "endDate": "2025-06-30",
   "assignedTo": null,
   "lastEvent": {
     "occurredAt": "2025-01-21T15:00:00",
