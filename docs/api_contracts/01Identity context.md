@@ -167,7 +167,10 @@ size       : Integer  (default 20)
             "name": "string",
             "email": "string"
           },
-          "group": "CURATORIAL"
+          "group": {
+            "id": "uuid",
+            "name": "CURATORIAL"
+          }
         }
       ]
     }
@@ -204,7 +207,10 @@ userId : UUID (required)
         "name": "string",
         "email": "string"
       },
-      "group": "COLLECTIONS_MANAGEMENT"
+      "group": {
+        "id": "uuid",
+        "name": "COLLECTIONS_MANAGEMENT"
+      }
     },
     {
       "permissionId": "uuid",
@@ -213,7 +219,10 @@ userId : UUID (required)
         "name": "string",
         "email": "string"
       },
-      "group": "CURATORIAL"
+      "group": {
+        "id": "uuid",
+        "name": "CURATORIAL"
+      }
     }
   ]
 }
@@ -312,7 +321,10 @@ userId : UUID (required)
         "name": "string",
         "email": "string"
       },
-      "group": "EXTERNAL"
+      "group": {
+        "id": "uuid",
+        "name": "EXTERNAL"
+      }
     }
   ]
 }
@@ -405,7 +417,7 @@ size : Integer (default 20)
 
 A few conventions applied consistently across all contracts:
 
-**IDs are UUIDs** throughout, matching the model. **Enum values are returned as strings** (`"CURATORIAL"` not `1`) for readability. **The embedded permission shape (`PermissionDetail`)** used across all contexts is `{ "permissionId", "user": { "id", "name", "email" }, "group": "<GROUP_NAME>" }` — the group is a flat enum string, not a nested object. The one exception is the `POST /users/{userId}/groups/{groupId}` response, which returns the group as a nested `{ "id", "name" }` object. **Pagination** follows a consistent envelope with `content`, `page`, `size`, `totalElements`, and `totalPages`.
+**IDs are UUIDs** throughout, matching the model. **Enum values are returned as strings** (`"CURATORIAL"` not `1`) for readability. **The embedded permission shape (`PermissionDetail`)** used by the user-management endpoints (`GET /users`, `GET /users/{userId}`, `GET /users/{userId}/permissions`, and the `POST/DELETE /users/{userId}/groups/{groupId}` responses) is `{ "permissionId", "user": { "id", "name", "email" }, "group": { "id", "name" } }` — the group is a nested `{ id, name }` object so clients can act on the group id (e.g. revoke). Note the **`POST /auth/login`** permission shape is different and intentionally lighter: `{ "permissionId", "group": "<GROUP_NAME>" }` with the group as a flat enum string (the session only needs the active group name). **Pagination** follows a consistent envelope with `content`, `page`, `size`, `totalElements`, and `totalPages`.
 
 **Authentication** — except for `POST /auth/login`, every endpoint here and in the other contexts requires `Authorization: Bearer <accessToken>` and `X-Permission-Id: <permission id>` headers; see [Authenticated requests](#authenticated-requests). `401` is reserved for authentication failure (and logs the client out); `403` for authorization failure.
 

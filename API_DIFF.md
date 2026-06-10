@@ -158,11 +158,12 @@ endpoints. Backend = OpenAPI component schemas; Frontend = TypeScript interfaces
 - Frontend reads `requestNote` → always `undefined`.
 - File: `project.model.ts`, `proposal.model.ts`
 
-### 8. `PermissionSummary.group` — object vs enum string
+### 8. `PermissionSummary.group` — object vs enum string — RESOLVED 2026-06-10
 - **Backend `PermissionDetail`** (used in `UserDetailResponse.permissions`, `UserPermissionsResponse.permissions`): `group: GroupName` (string) + a `user` field
 - **Frontend `PermissionSummary`:** `group: Group` (object `{id, name}`), no `user`
 - Frontend expects `group.name` but receives a bare string.
 - File: `permission.model.ts`
+- **Resolution:** backend now emits `group` as a nested `{ id, name }` object on the user-management endpoints (matches frontend; admin needs `group.id` to revoke). Contract `01Identity context.md` updated; login keeps the flat-string group. This was the cause of the forward-popup "undefined" group label and the EXTERNAL filter not excluding researchers.
 
 ## 🟠 Incomplete — frontend missing fields/enum members
 
