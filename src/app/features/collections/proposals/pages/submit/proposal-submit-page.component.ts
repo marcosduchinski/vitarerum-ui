@@ -103,6 +103,10 @@ export class ProposalSubmitPageComponent {
     this.submitError.set(null);
 
     try {
+      // The proposal opens with exactly one message (Business Rule 01): the
+      // backend seeds the conversation from these initialMessage* fields, so we
+      // send the user's composed email here rather than via a second sendMessage
+      // call (which would create a duplicate alongside the auto-seeded message).
       const response = await firstValueFrom(
         this.proposalService.createProposal({
           title: this.title().trim(),
@@ -110,14 +114,9 @@ export class ProposalSubmitPageComponent {
           purpose: this.purpose().trim(),
           beginDate: this.beginDate(),
           endDate: this.endDate(),
-        }),
-      );
-
-      await firstValueFrom(
-        this.proposalService.sendMessage(response.proposal.id, {
-          recipient: this.recipient().trim(),
-          subject: this.subject().trim(),
-          body: this.body().trim(),
+          initialMessageRecipient: this.recipient().trim(),
+          initialMessageSubject: this.subject().trim(),
+          initialMessageBody: this.body().trim(),
         }),
       );
 

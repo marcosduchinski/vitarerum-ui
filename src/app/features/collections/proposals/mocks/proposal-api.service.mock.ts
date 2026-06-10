@@ -94,7 +94,19 @@ export class ProposalApiServiceMock {
     this.events.set(id, [
       { occurredAt: now, type: 'SUBMITTED', triggeredBy: this.currentPrincipal(), note: null },
     ]);
-    this.messages.set(convId, []);
+    // Business Rule 01: a proposal opens with one message. The conversation is
+    // seeded from the request's initialMessage* fields, falling back to
+    // recipient → collections@…, subject → title, body → purpose.
+    this.messages.set(convId, [
+      {
+        id: `msg-${this.nextId++}`,
+        sentAt: now,
+        sender: this.currentPrincipal().user.email,
+        recipient: request.initialMessageRecipient ?? 'collections@vitarerum.example.com',
+        subject: request.initialMessageSubject ?? request.title,
+        body: request.initialMessageBody ?? request.purpose,
+      },
+    ]);
 
     return of({
       proposal: {

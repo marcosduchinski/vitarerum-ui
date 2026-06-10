@@ -180,6 +180,51 @@ describe('ProposalApiServiceMock', () => {
     expect(found).toBeDefined();
   });
 
+  it('seeds the opening message once from the initialMessage fields (Business Rule 01)', async () => {
+    const created = await firstValueFrom(
+      service.createProposal({
+        title: 'New study',
+        type: 'RESEARCH',
+        purpose: 'Test',
+        beginDate: '2026-07-01',
+        endDate: '2026-12-31',
+        initialMessageRecipient: 'collections@vitarerum.example.com',
+        initialMessageSubject: 'Collection use request: new study',
+        initialMessageBody: 'Requesting access for a new comparative study.',
+      }),
+    );
+
+    const conversation = await firstValueFrom(service.getConversation(created.proposal.id));
+
+    expect(conversation.messages).toHaveLength(1);
+    expect(conversation.messages[0]).toMatchObject({
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Collection use request: new study',
+      body: 'Requesting access for a new comparative study.',
+    });
+  });
+
+  it('falls back to title/purpose when initialMessage fields are omitted', async () => {
+    const created = await firstValueFrom(
+      service.createProposal({
+        title: 'Fallback study',
+        type: 'RESEARCH',
+        purpose: 'Fallback purpose text',
+        beginDate: '2026-07-01',
+        endDate: '2026-12-31',
+      }),
+    );
+
+    const conversation = await firstValueFrom(service.getConversation(created.proposal.id));
+
+    expect(conversation.messages).toHaveLength(1);
+    expect(conversation.messages[0]).toMatchObject({
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Fallback study',
+      body: 'Fallback purpose text',
+    });
+  });
+
   it('filters proposals by status', async () => {
     const page = await firstValueFrom(service.listProposals({ status: 'SUBMITTED' }));
     expect(page.content.every((p) => p.status === 'SUBMITTED')).toBe(true);
