@@ -10,6 +10,8 @@ import { ProposalsRejectedPageComponent } from './proposals-rejected-page.compon
 
 const REJECTED_PROPOSAL: ProposalSummary = {
   id: 'proposal-rejected',
+  referenceNumber: 'VR-2026-001',
+  title: 'Rejected research request',
   status: 'REJECTED',
   type: 'RESEARCH',
   requestedBy: {

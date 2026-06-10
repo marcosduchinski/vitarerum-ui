@@ -36,6 +36,8 @@ size     : Integer     (default 20)
       "endDate": "2025-06-30",
       "proposal": {
         "id": "uuid",
+        "referenceNumber": "VRP-20250115-0001",
+        "title": "string",
         "status": "APPROVED",
         "submittedAt": "2025-01-15T10:30:00",
         "assignedTo": {
@@ -94,6 +96,8 @@ projectId : UUID (required)
   "authorisedAt": null,
   "proposal": {
     "id": "uuid",
+    "referenceNumber": "VRP-20250115-0001",
+    "title": "string",
     "status": "APPROVED",
     "submittedAt": "2025-01-15T10:30:00",
     "assignedTo": {

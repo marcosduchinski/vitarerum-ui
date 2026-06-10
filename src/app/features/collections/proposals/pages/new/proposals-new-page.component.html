@@ -87,7 +87,7 @@
               @for (proposal of proposals(); track proposal.id) {
                 <tr>
                   <td class="proposals-table__ref">
-                    {{ proposal.collectionUseProject.referenceNumber }}
+                    {{ proposal.referenceNumber }}
                   </td>
                   <td>
                     <a
@@ -98,7 +98,7 @@
                         returnLabel: 'new proposals',
                       }"
                     >
-                      {{ proposal.collectionUseProject.title }}
+                      {{ proposal.title }}
                     </a>
                   </td>
                   <td>
@@ -120,7 +120,7 @@
                         class="action-btn action-btn--primary"
                         [disabled]="assumingId() === proposal.id"
                         (click)="requestAssumeConfirmation(proposal.id)"
-                        aria-label="Assume {{ proposal.collectionUseProject.referenceNumber }}"
+                        aria-label="Assume {{ proposal.referenceNumber }}"
                       >
                         {{ assumingId() === proposal.id ? 'Assuming…' : 'Assume' }}
                       </button>
@@ -131,7 +131,7 @@
                         aria-haspopup="menu"
                         (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
                         aria-label="More actions for {{
-                          proposal.collectionUseProject.referenceNumber
+                          proposal.referenceNumber
                         }}"
                       >
                         <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
@@ -229,8 +229,8 @@
       >
         <div class="forward-modal-body">
           <p class="forward-modal-body__hint">
-            {{ proposal.collectionUseProject.referenceNumber }} —
-            {{ proposal.collectionUseProject.title }}
+            {{ proposal.referenceNumber }} —
+            {{ proposal.title }}
           </p>
           @if (staffUsersResource.isLoading()) {
             <app-loading-state label="Loading staff..." />
@@ -267,7 +267,7 @@
         title="Assume proposal?"
         [message]="
           'This will assign ' +
-          proposal.collectionUseProject.referenceNumber +
+          proposal.referenceNumber +
           ' to you for review.'
         "
         confirmLabel="Assume proposal"

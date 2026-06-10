@@ -8,8 +8,8 @@
   } @else if (proposal()) {
     <header class="proposal-detail__header">
       <div class="proposal-detail__header-meta">
-        <p class="proposal-detail__ref">{{ proposal()!.collectionUseProject.referenceNumber }}</p>
-        <h1 class="proposal-detail__title">{{ proposal()!.collectionUseProject.title }}</h1>
+        <p class="proposal-detail__ref">{{ proposal()!.referenceNumber }}</p>
+        <h1 class="proposal-detail__title">{{ proposal()!.title }}</h1>
         <div class="proposal-detail__status-row">
           <app-status-chip kind="proposal" [status]="asWorkflowStatus(proposal()!.status)" />
           <app-type-chip [type]="proposal()!.type" />
@@ -61,7 +61,7 @@
       title="Assume proposal?"
       [message]="
         'This will assign ' +
-        proposal()!.collectionUseProject.referenceNumber +
+        proposal()!.referenceNumber +
         ' to you for review.'
       "
       confirmLabel="Assume proposal"
@@ -89,8 +89,8 @@
     >
       <div class="forward-modal-body">
         <p class="forward-modal-body__hint">
-          {{ proposal()!.collectionUseProject.referenceNumber }} —
-          {{ proposal()!.collectionUseProject.title }}
+          {{ proposal()!.referenceNumber }} —
+          {{ proposal()!.title }}
         </p>
         @if (staffUsersResource.isLoading()) {
           <app-loading-state label="Loading staff..." />
@@ -151,11 +151,11 @@
             <dd>{{ formatDateTime(proposal()!.submittedAt) }}</dd>
           </div>
           <div class="detail-dl__row">
-            <dt>Project status</dt>
+            <dt>Status</dt>
             <dd>
               <app-status-chip
-                kind="project"
-                [status]="asWorkflowStatus(proposal()!.collectionUseProject.status)"
+                kind="proposal"
+                [status]="asWorkflowStatus(proposal()!.status)"
               />
             </dd>
           </div>

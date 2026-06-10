@@ -28,6 +28,8 @@ const SESSION: IdentitySession = {
 
 const OTHER_PROPOSAL: ProposalSummary = {
   id: 'proposal-other',
+  referenceNumber: 'VR-2026-001',
+  title: 'Photographic history of Rio de Janeiro port, 1890-1930',
   status: 'PENDING',
   type: 'RESEARCH',
   requestedBy: {
@@ -52,6 +54,8 @@ const OTHER_PROPOSAL: ProposalSummary = {
 const MY_PROPOSAL: ProposalSummary = {
   ...OTHER_PROPOSAL,
   id: 'proposal-mine',
+  referenceNumber: 'VR-2026-002',
+  title: 'Research assigned to Bob',
   assignedTo: {
     permissionId: 'permission-staff',
     user: { id: 'staff-1', name: 'Bob Santos', email: 'bob@example.test' },
@@ -68,6 +72,8 @@ const MY_PROPOSAL: ProposalSummary = {
 const UNASSIGNED_PROPOSAL: ProposalSummary = {
   ...OTHER_PROPOSAL,
   id: 'proposal-unassigned',
+  referenceNumber: 'VR-2026-003',
+  title: 'Unassigned request',
   assignedTo: null,
   collectionUseProject: {
     ...OTHER_PROPOSAL.collectionUseProject,

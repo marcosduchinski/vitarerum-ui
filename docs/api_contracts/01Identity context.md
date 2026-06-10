@@ -100,6 +100,15 @@ for each request; the group is never inferred from the token alone.
 
 ---
 
+### Bootstrap
+
+User and group administration endpoints require a caller permission in the `SYS_ADMIN`
+group. A clean database therefore needs one out-of-band bootstrap step after migrations:
+run `scripts/seed.sql` to create the fixed groups and an initial `SYS_ADMIN` permission
+(`perm-sys-admin`) for local development and smoke testing.
+
+---
+
 ### `POST /users`
 
 **Description** — Create a new user. Returns the created user with an empty `permissions` list (groups are assigned separately via `POST /users/{userId}/groups/{groupId}`).
@@ -113,9 +122,10 @@ for each request; the group is never inferred from the token alone.
 }
 ```
 
-`password` is optional. When provided it is hashed (bcrypt) and lets the user authenticate
-via `POST /auth/login`; a user created without one has no usable password until set. The
-password is never returned in any response.
+`password` is optional. When provided it is hashed (bcrypt); a user created without one
+has no usable password until set. The password is never returned in any response. Login
+also requires at least one group permission, so a newly created user can authenticate
+only after `POST /users/{userId}/groups/{groupId}` assigns them to a group.
 
 **Response `201 Created`**
 ```json

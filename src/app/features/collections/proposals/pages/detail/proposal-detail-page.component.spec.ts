@@ -13,6 +13,8 @@ import { ProposalDetailPageComponent } from './proposal-detail-page.component';
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
+  referenceNumber: 'VR-2026-001',
+  title: 'Photographic history of Rio de Janeiro port, 1890-1930',
   status: 'SUBMITTED',
   type: 'RESEARCH',
   requestedBy: {

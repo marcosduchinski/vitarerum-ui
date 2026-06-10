@@ -260,7 +260,7 @@ export class ProposalsNewPageComponent {
     const targetPermissionId = this.forwardTargetPermissionId();
     if (!targetPermissionId || this.forwardPending()) return;
     const proposalReference =
-      this.forwardModalProposal()?.collectionUseProject.referenceNumber ?? 'The proposal';
+      this.forwardModalProposal()?.referenceNumber ?? 'The proposal';
     this.forwardPending.set(true);
     this.forwardError.set(null);
     try {

@@ -257,7 +257,7 @@ export class ProposalMyDetailPageComponent {
       await firstValueFrom(
         this.proposalService.sendMessage(this.id(), {
           recipient: this.proposal()?.requestedBy.user.email ?? '',
-          subject: `Response to ${this.proposal()?.collectionUseProject.referenceNumber ?? 'proposal'}`,
+          subject: `Response to ${this.proposal()?.referenceNumber ?? 'proposal'}`,
           body: payload.body,
           documentIds: uploadedDocuments.map((document) => document.id),
         }),

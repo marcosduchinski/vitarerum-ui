@@ -20,6 +20,12 @@ export interface ProposalProjectSummary {
 
 export interface ProposalSummary {
   readonly id: string;
+  // Proposal reference (VRP-YYYYMMDD-XXXX), distinct from the project's
+  // collectionUseProject.referenceNumber (CUP-XXXXXXXX, empty until approval).
+  readonly referenceNumber: string;
+  // Proposal title (owned by the proposal). The linked project carries its own
+  // collectionUseProject.title (empty until approval).
+  readonly title: string;
   readonly status: ProposalStatus;
   readonly type: UseType;
   readonly requestedBy: PermissionPrincipal;

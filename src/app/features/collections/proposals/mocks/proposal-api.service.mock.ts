@@ -63,11 +63,15 @@ export class ProposalApiServiceMock {
     const projectId = `proj-${this.nextId}`;
     this.nextId++;
     const now = new Date().toISOString();
-    const refNum = `VR-${new Date().getFullYear()}-${String(this.proposals.size + 1).padStart(3, '0')}`;
+    const seq = this.proposals.size + 1;
+    const proposalRef = `VRP-${now.slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(4, '0')}`;
+    const refNum = `VR-${new Date().getFullYear()}-${String(seq).padStart(3, '0')}`;
     const convId = `conv-${id}`;
 
     const proposal: ProposalDetail = {
       id,
+      referenceNumber: proposalRef,
+      title: request.title,
       status: 'SUBMITTED',
       type: request.type,
       requestedBy: this.currentPrincipal(),
@@ -95,6 +99,8 @@ export class ProposalApiServiceMock {
     return of({
       proposal: {
         id: proposal.id,
+        referenceNumber: proposal.referenceNumber,
+        title: proposal.title,
         status: proposal.status,
         type: proposal.type,
         requestedBy: proposal.requestedBy,
@@ -118,13 +124,15 @@ export class ProposalApiServiceMock {
       const q = query.search.toLowerCase();
       items = items.filter(
         (p) =>
-          p.collectionUseProject.title.toLowerCase().includes(q) ||
-          p.collectionUseProject.referenceNumber.toLowerCase().includes(q),
+          p.title.toLowerCase().includes(q) ||
+          p.referenceNumber.toLowerCase().includes(q),
       );
     }
 
     const summaries: ProposalSummary[] = items.map((p) => ({
       id: p.id,
+      referenceNumber: p.referenceNumber,
+      title: p.title,
       status: p.status,
       type: p.type,
       requestedBy: p.requestedBy,

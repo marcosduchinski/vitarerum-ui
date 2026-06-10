@@ -10,6 +10,8 @@ import { ProposalsApprovedPageComponent } from './proposals-approved-page.compon
 
 const APPROVED_PROPOSAL: ProposalSummary = {
   id: 'proposal-approved',
+  referenceNumber: 'VR-2026-001',
+  title: 'Approved research request',
   status: 'APPROVED',
   type: 'RESEARCH',
   requestedBy: {

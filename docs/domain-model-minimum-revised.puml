@@ -90,6 +90,8 @@ package "User Request" <<Bounded Context>> {
 
         class Proposal <<Aggregate Root>> #ffeead {
         - id: ProposalId
+        - referenceNumber: ReferenceNumber
+        - title: String
         - collectionUseProjectId: CollectionUseProjectId
         - type: UseType
         - status: ProposalStatus

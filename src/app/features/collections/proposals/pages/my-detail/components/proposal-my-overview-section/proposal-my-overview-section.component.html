@@ -27,11 +27,11 @@
       <dd>{{ formatDateTime(proposal().submittedAt) }}</dd>
     </div>
     <div class="detail-dl__row">
-      <dt>Project status</dt>
+      <dt>Status</dt>
       <dd>
         <app-status-chip
-          kind="project"
-          [status]="asWorkflowStatus(proposal().collectionUseProject.status)"
+          kind="proposal"
+          [status]="asWorkflowStatus(proposal().status)"
         />
       </dd>
     </div>

@@ -79,7 +79,7 @@
               @for (proposal of proposals(); track proposal.id) {
                 <tr>
                   <td class="proposals-table__ref">
-                    {{ proposal.collectionUseProject.referenceNumber }}
+                    {{ proposal.referenceNumber }}
                   </td>
                   <td>
                     <a
@@ -90,7 +90,7 @@
                         returnLabel: 'other assignments',
                       }"
                     >
-                      {{ proposal.collectionUseProject.title }}
+                      {{ proposal.title }}
                     </a>
                   </td>
                   <td>
@@ -123,7 +123,7 @@
                         aria-haspopup="menu"
                         (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
                         aria-label="More actions for {{
-                          proposal.collectionUseProject.referenceNumber
+                          proposal.referenceNumber
                         }}"
                       >
                         <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
@@ -213,7 +213,7 @@
         title="Assume assignment?"
         [message]="
           'This will move ' +
-          proposal.collectionUseProject.referenceNumber +
+          proposal.referenceNumber +
           ' from ' +
           proposal.assignedTo!.user.name +
           ' to you.'

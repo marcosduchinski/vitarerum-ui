@@ -81,7 +81,7 @@
               @for (proposal of proposals(); track proposal.id) {
                 <tr>
                   <td class="proposals-table__ref">
-                    {{ proposal.collectionUseProject.referenceNumber }}
+                    {{ proposal.referenceNumber }}
                   </td>
                   <td>
                     <a
@@ -92,7 +92,7 @@
                         returnLabel: 'rejected / cancelled proposals',
                       }"
                     >
-                      {{ proposal.collectionUseProject.title }}
+                      {{ proposal.title }}
                     </a>
                   </td>
                   <td>
@@ -130,7 +130,7 @@
                           returnLabel: 'rejected / cancelled proposals',
                         }"
                         aria-label="View details for {{
-                          proposal.collectionUseProject.referenceNumber
+                          proposal.referenceNumber
                         }}"
                       >
                         View details

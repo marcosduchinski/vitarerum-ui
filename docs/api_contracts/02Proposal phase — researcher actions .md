@@ -34,6 +34,8 @@
 {
   "proposal": {
     "id": "uuid",
+    "referenceNumber": "VRP-20250115-0001",
+    "title": "string",
     "status": "SUBMITTED",
     "type": "RESEARCH",
     "requestedBy": {
@@ -52,7 +54,7 @@
 }
 ```
 
-The submit response carries only the `proposal` summary and the `conversationId`; there is no project yet. The project (with its `CUP-XXXXXXXX` reference number) appears once the proposal is approved.
+The submit response carries only the `proposal` summary and the `conversationId`; there is no project yet. The proposal reference follows `VRP-YYYYMMDD-XXXX`, where `XXXX` is sequential per submission date. The project (with its `CUP-XXXXXXXX` reference number) appears once the proposal is approved.
 
 **Response `422 Unprocessable Entity`**
 ```json
@@ -111,6 +113,8 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "PENDING",
   "type": "RESEARCH",
   "requestedBy": {
@@ -211,7 +215,7 @@ proposalId : UUID (required)
 }
 ```
 
-`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: `referenceNumber` and `title` are empty strings and `status` is the placeholder `CREATED`. After approval these reflect the real project. `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
+`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`) and the top-level `title` is the title submitted with the proposal. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings and `status` is the placeholder `CREATED`. After approval these reflect the real project (`CUP-XXXXXXXX`). `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
 
 **Response `404 Not Found`**
 ```json

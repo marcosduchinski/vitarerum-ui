@@ -83,14 +83,14 @@
               @for (proposal of proposals(); track proposal.id) {
                 <tr>
                   <td class="proposals-table__ref">
-                    {{ proposal.collectionUseProject.referenceNumber }}
+                    {{ proposal.referenceNumber }}
                   </td>
                   <td>
                     <a
                       class="proposals-table__title"
                       [routerLink]="['/p/collections/proposals/my-assignments', proposal.id]"
                     >
-                      {{ proposal.collectionUseProject.title }}
+                      {{ proposal.title }}
                     </a>
                   </td>
                   <td>
@@ -114,7 +114,7 @@
                         aria-haspopup="menu"
                         (click)="toggleActionsMenu(proposal.id); rowActionsMenu.toggle($event)"
                         aria-label="More actions for {{
-                          proposal.collectionUseProject.referenceNumber
+                          proposal.referenceNumber
                         }}"
                       >
                         <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
@@ -212,8 +212,8 @@
       >
         <div class="forward-modal-body">
           <p class="forward-modal-body__hint">
-            {{ proposal.collectionUseProject.referenceNumber }} —
-            {{ proposal.collectionUseProject.title }}
+            {{ proposal.referenceNumber }} —
+            {{ proposal.title }}
           </p>
           @if (usersResource.isLoading()) {
             <app-loading-state label="Loading staff..." />

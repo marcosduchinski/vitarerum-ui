@@ -152,6 +152,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-1: SUBMITTED — alice, awaiting first review
   {
     id: 'prop-1',
+    referenceNumber: 'VRP-20260601-0001',
+    title: 'Zoology specimen catalogues from Atlantic forest surveys',
     status: 'SUBMITTED',
     type: 'RESEARCH',
     requestedBy: P['alice'],
@@ -188,6 +190,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-2: PENDING — iris, exhibition, assigned to greg
   {
     id: 'prop-2',
+    referenceNumber: 'VRP-20260601-0002',
+    title: 'Science history exhibition on botanical illustration',
     status: 'PENDING',
     type: 'EXHIBITION',
     requestedBy: P['iris'],
@@ -207,6 +211,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-3: APPROVED — hugo, research; fran took it, forwarded to carol; eve watches; project in progress
   {
     id: 'prop-3',
+    referenceNumber: 'VRP-20260601-0003',
+    title: 'Comparative study of zoological field notebooks',
     status: 'APPROVED',
     type: 'RESEARCH',
     requestedBy: P['hugo'],
@@ -226,6 +232,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-4: APPROVED — alice, lab instruments exhibition, bob assigned and approved; project ready to start
   {
     id: 'prop-4',
+    referenceNumber: 'VRP-20260601-0004',
+    title: 'Science history exhibition on early laboratory instruments',
     status: 'APPROVED',
     type: 'EXHIBITION',
     requestedBy: P['alice'],
@@ -262,6 +270,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-5: REJECTED — iris, expedition photography exhibition, greg assigned and rejected
   {
     id: 'prop-5',
+    referenceNumber: 'VRP-20260601-0005',
+    title: 'Science history exhibition on expedition photography',
     status: 'REJECTED',
     type: 'EXHIBITION',
     requestedBy: P['iris'],
@@ -281,6 +291,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-6: REJECTED — hugo, botanical herbarium; bob assigned and rejected (scope too broad)
   {
     id: 'prop-6',
+    referenceNumber: 'VRP-20260601-0006',
+    title: 'Botanical herbarium records of medicinal plant collections',
     status: 'REJECTED',
     type: 'RESEARCH',
     requestedBy: P['hugo'],
@@ -300,6 +312,8 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
   // prop-7: APPROVED — hugo, port photography research; bob forwarded to dan who approved; project completed
   {
     id: 'prop-7',
+    referenceNumber: 'VRP-20260601-0007',
+    title: 'Photographic history of Rio de Janeiro port, 1890–1930',
     status: 'APPROVED',
     type: 'RESEARCH',
     requestedBy: P['hugo'],

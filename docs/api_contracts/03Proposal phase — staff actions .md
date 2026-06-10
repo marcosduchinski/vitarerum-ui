@@ -25,6 +25,8 @@ size        : Integer          (default 20)
   "content": [
     {
       "id": "uuid",
+      "referenceNumber": "VRP-20250115-0001",
+      "title": "string",
       "status": "PENDING",
       "type": "RESEARCH",
       "requestedBy": {
@@ -55,7 +57,7 @@ size        : Integer          (default 20)
 }
 ```
 
-List items carry the proposal summary only — there is no embedded `collectionUseProject` (use `GET /proposals/{proposalId}` for the linked project reference).
+List items carry the proposal summary only, including the proposal `referenceNumber` (`VRP-YYYYMMDD-XXXX`) and `title` — there is no embedded `collectionUseProject` (use `GET /proposals/{proposalId}` for the linked project reference).
 
 ---
 
@@ -82,6 +84,8 @@ Both fields are optional. When `targetPermissionId` is omitted the caller is ass
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "PENDING",
   "assignedTo": {
     "permissionId": "uuid",
@@ -145,6 +149,8 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "PENDING",
   "lastEvent": {
     "occurredAt": "2025-01-16T09:00:00",
@@ -196,6 +202,8 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "PENDING",
   "assignedTo": {
     "permissionId": "uuid",
@@ -248,6 +256,8 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "PENDING",
   "lastEvent": {
     "occurredAt": "2025-01-19T11:00:00",
@@ -307,6 +317,8 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "PENDING",
   "lastEvent": {
     "occurredAt": "2025-01-20T09:30:00",
@@ -370,6 +382,8 @@ proposalId : UUID (required)
 {
   "proposal": {
     "id": "uuid",
+    "referenceNumber": "VRP-20250115-0001",
+    "title": "string",
     "status": "APPROVED",
     "assignedTo": null,
     "lastEvent": {
@@ -396,7 +410,7 @@ proposalId : UUID (required)
 }
 ```
 
-`referenceNumber` follows the `CUP-XXXXXXXX` pattern (8 hex chars).
+The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collectionUseProject.referenceNumber` follows the `CUP-XXXXXXXX` pattern (8 hex chars).
 
 **Response `403 Forbidden`**
 ```json
@@ -444,6 +458,8 @@ proposalId : UUID (required)
 ```json
 {
   "id": "uuid",
+  "referenceNumber": "VRP-20250115-0001",
+  "title": "string",
   "status": "REJECTED",
   "assignedTo": null,
   "lastEvent": {
