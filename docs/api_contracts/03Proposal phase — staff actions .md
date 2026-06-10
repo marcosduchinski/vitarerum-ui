@@ -440,7 +440,7 @@ The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collect
 
 ### `POST /proposals/{proposalId}/reject`
 
-**Description** — Curator rejects the proposal. Transitions the proposal from `PENDING` to `REJECTED` and records a `REJECTED` `ProposalEvent`. No project is created or affected (the project only exists after approval). A `reason` is mandatory. Only available to `CURATORIAL` group members.
+**Description** — Curator rejects the proposal. Transitions the proposal from `PENDING` to `REJECTED`, records a `REJECTED` `ProposalEvent`, and appends a conversation message from the caller's permission user to the requester using `reason` as the message body. No project is created or affected (the project only exists after approval). A `reason` is mandatory. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
