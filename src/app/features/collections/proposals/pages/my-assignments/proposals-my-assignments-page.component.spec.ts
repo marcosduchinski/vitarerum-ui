@@ -24,6 +24,7 @@ const SESSION: IdentitySession = {
   },
   group: 'COLLECTIONS_MANAGEMENT',
   availableGroups: ['COLLECTIONS_MANAGEMENT'],
+  permissions: [{ permissionId: 'permission-staff', group: 'COLLECTIONS_MANAGEMENT' }],
 };
 
 const PROPOSAL: ProposalSummary = {
@@ -127,7 +128,9 @@ class IdentityServiceStub implements IdentityService {
   }
 
   getPermissionId(): string | null {
-    return null;
+    const session = this.sessionState();
+    if (session === null) return null;
+    return session.permissions?.find((p) => p.group === session.group)?.permissionId ?? null;
   }
 
   setGroup(group: GroupName): void {

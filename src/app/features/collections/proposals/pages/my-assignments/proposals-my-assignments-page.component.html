@@ -5,7 +5,7 @@
     description="Requests currently assigned to you."
   />
 
-  @if (usersResource.isLoading() || proposalsResource.isLoading()) {
+  @if (proposalsResource.isLoading()) {
     <app-loading-state />
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />

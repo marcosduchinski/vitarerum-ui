@@ -76,23 +76,16 @@ export class ProposalsMyAssignmentsPageComponent {
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
 
+  // Staff directory for the forward picker only. The assignments list no longer
+  // depends on this (see currentPermissionId), so a failure here degrades the
+  // picker without blanking the list.
   protected readonly usersResource = resource({
     loader: () => firstValueFrom(this.userService.listUsers({ size: 100 })),
   });
 
-  protected readonly currentPermissionId = computed(() => {
-    const session = this.identity.session();
-    if (!session) return null;
-
-    const user = (this.usersResource.value()?.content ?? []).find(
-      (candidate) => candidate.id === session.user.id || candidate.email === session.user.email,
-    );
-
-    return (
-      user?.permissions.find((permission) => permission.group.name === session.group)
-        ?.permissionId ?? null
-    );
-  });
+  // The active permission id comes straight from the session — no need to fetch
+  // the (admin-only) user directory to look it up.
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
 
   protected readonly proposalsResource = resource({
     params: () => ({
@@ -130,7 +123,7 @@ export class ProposalsMyAssignmentsPageComponent {
     Math.min((this.currentPage() + 1) * this.pageSize(), this.totalProposals()),
   );
   protected readonly listError = computed<ApiError | null>(() => {
-    const err = this.proposalsResource.error() ?? this.usersResource.error();
+    const err = this.proposalsResource.error();
     return err ? toApiError(err) : null;
   });
 
