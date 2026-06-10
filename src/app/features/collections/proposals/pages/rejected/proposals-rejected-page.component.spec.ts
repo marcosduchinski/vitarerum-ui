@@ -74,7 +74,7 @@ describe('ProposalsRejectedPageComponent', () => {
 
     expect(proposalService.queries).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ status: 'REJECTED', page: 0, size: 500, search: '' }),
+        expect.objectContaining({ status: 'REJECTED', page: 0, size: 100, search: '' }),
       ]),
     );
   });

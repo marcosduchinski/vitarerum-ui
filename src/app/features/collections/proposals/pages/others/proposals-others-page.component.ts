@@ -13,7 +13,6 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
-import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -26,7 +25,10 @@ import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-const ASSIGNMENTS_FETCH_SIZE = 500;
+// Capped at the backend's max page size. "Others" fetches a page of PENDING
+// proposals and filters out the caller's own client-side (there is no
+// "assigned to others" server filter); proposals beyond this cap aren't shown.
+const ASSIGNMENTS_FETCH_SIZE = 100;
 
 @Component({
   selector: 'app-proposals-others-page',
@@ -48,7 +50,6 @@ const ASSIGNMENTS_FETCH_SIZE = 500;
 export class ProposalsOthersPageComponent {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
-  private readonly userService = inject(USER_MANAGEMENT_SERVICE);
   private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
@@ -56,23 +57,9 @@ export class ProposalsOthersPageComponent {
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
 
-  protected readonly usersResource = resource({
-    loader: () => firstValueFrom(this.userService.listUsers({ size: 100 })),
-  });
-
-  protected readonly currentPermissionId = computed(() => {
-    const session = this.identity.session();
-    if (!session) return null;
-
-    const user = (this.usersResource.value()?.content ?? []).find(
-      (candidate) => candidate.id === session.user.id || candidate.email === session.user.email,
-    );
-
-    return (
-      user?.permissions.find((permission) => permission.group.name === session.group)
-        ?.permissionId ?? null
-    );
-  });
+  // The active permission id comes straight from the session — no need to fetch
+  // the (admin-only) user directory to look it up.
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
 
   protected readonly proposalsResource = resource({
     params: () => ({
@@ -114,7 +101,7 @@ export class ProposalsOthersPageComponent {
     Math.min((this.currentPage() + 1) * this.pageSize(), this.totalProposals()),
   );
   protected readonly listError = computed<ApiError | null>(() => {
-    const err = this.proposalsResource.error() ?? this.usersResource.error();
+    const err = this.proposalsResource.error();
     return err ? toApiError(err) : null;
   });
 

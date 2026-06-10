@@ -47,8 +47,19 @@ export class ProposalApiService {
   }
 
   listProposals(query: ProposalListQuery = {}): Observable<Page<ProposalSummary>> {
+    // The contract uses snake_case filter names; the TS query stays camelCase.
     return this.http.get<Page<ProposalSummary>>(this.url('/proposals'), {
-      params: buildHttpParams(query),
+      params: buildHttpParams({
+        status: query.status,
+        type: query.type,
+        requested_by: query.requestedBy,
+        assigned_to: query.assignedTo,
+        date_from: query.dateFrom,
+        date_to: query.dateTo,
+        search: query.search,
+        page: query.page,
+        size: query.size,
+      }),
     });
   }
 

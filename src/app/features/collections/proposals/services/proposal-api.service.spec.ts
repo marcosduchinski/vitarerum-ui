@@ -85,13 +85,13 @@ describe('ProposalApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/proposals?status=PENDING&type=RESEARCH&requestedBy=permission-external&assignedTo=permission-1&dateFrom=2026-01-01&dateTo=2026-01-31&search=CUP&page=1&size=25',
+      'https://api.example.test/proposals?status=PENDING&type=RESEARCH&requested_by=permission-external&assigned_to=permission-1&date_from=2026-01-01&date_to=2026-01-31&search=CUP&page=1&size=25',
     );
 
     expect(request.request.method).toBe('GET');
     expect(request.request.params.get('status')).toBe('PENDING');
-    expect(request.request.params.get('requestedBy')).toBe('permission-external');
-    expect(request.request.params.get('assignedTo')).toBe('permission-1');
+    expect(request.request.params.get('requested_by')).toBe('permission-external');
+    expect(request.request.params.get('assigned_to')).toBe('permission-1');
     request.flush({ content: [], page: 1, size: 25, totalElements: 0, totalPages: 0 });
   });
 

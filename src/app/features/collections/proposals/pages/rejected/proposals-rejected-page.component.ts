@@ -22,7 +22,9 @@ import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-const TERMINAL_FETCH_SIZE = 500;
+// Capped at the backend's max page size (size > this returns 422). Terminal
+// proposals beyond this cap aren't shown.
+const TERMINAL_FETCH_SIZE = 100;
 
 @Component({
   selector: 'app-proposals-rejected-page',
