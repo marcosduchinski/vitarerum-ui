@@ -117,6 +117,22 @@ describe('ProposalApiService', () => {
     });
   });
 
+  it('downloads a document as a blob', () => {
+    let received: Blob | undefined;
+    service.downloadDocument('proposal-1', 'document-1').subscribe((blob) => (received = blob));
+
+    const request = http.expectOne(
+      'https://api.example.test/proposals/proposal-1/documents/document-1',
+    );
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+
+    const blob = new Blob(['file-bytes']);
+    request.flush(blob);
+    expect(received).toBe(blob);
+  });
+
   it('posts proposal decision actions to documented endpoints', () => {
     const approveBody = {
       title: 'Specimen study',

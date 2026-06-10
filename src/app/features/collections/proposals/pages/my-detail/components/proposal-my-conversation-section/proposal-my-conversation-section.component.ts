@@ -13,11 +13,14 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ApiError } from '@core/http/api-error.model';
+import { firstValueFrom } from 'rxjs';
+
+import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
-import { Message, ProposalDetail } from '../../../../models/proposal.model';
+import { Message, MessageAttachment, ProposalDetail } from '../../../../models/proposal.model';
+import { PROPOSAL_API_SERVICE } from '../../../../services/proposal-api.service';
 import { formatProposalMyDetailDateTime } from '../../proposal-my-detail.presentation';
 
 export interface ReplyComposerPayload {
@@ -38,6 +41,7 @@ type ReplyEditorCommand = 'bold' | 'italic' | 'insertUnorderedList' | 'removeFor
 export class ProposalMyConversationSectionComponent {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly replyEditor = viewChild<ElementRef<HTMLElement>>('replyEditor');
 
   readonly proposal = input.required<ProposalDetail>();
@@ -60,6 +64,10 @@ export class ProposalMyConversationSectionComponent {
   protected readonly replyBody = signal('');
   protected readonly formatDateTime = formatProposalMyDetailDateTime;
 
+  // documentId currently downloading, plus the last download error (per section).
+  protected readonly downloadingDocumentId = signal<string | null>(null);
+  protected readonly downloadError = signal<ApiError | null>(null);
+
   constructor() {
     effect(() => {
       if (this.replyResetVersion() > 0) this.clearReply();
@@ -77,6 +85,34 @@ export class ProposalMyConversationSectionComponent {
 
   protected isRequesterMessage(message: Message): boolean {
     return message.sender === this.proposal().requestedBy.user.email;
+  }
+
+  protected async downloadAttachment(attachment: MessageAttachment): Promise<void> {
+    if (this.downloadingDocumentId()) return;
+
+    this.downloadingDocumentId.set(attachment.documentId);
+    this.downloadError.set(null);
+    try {
+      const blob = await firstValueFrom(
+        this.proposalService.downloadDocument(this.proposal().id, attachment.documentId),
+      );
+      this.saveBlob(blob, attachment.fileName);
+    } catch (err) {
+      this.downloadError.set(toApiError(err));
+    } finally {
+      this.downloadingDocumentId.set(null);
+    }
+  }
+
+  private saveBlob(blob: Blob, fileName: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const url = URL.createObjectURL(blob);
+    const anchor = this.document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   protected onReplyInput(event: Event): void {

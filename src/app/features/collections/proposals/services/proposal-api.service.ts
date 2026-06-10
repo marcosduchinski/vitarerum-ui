@@ -82,6 +82,15 @@ export class ProposalApiService {
     return this.http.get<ProposalDocumentsResponse>(this.url(`/proposals/${proposalId}/documents`));
   }
 
+  // Downloads a single document's binary content. The endpoint streams the file
+  // (Content-Disposition: attachment); the Bearer token is added by the auth
+  // interceptor, so it must be fetched here rather than linked directly.
+  downloadDocument(proposalId: string, documentId: string): Observable<Blob> {
+    return this.http.get(this.url(`/proposals/${proposalId}/documents/${documentId}`), {
+      responseType: 'blob',
+    });
+  }
+
   listEvents(proposalId: string, query: PageQuery = {}): Observable<ProposalEventsPage> {
     return this.http.get<ProposalEventsPage>(this.url(`/proposals/${proposalId}/events`), {
       params: buildHttpParams(query),

@@ -570,6 +570,6 @@ A few conventions worth noting across this group:
 
 **`reason` is schema-mandatory on rejection** — a missing `reason` is rejected by request validation with `422 Unprocessable Entity`.
 
-**Conversation and document endpoints are shared** — staff use the same `GET/POST /proposals/{proposalId}/conversation`, `POST /proposals/{proposalId}/conversation/messages`, and `POST/GET /proposals/{proposalId}/documents` contracts defined in the researcher group. The sender is always resolved from the authenticated user's session.
+**Conversation and document endpoints are shared** — staff use the same `GET/POST /proposals/{proposalId}/conversation`, `POST /proposals/{proposalId}/conversation/messages`, `POST/GET /proposals/{proposalId}/documents`, and `GET /proposals/{proposalId}/documents/{documentId}` (download) contracts defined in the researcher group. The sender is always resolved from the authenticated user's session.
 
 **Watchers carry no behavior** — watcher endpoints manage visibility only. They produce no `ProposalEvent` and have no effect on status transitions. The `watchers` list is always returned in the `GET /proposals/{proposalId}` response.

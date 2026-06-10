@@ -26,11 +26,25 @@
               <ul class="message-attachments" aria-label="Message attachments">
                 @for (attachment of msg.attachments; track attachment.documentId) {
                   <li>
-                    <span class="pi pi-paperclip" aria-hidden="true"></span>
-                    {{ attachment.fileName }}
+                    <button
+                      type="button"
+                      class="message-attachment"
+                      [disabled]="downloadingDocumentId() === attachment.documentId"
+                      [attr.aria-label]="'Download ' + attachment.fileName"
+                      (click)="downloadAttachment(attachment)"
+                    >
+                      <span class="pi pi-paperclip" aria-hidden="true"></span>
+                      {{ attachment.fileName }}
+                      @if (downloadingDocumentId() === attachment.documentId) {
+                        <span class="pi pi-spin pi-spinner" aria-hidden="true"></span>
+                      }
+                    </button>
                   </li>
                 }
               </ul>
+              @if (downloadError()) {
+                <app-error-message [apiError]="downloadError()!" />
+              }
             }
           </div>
         </li>

@@ -231,6 +231,12 @@ export class ProposalApiServiceMock {
     return of({ proposalId, documents: proposal.documents });
   }
 
+  downloadDocument(proposalId: string, documentId: string): Observable<Blob> {
+    const proposal = this.proposals.get(proposalId);
+    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    return of(new Blob([`mock document content for ${documentId}`], { type: 'text/plain' }));
+  }
+
   listEvents(proposalId: string, query: PageQuery = {}): Observable<ProposalEventsPage> {
     const evts = this.events.get(proposalId) ?? [];
     return of({ ...makePageFrom(evts, query), proposalId });

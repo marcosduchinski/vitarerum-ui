@@ -324,6 +324,44 @@ proposalId : UUID (required)
 
 ---
 
+### `GET /proposals/{proposalId}/documents/{documentId}`
+
+**Description** — Download the binary content of a single document (e.g. a conversation message attachment). Streams the stored file resolved from its `fileReference`, with a `Content-Disposition: attachment` header so browsers save it under its original `fileName`. Access follows the same rules as the parent proposal: the requester and staff (`CURATORIAL`, `COLLECTIONS_MANAGEMENT`, `DIRECTION`, `SYS_ADMIN`) may download; other callers get `403`.
+
+**Path parameters**
+```
+proposalId : UUID (required)
+documentId : UUID (required)
+```
+
+**Response `200 OK`** — binary file stream (not JSON)
+```
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+Content-Disposition: attachment; filename="research_form.docx"
+
+<binary file content>
+```
+
+The `Content-Type` reflects the stored file's media type (`.docx` today). Clients authenticate with the usual `Authorization` / `X-Permission-Id` headers — there is no public/presigned URL, so the file must be fetched through this endpoint rather than linked directly.
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "NOT_FOUND",
+  "message": "Document not found for this proposal"
+}
+```
+
+**Response `403 Forbidden`**
+```json
+{
+  "error": "ACCESS_DENIED",
+  "message": "You do not have access to this proposal"
+}
+```
+
+---
+
 ### `GET /proposals/{proposalId}/events`
 
 **Description** — Get the immutable audit trail of a proposal, paginated in insertion order. Reflects every `ProposalEvent` recorded on the aggregate.

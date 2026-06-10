@@ -1,11 +1,17 @@
 import { ComponentRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
 import { Message, ProposalDetail } from '../../../../models/proposal.model';
+import { PROPOSAL_API_SERVICE } from '../../../../services/proposal-api.service';
 import {
   ProposalMyConversationSectionComponent,
   ReplyComposerPayload,
 } from './proposal-my-conversation-section.component';
+
+const proposalServiceStub = {
+  downloadDocument: () => of(new Blob(['mock'])),
+};
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
@@ -72,6 +78,7 @@ describe('ProposalMyConversationSectionComponent', () => {
   it('renders requester and staff messages with roles and attachments', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalMyConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
@@ -95,6 +102,7 @@ describe('ProposalMyConversationSectionComponent', () => {
   it('emits reply body and selected files, then clears when reset version changes', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalMyConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
@@ -142,6 +150,7 @@ describe('ProposalMyConversationSectionComponent', () => {
   it('runs browser editor commands from formatting controls', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalMyConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
     }).compileComponents();
 
     const execCommand = vi.fn();
@@ -162,5 +171,40 @@ describe('ProposalMyConversationSectionComponent', () => {
     boldButton!.click();
 
     expect(execCommand).toHaveBeenCalledWith('bold', false);
+  });
+
+  it('downloads an attachment via the proposal service when its button is clicked', async () => {
+    const downloadDocument = vi.fn().mockReturnValue(of(new Blob(['file-bytes'])));
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    await TestBed.configureTestingModule({
+      imports: [ProposalMyConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: { downloadDocument } }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalMyConversationSectionComponent> = fixture.componentRef;
+
+    setRequiredInputs(componentRef);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const downloadButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Download signed-response.docx"]',
+    );
+
+    expect(downloadButton).not.toBeNull();
+
+    downloadButton!.click();
+    await fixture.whenStable();
+
+    expect(downloadDocument).toHaveBeenCalledWith('proposal-1', 'document-1');
+    expect(createObjectURL).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
   });
 });
