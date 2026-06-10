@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
+import { groupNameOf } from '@core/auth/models/permission.model';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
@@ -138,12 +139,11 @@ export class ProposalDetailPageComponent {
   });
   protected readonly staffOptions = computed<ForwardStaffOption[]>(() =>
     (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
-      u.permissions
-        .filter((p) => p.group.name !== 'EXTERNAL')
-        .map((p) => ({
-          label: `${u.name} — ${GROUP_LABELS[p.group.name]}`,
-          permissionId: p.permissionId,
-        })),
+      u.permissions.flatMap((p) => {
+        const groupName = groupNameOf(p.group);
+        if (groupName === 'EXTERNAL') return [];
+        return [{ label: `${u.name} — ${GROUP_LABELS[groupName]}`, permissionId: p.permissionId }];
+      }),
     ),
   );
 

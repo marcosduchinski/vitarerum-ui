@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
+import { groupNameOf } from '@core/auth/models/permission.model';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
@@ -130,12 +131,13 @@ export class ProposalsMyAssignmentsPageComponent {
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly staffOptions = computed<ForwardStaffOption[]>(() =>
     (this.usersResource.value()?.content ?? []).flatMap((user) =>
-      user.permissions
-        .filter((permission) => permission.group.name !== 'EXTERNAL')
-        .map((permission) => ({
-          label: `${user.name} — ${GROUP_LABELS[permission.group.name]}`,
-          permissionId: permission.permissionId,
-        })),
+      user.permissions.flatMap((permission) => {
+        const groupName = groupNameOf(permission.group);
+        if (groupName === 'EXTERNAL') return [];
+        return [
+          { label: `${user.name} — ${GROUP_LABELS[groupName]}`, permissionId: permission.permissionId },
+        ];
+      }),
     ),
   );
 

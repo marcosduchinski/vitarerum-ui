@@ -10,6 +10,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { groupNameOf } from '@core/auth/models/permission.model';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
@@ -87,12 +88,16 @@ export class ProposalMyDetailPageComponent {
   protected readonly watchers = computed(() => this.proposal()?.watchers ?? []);
   protected readonly staffOptions = computed<StaffWatcherOption[]>(() =>
     (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
-      u.permissions
-        .filter((p) => p.group.name !== 'EXTERNAL')
-        .map((p) => ({
-          label: `${u.name} - ${PROPOSAL_MY_DETAIL_GROUP_LABELS[p.group.name]}`,
-          permissionId: p.permissionId,
-        })),
+      u.permissions.flatMap((p) => {
+        const groupName = groupNameOf(p.group);
+        if (groupName === 'EXTERNAL') return [];
+        return [
+          {
+            label: `${u.name} - ${PROPOSAL_MY_DETAIL_GROUP_LABELS[groupName]}`,
+            permissionId: p.permissionId,
+          },
+        ];
+      }),
     ),
   );
   protected readonly watcherOptions = computed<StaffWatcherOption[]>(() => {
