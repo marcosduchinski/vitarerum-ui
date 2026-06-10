@@ -5,7 +5,7 @@ export const PROPOSAL_MY_DETAIL_GROUP_LABELS: Record<GroupName, string> = {
   COLLECTIONS_MANAGEMENT: 'Collections management',
   CURATORIAL: 'Curatorial',
   DIRECTION: 'Direction',
-  ADMINISTRATION: 'Administration',
+  SYS_ADMIN: 'Administration',
 };
 
 export function formatProposalMyDetailDateTime(iso: string): string {

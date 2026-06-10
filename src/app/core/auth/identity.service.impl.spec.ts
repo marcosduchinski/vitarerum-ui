@@ -75,7 +75,7 @@ describe('IdentityServiceImpl', () => {
     expect(service.getPermissionId()).toBe('perm-1-CURATORIAL');
 
     // A group outside availableGroups is ignored.
-    service.setGroup('ADMINISTRATION');
+    service.setGroup('SYS_ADMIN');
     expect(service.session()?.group).toBe('CURATORIAL');
   });
 

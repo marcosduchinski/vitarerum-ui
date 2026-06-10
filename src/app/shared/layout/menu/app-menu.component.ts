@@ -94,7 +94,7 @@ const USE_OF_COLLECTIONS_STAFF: MenuNode = {
   items: [COLLECTION_PROPOSALS_STAFF, COLLECTION_PROJECTS_STAFF],
 };
 
-const ADMINISTRATION_MENU: MenuNode = {
+const SYS_ADMIN_MENU: MenuNode = {
   label: 'Administration',
   items: [
     { label: 'Users', icon: 'pi pi-users', routerLink: '/p/admin/users' },
@@ -107,7 +107,7 @@ const MENUS: Record<GroupName, readonly MenuNode[]> = {
   COLLECTIONS_MANAGEMENT: [HOME, USE_OF_COLLECTIONS_STAFF],
   CURATORIAL: [HOME, USE_OF_COLLECTIONS_STAFF],
   DIRECTION: [HOME, USE_OF_COLLECTIONS_STAFF],
-  ADMINISTRATION: [HOME, USE_OF_COLLECTIONS_STAFF, ADMINISTRATION_MENU],
+  SYS_ADMIN: [HOME, USE_OF_COLLECTIONS_STAFF, SYS_ADMIN_MENU],
 };
 
 @Component({

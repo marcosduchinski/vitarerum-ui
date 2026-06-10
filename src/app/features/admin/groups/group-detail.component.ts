@@ -34,7 +34,7 @@ const GROUP_META: Record<GroupName, { label: string; description: string }> = {
     label: 'Direction',
     description: 'Institutional direction that clarifies or decides on referred proposals.',
   },
-  ADMINISTRATION: {
+  SYS_ADMIN: {
     label: 'Administrators',
     description: 'System administrators with full access to users, groups, proposals, and projects.',
   },

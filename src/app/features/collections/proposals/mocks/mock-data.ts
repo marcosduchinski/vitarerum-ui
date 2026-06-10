@@ -22,7 +22,7 @@ export const MOCK_GROUPS: Group[] = [
   { id: 'g-collections', name: 'COLLECTIONS_MANAGEMENT' },
   { id: 'g-curatorial', name: 'CURATORIAL' },
   { id: 'g-direction', name: 'DIRECTION' },
-  { id: 'g-admin', name: 'ADMINISTRATION' },
+  { id: 'g-admin', name: 'SYS_ADMIN' },
 ];
 
 export const MOCK_USERS: UserDetail[] = [
@@ -124,7 +124,7 @@ export const P: Record<string, PermissionPrincipal> = {
   eve: {
     permissionId: 'perm-eve',
     user: { id: 'u-eve', name: 'Eve Lima', email: 'eve@admin.example.com' },
-    group: 'ADMINISTRATION',
+    group: 'SYS_ADMIN',
   },
   fran: {
     permissionId: 'perm-fran-collections',

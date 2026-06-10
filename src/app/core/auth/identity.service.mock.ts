@@ -20,7 +20,7 @@ const MOCK_ACCOUNTS: Record<string, MockAccount> = {
   'bob@collections.example.com': { id: 'u-bob',   name: 'Bob Santos',    groups: ['COLLECTIONS_MANAGEMENT'] },
   'carol@curatorial.example.com':{ id: 'u-carol', name: 'Carol Souza',   groups: ['CURATORIAL'] },
   'dan@direction.example.com':   { id: 'u-dan',   name: 'Dan Oliveira',  groups: ['DIRECTION'] },
-  'eve@admin.example.com':       { id: 'u-eve',   name: 'Eve Lima',      groups: ['ADMINISTRATION'] },
+  'eve@admin.example.com':       { id: 'u-eve',   name: 'Eve Lima',      groups: ['SYS_ADMIN'] },
   'fran@staff.example.com':      { id: 'u-fran',  name: 'Fran Costa',    groups: ['COLLECTIONS_MANAGEMENT', 'CURATORIAL', 'DIRECTION'] },
   'greg@collections.example.com':{ id: 'u-greg',  name: 'Greg Viana',    groups: ['COLLECTIONS_MANAGEMENT'] },
 };

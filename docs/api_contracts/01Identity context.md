@@ -336,7 +336,7 @@ userId : UUID (required)
     },
     {
       "id": "uuid",
-      "name": "ADMINISTRATION"
+      "name": "SYS_ADMIN"
     }
   ]
 }

@@ -59,7 +59,7 @@ test('DIRECTION user sees proposal terminal queues without administration links'
   await expect(sidebar(page).getByRole('link', { name: 'Groups' })).not.toBeVisible();
 });
 
-test('ADMINISTRATION user can reach users and groups from the sidebar', async ({ page }) => {
+test('SYS_ADMIN user can reach users and groups from the sidebar', async ({ page }) => {
   await loginAs(page, 'eve@admin.example.com');
 
   await expect(sidebar(page).getByText('Administration', { exact: true })).toBeVisible();
