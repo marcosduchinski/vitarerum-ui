@@ -20,6 +20,15 @@
    end note
 
   Pending --> Pending : Proposal is updated \n during review \n (eg. messages exchange)
+  Submitted --> Cancelled : Requester cancels \n the proposal
+  Pending --> Cancelled : Requester cancels \n the proposal
+  Approved --> Cancelled : Requester cancels \n the proposal and project
+  note right of Cancelled
+      Status: CANCELLED
+       event: CANCELLED
+       visibility : Cancelled list (for curators and collections managers)
+       My proposals list (for external requesters)
+    end note
   Pending --> Rejected : Rejected after review
   note left of Rejected
       Status: REJECTED
@@ -37,5 +46,6 @@
     end note
   Approved --> [*] : Project is created after proposal approval
   Rejected --> [*]
+  Cancelled --> [*]
 
 @enduml

@@ -1,6 +1,6 @@
 export type UseType = 'EXHIBITION' | 'RESEARCH' | 'OTHER';
 
-export type ProposalStatus = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ProposalStatus = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 export type ProposalEventType =
   | 'SUBMITTED'
@@ -23,7 +23,7 @@ export type UseEventType = 'REQUESTED' | 'STARTED' | 'COMPLETED' | 'CANCELLED';
 
 export type MediaType = 'DOCUMENT' | 'IMAGE' | 'VIDEO' | 'OTHER';
 
-export type StatusTone = 'approved' | 'closed' | 'pending' | 'rejected' | 'review' | 'submitted';
+export type StatusTone = 'approved' | 'cancelled' | 'pending' | 'rejected' | 'review' | 'submitted';
 
 export interface StatusPresentation {
   readonly label: string;
@@ -35,13 +35,14 @@ const PROPOSAL_STATUS_PRESENTATION = {
   PENDING: { label: 'Under review', tone: 'review' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },
+  CANCELLED: { label: 'Cancelled', tone: 'cancelled' },
 } as const satisfies Record<ProposalStatus, StatusPresentation>;
 
 const USE_STATUS_PRESENTATION = {
   CREATED: { label: 'Created', tone: 'submitted' },
   IN_PROGRESS: { label: 'In progress', tone: 'review' },
   COMPLETED: { label: 'Completed', tone: 'approved' },
-  CANCELLED: { label: 'Cancelled', tone: 'closed' },
+  CANCELLED: { label: 'Cancelled', tone: 'cancelled' },
 } as const satisfies Record<UseStatus, StatusPresentation>;
 
 export function getProposalStatusPresentation(status: ProposalStatus): StatusPresentation {

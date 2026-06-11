@@ -42,8 +42,8 @@
   color: var(--status-rejected-text);
 }
 
-.status-chip--closed {
-  border-color: color-mix(in srgb, var(--status-closed-text) 18%, transparent);
-  background: var(--status-closed-bg);
-  color: var(--status-closed-text);
+.status-chip--cancelled {
+  border-color: color-mix(in srgb, var(--status-cancelled-text) 18%, transparent);
+  background: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
 }

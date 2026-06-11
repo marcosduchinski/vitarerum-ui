@@ -831,7 +831,7 @@ export class MockProjectState {
     project.proposalStatus = proposalStatus;
     project.proposalAssignedTo = proposalAssignedTo;
 
-    if (proposalStatus === 'REJECTED') {
+    if (proposalStatus === 'REJECTED' || proposalStatus === 'CANCELLED') {
       project.status = 'CANCELLED';
       project.result = 'CANCELLED';
       const events = this.events.get(project.id) ?? [];

@@ -8,7 +8,7 @@
 
 **Query parameters**
 ```
-status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECTED
+status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECTED | CANCELLED
 type        : UseType          (optional) EXHIBITION | RESEARCH | OTHER
 requested_by: UUID             (optional) filter by researcher (honoured for staff only)
 assigned_to : UUID             (optional) filter by attendant permissionId
@@ -121,7 +121,7 @@ Both fields are optional. When `targetPermissionId` is omitted the caller is ass
 ```json
 {
   "error": "INVALID_TRANSITION",
-  "message": "Cannot assign a proposal that is already APPROVED or REJECTED"
+  "message": "Cannot assign a proposal that is already decided or cancelled"
 }
 ```
 
@@ -589,9 +589,9 @@ A few conventions worth noting across this group:
 
 **Group-restricted commands** — `assign`, `forward`, and `request-documents` require a staff permission (`CURATORIAL`, `COLLECTIONS_MANAGEMENT`, `DIRECTION`, or `SYS_ADMIN`). `approve`, `reject`, and `refer-to-direction` require `CURATORIAL`; `direction-clarification` requires `DIRECTION`. Invalid group membership returns `403 Forbidden` (`INSUFFICIENT_GROUP`). Explicit assignment/forwarding/watcher targets must be staff permissions, otherwise the API returns `422 INVALID_PERMISSION_TARGET`.
 
-**Single review state** — the implemented flow is `SUBMITTED` → `assign` (`→ PENDING`, event `ASSIGNED`) → all review activity happens in `PENDING` (`request-documents`, document uploads, `forward`, `refer-to-direction`, `direction-clarification`, messages — none change the status) → `approve` (`→ APPROVED`, creates the project) or `reject` (`→ REJECTED`). There is no separate `PENDING_DOCUMENTS`/`UNDER_REVIEW`/`PENDING_DIRECTION` state, and there is no `start-review` endpoint.
+**Single review state** — the implemented flow is `SUBMITTED` → `assign` (`→ PENDING`, event `ASSIGNED`) → all review activity happens in `PENDING` (`request-documents`, document uploads, `forward`, `refer-to-direction`, `direction-clarification`, messages — none change the status) → `approve` (`→ APPROVED`, creates the project), `reject` (`→ REJECTED`), or requester cancellation (`→ CANCELLED`). There is no separate `PENDING_DOCUMENTS`/`UNDER_REVIEW`/`PENDING_DIRECTION` state, and there is no `start-review` endpoint.
 
-**Approve is the only dual-aggregate response** — `approve` returns the updated `Proposal` and the newly-created `CollectionUseProject` together, reflecting that it atomically decides the proposal and materialises the project. `reject` returns the proposal alone (no project exists). There is no proposal-level `cancel` endpoint; cancellation lives on the project (`POST /collection-use-projects/{projectId}/cancel`).
+**Dual-aggregate responses** — `approve` returns the updated `Proposal` and the newly-created `CollectionUseProject` together, reflecting that it atomically decides the proposal and materialises the project. Requester cancellation (`POST /proposals/{proposalId}/cancel`, defined in file 02) returns the cancelled proposal and the linked project summary when a project already exists. `reject` returns the proposal alone.
 
 **`reason` is schema-mandatory on rejection** — a missing `reason` is rejected by request validation with `422 Unprocessable Entity`.
 

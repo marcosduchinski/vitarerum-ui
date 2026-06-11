@@ -163,6 +163,33 @@ describe('ProposalApiServiceMock', () => {
     });
   });
 
+  it('cancels a proposal, records a CANCELLED event and cascades the project', async () => {
+    const projectService = TestBed.inject(ProjectApiServiceMock);
+    await firstValueFrom(service.approveProposal('prop-3', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Approved' }));
+
+    const result = await firstValueFrom(service.cancelProposal('prop-3', { reason: 'Trip cancelled' }));
+    expect(result.proposal.status).toBe('CANCELLED');
+    expect(result.proposal.lastEvent.note).toBe('Trip cancelled');
+    expect(result.collectionUseProject?.status).toBe('CANCELLED');
+
+    const proposal = await firstValueFrom(service.getProposal('prop-3'));
+    expect(proposal.status).toBe('CANCELLED');
+
+    const events = await firstValueFrom(service.listEvents('prop-3'));
+    expect(events.content[events.content.length - 1].type).toBe('CANCELLED');
+
+    const project = await firstValueFrom(projectService.getProject('proj-3'));
+    expect(project.status).toBe('CANCELLED');
+  });
+
+  it('refuses to cancel a rejected proposal', async () => {
+    await firstValueFrom(service.rejectProposal('prop-3', { reason: 'Out of scope' }));
+
+    await expect(
+      firstValueFrom(service.cancelProposal('prop-3', { reason: 'Too late' })),
+    ).rejects.toMatchObject({ status: 422 });
+  });
+
   it('creates a new proposal and lists it', async () => {
     const created = await firstValueFrom(
       service.createProposal({

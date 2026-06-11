@@ -13,12 +13,14 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
+import { ProposalStatus } from '@shared/models/collection-use-status.model';
 import { Page } from '@shared/models/page.model';
 
 import { ProposalSummary } from '../../models/proposal.model';
@@ -26,6 +28,8 @@ import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+// Cancellation is allowed from these statuses; REJECTED/CANCELLED are terminal.
+const CANCELLABLE_STATUSES: readonly ProposalStatus[] = ['SUBMITTED', 'PENDING', 'APPROVED'];
 
 function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
   return { content: [], page, size, totalElements: 0, totalPages: 0 };
@@ -44,6 +48,7 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
     EmptyStateComponent,
     StatusChipComponent,
     TypeChipComponent,
+    ConfirmModalComponent,
   ],
   templateUrl: './proposals-my-page.component.html',
   styleUrl: './proposals-my-page.component.scss',
@@ -102,16 +107,21 @@ export class ProposalsMyPageComponent {
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   protected readonly actionsMenuId = signal<string | null>(null);
-  protected readonly rowActionItems = computed<MenuItem[]>(() => {
+  protected readonly actionsMenuProposal = computed<ProposalSummary | null>(() => {
     const proposalId = this.actionsMenuId();
-    if (!proposalId) return [];
+    if (!proposalId) return null;
+    return this.proposals().find((proposal) => proposal.id === proposalId) ?? null;
+  });
+  protected readonly rowActionItems = computed<MenuItem[]>(() => {
+    const proposal = this.actionsMenuProposal();
+    if (!proposal) return [];
 
-    return [
+    const items: MenuItem[] = [
       {
         label: 'View details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/proposals', proposalId], {
+          void this.router.navigate(['/p/collections/proposals', proposal.id], {
             queryParams: {
               returnTo: '/p/collections/proposals/my',
               returnLabel: 'my proposals',
@@ -120,7 +130,24 @@ export class ProposalsMyPageComponent {
         },
       },
     ];
+
+    if (CANCELLABLE_STATUSES.includes(proposal.status)) {
+      items.push({
+        label: 'Cancel proposal',
+        icon: 'pi pi-times-circle',
+        styleClass: 'row-action--danger',
+        command: () => this.openCancelModal(proposal),
+      });
+    }
+
+    return items;
   });
+
+  protected readonly cancelModalOpen = signal(false);
+  protected readonly cancelTarget = signal<ProposalSummary | null>(null);
+  protected readonly cancelReason = signal('');
+  protected readonly cancelling = signal(false);
+  protected readonly cancelError = signal<ApiError | null>(null);
 
   protected prevPage(): void {
     this.currentPage.update((page) => Math.max(0, page - 1));
@@ -164,5 +191,42 @@ export class ProposalsMyPageComponent {
 
   protected closeActionsMenu(): void {
     this.actionsMenuId.set(null);
+  }
+
+  protected openCancelModal(proposal: ProposalSummary): void {
+    this.cancelTarget.set(proposal);
+    this.cancelReason.set('');
+    this.cancelError.set(null);
+    this.cancelModalOpen.set(true);
+  }
+
+  protected closeCancelModal(): void {
+    if (this.cancelling()) return;
+    this.cancelModalOpen.set(false);
+    this.cancelTarget.set(null);
+  }
+
+  protected onCancelReasonInput(event: Event): void {
+    this.cancelReason.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected async confirmCancel(): Promise<void> {
+    const target = this.cancelTarget();
+    const reason = this.cancelReason().trim();
+    if (!target || !reason || this.cancelling()) return;
+
+    this.cancelling.set(true);
+    this.cancelError.set(null);
+
+    try {
+      await firstValueFrom(this.proposalService.cancelProposal(target.id, { reason }));
+      this.cancelModalOpen.set(false);
+      this.cancelTarget.set(null);
+      this.proposalsResource.reload();
+    } catch (err) {
+      this.cancelError.set(toApiError(err));
+    } finally {
+      this.cancelling.set(false);
+    }
   }
 }

@@ -220,7 +220,7 @@ proposalId : UUID (required)
 }
 ```
 
-`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`), the top-level `title` is the title submitted with the proposal, and `beginDate` / `endDate` are the requested use period. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings, `status` is the placeholder `CREATED`, and `requestedBy` is `null`. After approval these reflect the real project (`CUP-XXXXXXXX`) and its `requestedBy` permission. `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
+`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`), the top-level `title` is the title submitted with the proposal, and `beginDate` / `endDate` are the requested use period. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings, `status` is the placeholder `CREATED`, and `requestedBy` is `null`. After approval these reflect the real project (`CUP-XXXXXXXX`) and its `requestedBy` permission. `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
 
 **Response `404 Not Found`**
 ```json
@@ -235,6 +235,92 @@ proposalId : UUID (required)
 {
   "error": "ACCESS_DENIED",
   "message": "You do not have access to this proposal"
+}
+```
+
+---
+
+### `POST /proposals/{proposalId}/cancel`
+
+**Description** — Cancels a proposal. Only the requester recorded in `requestedBy` can cancel it, and cancellation is allowed from `SUBMITTED`, `PENDING`, or `APPROVED`. `REJECTED` proposals are terminal and cannot be cancelled. Records a `CANCELLED` `ProposalEvent`. If the proposal already has an associated `CollectionUseProject`, the project is also transitioned to `CANCELLED`, its `result` is set to `CANCELLED`, and a `CANCELLED` `UseEvent` is recorded, regardless of the project's previous status.
+
+**Path parameters**
+```
+proposalId : UUID (required)
+```
+
+**Request body**
+```json
+{
+  "reason": "Research trip cancelled"
+}
+```
+
+**Response `200 OK`**
+```json
+{
+  "proposal": {
+    "id": "uuid",
+    "referenceNumber": "VRP-20250115-0001",
+    "title": "Research on 19th century photographs",
+    "status": "CANCELLED",
+    "beginDate": "2025-02-01",
+    "endDate": "2025-02-10",
+    "assignedTo": null,
+    "lastEvent": {
+      "occurredAt": "2025-01-17T10:00:00",
+      "type": "CANCELLED",
+      "triggeredBy": {
+        "permissionId": "uuid",
+        "user": {
+          "id": "uuid",
+          "name": "string",
+          "email": "string"
+        },
+        "group": "EXTERNAL"
+      },
+      "note": "Research trip cancelled"
+    }
+  },
+  "collectionUseProject": null
+}
+```
+
+When a linked project exists, `collectionUseProject` contains its cancelled summary:
+
+```json
+{
+  "collectionUseProject": {
+    "id": "uuid",
+    "referenceNumber": "CUP-1A2B3C4D",
+    "title": "Research on 19th century photographs",
+    "status": "CANCELLED",
+    "requestedBy": {
+      "permissionId": "uuid",
+      "user": {
+        "id": "uuid",
+        "name": "string",
+        "email": "string"
+      },
+      "group": "EXTERNAL"
+    }
+  }
+}
+```
+
+**Response `403 Forbidden`**
+```json
+{
+  "error": "ACCESS_DENIED",
+  "message": "Only the requester can cancel this proposal"
+}
+```
+
+**Response `422 Unprocessable Entity`**
+```json
+{
+  "error": "VALIDATION_ERROR",
+  "message": "Cannot cancel a rejected proposal"
 }
 ```
 

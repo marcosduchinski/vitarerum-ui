@@ -34,7 +34,7 @@ describe('collection-use status presentation', () => {
     });
     expect(getUseStatusPresentation('CANCELLED')).toEqual({
       label: 'Cancelled',
-      tone: 'closed',
+      tone: 'cancelled',
     });
   });
 });

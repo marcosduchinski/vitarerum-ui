@@ -12,6 +12,7 @@ import {
   DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
+  ProposalCancellationResult,
   ProposalDecisionResult,
   ProposalEventResult,
   ProposalNoteRequest,
@@ -454,6 +455,58 @@ export class ProposalApiServiceMock {
     return of({
       proposal: { id: proposalId, status: 'REJECTED', lastEvent: evt },
       collectionUseProject: { ...proposal.collectionUseProject!, status: 'CANCELLED' },
+    });
+  }
+
+  cancelProposal(
+    proposalId: string,
+    request: ProposalReasonRequest,
+  ): Observable<ProposalCancellationResult> {
+    const proposal = this.proposals.get(proposalId);
+    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    if (proposal.status === 'REJECTED') {
+      return throwError(() => ({
+        status: 422,
+        error: 'VALIDATION_ERROR',
+        message: 'Cannot cancel a rejected proposal',
+      }));
+    }
+
+    const now = new Date().toISOString();
+    const evt: ProposalEvent = {
+      occurredAt: now,
+      type: 'CANCELLED',
+      triggeredBy: this.currentPrincipal(),
+      note: request.reason,
+    };
+    const hadProject = proposal.collectionUseProject?.status === 'IN_PROGRESS'
+      || proposal.collectionUseProject?.status === 'COMPLETED'
+      || proposal.status === 'APPROVED';
+    const updated: ProposalDetail = {
+      ...proposal,
+      status: 'CANCELLED',
+      collectionUseProject: proposal.collectionUseProject
+        ? { ...proposal.collectionUseProject, status: 'CANCELLED' }
+        : proposal.collectionUseProject,
+    };
+    this.proposals.set(proposalId, updated);
+    this.projectState.syncProposalStatus(proposalId, 'CANCELLED', proposal.assignedTo, this.currentPrincipal());
+    this.pushEvent(proposalId, evt);
+
+    return of({
+      proposal: {
+        id: proposalId,
+        referenceNumber: proposal.referenceNumber,
+        title: proposal.title,
+        status: 'CANCELLED',
+        beginDate: proposal.beginDate,
+        endDate: proposal.endDate,
+        assignedTo: proposal.assignedTo,
+        lastEvent: evt,
+      },
+      collectionUseProject: hadProject && proposal.collectionUseProject
+        ? { ...proposal.collectionUseProject, status: 'CANCELLED' }
+        : null,
     });
   }
 

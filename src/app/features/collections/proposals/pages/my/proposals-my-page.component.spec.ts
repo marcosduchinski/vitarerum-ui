@@ -111,17 +111,39 @@ class IdentityServiceStub implements IdentityService {
 
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  readonly cancelCalls: { proposalId: string; reason: string }[] = [];
+  rows: ProposalSummary[] = [PROPOSAL];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
     const size = query.size ?? 20;
 
     return of<Page<ProposalSummary>>({
-      content: [PROPOSAL],
+      content: this.rows,
       page: query.page ?? 0,
       size,
-      totalElements: 1,
+      totalElements: this.rows.length,
       totalPages: 1,
+    });
+  }
+
+  cancelProposal(proposalId: string, request: { reason: string }) {
+    this.cancelCalls.push({ proposalId, reason: request.reason });
+    return of({
+      proposal: {
+        id: proposalId,
+        referenceNumber: PROPOSAL.referenceNumber,
+        title: PROPOSAL.title,
+        status: 'CANCELLED' as const,
+        assignedTo: null,
+        lastEvent: {
+          occurredAt: '2026-05-02T10:00:00',
+          type: 'CANCELLED' as const,
+          triggeredBy: PROPOSAL.requestedBy,
+          note: request.reason,
+        },
+      },
+      collectionUseProject: null,
     });
   }
 }
@@ -240,6 +262,60 @@ describe('ProposalsMyPageComponent', () => {
 
     expect(document.body.textContent).not.toContain('Forward');
     expect(document.body.textContent).toContain('View details');
+  });
+
+  it('offers Cancel proposal for a cancellable proposal and submits the reason', async () => {
+    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-001"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    menuItemByText('Cancel proposal').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const reason = compiled.querySelector<HTMLTextAreaElement>('#cancel-reason');
+    expect(reason).not.toBeNull();
+    reason!.value = 'Trip cancelled';
+    reason!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const confirmButton = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.confirm-modal__button--primary'),
+    ).find((button) => button.textContent?.includes('Cancel proposal'));
+    confirmButton!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.cancelCalls).toEqual([
+      { proposalId: 'proposal-1', reason: 'Trip cancelled' },
+    ]);
+  });
+
+  it('hides Cancel proposal for terminal proposals', async () => {
+    proposalService.rows = [{ ...PROPOSAL, status: 'REJECTED' }];
+
+    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-001"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).not.toContain('Cancel proposal');
   });
 });
 

@@ -15,6 +15,7 @@ import {
   DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
+  ProposalCancellationResult,
   ProposalDecisionResult,
   ProposalEventResult,
   ProposalNoteRequest,
@@ -191,6 +192,18 @@ export class ProposalApiService {
   ): Observable<ProposalDecisionResult> {
     return this.http.post<ProposalDecisionResult>(
       this.url(`/proposals/${proposalId}/reject`),
+      request,
+    );
+  }
+
+  // Researcher cancels their own proposal. Allowed from SUBMITTED/PENDING/APPROVED;
+  // a linked project (if any) is cascaded to CANCELLED by the backend.
+  cancelProposal(
+    proposalId: string,
+    request: ProposalReasonRequest,
+  ): Observable<ProposalCancellationResult> {
+    return this.http.post<ProposalCancellationResult>(
+      this.url(`/proposals/${proposalId}/cancel`),
       request,
     );
   }

@@ -14,7 +14,7 @@ export type WorkflowStatus =
 
 interface StatusPresentation {
   label: string;
-  tone: 'approved' | 'closed' | 'pending' | 'rejected' | 'review' | 'submitted';
+  tone: 'approved' | 'cancelled' | 'pending' | 'rejected' | 'review' | 'submitted';
 }
 
 const STATUS_PRESENTATION = {
@@ -22,7 +22,7 @@ const STATUS_PRESENTATION = {
   PENDING: { label: 'Under review', tone: 'review' },
   APPROVED: { label: 'Approved', tone: 'approved' },
   REJECTED: { label: 'Rejected', tone: 'rejected' },
-  CANCELLED: { label: 'Cancelled', tone: 'closed' },
+  CANCELLED: { label: 'Cancelled', tone: 'cancelled' },
   CREATED: { label: 'Created', tone: 'submitted' },
   IN_PROGRESS: { label: 'In progress', tone: 'review' },
   COMPLETED: { label: 'Completed', tone: 'approved' },

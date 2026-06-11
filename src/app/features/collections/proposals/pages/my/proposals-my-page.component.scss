@@ -3,3 +3,18 @@
 .proposals-table__col-status {
   width: 8rem;
 }
+
+.cancel-modal-body {
+  display: grid;
+  gap: 0.5rem;
+
+  textarea {
+    min-height: 5rem;
+    resize: vertical;
+  }
+}
+
+.cancel-modal-body__hint {
+  margin: 0;
+  color: var(--color-subtle);
+}

@@ -77,3 +77,21 @@ export interface ProposalDecisionResult {
     readonly status: UseStatus;
   };
 }
+
+// Cancel returns a richer proposal summary, and `collectionUseProject` is null
+// when no project was ever materialised (proposal cancelled before approval).
+export interface ProposalCancellationResult {
+  readonly proposal: {
+    readonly id: string;
+    readonly referenceNumber: string;
+    readonly title: string;
+    readonly status: ProposalStatus;
+    readonly beginDate?: string;
+    readonly endDate?: string;
+    readonly assignedTo: PermissionPrincipal | null;
+    readonly lastEvent: ProposalEvent;
+  };
+  readonly collectionUseProject:
+    | (ProposalProjectSummary & { readonly status: UseStatus })
+    | null;
+}

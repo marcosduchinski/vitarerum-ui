@@ -197,5 +197,37 @@
       [appendTo]="'body'"
       (onHide)="closeActionsMenu()"
     />
+
+    <app-confirm-modal
+      [open]="cancelModalOpen()"
+      title="Cancel proposal?"
+      confirmLabel="Cancel proposal"
+      cancelLabel="Keep proposal"
+      tone="danger"
+      [pending]="cancelling()"
+      [confirmDisabled]="!cancelReason().trim()"
+      (confirmed)="confirmCancel()"
+      (cancelled)="closeCancelModal()"
+    >
+      @if (cancelTarget(); as target) {
+        <div class="cancel-modal-body">
+          <p class="cancel-modal-body__hint">
+            This will cancel {{ target.referenceNumber }} and cannot be undone. Any linked project
+            will be cancelled too.
+          </p>
+          <label for="cancel-reason">Reason</label>
+          <textarea
+            id="cancel-reason"
+            rows="4"
+            placeholder="Explain why you are cancelling..."
+            [value]="cancelReason()"
+            (input)="onCancelReasonInput($event)"
+          ></textarea>
+          @if (cancelError(); as error) {
+            <app-error-message [apiError]="error" />
+          }
+        </div>
+      }
+    </app-confirm-modal>
   }
 </div>
