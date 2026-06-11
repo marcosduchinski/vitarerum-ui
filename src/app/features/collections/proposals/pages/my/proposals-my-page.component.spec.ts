@@ -117,13 +117,15 @@ class ProposalApiServiceStub {
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
     const size = query.size ?? 20;
+    const page = query.page ?? 0;
+    const start = page * size;
 
     return of<Page<ProposalSummary>>({
-      content: this.rows,
-      page: query.page ?? 0,
+      content: this.rows.slice(start, start + size),
+      page,
       size,
       totalElements: this.rows.length,
-      totalPages: 1,
+      totalPages: this.rows.length === 0 ? 0 : Math.ceil(this.rows.length / size),
     });
   }
 
@@ -297,6 +299,59 @@ describe('ProposalsMyPageComponent', () => {
     expect(proposalService.cancelCalls).toEqual([
       { proposalId: 'proposal-1', reason: 'Trip cancelled' },
     ]);
+  });
+
+  it('advances to the next page and re-queries with the new page index', async () => {
+    proposalService.rows = Array.from({ length: 45 }, (_, i) => ({
+      ...PROPOSAL,
+      id: `proposal-${i + 1}`,
+      referenceNumber: `VR-2026-${String(i + 1).padStart(3, '0')}`,
+    }));
+
+    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Page 1 of 3');
+
+    compiled.querySelector<HTMLButtonElement>('[aria-label="Next page"]')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.queries.at(-1)).toMatchObject({ page: 1, size: 20 });
+    expect(compiled.textContent).toContain('Page 2 of 3');
+  });
+
+  it('reflects the default page size in the Rows select and re-queries when it changes', async () => {
+    proposalService.rows = Array.from({ length: 15 }, (_, i) => ({
+      ...PROPOSAL,
+      id: `proposal-${i + 1}`,
+      referenceNumber: `VR-2026-${String(i + 1).padStart(3, '0')}`,
+    }));
+
+    const fixture = TestBed.createComponent(ProposalsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const select = compiled.querySelector<HTMLSelectElement>('#proposals-page-size')!;
+
+    // The select must show the actual model size (20), not its first option (10).
+    expect(select.value).toBe('20');
+    expect(proposalService.queries.at(-1)).toMatchObject({ size: 20, page: 0 });
+
+    select.value = '10';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.queries.at(-1)).toMatchObject({ size: 10, page: 0 });
+    expect(compiled.textContent).toContain('Page 1 of 2');
   });
 
   it('hides Cancel proposal for terminal proposals', async () => {

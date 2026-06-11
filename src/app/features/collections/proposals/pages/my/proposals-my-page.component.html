@@ -5,12 +5,17 @@
     description="Requests submitted by you across every status."
   />
 
-  @if (proposalsResource.isLoading()) {
+  @if (initialLoading()) {
     <app-loading-state />
-  } @else if (listError()) {
+  } @else if (listError() && !proposals().length) {
     <app-error-message [apiError]="listError()!" (retry)="proposalsResource.reload()" />
   } @else {
-    <section class="proposals-list-panel" aria-label="My proposals list">
+    <section
+      class="proposals-list-panel"
+      aria-label="My proposals list"
+      [class.is-reloading]="reloading()"
+      [attr.aria-busy]="reloading()"
+    >
       <div class="proposals-toolbar">
         <label class="proposals-search" for="proposals-search">
           <span class="pi pi-search" aria-hidden="true"></span>
@@ -134,13 +139,9 @@
               </span>
               <label class="proposals-pagination__size" for="proposals-page-size">
                 Rows
-                <select
-                  id="proposals-page-size"
-                  [value]="pageSize()"
-                  (change)="onPageSizeChange($event)"
-                >
+                <select id="proposals-page-size" (change)="onPageSizeChange($event)">
                   @for (size of pageSizeOptions; track size) {
-                    <option [value]="size">{{ size }}</option>
+                    <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
                   }
                 </select>
               </label>
@@ -149,7 +150,7 @@
               <button
                 type="button"
                 class="action-btn"
-                [disabled]="currentPage() === 0"
+                [disabled]="currentPage() === 0 || reloading()"
                 (click)="firstPage()"
                 aria-label="First page"
               >
@@ -158,7 +159,7 @@
               <button
                 type="button"
                 class="action-btn"
-                [disabled]="currentPage() === 0"
+                [disabled]="currentPage() === 0 || reloading()"
                 (click)="prevPage()"
                 aria-label="Previous page"
               >
@@ -170,7 +171,7 @@
               <button
                 type="button"
                 class="action-btn"
-                [disabled]="currentPage() >= totalPages() - 1"
+                [disabled]="currentPage() >= totalPages() - 1 || reloading()"
                 (click)="nextPage()"
                 aria-label="Next page"
               >
@@ -179,7 +180,7 @@
               <button
                 type="button"
                 class="action-btn"
-                [disabled]="currentPage() >= totalPages() - 1"
+                [disabled]="currentPage() >= totalPages() - 1 || reloading()"
                 (click)="lastPage()"
                 aria-label="Last page"
               >

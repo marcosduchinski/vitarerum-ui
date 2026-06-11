@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   resource,
   signal,
 } from '@angular/core';
@@ -88,11 +89,28 @@ export class ProposalsMyPageComponent {
     },
   });
 
-  protected readonly proposals = computed(() => this.proposalsResource.value()?.content ?? []);
-  protected readonly totalProposals = computed(
-    () => this.proposalsResource.value()?.totalElements ?? 0,
+  // The resource clears value() to undefined whenever params change (every page
+  // navigation), which would otherwise blank the whole list + pagination on each
+  // Next/Prev click. Retain the last resolved page so the table stays mounted and
+  // only the very first load shows the full-panel spinner.
+  protected readonly loadedPage = linkedSignal<
+    Page<ProposalSummary> | undefined,
+    Page<ProposalSummary> | undefined
+  >({
+    source: () => this.proposalsResource.value(),
+    computation: (value, previous) => value ?? previous?.value,
+  });
+
+  protected readonly initialLoading = computed(
+    () => this.proposalsResource.isLoading() && !this.loadedPage(),
   );
-  protected readonly totalPages = computed(() => this.proposalsResource.value()?.totalPages ?? 0);
+  protected readonly reloading = computed(
+    () => this.proposalsResource.isLoading() && !!this.loadedPage(),
+  );
+
+  protected readonly proposals = computed(() => this.loadedPage()?.content ?? []);
+  protected readonly totalProposals = computed(() => this.loadedPage()?.totalElements ?? 0);
+  protected readonly totalPages = computed(() => this.loadedPage()?.totalPages ?? 0);
   protected readonly rangeStart = computed(() =>
     this.totalProposals() === 0 ? 0 : this.currentPage() * this.pageSize() + 1,
   );

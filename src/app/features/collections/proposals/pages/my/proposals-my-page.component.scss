@@ -4,6 +4,17 @@
   width: 8rem;
 }
 
+/* Page navigation keeps the table mounted; dim it while the next page loads. */
+.proposals-list-panel.is-reloading {
+  position: relative;
+
+  .proposals-table-shell {
+    opacity: 0.55;
+    transition: opacity 120ms ease;
+    pointer-events: none;
+  }
+}
+
 .cancel-modal-body {
   display: grid;
   gap: 0.5rem;
