@@ -341,10 +341,19 @@ a {
   .message {
     grid-template-columns: 2.5rem 1fr;
     align-items: start;
+    border-left-width: 3px;
   }
 
+  /* Two participants, two brand colours from the system palette: the requester
+     in indigo (accent), the staff/responder in coral (CTA). */
   .message--requester {
-    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-panel-muted));
+    border-left-color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .message:not(.message--requester) {
+    border-left-color: var(--color-cta);
+    background: var(--color-cta-soft);
   }
 
   .message__avatar {
@@ -354,8 +363,18 @@ a {
     height: 2.5rem;
     border: 1px solid var(--color-line);
     border-radius: 50%;
-    background: var(--color-surface);
+    background: var(--color-panel);
     color: var(--color-accent);
+  }
+
+  .message--requester .message__avatar {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-line));
+    color: var(--color-accent);
+  }
+
+  .message:not(.message--requester) .message__avatar {
+    border-color: color-mix(in srgb, var(--color-cta) 45%, var(--color-line));
+    color: var(--color-cta);
   }
 
   .message__content {
@@ -369,6 +388,7 @@ a {
     margin-top: 0.15rem;
     color: var(--color-subtle);
     font-size: 0.75rem;
+    font-weight: 700;
     text-transform: capitalize;
   }
 
