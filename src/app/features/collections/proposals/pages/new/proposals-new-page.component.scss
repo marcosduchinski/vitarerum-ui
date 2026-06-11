@@ -74,7 +74,31 @@
 }
 
 .proposals-table-shell {
-  overflow-x: auto;
+  max-height: 70vh;
+  overflow: auto;
+  /* Horizontal scroll-shadow cue: edge shadows that fade out at the ends. */
+  background:
+    linear-gradient(to right, var(--color-panel) 30%, transparent) 0 0,
+    linear-gradient(to right, transparent, var(--color-panel) 70%) 100% 0,
+    radial-gradient(
+        farthest-side at 0 50%,
+        color-mix(in srgb, var(--color-text) 14%, transparent),
+        transparent
+      )
+      0 0,
+    radial-gradient(
+        farthest-side at 100% 50%,
+        color-mix(in srgb, var(--color-text) 14%, transparent),
+        transparent
+      )
+      100% 0;
+  background-repeat: no-repeat;
+  background-size:
+    40px 100%,
+    40px 100%,
+    14px 100%,
+    14px 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .proposals-table {
@@ -118,7 +142,14 @@
 }
 
 .proposals-table th {
+  /* Sticky header keeps the column labels in view on long lists. The inset
+     shadow stands in for the bottom border, which collapses under sticky. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
   background: color-mix(in srgb, var(--color-panel-muted) 78%, var(--color-panel));
+  border-bottom: none;
+  box-shadow: inset 0 -1px 0 var(--color-line);
   color: var(--color-subtle);
   font-size: 0.72rem;
   font-weight: 800;
@@ -141,6 +172,7 @@
 .proposals-table__ref {
   color: var(--color-subtle);
   font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -169,6 +201,7 @@
 .proposals-table__date {
   color: var(--color-subtle);
   font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -294,10 +327,6 @@
 }
 
 @media (max-width: 700px) {
-  .proposals-table {
-    min-width: 64rem;
-  }
-
   .proposals-table th,
   .proposals-table td {
     padding-inline: 0.75rem;
