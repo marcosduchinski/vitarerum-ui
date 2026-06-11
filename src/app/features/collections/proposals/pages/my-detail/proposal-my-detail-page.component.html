@@ -34,7 +34,7 @@
             <button
               type="button"
               class="action-btn action-btn--primary"
-              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              [disabled]="accepting() || rejecting() || forwarding()"
               (click)="requestAcceptConfirmation()"
             >
               <span class="pi pi-check-circle" aria-hidden="true"></span>
@@ -43,7 +43,7 @@
             <button
               type="button"
               class="action-btn"
-              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              [disabled]="accepting() || rejecting() || forwarding()"
               (click)="openRejectModal()"
             >
               <span class="pi pi-times-circle" aria-hidden="true"></span>
@@ -52,20 +52,11 @@
             <button
               type="button"
               class="action-btn"
-              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
+              [disabled]="accepting() || rejecting() || forwarding()"
               (click)="openForwardModal()"
             >
               <span class="pi pi-send" aria-hidden="true"></span>
               {{ forwarding() ? 'Forwarding...' : 'Forward' }}
-            </button>
-            <button
-              type="button"
-              class="action-btn"
-              [disabled]="accepting() || rejecting() || forwarding() || requestingDocs()"
-              (click)="openRequestDocsModal()"
-            >
-              <span class="pi pi-file" aria-hidden="true"></span>
-              {{ requestingDocs() ? 'Requesting...' : 'Request docs' }}
             </button>
           } @else {
             <p class="proposal-actions__status-note">
@@ -119,32 +110,6 @@
             (input)="onForwardNoteChange($event)"
           ></textarea>
         }
-      </div>
-    </app-confirm-modal>
-
-    <app-confirm-modal
-      [open]="requestDocsModalOpen()"
-      title="Request documents"
-      confirmLabel="Send request"
-      cancelLabel="Cancel"
-      [pending]="requestingDocs()"
-      (confirmed)="requestDocuments()"
-      (cancelled)="closeRequestDocsModal()"
-    >
-      <div class="request-docs-modal-body">
-        <p>
-          Request additional documents from
-          {{ proposal()!.requestedBy.user.name }} for
-          {{ proposal()!.referenceNumber }}.
-        </p>
-        <label for="my-detail-request-docs-note">Message to requester</label>
-        <textarea
-          id="my-detail-request-docs-note"
-          rows="4"
-          placeholder="Describe what documents are needed..."
-          [value]="requestDocsNote()"
-          (input)="onRequestDocsNoteChange($event)"
-        ></textarea>
       </div>
     </app-confirm-modal>
 

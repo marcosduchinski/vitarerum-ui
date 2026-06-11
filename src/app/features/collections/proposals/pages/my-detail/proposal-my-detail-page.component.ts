@@ -113,11 +113,9 @@ export class ProposalMyDetailPageComponent {
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
   protected readonly forwarding = signal(false);
-  protected readonly requestingDocs = signal(false);
   protected readonly acceptConfirmOpen = signal(false);
   protected readonly rejectModalOpen = signal(false);
   protected readonly forwardModalOpen = signal(false);
-  protected readonly requestDocsModalOpen = signal(false);
   protected readonly rejectionReason = signal('');
   // Approve materialises the project — the curator confirms its parameters here.
   protected readonly approvePurpose = signal('');
@@ -125,7 +123,6 @@ export class ProposalMyDetailPageComponent {
   protected readonly approveEndDate = signal('');
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardNote = signal('');
-  protected readonly requestDocsNote = signal('');
   protected readonly replyResetVersion = signal(0);
   protected readonly watcherResetVersion = signal(0);
   protected readonly sendingMessage = signal(false);
@@ -207,39 +204,6 @@ export class ProposalMyDetailPageComponent {
       this.actionError.set(toApiError(err));
     } finally {
       this.forwarding.set(false);
-    }
-  }
-
-  protected openRequestDocsModal(): void {
-    this.requestDocsNote.set('');
-    this.actionError.set(null);
-    this.requestDocsModalOpen.set(true);
-  }
-
-  protected closeRequestDocsModal(): void {
-    this.requestDocsModalOpen.set(false);
-  }
-
-  protected onRequestDocsNoteChange(event: Event): void {
-    this.requestDocsNote.set((event.target as HTMLTextAreaElement).value);
-  }
-
-  protected async requestDocuments(): Promise<void> {
-    if (this.requestingDocs()) return;
-
-    this.requestingDocs.set(true);
-    this.actionError.set(null);
-
-    try {
-      await firstValueFrom(
-        this.proposalService.requestDocuments(this.id(), { note: this.requestDocsNote() }),
-      );
-      this.requestDocsModalOpen.set(false);
-      this.eventsResource.reload();
-    } catch (err) {
-      this.actionError.set(toApiError(err));
-    } finally {
-      this.requestingDocs.set(false);
     }
   }
 
