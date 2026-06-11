@@ -7,7 +7,7 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -98,6 +98,7 @@ export class ProposalDetailPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly router = inject(Router);
 
   readonly id = input.required<string>();
   readonly returnTo = input<string>();
@@ -232,10 +233,13 @@ export class ProposalDetailPageComponent {
 
     try {
       await firstValueFrom(
-        this.proposalService.assignProposal(this.id(), { note: 'Assumed from proposal detail.' }),
+        this.proposalService.assignProposal(this.id(), {
+          note: 'Assigned to self from proposal detail.',
+        }),
       );
       this.assumeConfirmOpen.set(false);
-      this.reloadWorkflow();
+      // The proposal is now the current user's assignment — take them straight to it.
+      void this.router.navigate(['/p/collections/proposals/my-assignments', this.id()]);
     } catch (err) {
       this.actionError.set(toApiError(err));
       this.assumeConfirmOpen.set(false);

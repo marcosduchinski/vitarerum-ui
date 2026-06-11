@@ -210,7 +210,7 @@
     @for (proposal of proposals(); track proposal.id) {
       <app-confirm-modal
         [open]="assumeConfirmProposalId() === proposal.id"
-        title="Assume assignment?"
+        title="Take over assignment?"
         [message]="
           'This will move ' +
           proposal.referenceNumber +
@@ -218,7 +218,7 @@
           proposal.assignedTo!.user.name +
           ' to you.'
         "
-        confirmLabel="Assume assignment"
+        confirmLabel="Take over assignment"
         cancelLabel="Keep assigned"
         tone="warning"
         [pending]="assumingId() === proposal.id"

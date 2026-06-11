@@ -369,7 +369,7 @@ proposalId : UUID (required)
 
 ### `POST /proposals/{proposalId}/approve`
 
-**Description** — Curator approves the proposal and materialises the project. Transitions the proposal from `PENDING` to `APPROVED` and **creates** the linked `CollectionUseProject` in `CREATED` status. Records an `APPROVED` `ProposalEvent` and a `REQUESTED` `UseEvent` on the new project. The project's `title`, `purpose`, `beginDate`, and `endDate` are taken from this request body (the curator confirms/adjusts the project parameters at approval time). Only available to `CURATORIAL` group members.
+**Description** — Curator approves the proposal and materialises the project. Transitions the proposal from `PENDING` to `APPROVED` and **creates** the linked `CollectionUseProject` in `CREATED` status. Records an `APPROVED` `ProposalEvent` and a `REQUESTED` `UseEvent` on the new project. The project's `title`, `purpose`, `beginDate`, and `endDate` are taken from this request body (the curator confirms/adjusts the project parameters at approval time), and `requestedBy` is copied from the approved proposal. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
@@ -419,12 +419,21 @@ proposalId : UUID (required)
     "id": "uuid",
     "referenceNumber": "CUP-1A2B3C4D",
     "title": "string",
-    "status": "CREATED"
+    "status": "CREATED",
+    "requestedBy": {
+      "permissionId": "uuid",
+      "user": {
+        "id": "uuid",
+        "name": "string",
+        "email": "string"
+      },
+      "group": "EXTERNAL"
+    }
   }
 }
 ```
 
-The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collectionUseProject.referenceNumber` follows the `CUP-XXXXXXXX` pattern (8 hex chars).
+The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collectionUseProject.referenceNumber` follows the `CUP-XXXXXXXX` pattern (8 hex chars), and `collectionUseProject.requestedBy` is copied from the approved proposal.
 
 **Response `403 Forbidden`**
 ```json

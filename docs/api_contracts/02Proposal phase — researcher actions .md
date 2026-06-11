@@ -154,7 +154,8 @@ proposalId : UUID (required)
     "id": "uuid",
     "referenceNumber": "",
     "title": "",
-    "status": "CREATED"
+    "status": "CREATED",
+    "requestedBy": null
   },
   "conversationId": "uuid",
   "documents": [
@@ -219,7 +220,7 @@ proposalId : UUID (required)
 }
 ```
 
-`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`), the top-level `title` is the title submitted with the proposal, and `beginDate` / `endDate` are the requested use period. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings and `status` is the placeholder `CREATED`. After approval these reflect the real project (`CUP-XXXXXXXX`). `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
+`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`), the top-level `title` is the title submitted with the proposal, and `beginDate` / `endDate` are the requested use period. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings, `status` is the placeholder `CREATED`, and `requestedBy` is `null`. After approval these reflect the real project (`CUP-XXXXXXXX`) and its `requestedBy` permission. `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
 
 **Response `404 Not Found`**
 ```json

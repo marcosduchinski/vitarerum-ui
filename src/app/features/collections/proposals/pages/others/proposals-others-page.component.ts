@@ -117,7 +117,7 @@ export class ProposalsOthersPageComponent {
 
     return [
       {
-        label: 'Assume',
+        label: 'Take over',
         icon: 'pi pi-user-plus',
         command: () => this.requestAssumeConfirmation(proposalId),
       },

@@ -214,7 +214,8 @@ export class ProposalsNewPageComponent {
     try {
       await firstValueFrom(this.proposalService.assignProposal(proposalId, { note: '' }));
       this.assumeConfirmProposalId.set(null);
-      this.proposalsResource.reload();
+      // The proposal is now the current user's assignment — take them straight to it.
+      void this.router.navigate(['/p/collections/proposals/my-assignments', proposalId]);
     } catch (err) {
       this.assumeError.set(toApiError(err));
       this.assumeConfirmProposalId.set(null);

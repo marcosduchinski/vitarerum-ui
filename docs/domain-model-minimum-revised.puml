@@ -94,6 +94,8 @@ package "User Request" <<Bounded Context>> {
         - title: String
         - collectionUseProjectId: CollectionUseProjectId
         - type: UseType
+        - beginDate: LocalDate
+        - endDate: LocalDate
         - status: ProposalStatus
         - requestedBy: PermissionId
         - submittedAt: DateTime
@@ -236,6 +238,7 @@ package "Collection Use" <<Bounded Context>> {
         - status: UseStatus
         - beginDate: LocalDate
         - endDate: LocalDate
+        - requestedBy: PermissionId
         - proposalId: ProposalId?
         - requestNote: String?
         - note: String?
@@ -314,6 +317,7 @@ package "Collection Use" <<Bounded Context>> {
         CollectionUseProject *-- ReferenceNumber
         CollectionUseProject *-- "0..*" UseEvent
         CollectionUseProject ..> Proposal : proposalId
+        CollectionUseProject ..> Permission : requestedBy
         CollectionUseProject ..> Permission : authorisedBy
         UseEvent ..> Permission : triggeredBy
 

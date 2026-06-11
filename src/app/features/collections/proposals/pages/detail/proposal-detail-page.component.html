@@ -29,7 +29,7 @@
               (click)="requestAssumeConfirmation()"
             >
               <span class="pi pi-check-circle" aria-hidden="true"></span>
-              {{ assuming() ? 'Assuming…' : 'Assume' }}
+              {{ assuming() ? 'Assigning…' : 'Assign to me' }}
             </button>
             <button
               type="button"
@@ -58,13 +58,13 @@
 
     <app-confirm-modal
       [open]="assumeConfirmOpen()"
-      title="Assume proposal?"
+      title="Assign to me?"
       [message]="
         'This will assign ' +
         proposal()!.referenceNumber +
         ' to you for review.'
       "
-      confirmLabel="Assume proposal"
+      confirmLabel="Assign to me"
       cancelLabel="Keep unassigned"
       tone="warning"
       [pending]="assuming()"

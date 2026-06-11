@@ -7,8 +7,6 @@ import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 import { LoginRequest } from '@core/auth/models/login.model';
-import { UserDetail } from '@core/auth/models/user.model';
-import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
 
 import { CollectionUseProjectSummary, ProjectListQuery } from '../../models/project.model';
@@ -64,37 +62,6 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 4 
   },
 }));
 
-const USERS: Page<UserDetail> = {
-  content: [
-    {
-      id: 'user-1',
-      name: 'Alice Ferreira',
-      email: 'alice@example.test',
-      permissions: [
-        {
-          permissionId: 'permission-external',
-          group: { id: 'group-external', name: 'EXTERNAL' },
-        },
-      ],
-    },
-    {
-      id: 'staff-1',
-      name: 'Bob Santos',
-      email: 'bob@example.test',
-      permissions: [
-        {
-          permissionId: 'permission-staff',
-          group: { id: 'group-collections', name: 'COLLECTIONS_MANAGEMENT' },
-        },
-      ],
-    },
-  ],
-  page: 0,
-  size: 100,
-  totalElements: 2,
-  totalPages: 1,
-};
-
 let activeSession: IdentitySession | null = STAFF_SESSION;
 
 class IdentityServiceStub implements IdentityService {
@@ -131,7 +98,9 @@ class IdentityServiceStub implements IdentityService {
   }
 
   getPermissionId(): string | null {
-    return null;
+    const group = this.session()?.group;
+    if (group == null) return null;
+    return group === 'EXTERNAL' ? 'permission-external' : 'permission-staff';
   }
 
   setGroup(group: GroupName): void {
@@ -184,12 +153,6 @@ class ProjectApiServiceStub {
   }
 }
 
-class UserManagementServiceStub {
-  listUsers() {
-    return of(USERS);
-  }
-}
-
 describe('ProjectsMyPageComponent', () => {
   let projectService: ProjectApiServiceStub;
   let router: Router;
@@ -204,7 +167,6 @@ describe('ProjectsMyPageComponent', () => {
         provideRouter([]),
         { provide: IDENTITY_SERVICE, useClass: IdentityServiceStub },
         { provide: PROJECT_API_SERVICE, useValue: projectService },
-        { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
       ],
     }).compileComponents();
 

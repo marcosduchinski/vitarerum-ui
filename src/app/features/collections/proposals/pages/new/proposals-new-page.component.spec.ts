@@ -1,4 +1,4 @@
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
@@ -203,7 +203,10 @@ describe('ProposalsNewPageComponent', () => {
     expect(compiled.textContent).toContain('No proposals found');
   });
 
-  it('confirms assuming a new proposal before assigning it', async () => {
+  it('confirms assuming a new proposal then redirects to the assignment detail', async () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     const fixture = TestBed.createComponent(ProposalsNewPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -211,16 +214,16 @@ describe('ProposalsNewPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
 
-    buttonByText(compiled, 'Assume').click();
+    buttonByText(compiled, 'Assign to me').click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(proposalService.assignCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Assume proposal?');
+    expect(compiled.textContent).toContain('Assign to me?');
     expect(compiled.textContent).toContain('This will assign VR-2026-001 to you for review.');
 
-    buttonByText(compiled, 'Assume proposal').click();
+    compiled.querySelector<HTMLButtonElement>('.confirm-modal__button--primary')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -229,6 +232,10 @@ describe('ProposalsNewPageComponent', () => {
         proposalId: 'proposal-1',
         payload: { note: '' },
       },
+    ]);
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/p/collections/proposals/my-assignments',
+      'proposal-1',
     ]);
   });
 

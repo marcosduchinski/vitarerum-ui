@@ -1,6 +1,6 @@
 import { ComponentRef, signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -237,13 +237,16 @@ describe('ProposalDetailPageComponent', () => {
     expect(compiled.textContent).not.toContain('Decision desk');
     expect(
       Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).some(
-        (button) => button.textContent?.trim() === 'Assume',
+        (button) => button.textContent?.trim() === 'Assign to me',
       ),
     ).toBe(false);
     expect(compiled.textContent).toContain('No routing action is available for this status.');
   });
 
-  it('confirms assuming a submitted proposal before assigning it', async () => {
+  it('confirms assuming a submitted proposal then redirects to the assignment detail', async () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     const fixture = TestBed.createComponent(ProposalDetailPageComponent);
     const componentRef: ComponentRef<ProposalDetailPageComponent> = fixture.componentRef;
 
@@ -254,16 +257,16 @@ describe('ProposalDetailPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
 
-    buttonByText(compiled, 'Assume').click();
+    buttonByText(compiled, 'Assign to me').click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(proposalService.assignCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Assume proposal?');
+    expect(compiled.textContent).toContain('Assign to me?');
     expect(compiled.textContent).toContain('This will assign VR-2026-001 to you for review.');
 
-    buttonByText(compiled, 'Assume proposal').click();
+    compiled.querySelector<HTMLButtonElement>('.confirm-modal__button--primary')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     await new Promise<void>((resolve) => setTimeout(resolve));
@@ -272,11 +275,13 @@ describe('ProposalDetailPageComponent', () => {
     expect(proposalService.assignCalls).toEqual([
       {
         proposalId: 'proposal-1',
-        payload: { note: 'Assumed from proposal detail.' },
+        payload: { note: 'Assigned to self from proposal detail.' },
       },
     ]);
-    expect(proposalService.proposalLoads).toBeGreaterThan(1);
-    expect(proposalService.eventLoads).toBeGreaterThan(1);
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/p/collections/proposals/my-assignments',
+      'proposal-1',
+    ]);
   });
 
   it('opens the forward modal and forwards after confirmation', async () => {

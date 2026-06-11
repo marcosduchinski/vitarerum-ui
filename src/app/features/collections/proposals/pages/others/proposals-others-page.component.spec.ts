@@ -241,7 +241,7 @@ describe('ProposalsOthersPageComponent', () => {
     expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });
 
-  it('shows assume and view details in the row menu', async () => {
+  it('shows take over and view details in the row menu', async () => {
     const fixture = TestBed.createComponent(ProposalsOthersPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -258,11 +258,11 @@ describe('ProposalsOthersPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('Assume');
+    expect(document.body.textContent).toContain('Take over');
     expect(document.body.textContent).toContain('View details');
   });
 
-  it('confirms assuming another staff assignment from the row action menu', async () => {
+  it('confirms taking over another staff assignment from the row action menu', async () => {
     const fixture = TestBed.createComponent(ProposalsOthersPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -279,18 +279,18 @@ describe('ProposalsOthersPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    menuItemByText('Assume').click();
+    menuItemByText('Take over').click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(proposalService.assignCalls).toEqual([]);
-    expect(compiled.textContent).toContain('Assume assignment?');
+    expect(compiled.textContent).toContain('Take over assignment?');
     expect(compiled.textContent).toContain(
       'This will move VR-2026-001 from Carolina Silva to you.',
     );
 
-    buttonByText(compiled, 'Assume assignment').click();
+    buttonByText(compiled, 'Take over assignment').click();
     fixture.detectChanges();
     await fixture.whenStable();
 

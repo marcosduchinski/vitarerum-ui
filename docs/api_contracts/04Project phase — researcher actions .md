@@ -4,7 +4,7 @@
 
 ### `GET /collection-use-projects`
 
-**Description** — List projects. Non-staff callers are automatically scoped to projects originated by their own proposals (`requestedBy` match). Same endpoint as the staff list — visibility is decided from the caller's group.
+**Description** — List projects. Non-staff callers are automatically scoped to projects where `CollectionUseProject.requestedBy` matches the caller's `permissionId`. Same endpoint as the staff list — visibility is decided from the caller's group.
 
 **Query parameters**
 ```
@@ -52,7 +52,7 @@ size     : Integer     (default 20)
 }
 ```
 
-`requestedBy` is `null` for non-staff callers (only populated for staff).
+`requestedBy` is stored on the project as a `PermissionId`, but the hydrated `requestedBy` response object is `null` for non-staff callers (only populated for staff).
 
 ---
 
@@ -94,7 +94,7 @@ projectId : UUID (required)
 }
 ```
 
-`authorisedBy` / `authorisedAt` and `requestedBy` are populated only for staff callers — all three are `null` for a researcher. The detail view does not embed an entries summary; use `GET /collection-use-projects/{projectId}/log-entries` and `.../occurrence-entries` for the paginated lists.
+`authorisedBy` / `authorisedAt` and the hydrated `requestedBy` object are populated only for staff callers — all three are `null` for a researcher. `CollectionUseProject.requestedBy` remains the ownership field used for access control. The detail view does not embed an entries summary; use `GET /collection-use-projects/{projectId}/log-entries` and `.../occurrence-entries` for the paginated lists.
 
 **Response `403 Forbidden`**
 ```json

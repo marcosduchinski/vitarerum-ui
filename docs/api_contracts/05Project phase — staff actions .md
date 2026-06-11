@@ -4,7 +4,7 @@
 
 ### `GET /collection-use-projects`
 
-**Description** — List all projects across all researchers. Staff see every project regardless of ownership; for staff callers the `requestedBy` detail is populated on each item.
+**Description** — List all projects across all researchers. Staff see every project regardless of ownership; for staff callers the `requestedBy` detail is populated from `CollectionUseProject.requestedBy` on each item.
 
 **Query parameters**
 ```
@@ -74,7 +74,7 @@ size     : Integer     (default 20)
 
 ### `GET /collection-use-projects/{projectId}`
 
-**Description** — Get full detail of any project. Staff have access to all projects regardless of ownership; the response populates the `requestedBy` detail (it is `null` for non-staff callers).
+**Description** — Get full detail of any project. Staff have access to all projects regardless of ownership; the response populates the `requestedBy` detail from `CollectionUseProject.requestedBy` (it is `null` for non-staff callers).
 
 **Path parameters**
 ```
@@ -126,7 +126,7 @@ projectId : UUID (required)
 }
 ```
 
-> `requestedBy` is populated for staff callers (`null` for non-staff). `authorisedBy` / `authorisedAt` are nullable fields on the response that are **not currently populated by any flow** — they remain `null` (the approval flow that previously set them was removed). The detail view does not embed an `entries` summary; use the `log-entries` / `occurrence-entries` list endpoints.
+> `requestedBy` is a required `PermissionId` on `CollectionUseProject`; the API hydrates it as a permission detail for staff callers and returns `null` for non-staff. `authorisedBy` / `authorisedAt` are nullable fields on the response that are **not currently populated by any flow** — they remain `null` (the approval flow that previously set them was removed). The detail view does not embed an `entries` summary; use the `log-entries` / `occurrence-entries` list endpoints.
 
 **Response `404 Not Found`**
 ```json

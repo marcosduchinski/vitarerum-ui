@@ -9,7 +9,7 @@
     "
   />
 
-  @if (usersResource.isLoading() || projectsResource.isLoading()) {
+  @if (projectsResource.isLoading()) {
     <app-loading-state />
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="projectsResource.reload()" />
