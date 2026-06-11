@@ -84,11 +84,7 @@
                   <td>
                     <a
                       class="proposals-table__title"
-                      [routerLink]="['/p/collections/proposals', proposal.id]"
-                      [queryParams]="{
-                        returnTo: '/p/collections/proposals/others',
-                        returnLabel: 'other assignments',
-                      }"
+                      [routerLink]="['/p/collections/proposals/others', proposal.id]"
                     >
                       {{ proposal.title }}
                     </a>

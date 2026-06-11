@@ -125,12 +125,7 @@ export class ProposalsOthersPageComponent {
         label: 'View details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/proposals', proposalId], {
-            queryParams: {
-              returnTo: '/p/collections/proposals/others',
-              returnLabel: 'other assignments',
-            },
-          });
+          void this.router.navigate(['/p/collections/proposals/others', proposalId]);
         },
       },
     ];

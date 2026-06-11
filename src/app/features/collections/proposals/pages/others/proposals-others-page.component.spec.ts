@@ -236,7 +236,7 @@ describe('ProposalsOthersPageComponent', () => {
     expect(compiled.textContent).toContain('Requested by');
     expect(compiled.textContent).toContain('Assigned to');
     expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/proposal-other"]'),
+      compiled.querySelector('a[href^="/p/collections/proposals/others/proposal-other"]'),
     ).not.toBeNull();
     expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });

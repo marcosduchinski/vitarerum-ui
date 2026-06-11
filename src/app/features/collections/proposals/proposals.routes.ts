@@ -53,6 +53,15 @@ export const PROPOSALS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'others/:id',
+    title: 'Assignment',
+    canMatch: [staffGuard],
+    loadComponent: () =>
+      import('./pages/others-detail/proposal-others-detail-page.component').then(
+        (m) => m.ProposalOthersDetailPageComponent,
+      ),
+  },
+  {
     path: 'approved',
     title: 'Approved Proposals',
     canMatch: [staffGuard],
