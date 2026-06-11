@@ -1,6 +1,6 @@
 import { GroupName } from '@core/auth/models/group-name.enum';
 
-export const PROPOSAL_MY_DETAIL_GROUP_LABELS: Record<GroupName, string> = {
+export const PROPOSAL_DETAIL_GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External',
   COLLECTIONS_MANAGEMENT: 'Collections management',
   CURATORIAL: 'Curatorial',
@@ -8,7 +8,7 @@ export const PROPOSAL_MY_DETAIL_GROUP_LABELS: Record<GroupName, string> = {
   SYS_ADMIN: 'Administration',
 };
 
-export function formatProposalMyDetailDateTime(iso: string): string {
+export function formatProposalDetailDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString('en-GB', {
       day: '2-digit',

@@ -24,16 +24,16 @@ import { TypeChipComponent } from '@shared/components/type-chip/type-chip.compon
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import {
-  ProposalMyConversationSectionComponent,
+  ProposalConversationSectionComponent,
   ReplyComposerPayload,
-} from './components/proposal-my-conversation-section/proposal-my-conversation-section.component';
-import { ProposalMyEventsSectionComponent } from './components/proposal-my-events-section/proposal-my-events-section.component';
-import { ProposalMyOverviewSectionComponent } from './components/proposal-my-overview-section/proposal-my-overview-section.component';
+} from '../../components/proposal-conversation-section/proposal-conversation-section.component';
+import { ProposalEventsSectionComponent } from '../../components/proposal-events-section/proposal-events-section.component';
+import { ProposalOverviewSectionComponent } from '../../components/proposal-overview-section/proposal-overview-section.component';
 import {
-  ProposalMyWatchersSectionComponent,
+  ProposalWatchersSectionComponent,
   StaffWatcherOption,
-} from './components/proposal-my-watchers-section/proposal-my-watchers-section.component';
-import { PROPOSAL_MY_DETAIL_GROUP_LABELS } from './proposal-my-detail.presentation';
+} from '../../components/proposal-watchers-section/proposal-watchers-section.component';
+import { PROPOSAL_DETAIL_GROUP_LABELS } from '../../proposal-detail.presentation';
 
 type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
 
@@ -48,10 +48,10 @@ type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
     StatusChipComponent,
     TypeChipComponent,
     ConfirmModalComponent,
-    ProposalMyOverviewSectionComponent,
-    ProposalMyConversationSectionComponent,
-    ProposalMyWatchersSectionComponent,
-    ProposalMyEventsSectionComponent,
+    ProposalOverviewSectionComponent,
+    ProposalConversationSectionComponent,
+    ProposalWatchersSectionComponent,
+    ProposalEventsSectionComponent,
   ],
   templateUrl: './proposal-my-detail-page.component.html',
   styleUrl: './proposal-my-detail-page.component.scss',
@@ -93,7 +93,7 @@ export class ProposalMyDetailPageComponent {
         if (groupName === 'EXTERNAL') return [];
         return [
           {
-            label: `${u.name} - ${PROPOSAL_MY_DETAIL_GROUP_LABELS[groupName]}`,
+            label: `${u.name} - ${PROPOSAL_DETAIL_GROUP_LABELS[groupName]}`,
             permissionId: p.permissionId,
           },
         ];

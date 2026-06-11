@@ -203,8 +203,8 @@
           role="tabpanel"
           aria-labelledby="overview-tab"
         >
-          <app-proposal-my-overview-section [proposal]="proposal()!" />
-          <app-proposal-my-events-section
+          <app-proposal-overview-section [proposal]="proposal()!" />
+          <app-proposal-events-section
             [events]="events()"
             [loading]="eventsResource.isLoading()"
           />
@@ -217,7 +217,7 @@
           role="tabpanel"
           aria-labelledby="watchers-tab"
         >
-          <app-proposal-my-watchers-section
+          <app-proposal-watchers-section
             [watchers]="watchers()"
             [watcherOptions]="watcherOptions()"
             [staffLoading]="staffUsersResource.isLoading()"
@@ -236,7 +236,7 @@
           role="tabpanel"
           aria-labelledby="conversation-tab"
         >
-          <app-proposal-my-conversation-section
+          <app-proposal-conversation-section
             [proposal]="proposal()!"
             [messages]="messages()"
             [messagesLoading]="conversationResource.isLoading()"

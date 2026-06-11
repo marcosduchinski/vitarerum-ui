@@ -19,9 +19,9 @@ import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
-import { Message, MessageAttachment, ProposalDetail } from '../../../../models/proposal.model';
-import { PROPOSAL_API_SERVICE } from '../../../../services/proposal-api.service';
-import { formatProposalMyDetailDateTime } from '../../proposal-my-detail.presentation';
+import { Message, MessageAttachment, ProposalDetail } from '../../models/proposal.model';
+import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
+import { formatProposalDetailDateTime } from '../../proposal-detail.presentation';
 
 export interface ReplyComposerPayload {
   readonly body: string;
@@ -31,14 +31,14 @@ export interface ReplyComposerPayload {
 type ReplyEditorCommand = 'bold' | 'italic' | 'insertUnorderedList' | 'removeFormat';
 
 @Component({
-  selector: 'app-proposal-my-conversation-section',
+  selector: 'app-proposal-conversation-section',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LoadingStateComponent, ErrorMessageComponent],
-  templateUrl: './proposal-my-conversation-section.component.html',
-  styleUrl: './proposal-my-conversation-section.component.scss',
+  templateUrl: './proposal-conversation-section.component.html',
+  styleUrl: './proposal-conversation-section.component.scss',
 })
-export class ProposalMyConversationSectionComponent {
+export class ProposalConversationSectionComponent {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
@@ -62,7 +62,7 @@ export class ProposalMyConversationSectionComponent {
 
   protected readonly selectedFiles = signal<readonly File[]>([]);
   protected readonly replyBody = signal('');
-  protected readonly formatDateTime = formatProposalMyDetailDateTime;
+  protected readonly formatDateTime = formatProposalDetailDateTime;
 
   // documentId currently downloading, plus the last download error (per section).
   protected readonly downloadingDocumentId = signal<string | null>(null);

@@ -4,9 +4,9 @@ import { TestBed } from '@angular/core/testing';
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
 
 import {
-  ProposalMyWatchersSectionComponent,
+  ProposalWatchersSectionComponent,
   StaffWatcherOption,
-} from './proposal-my-watchers-section.component';
+} from './proposal-watchers-section.component';
 
 const WATCHERS: readonly PermissionPrincipal[] = [
   {
@@ -23,14 +23,14 @@ const OPTIONS: readonly StaffWatcherOption[] = [
   },
 ];
 
-describe('ProposalMyWatchersSectionComponent', () => {
+describe('ProposalWatchersSectionComponent', () => {
   it('renders watchers and emits add/remove intents', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyWatchersSectionComponent],
+      imports: [ProposalWatchersSectionComponent],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyWatchersSectionComponent);
-    const componentRef: ComponentRef<ProposalMyWatchersSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalWatchersSectionComponent);
+    const componentRef: ComponentRef<ProposalWatchersSectionComponent> = fixture.componentRef;
     const added: string[] = [];
     const removed: string[] = [];
 

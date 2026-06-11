@@ -25,9 +25,9 @@ import {
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import {
-  ProposalMyConversationSectionComponent,
+  ProposalConversationSectionComponent,
   ReplyComposerPayload,
-} from '../my-detail/components/proposal-my-conversation-section/proposal-my-conversation-section.component';
+} from '../../components/proposal-conversation-section/proposal-conversation-section.component';
 
 interface ForwardStaffOption {
   readonly label: string;
@@ -89,7 +89,7 @@ function safeReturnLabel(value: string | undefined): string {
     StatusChipComponent,
     TypeChipComponent,
     ConfirmModalComponent,
-    ProposalMyConversationSectionComponent,
+    ProposalConversationSectionComponent,
   ],
   templateUrl: './proposal-detail-page.component.html',
   styleUrl: './proposal-detail-page.component.scss',

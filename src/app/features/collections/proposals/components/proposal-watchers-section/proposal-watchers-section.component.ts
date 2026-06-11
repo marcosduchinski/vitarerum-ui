@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, effect, input, output, signal } fro
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
-import { PROPOSAL_MY_DETAIL_GROUP_LABELS } from '../../proposal-my-detail.presentation';
+import { PROPOSAL_DETAIL_GROUP_LABELS } from '../../proposal-detail.presentation';
 
 export interface StaffWatcherOption {
   readonly label: string;
@@ -11,14 +11,14 @@ export interface StaffWatcherOption {
 }
 
 @Component({
-  selector: 'app-proposal-my-watchers-section',
+  selector: 'app-proposal-watchers-section',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LoadingStateComponent],
-  templateUrl: './proposal-my-watchers-section.component.html',
-  styleUrl: './proposal-my-watchers-section.component.scss',
+  templateUrl: './proposal-watchers-section.component.html',
+  styleUrl: './proposal-watchers-section.component.scss',
 })
-export class ProposalMyWatchersSectionComponent {
+export class ProposalWatchersSectionComponent {
   readonly watchers = input.required<readonly PermissionPrincipal[]>();
   readonly watcherOptions = input.required<readonly StaffWatcherOption[]>();
   readonly staffLoading = input.required<boolean>();
@@ -29,7 +29,7 @@ export class ProposalMyWatchersSectionComponent {
   readonly watcherRemoved = output<string>();
 
   protected readonly watcherPermissionId = signal('');
-  protected readonly groupLabels = PROPOSAL_MY_DETAIL_GROUP_LABELS;
+  protected readonly groupLabels = PROPOSAL_DETAIL_GROUP_LABELS;
 
   constructor() {
     effect(() => {

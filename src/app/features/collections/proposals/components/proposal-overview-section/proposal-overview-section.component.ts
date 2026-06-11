@@ -5,21 +5,21 @@ import {
   WorkflowStatus,
 } from '@shared/components/status-chip/status-chip.component';
 
-import { ProposalDetail } from '../../../../models/proposal.model';
-import { formatProposalMyDetailDateTime } from '../../proposal-my-detail.presentation';
+import { ProposalDetail } from '../../models/proposal.model';
+import { formatProposalDetailDateTime } from '../../proposal-detail.presentation';
 
 @Component({
-  selector: 'app-proposal-my-overview-section',
+  selector: 'app-proposal-overview-section',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [StatusChipComponent],
-  templateUrl: './proposal-my-overview-section.component.html',
-  styleUrl: './proposal-my-overview-section.component.scss',
+  templateUrl: './proposal-overview-section.component.html',
+  styleUrl: './proposal-overview-section.component.scss',
 })
-export class ProposalMyOverviewSectionComponent {
+export class ProposalOverviewSectionComponent {
   readonly proposal = input.required<ProposalDetail>();
 
-  protected readonly formatDateTime = formatProposalMyDetailDateTime;
+  protected readonly formatDateTime = formatProposalDetailDateTime;
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;

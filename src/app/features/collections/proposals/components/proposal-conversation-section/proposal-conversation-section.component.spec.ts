@@ -2,12 +2,12 @@ import { ComponentRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
-import { Message, ProposalDetail } from '../../../../models/proposal.model';
-import { PROPOSAL_API_SERVICE } from '../../../../services/proposal-api.service';
+import { Message, ProposalDetail } from '../../models/proposal.model';
+import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import {
-  ProposalMyConversationSectionComponent,
+  ProposalConversationSectionComponent,
   ReplyComposerPayload,
-} from './proposal-my-conversation-section.component';
+} from './proposal-conversation-section.component';
 
 const proposalServiceStub = {
   downloadDocument: () => of(new Blob(['mock'])),
@@ -63,7 +63,7 @@ const MESSAGES: readonly Message[] = [
 ];
 
 function setRequiredInputs(
-  componentRef: ComponentRef<ProposalMyConversationSectionComponent>,
+  componentRef: ComponentRef<ProposalConversationSectionComponent>,
   resetVersion = 0,
 ): void {
   componentRef.setInput('proposal', PROPOSAL);
@@ -74,15 +74,15 @@ function setRequiredInputs(
   componentRef.setInput('replyResetVersion', resetVersion);
 }
 
-describe('ProposalMyConversationSectionComponent', () => {
+describe('ProposalConversationSectionComponent', () => {
   it('renders requester and staff messages with roles and attachments', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyConversationSectionComponent],
+      imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
-    const componentRef: ComponentRef<ProposalMyConversationSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
 
     setRequiredInputs(componentRef);
     fixture.detectChanges();
@@ -101,12 +101,12 @@ describe('ProposalMyConversationSectionComponent', () => {
 
   it('emits reply body and selected files, then clears when reset version changes', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyConversationSectionComponent],
+      imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
-    const componentRef: ComponentRef<ProposalMyConversationSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
     const submitted: ReplyComposerPayload[] = [];
 
     setRequiredInputs(componentRef);
@@ -149,7 +149,7 @@ describe('ProposalMyConversationSectionComponent', () => {
 
   it('runs browser editor commands from formatting controls', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyConversationSectionComponent],
+      imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
     }).compileComponents();
 
@@ -158,8 +158,8 @@ describe('ProposalMyConversationSectionComponent', () => {
       value: execCommand,
       configurable: true,
     });
-    const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
-    const componentRef: ComponentRef<ProposalMyConversationSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
 
     setRequiredInputs(componentRef);
     fixture.detectChanges();
@@ -182,12 +182,12 @@ describe('ProposalMyConversationSectionComponent', () => {
       .mockImplementation(() => undefined);
 
     await TestBed.configureTestingModule({
-      imports: [ProposalMyConversationSectionComponent],
+      imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: { downloadDocument } }],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyConversationSectionComponent);
-    const componentRef: ComponentRef<ProposalMyConversationSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
 
     setRequiredInputs(componentRef);
     fixture.detectChanges();

@@ -1,8 +1,8 @@
 import { ComponentRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { ProposalDetail } from '../../../../models/proposal.model';
-import { ProposalMyOverviewSectionComponent } from './proposal-my-overview-section.component';
+import { ProposalDetail } from '../../models/proposal.model';
+import { ProposalOverviewSectionComponent } from './proposal-overview-section.component';
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
@@ -33,14 +33,14 @@ const PROPOSAL: ProposalDetail = {
   requestedObjects: [],
 };
 
-describe('ProposalMyOverviewSectionComponent', () => {
+describe('ProposalOverviewSectionComponent', () => {
   it('renders proposal requester, assignee, submitted date, and project status', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyOverviewSectionComponent],
+      imports: [ProposalOverviewSectionComponent],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyOverviewSectionComponent);
-    const componentRef: ComponentRef<ProposalMyOverviewSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalOverviewSectionComponent);
+    const componentRef: ComponentRef<ProposalOverviewSectionComponent> = fixture.componentRef;
 
     componentRef.setInput('proposal', PROPOSAL);
     fixture.detectChanges();

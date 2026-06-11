@@ -1,8 +1,8 @@
 import { ComponentRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { ProposalEvent } from '../../../../models/proposal.model';
-import { ProposalMyEventsSectionComponent } from './proposal-my-events-section.component';
+import { ProposalEvent } from '../../models/proposal.model';
+import { ProposalEventsSectionComponent } from './proposal-events-section.component';
 
 const EVENTS: readonly ProposalEvent[] = [
   {
@@ -17,14 +17,14 @@ const EVENTS: readonly ProposalEvent[] = [
   },
 ];
 
-describe('ProposalMyEventsSectionComponent', () => {
+describe('ProposalEventsSectionComponent', () => {
   it('renders proposal events', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyEventsSectionComponent],
+      imports: [ProposalEventsSectionComponent],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyEventsSectionComponent);
-    const componentRef: ComponentRef<ProposalMyEventsSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalEventsSectionComponent);
+    const componentRef: ComponentRef<ProposalEventsSectionComponent> = fixture.componentRef;
 
     componentRef.setInput('events', EVENTS);
     componentRef.setInput('loading', false);
@@ -42,11 +42,11 @@ describe('ProposalMyEventsSectionComponent', () => {
 
   it('renders the empty state when there are no events', async () => {
     await TestBed.configureTestingModule({
-      imports: [ProposalMyEventsSectionComponent],
+      imports: [ProposalEventsSectionComponent],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ProposalMyEventsSectionComponent);
-    const componentRef: ComponentRef<ProposalMyEventsSectionComponent> = fixture.componentRef;
+    const fixture = TestBed.createComponent(ProposalEventsSectionComponent);
+    const componentRef: ComponentRef<ProposalEventsSectionComponent> = fixture.componentRef;
 
     componentRef.setInput('events', []);
     componentRef.setInput('loading', false);

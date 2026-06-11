@@ -62,6 +62,15 @@ export const PROPOSALS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'approved/:id',
+    title: 'Approved Proposal',
+    canMatch: [staffGuard],
+    loadComponent: () =>
+      import('./pages/approved-detail/proposal-approved-detail-page.component').then(
+        (m) => m.ProposalApprovedDetailPageComponent,
+      ),
+  },
+  {
     path: 'rejected',
     title: 'Rejected / Cancelled Proposals',
     canMatch: [staffGuard],
