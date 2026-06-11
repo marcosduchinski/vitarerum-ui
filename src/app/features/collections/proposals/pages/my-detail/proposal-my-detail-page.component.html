@@ -119,43 +119,14 @@
       confirmLabel="Accept proposal"
       cancelLabel="Review again"
       [pending]="accepting()"
-      [confirmDisabled]="!approveReady()"
       (confirmed)="accept()"
       (cancelled)="cancelAcceptConfirmation()"
     >
       <div class="accept-modal-body">
         <p class="accept-modal-body__hint">
           Approving creates the project for
-          {{ proposal()!.referenceNumber }}. Confirm its parameters.
+          {{ proposal()!.referenceNumber }} using its requested title and use period.
         </p>
-        <label for="approve-purpose">Purpose</label>
-        <textarea
-          id="approve-purpose"
-          rows="3"
-          placeholder="Describe the approved use..."
-          [value]="approvePurpose()"
-          (input)="onApprovePurposeInput($event)"
-        ></textarea>
-        <div class="accept-modal-body__dates">
-          <div class="accept-modal-body__field">
-            <label for="approve-begin-date">Begin date</label>
-            <input
-              id="approve-begin-date"
-              type="date"
-              [value]="approveBeginDate()"
-              (input)="onApproveBeginDateInput($event)"
-            />
-          </div>
-          <div class="accept-modal-body__field">
-            <label for="approve-end-date">End date</label>
-            <input
-              id="approve-end-date"
-              type="date"
-              [value]="approveEndDate()"
-              (input)="onApproveEndDateInput($event)"
-            />
-          </div>
-        </div>
       </div>
     </app-confirm-modal>
 

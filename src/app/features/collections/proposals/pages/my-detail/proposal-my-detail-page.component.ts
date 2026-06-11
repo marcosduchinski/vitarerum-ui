@@ -117,10 +117,6 @@ export class ProposalMyDetailPageComponent {
   protected readonly rejectModalOpen = signal(false);
   protected readonly forwardModalOpen = signal(false);
   protected readonly rejectionReason = signal('');
-  // Approve materialises the project — the curator confirms its parameters here.
-  protected readonly approvePurpose = signal('');
-  protected readonly approveBeginDate = signal('');
-  protected readonly approveEndDate = signal('');
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardNote = signal('');
   protected readonly replyResetVersion = signal(0);
@@ -132,12 +128,6 @@ export class ProposalMyDetailPageComponent {
   protected readonly messageError = signal<ApiError | null>(null);
 
   protected readonly canDecide = computed(() => this.proposal()?.status === 'PENDING');
-  protected readonly approveReady = computed(
-    () =>
-      this.approvePurpose().trim().length > 0 &&
-      this.approveBeginDate().length > 0 &&
-      this.approveEndDate().length > 0,
-  );
   protected readonly forwardTargetLabel = computed(
     () =>
       this.staffOptions().find((o) => o.permissionId === this.forwardTargetPermissionId())?.label ??
@@ -278,12 +268,6 @@ export class ProposalMyDetailPageComponent {
 
   protected requestAcceptConfirmation(): void {
     if (this.accepting() || this.rejecting()) return;
-    const proposal = this.proposal();
-    // Pre-fill the project period from the proposal's requested use period so
-    // the curator confirms/adjusts rather than re-typing from scratch.
-    this.approvePurpose.set('');
-    this.approveBeginDate.set(proposal?.beginDate ?? '');
-    this.approveEndDate.set(proposal?.endDate ?? '');
     this.actionError.set(null);
     this.acceptConfirmOpen.set(true);
   }
@@ -292,31 +276,23 @@ export class ProposalMyDetailPageComponent {
     this.acceptConfirmOpen.set(false);
   }
 
-  protected onApprovePurposeInput(event: Event): void {
-    this.approvePurpose.set((event.target as HTMLTextAreaElement).value);
-  }
-
-  protected onApproveBeginDateInput(event: Event): void {
-    this.approveBeginDate.set((event.target as HTMLInputElement).value);
-  }
-
-  protected onApproveEndDateInput(event: Event): void {
-    this.approveEndDate.set((event.target as HTMLInputElement).value);
-  }
-
   protected async accept(): Promise<void> {
-    if (this.accepting() || this.rejecting() || !this.approveReady()) return;
+    if (this.accepting() || this.rejecting()) return;
+    const proposal = this.proposal();
+    if (!proposal) return;
 
     this.accepting.set(true);
     this.actionError.set(null);
 
     try {
       await firstValueFrom(
+        // The project is materialised from the proposal: its title becomes both the
+        // project title and purpose, and the requested period becomes its dates.
         this.proposalService.approveProposal(this.id(), {
-          title: this.proposal()?.collectionUseProject?.title ?? '',
-          purpose: this.approvePurpose().trim(),
-          beginDate: this.approveBeginDate(),
-          endDate: this.approveEndDate(),
+          title: proposal.collectionUseProject?.title ?? '',
+          purpose: proposal.title,
+          beginDate: proposal.beginDate ?? '',
+          endDate: proposal.endDate ?? '',
           note: 'Accepted from my assignment detail.',
         }),
       );

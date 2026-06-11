@@ -518,21 +518,6 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(proposalService.approveCalls).toEqual([]);
     expect(compiled.textContent).toContain('Accept proposal?');
 
-    // The project period is pre-filled from the proposal's requested use period.
-    expect(compiled.querySelector<HTMLInputElement>('#approve-begin-date')!.value).toBe('2026-07-01');
-    expect(compiled.querySelector<HTMLInputElement>('#approve-end-date')!.value).toBe('2026-12-31');
-
-    const purpose = compiled.querySelector<HTMLTextAreaElement>('#approve-purpose')!;
-    purpose.value = 'Approved research access';
-    purpose.dispatchEvent(new Event('input'));
-    const begin = compiled.querySelector<HTMLInputElement>('#approve-begin-date')!;
-    begin.value = '2026-06-01';
-    begin.dispatchEvent(new Event('input'));
-    const end = compiled.querySelector<HTMLInputElement>('#approve-end-date')!;
-    end.value = '2026-06-30';
-    end.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
     const confirm = Array.from(
       compiled.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
     ).find((button) => button.textContent?.trim() === 'Accept proposal');
@@ -543,14 +528,16 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
+    // The project is materialised straight from the proposal: its title becomes the
+    // project title and purpose, and the requested period becomes its dates.
     expect(proposalService.approveCalls).toEqual([
       {
         proposalId: 'proposal-1',
         payload: {
           title: 'Photographic history of Rio de Janeiro port, 1890-1930',
-          purpose: 'Approved research access',
-          beginDate: '2026-06-01',
-          endDate: '2026-06-30',
+          purpose: 'Photographic history of Rio de Janeiro port, 1890-1930',
+          beginDate: '2026-07-01',
+          endDate: '2026-12-31',
           note: 'Accepted from my assignment detail.',
         },
       },
