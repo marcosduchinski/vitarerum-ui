@@ -75,6 +75,14 @@
   font-family: inherit;
   cursor: pointer;
   max-width: 14rem;
+
+  // The closed control sits on the dark topbar (white text), but the open
+  // dropdown is rendered on the OS's light popup — so the options need explicit
+  // readable colours, otherwise they are white-on-white (e.g. Chrome/Windows).
+  option {
+    color: var(--color-text);
+    background: var(--color-panel);
+  }
 }
 
 .layout-topbar-role-select:focus {
