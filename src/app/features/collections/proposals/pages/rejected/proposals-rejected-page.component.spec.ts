@@ -92,7 +92,7 @@ describe('ProposalsRejectedPageComponent', () => {
     expect(compiled.textContent).toContain('Rejected');
     expect(compiled.textContent).toContain('View details');
     expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/proposal-rejected"]'),
+      compiled.querySelector('a[href^="/p/collections/proposals/rejected/proposal-rejected"]'),
     ).not.toBeNull();
   });
 });

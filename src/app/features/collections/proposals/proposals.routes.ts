@@ -89,6 +89,15 @@ export const PROPOSALS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'rejected/:id',
+    title: 'Rejected Proposal',
+    canMatch: [staffGuard],
+    loadComponent: () =>
+      import('./pages/rejected-detail/proposal-rejected-detail-page.component').then(
+        (m) => m.ProposalRejectedDetailPageComponent,
+      ),
+  },
+  {
     // Named segments above take precedence; :id is only reached for actual proposal IDs.
     path: ':id',
     title: 'Proposal',

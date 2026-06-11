@@ -86,11 +86,7 @@
                   <td>
                     <a
                       class="proposals-table__title"
-                      [routerLink]="['/p/collections/proposals', proposal.id]"
-                      [queryParams]="{
-                        returnTo: '/p/collections/proposals/rejected',
-                        returnLabel: 'rejected / cancelled proposals',
-                      }"
+                      [routerLink]="['/p/collections/proposals/rejected', proposal.id]"
                     >
                       {{ proposal.title }}
                     </a>
@@ -124,11 +120,7 @@
                     <div class="proposals-table__actions">
                       <a
                         class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/proposals', proposal.id]"
-                        [queryParams]="{
-                          returnTo: '/p/collections/proposals/rejected',
-                          returnLabel: 'rejected / cancelled proposals',
-                        }"
+                        [routerLink]="['/p/collections/proposals/rejected', proposal.id]"
                         aria-label="View details for {{
                           proposal.referenceNumber
                         }}"
