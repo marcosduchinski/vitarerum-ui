@@ -21,12 +21,19 @@
       <aside class="proposal-actions" aria-label="Assignment decision">
         <div class="proposal-actions__copy">
           <span class="proposal-actions__eyebrow">Decision desk</span>
-          @if (proposal()!.assignedTo) {
-            <strong>{{ proposal()!.assignedTo!.user.name }}</strong>
-            <span>{{ proposal()!.assignedTo!.user.email }}</span>
+          @if (proposal()!.assignedTo; as assignedTo) {
+            <div class="proposal-actions__assignee">
+              <span class="proposal-actions__avatar" aria-hidden="true">
+                <span class="pi pi-user"></span>
+              </span>
+              <span class="proposal-actions__identity">
+                <strong>{{ assignedTo.user.name }}</strong>
+                <span class="proposal-actions__email">{{ assignedTo.user.email }}</span>
+              </span>
+            </div>
           } @else {
             <strong>{{ proposal()!.status.replace('_', ' ') }}</strong>
-            <span>No reviewer is currently assigned.</span>
+            <span class="proposal-actions__email">No reviewer is currently assigned.</span>
           }
         </div>
         <div class="proposal-actions__buttons">
@@ -160,8 +167,8 @@
       <button
         type="button"
         id="overview-tab"
-        class="action-btn"
-        [class.action-btn--primary]="activePanel() === 'overview'"
+        class="proposal-detail__tab"
+        [class.proposal-detail__tab--active]="activePanel() === 'overview'"
         role="tab"
         aria-controls="overview-panel"
         [attr.aria-selected]="activePanel() === 'overview'"
@@ -172,8 +179,8 @@
       <button
         type="button"
         id="watchers-tab"
-        class="action-btn"
-        [class.action-btn--primary]="activePanel() === 'watchers'"
+        class="proposal-detail__tab"
+        [class.proposal-detail__tab--active]="activePanel() === 'watchers'"
         role="tab"
         aria-controls="watchers-panel"
         [attr.aria-selected]="activePanel() === 'watchers'"
@@ -184,8 +191,8 @@
       <button
         type="button"
         id="conversation-tab"
-        class="action-btn"
-        [class.action-btn--primary]="activePanel() === 'conversation'"
+        class="proposal-detail__tab"
+        [class.proposal-detail__tab--active]="activePanel() === 'conversation'"
         role="tab"
         aria-controls="conversation-panel"
         [attr.aria-selected]="activePanel() === 'conversation'"
