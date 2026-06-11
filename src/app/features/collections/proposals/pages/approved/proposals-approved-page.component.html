@@ -82,11 +82,7 @@
                   <td>
                     <a
                       class="proposals-table__title"
-                      [routerLink]="['/p/collections/proposals', proposal.id]"
-                      [queryParams]="{
-                        returnTo: '/p/collections/proposals/approved',
-                        returnLabel: 'approved proposals',
-                      }"
+                      [routerLink]="['/p/collections/proposals/approved', proposal.id]"
                     >
                       {{ proposal.title }}
                     </a>
@@ -126,7 +122,7 @@
                         "
                         aria-haspopup="menu"
                         (click)="
-                          toggleActionsMenu(proposal.id, proposal.collectionUseProject.id);
+                          toggleActionsMenu(proposal.id, proposal.collectionUseProject?.id ?? null);
                           rowActionsMenu.toggle($event)
                         "
                         aria-label="More actions for {{

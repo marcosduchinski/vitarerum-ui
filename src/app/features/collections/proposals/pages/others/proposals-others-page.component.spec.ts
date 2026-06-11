@@ -63,7 +63,7 @@ const MY_PROPOSAL: ProposalSummary = {
     group: 'COLLECTIONS_MANAGEMENT',
   },
   collectionUseProject: {
-    ...OTHER_PROPOSAL.collectionUseProject,
+    ...OTHER_PROPOSAL.collectionUseProject!,
     id: 'project-2',
     referenceNumber: 'VR-2026-002',
     title: 'Research assigned to Bob',
@@ -77,7 +77,7 @@ const UNASSIGNED_PROPOSAL: ProposalSummary = {
   title: 'Unassigned request',
   assignedTo: null,
   collectionUseProject: {
-    ...OTHER_PROPOSAL.collectionUseProject,
+    ...OTHER_PROPOSAL.collectionUseProject!,
     id: 'project-3',
     referenceNumber: 'VR-2026-003',
     title: 'Unassigned request',

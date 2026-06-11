@@ -33,18 +33,27 @@ const APPROVED_PROPOSAL: ProposalSummary = {
   submittedAt: '2026-05-01T10:00:00',
 };
 
+// An approved proposal whose project link the backend has not materialised/embedded.
+const APPROVED_PROPOSAL_WITHOUT_PROJECT: ProposalSummary = {
+  ...APPROVED_PROPOSAL,
+  id: 'proposal-no-project',
+  referenceNumber: 'VR-2026-002',
+  collectionUseProject: undefined,
+};
+
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
+  content: ProposalSummary[] = [APPROVED_PROPOSAL];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
     const size = query.size ?? 20;
 
     return of<Page<ProposalSummary>>({
-      content: [APPROVED_PROPOSAL],
+      content: this.content,
       page: query.page ?? 0,
       size,
-      totalElements: 1,
+      totalElements: this.content.length,
       totalPages: 1,
     });
   }
@@ -114,5 +123,29 @@ describe('ProposalsApprovedPageComponent', () => {
 
     expect(document.body.textContent).toContain('View details');
     expect(document.body.textContent).toContain('Go to project');
+  });
+
+  it('opens the row menu without a project link when the proposal has no project', async () => {
+    proposalService.content = [APPROVED_PROPOSAL_WITHOUT_PROJECT];
+
+    const fixture = TestBed.createComponent(ProposalsApprovedPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const actionButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="More actions for VR-2026-002"]',
+    );
+
+    expect(actionButton).not.toBeNull();
+
+    // Must not throw on a proposal whose collectionUseProject is absent.
+    actionButton!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).not.toContain('Go to project');
   });
 });

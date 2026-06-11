@@ -421,13 +421,13 @@ export class ProposalApiServiceMock {
       triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };
-    const updated = { ...proposal, status: 'APPROVED' as const, collectionUseProject: { ...proposal.collectionUseProject, status: 'CREATED' as const } };
+    const updated = { ...proposal, status: 'APPROVED' as const, collectionUseProject: { ...proposal.collectionUseProject!, status: 'CREATED' as const } };
     this.proposals.set(proposalId, updated);
     this.projectState.acceptProjectForProposal(updated, now);
     this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'APPROVED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'CREATED' },
+      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CREATED' },
     });
   }
 
@@ -447,13 +447,13 @@ export class ProposalApiServiceMock {
     this.proposals.set(proposalId, {
       ...proposal,
       status: 'REJECTED',
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'CANCELLED' },
+      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CANCELLED' },
     });
     this.projectState.syncProposalStatus(proposalId, 'REJECTED', proposal.assignedTo, this.currentPrincipal());
     this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'REJECTED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject, status: 'CANCELLED' },
+      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CANCELLED' },
     });
   }
 

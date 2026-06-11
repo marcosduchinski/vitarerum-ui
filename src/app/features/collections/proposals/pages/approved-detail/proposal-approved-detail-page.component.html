@@ -21,36 +21,40 @@
 
     <section class="detail-card" aria-labelledby="approved-project-heading">
       <h2 id="approved-project-heading" class="detail-card__title">Resulting project</h2>
-      <div class="proposal-detail__status-row">
-        <p class="proposal-detail__ref">{{ project()!.referenceNumber }}</p>
-        <app-status-chip kind="project" [status]="asWorkflowStatus(project()!.status)" />
-      </div>
-      <dl class="detail-dl">
-        <div class="detail-dl__row">
-          <dt>Use period</dt>
-          <dd>{{ formatDate(proposal()!.beginDate) }} → {{ formatDate(proposal()!.endDate) }}</dd>
+      @if (project(); as project) {
+        <div class="proposal-detail__status-row">
+          <p class="proposal-detail__ref">{{ project.referenceNumber }}</p>
+          <app-status-chip kind="project" [status]="asWorkflowStatus(project.status)" />
         </div>
-        @if (approvalEvent()) {
+        <dl class="detail-dl">
           <div class="detail-dl__row">
-            <dt>Approved by</dt>
-            <dd>
-              {{ approvalEvent()!.triggeredBy.user.name }}
-              <span class="detail-dl__email">{{ formatDate(approvalEvent()!.occurredAt) }}</span>
-            </dd>
+            <dt>Use period</dt>
+            <dd>{{ formatDate(proposal()!.beginDate) }} → {{ formatDate(proposal()!.endDate) }}</dd>
           </div>
-        }
-      </dl>
-      <a
-        class="action-btn action-btn--primary approved-project-cta"
-        [routerLink]="['/p/collections/projects', project()!.id]"
-        [queryParams]="{
-          returnTo: '/p/collections/proposals/approved',
-          returnLabel: 'approved proposals'
-        }"
-      >
-        <span class="pi pi-folder-open" aria-hidden="true"></span>
-        Go to project
-      </a>
+          @if (approvalEvent()) {
+            <div class="detail-dl__row">
+              <dt>Approved by</dt>
+              <dd>
+                {{ approvalEvent()!.triggeredBy.user.name }}
+                <span class="detail-dl__email">{{ formatDate(approvalEvent()!.occurredAt) }}</span>
+              </dd>
+            </div>
+          }
+        </dl>
+        <a
+          class="action-btn action-btn--primary approved-project-cta"
+          [routerLink]="['/p/collections/projects', project.id]"
+          [queryParams]="{
+            returnTo: '/p/collections/proposals/approved',
+            returnLabel: 'approved proposals'
+          }"
+        >
+          <span class="pi pi-folder-open" aria-hidden="true"></span>
+          Go to project
+        </a>
+      } @else {
+        <p class="detail-card__empty">The project for this proposal is not available yet.</p>
+      }
     </section>
 
     <app-proposal-overview-section [proposal]="proposal()!" />

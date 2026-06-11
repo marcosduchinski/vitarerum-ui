@@ -778,7 +778,7 @@ export class MockProjectState {
     referenceNumber: string,
   ): void {
     const project: MutableProjectState = {
-      id: proposal.collectionUseProject.id,
+      id: proposal.collectionUseProject!.id,
       referenceNumber,
       title: request.title,
       purpose: request.purpose,
@@ -808,7 +808,7 @@ export class MockProjectState {
     proposal: ProposalDetail,
     occurredAt: string,
   ): MutableProjectState | null {
-    const project = this.projects.get(proposal.collectionUseProject.id);
+    const project = this.projects.get(proposal.collectionUseProject!.id);
     if (!project) return null;
 
     // Proposal approval updates project metadata but does not change UseStatus:

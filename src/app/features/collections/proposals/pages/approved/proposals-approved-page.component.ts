@@ -85,7 +85,7 @@ export class ProposalsApprovedPageComponent {
 
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly actionsMenuContext = signal<{
-    readonly projectId: string;
+    readonly projectId: string | null;
     readonly proposalId: string;
   } | null>(null);
   protected readonly rowActionItems = computed<MenuItem[]>(() => {
@@ -93,7 +93,7 @@ export class ProposalsApprovedPageComponent {
 
     if (!context) return [];
 
-    return [
+    const items: MenuItem[] = [
       {
         label: 'View details',
         icon: 'pi pi-eye',
@@ -104,19 +104,26 @@ export class ProposalsApprovedPageComponent {
           ]);
         },
       },
-      {
+    ];
+
+    // The linked project is only present once the proposal is materialised.
+    if (context.projectId) {
+      const projectId = context.projectId;
+      items.push({
         label: 'Go to project',
         icon: 'pi pi-folder-open',
         command: () => {
-          void this.router.navigate(['/p/collections/projects', context.projectId], {
+          void this.router.navigate(['/p/collections/projects', projectId], {
             queryParams: {
               returnTo: '/p/collections/proposals/approved',
               returnLabel: 'approved proposals',
             },
           });
         },
-      },
-    ];
+      });
+    }
+
+    return items;
   });
 
   protected prevPage(): void {
@@ -155,7 +162,7 @@ export class ProposalsApprovedPageComponent {
     this.currentPage.set(0);
   }
 
-  protected toggleActionsMenu(proposalId: string, projectId: string): void {
+  protected toggleActionsMenu(proposalId: string, projectId: string | null): void {
     this.actionsMenuContext.update((current) =>
       current?.proposalId === proposalId ? null : { proposalId, projectId },
     );

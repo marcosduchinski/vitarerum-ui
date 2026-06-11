@@ -217,7 +217,7 @@ class ProposalApiServiceStub {
         lastEvent: EVENTS.content[0],
       },
       collectionUseProject: {
-        ...PROPOSAL.collectionUseProject,
+        ...PROPOSAL.collectionUseProject!,
         status: 'CREATED' as const,
       },
     });
@@ -232,7 +232,7 @@ class ProposalApiServiceStub {
         lastEvent: EVENTS.content[0],
       },
       collectionUseProject: {
-        ...PROPOSAL.collectionUseProject,
+        ...PROPOSAL.collectionUseProject!,
         status: 'CANCELLED' as const,
       },
     });

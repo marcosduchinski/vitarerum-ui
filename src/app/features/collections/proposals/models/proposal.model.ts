@@ -34,7 +34,9 @@ export interface ProposalSummary {
   readonly endDate?: string;
   readonly requestedBy: PermissionPrincipal;
   readonly assignedTo: PermissionPrincipal | null;
-  readonly collectionUseProject: ProposalProjectSummary;
+  // Materialised only on approval — absent on proposals that have not yet been
+  // approved, and the backend list may omit it. Always guard before dereferencing.
+  readonly collectionUseProject?: ProposalProjectSummary;
   readonly submittedAt: string;
 }
 
