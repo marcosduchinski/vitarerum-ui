@@ -180,55 +180,98 @@
                   <td>{{ entry.addedBy.user.name }}</td>
                   <td>{{ entry.observations ?? '—' }}</td>
                   <td>
-                    @if (entry.attachments.length) {
-                      <ul class="attachment-list" aria-label="Entry attachments">
-                        @for (attachment of entry.attachments; track attachment.fileReference) {
-                          <li>
-                            <span class="attachment-list__name">{{ attachment.fileName }}</span>
-                            <span class="attachment-list__meta">{{ attachment.mediaType }}</span>
-                          </li>
-                        }
-                      </ul>
-                    } @else {
-                      <span class="object-register__empty">—</span>
-                    }
-                    <form
-                      class="entry-upload"
-                      [attr.aria-label]="'Upload file for ' + entry.objectReference.inventoryNumber"
-                      (submit)="uploadObjectAttachment(entry.id, $event)"
-                    >
-                      <input
-                        type="file"
-                        [disabled]="!canAddObjectEntries()"
-                        (change)="onObjectAttachmentFileInput(entry.id, $event)"
-                        aria-label="Object entry file"
-                      />
-                      <select
-                        [disabled]="!canAddObjectEntries()"
-                        (change)="onObjectAttachmentMediaTypeInput(entry.id, $event)"
-                        aria-label="Object entry media type"
-                      >
-                        <option value="DOCUMENT">Document</option>
-                        <option value="IMAGE">Image</option>
-                        <option value="VIDEO">Video</option>
-                        <option value="OTHER">Other</option>
-                      </select>
+                    <div class="file-cell">
+                      <span class="file-cell__count">
+                        {{ entry.attachments.length }}
+                        {{ entry.attachments.length === 1 ? 'file' : 'files' }}
+                      </span>
                       <button
-                        type="submit"
-                        [disabled]="
-                          !canAddObjectEntries() ||
-                          !objectAttachmentFiles()[entry.id] ||
-                          objectAttachmentUploading()[entry.id]
-                        "
+                        type="button"
+                        class="file-cell__toggle"
+                        [attr.aria-expanded]="expandedObjectEntryId() === entry.id"
+                        [attr.aria-controls]="'object-entry-files-' + entry.id"
+                        (click)="toggleObjectAttachments(entry.id)"
                       >
-                        {{ objectAttachmentUploading()[entry.id] ? 'Uploading...' : 'Upload' }}
+                        {{ expandedObjectEntryId() === entry.id ? 'Hide files' : 'Manage files' }}
                       </button>
-                    </form>
-                    @if (objectAttachmentErrors()[entry.id]) {
-                      <app-error-message [apiError]="objectAttachmentErrors()[entry.id]!" />
-                    }
+                    </div>
                   </td>
                 </tr>
+                @if (expandedObjectEntryId() === entry.id) {
+                  <tr class="object-register__details-row">
+                    <td colspan="8">
+                      <section
+                        class="entry-files"
+                        [id]="'object-entry-files-' + entry.id"
+                        [attr.aria-label]="'Files for ' + entry.objectReference.inventoryNumber"
+                      >
+                        <div class="entry-files__header">
+                          <div>
+                            <h3>Entry files</h3>
+                            <p>{{ entry.objectReference.inventoryNumber }}</p>
+                          </div>
+                          <span class="file-cell__count">
+                            {{ entry.attachments.length }}
+                            {{ entry.attachments.length === 1 ? 'file' : 'files' }}
+                          </span>
+                        </div>
+
+                        @if (entry.attachments.length) {
+                          <ul class="attachment-list" aria-label="Entry attachments">
+                            @for (attachment of entry.attachments; track attachment.fileReference) {
+                              <li>
+                                <span class="attachment-list__name">{{ attachment.fileName }}</span>
+                                <span class="attachment-list__meta">
+                                  {{ attachment.mediaType }}
+                                </span>
+                              </li>
+                            }
+                          </ul>
+                        } @else {
+                          <p class="entry-files__empty">No files attached to this entry.</p>
+                        }
+
+                        <form
+                          class="entry-upload"
+                          [attr.aria-label]="
+                            'Upload file for ' + entry.objectReference.inventoryNumber
+                          "
+                          (submit)="uploadObjectAttachment(entry.id, $event)"
+                        >
+                          <input
+                            type="file"
+                            [disabled]="!canAddObjectEntries()"
+                            (change)="onObjectAttachmentFileInput(entry.id, $event)"
+                            aria-label="Object entry file"
+                          />
+                          <select
+                            [disabled]="!canAddObjectEntries()"
+                            (change)="onObjectAttachmentMediaTypeInput(entry.id, $event)"
+                            aria-label="Object entry media type"
+                          >
+                            <option value="DOCUMENT">Document</option>
+                            <option value="IMAGE">Image</option>
+                            <option value="VIDEO">Video</option>
+                            <option value="OTHER">Other</option>
+                          </select>
+                          <button
+                            type="submit"
+                            [disabled]="
+                              !canAddObjectEntries() ||
+                              !objectAttachmentFiles()[entry.id] ||
+                              objectAttachmentUploading()[entry.id]
+                            "
+                          >
+                            {{ objectAttachmentUploading()[entry.id] ? 'Uploading...' : 'Upload' }}
+                          </button>
+                        </form>
+                        @if (objectAttachmentErrors()[entry.id]) {
+                          <app-error-message [apiError]="objectAttachmentErrors()[entry.id]!" />
+                        }
+                      </section>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>

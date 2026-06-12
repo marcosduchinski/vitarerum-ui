@@ -96,6 +96,7 @@ export class ProjectObjectLogPanelComponent {
   protected readonly objectAttachmentMediaTypes = signal<Record<string, MediaType>>({});
   protected readonly objectAttachmentUploading = signal<Record<string, boolean>>({});
   protected readonly objectAttachmentErrors = signal<Record<string, ApiError | null>>({});
+  protected readonly expandedObjectEntryId = signal<string | null>(null);
 
   protected onObjectInventoryInput(event: Event): void {
     this.objectInventoryNumber.set((event.target as HTMLInputElement).value);
@@ -176,6 +177,10 @@ export class ProjectObjectLogPanelComponent {
     } finally {
       this.setEntryRecord(this.objectAttachmentUploading, entryId, false);
     }
+  }
+
+  protected toggleObjectAttachments(entryId: string): void {
+    this.expandedObjectEntryId.update((current) => (current === entryId ? null : entryId));
   }
 
   protected openConcludeConfirm(): void {

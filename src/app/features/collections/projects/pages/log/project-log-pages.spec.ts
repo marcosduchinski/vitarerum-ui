@@ -163,6 +163,18 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
+    const manageFilesButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Manage files'),
+    );
+    expect(manageFilesButton).toBeTruthy();
+    expect(manageFilesButton?.getAttribute('aria-expanded')).toBe('false');
+
+    manageFilesButton!.click();
+    fixture.detectChanges();
+
+    expect(manageFilesButton?.getAttribute('aria-expanded')).toBe('true');
+    expect(root.querySelector('.object-register__details-row')).toBeTruthy();
+
     const objectFileInput = root.querySelector<HTMLInputElement>(
       'input[aria-label="Object entry file"]',
     )!;
@@ -188,6 +200,32 @@ describe('project log pages', () => {
         ?.find((entry) => entry.id === 'entry-101')
         ?.attachments.some((attachment) => attachment.fileName === 'object-photo.jpg'),
     ).toBe(true);
+  });
+
+  it('keeps attachments in an expandable row below each object entry', async () => {
+    const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.object-register__details-row')).toBeNull();
+
+    const toggle = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.textContent?.includes('Manage files'),
+    );
+    expect(toggle).toBeTruthy();
+    expect(toggle?.getAttribute('aria-controls')).toMatch(/^object-entry-files-/);
+
+    toggle!.click();
+    fixture.detectChanges();
+
+    const detailRow = root.querySelector<HTMLTableRowElement>('.object-register__details-row');
+    expect(detailRow).toBeTruthy();
+    expect(detailRow?.querySelector('td')?.getAttribute('colspan')).toBe('8');
+    expect(root.textContent).toContain('Entry files');
+    expect(root.querySelector('input[aria-label="Object entry file"]')).toBeTruthy();
   });
 
   it('locks researcher entry controls when the project is not in progress', async () => {
