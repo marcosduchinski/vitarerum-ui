@@ -58,17 +58,8 @@ export class ProjectObjectLogPanelComponent {
   protected readonly canAddObjectEntries = computed(
     () => !this.accessLogConcluded() && (!this.isExternalResearcher() || this.projectInProgress()),
   );
-  protected readonly canAddOccurrenceEntries = computed(
-    () => !this.isExternalResearcher() || this.projectInProgress(),
-  );
   protected readonly objectAccessMessage = computed(() => {
     if (this.accessLogConcluded()) return 'This access log is concluded.';
-    if (this.isExternalResearcher() && this.project() && !this.projectInProgress()) {
-      return 'Researcher entries are only available while the project is in progress.';
-    }
-    return null;
-  });
-  protected readonly occurrenceAccessMessage = computed(() => {
     if (this.isExternalResearcher() && this.project() && !this.projectInProgress()) {
       return 'Researcher entries are only available while the project is in progress.';
     }
@@ -105,31 +96,6 @@ export class ProjectObjectLogPanelComponent {
   protected readonly objectAttachmentMediaTypes = signal<Record<string, MediaType>>({});
   protected readonly objectAttachmentUploading = signal<Record<string, boolean>>({});
   protected readonly objectAttachmentErrors = signal<Record<string, ApiError | null>>({});
-
-  protected readonly occurrenceResource = resource({
-    params: () => ({ projectId: this.projectId() }),
-    loader: ({ params }) =>
-      firstValueFrom(this.projectService.listObjectOccurrenceEntries(params.projectId)),
-  });
-  protected readonly occurrenceEntries = computed(
-    () => this.occurrenceResource.value()?.content ?? [],
-  );
-  protected readonly occurrenceError = computed<ApiError | null>(() => {
-    const err = this.occurrenceResource.error();
-    return err ? toApiError(err) : null;
-  });
-
-  protected readonly occurrenceContent = signal('');
-  protected readonly occurrenceObjectsDraft = signal('');
-  protected readonly occurrenceObjects = computed(() =>
-    parseInventoryNumbers(this.occurrenceObjectsDraft()),
-  );
-  protected readonly occurrenceSubmitting = signal(false);
-  protected readonly occurrenceSubmitError = signal<ApiError | null>(null);
-  protected readonly occurrenceAttachmentFiles = signal<Record<string, File | null>>({});
-  protected readonly occurrenceAttachmentMediaTypes = signal<Record<string, MediaType>>({});
-  protected readonly occurrenceAttachmentUploading = signal<Record<string, boolean>>({});
-  protected readonly occurrenceAttachmentErrors = signal<Record<string, ApiError | null>>({});
 
   protected onObjectInventoryInput(event: Event): void {
     this.objectInventoryNumber.set((event.target as HTMLInputElement).value);
@@ -212,10 +178,6 @@ export class ProjectObjectLogPanelComponent {
     }
   }
 
-  protected onOccurrenceContentInput(event: Event): void {
-    this.occurrenceContent.set((event.target as HTMLTextAreaElement).value);
-  }
-
   protected openConcludeConfirm(): void {
     this.concludeError.set(null);
     this.concludeConfirmOpen.set(true);
@@ -242,82 +204,8 @@ export class ProjectObjectLogPanelComponent {
     }
   }
 
-  protected onOccurrenceObjectsInput(event: Event): void {
-    this.occurrenceObjectsDraft.set((event.target as HTMLTextAreaElement).value);
-  }
-
-  protected async addOccurrenceEntry(event: Event): Promise<void> {
-    event.preventDefault();
-    const content = this.occurrenceContent().trim();
-    if (!content || this.occurrenceSubmitting() || !this.canAddOccurrenceEntries()) return;
-    this.occurrenceSubmitting.set(true);
-    this.occurrenceSubmitError.set(null);
-    try {
-      await firstValueFrom(
-        this.projectService.createObjectOccurrenceEntry(this.projectId(), {
-          content,
-          ...(this.occurrenceObjects().length ? { objects: this.occurrenceObjects() } : {}),
-        }),
-      );
-      this.occurrenceContent.set('');
-      this.occurrenceObjectsDraft.set('');
-      this.occurrenceResource.reload();
-    } catch (err) {
-      this.occurrenceSubmitError.set(toApiError(err));
-    } finally {
-      this.occurrenceSubmitting.set(false);
-    }
-  }
-
-  protected onOccurrenceAttachmentFileInput(entryId: string, event: Event): void {
-    this.setEntryRecord(
-      this.occurrenceAttachmentFiles,
-      entryId,
-      (event.target as HTMLInputElement).files?.[0] ?? null,
-    );
-  }
-
-  protected onOccurrenceAttachmentMediaTypeInput(entryId: string, event: Event): void {
-    this.setEntryRecord(
-      this.occurrenceAttachmentMediaTypes,
-      entryId,
-      (event.target as HTMLSelectElement).value as MediaType,
-    );
-  }
-
-  protected async uploadOccurrenceAttachment(entryId: string, event: Event): Promise<void> {
-    event.preventDefault();
-    const file = this.occurrenceAttachmentFiles()[entryId];
-    if (!file || this.occurrenceAttachmentUploading()[entryId] || !this.canAddOccurrenceEntries()) {
-      return;
-    }
-
-    this.setEntryRecord(this.occurrenceAttachmentUploading, entryId, true);
-    this.setEntryRecord(this.occurrenceAttachmentErrors, entryId, null);
-    try {
-      await firstValueFrom(
-        this.projectService.uploadOccurrenceEntryAttachment(
-          this.projectId(),
-          entryId,
-          file,
-          this.occurrenceAttachmentMediaTypes()[entryId] ?? 'DOCUMENT',
-        ),
-      );
-      this.setEntryRecord(this.occurrenceAttachmentFiles, entryId, null);
-      this.occurrenceResource.reload();
-    } catch (err) {
-      this.setEntryRecord(this.occurrenceAttachmentErrors, entryId, toApiError(err));
-    } finally {
-      this.setEntryRecord(this.occurrenceAttachmentUploading, entryId, false);
-    }
-  }
-
   protected dateLabel(date: string): string {
     return date.slice(0, 10);
-  }
-
-  protected dateTimeLabel(date: string): string {
-    return date.replace('T', ' ').slice(0, 16);
   }
 
   protected objectLabel(entry: {
@@ -340,15 +228,4 @@ export class ProjectObjectLogPanelComponent {
   ): void {
     state.update((current) => ({ ...current, [entryId]: value }));
   }
-}
-
-function parseInventoryNumbers(value: string): readonly string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(/[\n,]+/)
-        .map((item) => item.trim())
-        .filter(Boolean),
-    ),
-  );
 }

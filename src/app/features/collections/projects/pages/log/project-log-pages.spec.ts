@@ -7,7 +7,6 @@ import { IdentitySession } from '@core/auth/models/identity-session.model';
 import {
   MOCK_SEED,
   MockProjectState,
-  P,
   TEST_SEED,
 } from '@features/collections/proposals/mocks/mock-data';
 
@@ -122,39 +121,6 @@ describe('project log pages', () => {
     ).toBe(true);
   });
 
-  it('submits occurrence entries with optional related inventory numbers', async () => {
-    const state = TestBed.inject(MockProjectState);
-    const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
-    fixture.componentRef.setInput('projectId', 'proj-3');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const root = fixture.nativeElement as HTMLElement;
-    root.querySelector<HTMLTextAreaElement>('#occurrence-content')!.value = 'Object handled twice.';
-    root
-      .querySelector<HTMLTextAreaElement>('#occurrence-content')!
-      .dispatchEvent(new Event('input'));
-    root.querySelector<HTMLTextAreaElement>('#occurrence-objects')!.value =
-      'INV-001, INV-002\nINV-001';
-    root
-      .querySelector<HTMLTextAreaElement>('#occurrence-objects')!
-      .dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
-    root
-      .querySelector<HTMLFormElement>('.occurrence-form')!
-      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const entry = state.occurrenceEntries
-      .get('proj-3')
-      ?.find((candidate) => candidate.content === 'Object handled twice.');
-    expect(entry?.objects.map((object) => object.inventoryNumber)).toEqual(['INV-001', 'INV-002']);
-  });
-
   it('allows curatorial staff to conclude an open access log', async () => {
     const state = TestBed.inject(MockProjectState);
     const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
@@ -187,19 +153,8 @@ describe('project log pages', () => {
     expect(state.objectAccessLogs.get('proj-3')?.dateConclusion).toBeTruthy();
   });
 
-  it('uploads attachments for object and occurrence entries', async () => {
+  it('uploads attachments for object entries', async () => {
     const state = TestBed.inject(MockProjectState);
-    state.occurrenceEntries.set('proj-3', [
-      {
-        id: 'occ-test-1',
-        collectionUseProjectId: 'proj-3',
-        content: 'Seeded occurrence.',
-        addedAt: '2026-06-06T10:00:00Z',
-        addedBy: P['carol'],
-        objects: [],
-        attachments: [],
-      },
-    ]);
 
     const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
     fixture.componentRef.setInput('projectId', 'proj-3');
@@ -227,31 +182,11 @@ describe('project log pages', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const occurrenceFileInput = root.querySelector<HTMLInputElement>(
-      'input[aria-label="Occurrence file"]',
-    )!;
-    Object.defineProperty(occurrenceFileInput, 'files', {
-      configurable: true,
-      value: [new File(['occurrence'], 'occurrence-note.pdf', { type: 'application/pdf' })],
-    });
-    occurrenceFileInput.dispatchEvent(new Event('change'));
-    root
-      .querySelector<HTMLFormElement>('form[aria-label="Upload file for occurrence occ-test-1"]')!
-      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    fixture.detectChanges();
-    await fixture.whenStable();
-
     expect(
       state.logEntries
         .get('proj-3')
         ?.find((entry) => entry.id === 'entry-101')
         ?.attachments.some((attachment) => attachment.fileName === 'object-photo.jpg'),
-    ).toBe(true);
-    expect(
-      state.occurrenceEntries
-        .get('proj-3')
-        ?.find((entry) => entry.id === 'occ-test-1')
-        ?.attachments.some((attachment) => attachment.fileName === 'occurrence-note.pdf'),
     ).toBe(true);
   });
 
@@ -276,8 +211,6 @@ describe('project log pages', () => {
     expect(root.querySelector<HTMLButtonElement>('.object-entry-form__submit')?.disabled).toBe(
       true,
     );
-    expect(root.querySelector<HTMLTextAreaElement>('#occurrence-content')?.disabled).toBe(true);
-    expect(root.querySelector<HTMLButtonElement>('.occurrence-form__submit')?.disabled).toBe(true);
   });
 
   it('describes locked researcher controls with live status messages', async () => {
@@ -294,19 +227,11 @@ describe('project log pages', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector('#object-access-lock-message')?.getAttribute('role')).toBe('status');
-    expect(root.querySelector('#occurrence-access-lock-message')?.getAttribute('role')).toBe(
-      'status',
-    );
     expect(
       root
         .querySelector<HTMLInputElement>('#object-inventory-number')
         ?.getAttribute('aria-describedby'),
     ).toBe('object-access-lock-message');
-    expect(
-      root
-        .querySelector<HTMLTextAreaElement>('#occurrence-content')
-        ?.getAttribute('aria-describedby'),
-    ).toBe('occurrence-access-lock-message');
     expect(
       root.querySelector<HTMLTableCaptionElement>('.object-register__table caption'),
     ).toBeTruthy();
@@ -334,7 +259,19 @@ describe('project log pages', () => {
     expect(root.querySelector<HTMLButtonElement>('.object-entry-form__submit')?.disabled).toBe(
       false,
     );
-    expect(root.querySelector<HTMLTextAreaElement>('#occurrence-content')?.disabled).toBe(false);
+  });
+
+  it('does not render object occurrence UI on the access log page', async () => {
+    const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).not.toContain('Object occurrences');
+    expect(root.querySelector('.occurrence-journal')).toBeNull();
+    expect(root.querySelector('#occurrence-content')).toBeNull();
   });
 });
 
@@ -351,6 +288,6 @@ function render<T extends { readonly id: () => string }>(component: Type<T>): st
 
   expect(backLink?.getAttribute('href')).toBe('/p/collections/projects/my');
   expect(text).toContain('Object access log');
-  expect(text).toContain('Object occurrences');
+  expect(text).not.toContain('Object occurrences');
   return text;
 }
