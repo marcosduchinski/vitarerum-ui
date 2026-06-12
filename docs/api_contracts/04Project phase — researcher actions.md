@@ -268,7 +268,7 @@ projectId : UUID (required)
 
 ### `POST /collection-use-projects/{projectId}/log-entries`
 
-**Description** — Researcher adds an object **log entry** (a narrative activity note). For non-staff callers the project must be `IN_PROGRESS`; otherwise `409`. The caller's `permissionId` is recorded as `addedBy`. The optional `objects` list names collection objects (by inventory number); the server resolves each to an `ObjectReference` snapshot.
+**Description** — Researcher adds an **object log entry** to the project's **object access log** — a structured record of one collection object accessed, with a quantity and optional observations. The access log (one per project, with its own `OAL-XXXXXXXX` reference number) is created automatically on the first entry. For non-staff callers the project must be `IN_PROGRESS`; otherwise `409`. The caller's `permissionId` is recorded as `addedBy`. `inventoryNumber` is resolved to an `ObjectReference` snapshot by the server. Entries cannot be added once the access log is concluded (`409`).
 
 **Path parameters**
 ```
@@ -278,32 +278,32 @@ projectId : UUID (required)
 **Request body**
 ```json
 {
-  "content": "string",
-  "objects": ["INV-001", "INV-002"]
+  "inventoryNumber": "INV-001",
+  "numberOfObjects": 2,
+  "observations": "string"
 }
 ```
 
-`objects` is optional.
+`observations` is optional; `numberOfObjects` must be ≥ 1.
 
 **Response `201 Created`**
 ```json
 {
   "id": "uuid",
-  "content": "string",
+  "objectReference": {
+    "inventoryNumber": "INV-001",
+    "displayTitle": null,
+    "objectName": null,
+    "briefDescriptionSnapshot": null
+  },
+  "numberOfObjects": 2,
   "addedAt": "2025-06-03T14:00:00",
   "addedBy": {
     "permissionId": "uuid",
     "user": { "id": "uuid", "name": "string", "email": "string" },
     "group": "EXTERNAL"
   },
-  "objects": [
-    {
-      "inventoryNumber": "INV-001",
-      "displayTitle": null,
-      "objectName": null,
-      "briefDescriptionSnapshot": null
-    }
-  ],
+  "observations": "string",
   "attachments": []
 }
 ```
@@ -322,7 +322,7 @@ projectId : UUID (required)
 
 ### `GET /collection-use-projects/{projectId}/log-entries`
 
-**Description** — List all log entries for a project, ordered chronologically. Includes `objects` and `attachments` per entry.
+**Description** — List all object log entries for a project's access log, ordered chronologically. Includes the `accessLog` header (`null` if no entry has been added yet) and `attachments` per entry.
 
 **Path parameters**
 ```
@@ -340,24 +340,30 @@ size    : Integer  (default 20)
 ```json
 {
   "projectId": "uuid",
+  "accessLog": {
+    "id": "uuid",
+    "referenceNumber": "OAL-1A2B3C4D",
+    "projectId": "uuid",
+    "dateConclusion": null,
+    "curator": null
+  },
   "content": [
     {
       "id": "uuid",
-      "content": "string",
+      "objectReference": {
+        "inventoryNumber": "INV-001",
+        "displayTitle": null,
+        "objectName": null,
+        "briefDescriptionSnapshot": null
+      },
+      "numberOfObjects": 1,
       "addedAt": "2025-06-03T14:00:00",
       "addedBy": {
         "permissionId": "uuid",
         "user": { "id": "uuid", "name": "string", "email": "string" },
         "group": "EXTERNAL"
       },
-      "objects": [
-        {
-          "inventoryNumber": "INV-001",
-          "displayTitle": null,
-          "objectName": null,
-          "briefDescriptionSnapshot": null
-        }
-      ],
+      "observations": "string",
       "attachments": [
         {
           "fileReference": "string",
@@ -377,9 +383,39 @@ size    : Integer  (default 20)
 
 ---
 
+### `GET /collection-use-projects/{projectId}/object-access-log`
+
+**Description** — Get the project's object access log header: reference number, conclusion date and the curator who concluded it (both `null` while the log is open). `404` if no entry has been added to the project yet.
+
+**Path parameters**
+```
+projectId : UUID (required)
+```
+
+**Response `200 OK`**
+```json
+{
+  "id": "uuid",
+  "referenceNumber": "OAL-1A2B3C4D",
+  "projectId": "uuid",
+  "dateConclusion": null,
+  "curator": null
+}
+```
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "OBJECT_ACCESS_LOG_NOT_FOUND",
+  "message": "No object_access_log found with id uuid"
+}
+```
+
+---
+
 ### `POST /collection-use-projects/{projectId}/log-entries/{entryId}/attachments`
 
-**Description** — Uploads a file to an existing log entry. For non-staff callers the project must be `IN_PROGRESS`. `mediaType` declares the kind of file: `DOCUMENT`, `IMAGE`, `VIDEO`, or `OTHER`.
+**Description** — Uploads a file to an existing object log entry. For non-staff callers the project must be `IN_PROGRESS`, and the access log must not be concluded (`409`). `mediaType` declares the kind of file: `DOCUMENT`, `IMAGE`, `VIDEO`, or `OTHER`.
 
 **Path parameters**
 ```
@@ -431,7 +467,7 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
 
 ### `POST /collection-use-projects/{projectId}/occurrence-entries`
 
-**Description** — Researcher records an object **occurrence entry** — a structured note of which collection objects were accessed or involved in an activity. Same request/response shape and status rules as `POST /collection-use-projects/{projectId}/log-entries` (researcher restricted to `IN_PROGRESS`; `objects` optional, resolved to `ObjectReference` snapshots).
+**Description** — Researcher records an object **occurrence entry** — a structured note of which collection objects were accessed or involved in an activity. Researcher restricted to `IN_PROGRESS`; the optional `objects` list is resolved to `ObjectReference` snapshots. Request body: `{ "content": "string", "objects": ["INV-001"] }`; response is the `JournalEntry` (`id`, `content`, `addedAt`, `addedBy`, `objects`, `attachments`).
 
 **Request body**
 ```json
@@ -447,7 +483,7 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
 
 ### `GET /collection-use-projects/{projectId}/occurrence-entries`
 
-**Description** — List all occurrence entries for a project, ordered chronologically. Same query parameters and response envelope as `GET /collection-use-projects/{projectId}/log-entries`.
+**Description** — List all occurrence entries for a project, ordered chronologically. Same query parameters (`addedBy`, `page`, `size`) as `GET /collection-use-projects/{projectId}/log-entries`; the response envelope carries `JournalEntry` items (`id`, `content`, `addedAt`, `addedBy`, `objects`, `attachments`) and has no `accessLog` field.
 
 ---
 
@@ -522,7 +558,7 @@ The project's first `UseEvent` is `REQUESTED`, recorded when the curator approve
 
 A few conventions worth noting across this group:
 
-**Two distinct journal resources** — `log-entries` capture narrative activity; `occurrence-entries` capture structured object-occurrence records. Both are separate aggregates referencing the project, share the same request/response shape, carry an optional `objects` list resolved to `ObjectReference` snapshots, and are restricted to `IN_PROGRESS` projects for researchers.
+**Two distinct journal resources** — `log-entries` belong to the project's **object access log** (`ObjectAccessLog` aggregate, one per project, `OAL-` reference number, concluded by a curator): each entry records exactly one `objectReference` with a `numberOfObjects` and optional `observations`. `occurrence-entries` remain a separate aggregate referencing the project, with narrative `content` and an optional `objects` list resolved to `ObjectReference` snapshots. Both are restricted to `IN_PROGRESS` projects for researchers.
 
 **`objects` reference inventory items** — the request `objects` field accepts inventory-number strings; the server resolves each to an `ObjectReference` snapshot (`inventoryNumber`, `displayTitle`, `objectName`, `briefDescriptionSnapshot`). Only `inventoryNumber` is populated until a real object catalog is wired in.
 

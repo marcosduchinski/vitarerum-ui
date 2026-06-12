@@ -1,110 +1,384 @@
-<div class="log-panels">
-  <section class="log-panel" aria-labelledby="log-entries-heading">
-    <h2 id="log-entries-heading" class="log-panel__title">Object log</h2>
-
-    @if (logResource.isLoading()) {
-      <app-loading-state />
-    } @else if (logError()) {
-      <app-error-message [apiError]="logError()!" (retry)="logResource.reload()" />
-    } @else if (!logEntries().length) {
-      <app-empty-state title="No log entries" message="No log entries have been added yet." />
-    } @else {
-      <ul class="log-panel__list" aria-label="Object log entries">
-        @for (entry of logEntries(); track entry.id) {
-          <li class="log-panel__entry">
-            <p class="log-panel__entry-content">{{ entry.content }}</p>
-            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy.user.name }}</p>
-            @if (entry.objects.length) {
-              <ul class="log-panel__entry-objects">
-                @for (obj of entry.objects; track obj.inventoryNumber) {
-                  <li>
-                    <span class="log-panel__inv">{{ obj.inventoryNumber }}</span>
-                    @if (obj.displayTitle) {<span> — {{ obj.displayTitle }}</span>}
-                  </li>
-                }
-              </ul>
-            }
-          </li>
+<div class="access-log">
+  <section class="access-sheet" aria-labelledby="object-access-log-heading">
+    <header class="access-sheet__header">
+      <div>
+        <p class="access-sheet__eyebrow">RAIS · Collection access</p>
+        <h2 id="object-access-log-heading" class="access-sheet__title">Object access log</h2>
+        @if (canConcludeAccessLog()) {
+          <button
+            type="button"
+            class="access-sheet__action"
+            [disabled]="concludeSubmitting()"
+            (click)="openConcludeConfirm()"
+          >
+            {{ concludeSubmitting() ? 'Concluding...' : 'Conclude access log' }}
+          </button>
         }
-      </ul>
-    }
+      </div>
 
-    <form class="log-panel__form" (submit)="addLogEntry($event)">
-      <label class="log-panel__form-label" for="log-content">New log entry</label>
-      <textarea
-        id="log-content"
-        class="log-panel__textarea"
-        rows="3"
-        [value]="logContent()"
-        (input)="onLogContentInput($event)"
-        placeholder="Describe the activity or observation…"
-      ></textarea>
-      @if (logSubmitError()) {
-        <app-error-message [apiError]="logSubmitError()!" />
+      <dl class="access-summary" aria-label="Object access log summary">
+        <div class="access-summary__item">
+          <dt>Reference</dt>
+          <dd>{{ accessLog()?.referenceNumber ?? 'Not issued' }}</dd>
+        </div>
+        <div class="access-summary__item">
+          <dt>Status</dt>
+          <dd>{{ accessLog()?.dateConclusion ? 'Concluded' : 'Open' }}</dd>
+        </div>
+        <div class="access-summary__item">
+          <dt>Conclusion</dt>
+          <dd>{{ accessLog()?.dateConclusion ? dateLabel(accessLog()!.dateConclusion!) : '—' }}</dd>
+        </div>
+        <div class="access-summary__item">
+          <dt>Curator</dt>
+          <dd>{{ accessLog()?.curator?.user?.name ?? '—' }}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <app-confirm-modal
+      [open]="concludeConfirmOpen()"
+      title="Conclude access log?"
+      message="This records the conclusion date and prevents more object access entries or object attachments."
+      confirmLabel="Conclude log"
+      cancelLabel="Keep open"
+      tone="warning"
+      [pending]="concludeSubmitting()"
+      (confirmed)="concludeAccessLog()"
+      (cancelled)="closeConcludeConfirm()"
+    >
+      @if (concludeError()) {
+        <app-error-message [apiError]="concludeError()!" />
       }
-      <button
-        type="submit"
-        class="log-panel__submit"
-        [disabled]="logSubmitting() || !logContent().trim()"
+    </app-confirm-modal>
+
+    <div class="access-band">
+      <span>Objects Consulted</span>
+      <span class="access-band__hint">Inventory, quantity, observations, and supporting files</span>
+    </div>
+
+    <div class="access-sheet__body">
+      @if (projectError()) {
+        <app-error-message [apiError]="projectError()!" (retry)="projectResource.reload()" />
+      }
+
+      <form
+        class="object-entry-form"
+        [class.object-entry-form--locked]="!canAddObjectEntries()"
+        (submit)="addObjectEntry($event)"
       >
-        {{ logSubmitting() ? 'Adding…' : 'Add entry' }}
-      </button>
-    </form>
+        @if (objectAccessMessage()) {
+          <p id="object-access-lock-message" class="object-entry-form__locked" role="status">
+            {{ objectAccessMessage() }}
+          </p>
+        }
+        <div class="object-entry-form__grid">
+          <div class="object-entry-form__field">
+            <label for="object-inventory-number">Inventory no.</label>
+            <input
+              id="object-inventory-number"
+              type="text"
+              autocomplete="off"
+              [value]="objectInventoryNumber()"
+              (input)="onObjectInventoryInput($event)"
+              [attr.aria-invalid]="!objectInventoryNumber().trim() || null"
+              [attr.aria-describedby]="objectAccessMessage() ? 'object-access-lock-message' : null"
+              [disabled]="!canAddObjectEntries()"
+              required
+            />
+          </div>
+
+          <div class="object-entry-form__field object-entry-form__field--quantity">
+            <label for="object-number-of-objects">No. objects</label>
+            <input
+              id="object-number-of-objects"
+              type="number"
+              min="1"
+              step="1"
+              [value]="objectNumberOfObjects()"
+              (input)="onObjectQuantityInput($event)"
+              [attr.aria-invalid]="objectNumberOfObjects() < 1 || null"
+              [attr.aria-describedby]="objectAccessMessage() ? 'object-access-lock-message' : null"
+              [disabled]="!canAddObjectEntries()"
+              required
+            />
+          </div>
+
+          <div class="object-entry-form__field object-entry-form__field--observations">
+            <label for="object-observations">Observations</label>
+            <textarea
+              id="object-observations"
+              rows="2"
+              [value]="objectObservations()"
+              (input)="onObjectObservationsInput($event)"
+              [attr.aria-describedby]="objectAccessMessage() ? 'object-access-lock-message' : null"
+              [disabled]="!canAddObjectEntries()"
+            ></textarea>
+          </div>
+        </div>
+
+        @if (objectSubmitError()) {
+          <app-error-message [apiError]="objectSubmitError()!" />
+        }
+
+        <button
+          type="submit"
+          class="object-entry-form__submit"
+          [disabled]="objectSubmitting() || !objectFormValid() || !canAddObjectEntries()"
+        >
+          {{ objectSubmitting() ? 'Registering...' : 'Register object' }}
+        </button>
+      </form>
+
+      @if (logResource.isLoading()) {
+        <app-loading-state label="Loading object access log…" />
+      } @else if (logError()) {
+        <app-error-message [apiError]="logError()!" (retry)="logResource.reload()" />
+      } @else if (!logEntries().length) {
+        <app-empty-state
+          title="No objects recorded"
+          message="No object access entries have been added yet."
+        />
+      } @else {
+        <div class="object-register" role="region" aria-label="Object access entries" tabindex="0">
+          <table class="object-register__table">
+            <caption style="height: 1px; overflow: hidden">
+              Object access entries with inventory number, quantity, date, actor, observations, and
+              files.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">No.</th>
+                <th scope="col">Inventory</th>
+                <th scope="col">Object</th>
+                <th scope="col">Qty.</th>
+                <th scope="col">Date</th>
+                <th scope="col">Added by</th>
+                <th scope="col">Observations</th>
+                <th scope="col">Files</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of logEntries(); track entry.id; let index = $index) {
+                <tr>
+                  <td class="object-register__index">{{ index + 1 }}</td>
+                  <td>
+                    <span class="object-register__inventory">
+                      {{ entry.objectReference.inventoryNumber }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="object-register__object">{{ objectLabel(entry) }}</span>
+                    @if (entry.objectReference.briefDescriptionSnapshot) {
+                      <span class="object-register__description">
+                        {{ entry.objectReference.briefDescriptionSnapshot }}
+                      </span>
+                    }
+                  </td>
+                  <td>{{ entry.numberOfObjects }}</td>
+                  <td>{{ dateLabel(entry.addedAt) }}</td>
+                  <td>{{ entry.addedBy.user.name }}</td>
+                  <td>{{ entry.observations ?? '—' }}</td>
+                  <td>
+                    @if (entry.attachments.length) {
+                      <ul class="attachment-list" aria-label="Entry attachments">
+                        @for (attachment of entry.attachments; track attachment.fileReference) {
+                          <li>
+                            <span class="attachment-list__name">{{ attachment.fileName }}</span>
+                            <span class="attachment-list__meta">{{ attachment.mediaType }}</span>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <span class="object-register__empty">—</span>
+                    }
+                    <form
+                      class="entry-upload"
+                      [attr.aria-label]="'Upload file for ' + entry.objectReference.inventoryNumber"
+                      (submit)="uploadObjectAttachment(entry.id, $event)"
+                    >
+                      <input
+                        type="file"
+                        [disabled]="!canAddObjectEntries()"
+                        (change)="onObjectAttachmentFileInput(entry.id, $event)"
+                        aria-label="Object entry file"
+                      />
+                      <select
+                        [disabled]="!canAddObjectEntries()"
+                        (change)="onObjectAttachmentMediaTypeInput(entry.id, $event)"
+                        aria-label="Object entry media type"
+                      >
+                        <option value="DOCUMENT">Document</option>
+                        <option value="IMAGE">Image</option>
+                        <option value="VIDEO">Video</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                      <button
+                        type="submit"
+                        [disabled]="
+                          !canAddObjectEntries() ||
+                          !objectAttachmentFiles()[entry.id] ||
+                          objectAttachmentUploading()[entry.id]
+                        "
+                      >
+                        {{ objectAttachmentUploading()[entry.id] ? 'Uploading...' : 'Upload' }}
+                      </button>
+                    </form>
+                    @if (objectAttachmentErrors()[entry.id]) {
+                      <app-error-message [apiError]="objectAttachmentErrors()[entry.id]!" />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
   </section>
 
-  <section class="log-panel" aria-labelledby="occurrence-entries-heading">
-    <h2 id="occurrence-entries-heading" class="log-panel__title">Object occurrences</h2>
+  <section class="occurrence-journal" aria-labelledby="occurrence-entries-heading">
+    <div class="access-band">
+      <span id="occurrence-entries-heading">Object occurrences</span>
+      <span class="access-band__hint">Chronological notes connected to accessed objects</span>
+    </div>
 
-    @if (occurrenceResource.isLoading()) {
-      <app-loading-state />
-    } @else if (occurrenceError()) {
-      <app-error-message [apiError]="occurrenceError()!" (retry)="occurrenceResource.reload()" />
-    } @else if (!occurrenceEntries().length) {
-      <app-empty-state
-        title="No occurrence entries"
-        message="No occurrence entries have been added yet."
-      />
-    } @else {
-      <ul class="log-panel__list" aria-label="Object occurrence entries">
-        @for (entry of occurrenceEntries(); track entry.id) {
-          <li class="log-panel__entry">
-            <p class="log-panel__entry-content">{{ entry.content }}</p>
-            <p class="log-panel__entry-meta">{{ dateLabel(entry.addedAt) }} · {{ entry.addedBy.user.name }}</p>
-            @if (entry.objects.length) {
-              <ul class="log-panel__entry-objects">
-                @for (obj of entry.objects; track obj.inventoryNumber) {
-                  <li>
-                    <span class="log-panel__inv">{{ obj.inventoryNumber }}</span>
-                    @if (obj.displayTitle) {<span> — {{ obj.displayTitle }}</span>}
-                  </li>
+    <div class="occurrence-journal__body">
+      @if (occurrenceResource.isLoading()) {
+        <app-loading-state label="Loading occurrence entries…" />
+      } @else if (occurrenceError()) {
+        <app-error-message [apiError]="occurrenceError()!" (retry)="occurrenceResource.reload()" />
+      } @else if (!occurrenceEntries().length) {
+        <app-empty-state
+          title="No occurrence entries"
+          message="No occurrence entries have been added yet."
+        />
+      } @else {
+        <ol class="occurrence-list" aria-label="Object occurrence entries">
+          @for (entry of occurrenceEntries(); track entry.id) {
+            <li class="occurrence-entry">
+              <div class="occurrence-entry__time">{{ dateTimeLabel(entry.addedAt) }}</div>
+              <div class="occurrence-entry__content">
+                <p class="occurrence-entry__text">{{ entry.content }}</p>
+                <p class="occurrence-entry__actor">{{ entry.addedBy.user.name }}</p>
+
+                @if (entry.objects.length) {
+                  <ul class="occurrence-entry__objects">
+                    @for (obj of entry.objects; track obj.inventoryNumber) {
+                      <li>
+                        <span class="object-register__inventory">{{ obj.inventoryNumber }}</span>
+                        @if (obj.displayTitle) {
+                          <span>{{ obj.displayTitle }}</span>
+                        }
+                      </li>
+                    }
+                  </ul>
                 }
-              </ul>
-            }
-          </li>
-        }
-      </ul>
-    }
-
-    <form class="log-panel__form" (submit)="addOccurrenceEntry($event)">
-      <label class="log-panel__form-label" for="occurrence-content">New occurrence entry</label>
-      <textarea
-        id="occurrence-content"
-        class="log-panel__textarea"
-        rows="3"
-        [value]="occurrenceContent()"
-        (input)="onOccurrenceContentInput($event)"
-        placeholder="Describe the occurrence or incident…"
-      ></textarea>
-      @if (occurrenceSubmitError()) {
-        <app-error-message [apiError]="occurrenceSubmitError()!" />
+                @if (entry.attachments.length) {
+                  <ul class="attachment-list" aria-label="Occurrence attachments">
+                    @for (attachment of entry.attachments; track attachment.fileReference) {
+                      <li>
+                        <span class="attachment-list__name">{{ attachment.fileName }}</span>
+                        <span class="attachment-list__meta">{{ attachment.mediaType }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
+                <form
+                  class="entry-upload"
+                  [attr.aria-label]="'Upload file for occurrence ' + entry.id"
+                  (submit)="uploadOccurrenceAttachment(entry.id, $event)"
+                >
+                  <input
+                    type="file"
+                    [disabled]="!canAddOccurrenceEntries()"
+                    (change)="onOccurrenceAttachmentFileInput(entry.id, $event)"
+                    aria-label="Occurrence file"
+                  />
+                  <select
+                    [disabled]="!canAddOccurrenceEntries()"
+                    (change)="onOccurrenceAttachmentMediaTypeInput(entry.id, $event)"
+                    aria-label="Occurrence media type"
+                  >
+                    <option value="DOCUMENT">Document</option>
+                    <option value="IMAGE">Image</option>
+                    <option value="VIDEO">Video</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  <button
+                    type="submit"
+                    [disabled]="
+                      !canAddOccurrenceEntries() ||
+                      !occurrenceAttachmentFiles()[entry.id] ||
+                      occurrenceAttachmentUploading()[entry.id]
+                    "
+                  >
+                    {{ occurrenceAttachmentUploading()[entry.id] ? 'Uploading...' : 'Upload' }}
+                  </button>
+                </form>
+                @if (occurrenceAttachmentErrors()[entry.id]) {
+                  <app-error-message [apiError]="occurrenceAttachmentErrors()[entry.id]!" />
+                }
+              </div>
+            </li>
+          }
+        </ol>
       }
-      <button
-        type="submit"
-        class="log-panel__submit"
-        [disabled]="occurrenceSubmitting() || !occurrenceContent().trim()"
-      >
-        {{ occurrenceSubmitting() ? 'Adding…' : 'Add entry' }}
-      </button>
-    </form>
+
+      <form class="occurrence-form" (submit)="addOccurrenceEntry($event)">
+        @if (occurrenceAccessMessage()) {
+          <p id="occurrence-access-lock-message" class="object-entry-form__locked" role="status">
+            {{ occurrenceAccessMessage() }}
+          </p>
+        }
+        <label class="occurrence-form__label" for="occurrence-content">New occurrence entry</label>
+        <textarea
+          id="occurrence-content"
+          class="occurrence-form__textarea"
+          rows="3"
+          [value]="occurrenceContent()"
+          (input)="onOccurrenceContentInput($event)"
+          [attr.aria-describedby]="
+            occurrenceAccessMessage() ? 'occurrence-access-lock-message' : null
+          "
+          [disabled]="!canAddOccurrenceEntries()"
+        ></textarea>
+        <label class="occurrence-form__label" for="occurrence-objects">
+          Related inventory numbers
+        </label>
+        <textarea
+          id="occurrence-objects"
+          class="occurrence-form__input"
+          rows="2"
+          [value]="occurrenceObjectsDraft()"
+          (input)="onOccurrenceObjectsInput($event)"
+          [attr.aria-describedby]="
+            occurrenceAccessMessage() ? 'occurrence-access-lock-message' : null
+          "
+          [disabled]="!canAddOccurrenceEntries()"
+        ></textarea>
+        @if (occurrenceObjects().length) {
+          <ul class="occurrence-form__objects" aria-label="Parsed related inventory numbers">
+            @for (inventoryNumber of occurrenceObjects(); track inventoryNumber) {
+              <li>
+                <span class="object-register__inventory">{{ inventoryNumber }}</span>
+              </li>
+            }
+          </ul>
+        }
+        @if (occurrenceSubmitError()) {
+          <app-error-message [apiError]="occurrenceSubmitError()!" />
+        }
+        <button
+          type="submit"
+          class="occurrence-form__submit"
+          [disabled]="
+            occurrenceSubmitting() || !occurrenceContent().trim() || !canAddOccurrenceEntries()
+          "
+        >
+          {{ occurrenceSubmitting() ? 'Adding...' : 'Add entry' }}
+        </button>
+      </form>
+    </div>
   </section>
 </div>

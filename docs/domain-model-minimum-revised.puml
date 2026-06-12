@@ -293,14 +293,26 @@ package "Collection Use" <<Bounded Context>> {
         OTHER
         }
 
-        class ObjectLogEntry <<Aggregate Root>> #ffb7b2 {
-        - id: ObjectLogEntryId
+        class ObjectAccessLog <<Aggregate Root>> #ffb7b2 {
+        - id: ObjectAccessLogId
+        - referenceNumber : ReferenceNumber
         - collectionUseProjectId: CollectionUseProjectId
-        - content: String
+        - dateConclusion: DateTime?
+        - curator: PermissionId?
+        - objects: List<ObjectLogEntry>
+        + addObjectLogEntry(...)
+        + conclude(...)
+        }
+
+        class ObjectLogEntry <<Entity>> #ffb7b2 {
+        - id: ObjectLogEntryId
+        - objectAccessLogId: ObjectAccessLogId
+        - objectReference: ObjectReference
+        - numberOfObjects: Int
         - addedAt: DateTime
         - addedBy: PermissionId
+        - observations: String?
         - attachments: List<Attachment>
-        - objects: List<ObjectReference>
         + addAttachment(...)
         }
 
@@ -322,9 +334,14 @@ package "Collection Use" <<Bounded Context>> {
         CollectionUseProject ..> Permission : authorisedBy
         UseEvent ..> Permission : triggeredBy
 
+
+        ObjectAccessLog "1..1" -- CollectionUseProject : collectionUseProjectId
+        ObjectAccessLog *-- "0..*" ObjectLogEntry
+        ObjectAccessLog *-- ReferenceNumber
+        ObjectAccessLog ..> Permission : curator
+
         ObjectLogEntry *-- "0..*" Attachment
-        ObjectLogEntry *-- "0..*" ObjectReference
-        ObjectLogEntry ..> CollectionUseProject : collectionUseProjectId
+        ObjectLogEntry *-- "1..1" ObjectReference
         ObjectLogEntry ..> Permission : addedBy
 
         ObjectOccurrenceEntry *-- "0..*" Attachment

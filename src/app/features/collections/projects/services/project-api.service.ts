@@ -13,6 +13,7 @@ import {
   CreateObjectLogEntryRequest,
   CreateObjectOccurrenceEntryRequest,
   NoteRequest,
+  ObjectAccessLog,
   ObjectLogEntriesPage,
   ObjectLogEntriesQuery,
   ObjectLogEntry,
@@ -49,7 +50,9 @@ export class ProjectApiService {
   }
 
   getProject(projectId: string): Observable<CollectionUseProjectDetail> {
-    return this.http.get<CollectionUseProjectDetail>(this.url(`/collection-use-projects/${projectId}`));
+    return this.http.get<CollectionUseProjectDetail>(
+      this.url(`/collection-use-projects/${projectId}`),
+    );
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {
@@ -90,6 +93,19 @@ export class ProjectApiService {
     return this.http.get<ObjectLogEntriesPage>(
       this.url(`/collection-use-projects/${projectId}/log-entries`),
       { params: buildHttpParams(query) },
+    );
+  }
+
+  getObjectAccessLog(projectId: string): Observable<ObjectAccessLog> {
+    return this.http.get<ObjectAccessLog>(
+      this.url(`/collection-use-projects/${projectId}/object-access-log`),
+    );
+  }
+
+  concludeObjectAccessLog(projectId: string): Observable<ObjectAccessLog> {
+    return this.http.post<ObjectAccessLog>(
+      this.url(`/collection-use-projects/${projectId}/object-access-log/conclusion`),
+      {},
     );
   }
 
@@ -146,9 +162,12 @@ export class ProjectApiService {
   }
 
   listEvents(projectId: string, query: ProjectEventsQuery = {}): Observable<ProjectEventsPage> {
-    return this.http.get<ProjectEventsPage>(this.url(`/collection-use-projects/${projectId}/events`), {
-      params: buildHttpParams(query),
-    });
+    return this.http.get<ProjectEventsPage>(
+      this.url(`/collection-use-projects/${projectId}/events`),
+      {
+        params: buildHttpParams(query),
+      },
+    );
   }
 
   private url(path: string): string {

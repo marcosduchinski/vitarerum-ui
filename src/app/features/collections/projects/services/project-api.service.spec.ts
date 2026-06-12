@@ -52,21 +52,40 @@ describe('ProjectApiService', () => {
   });
 
   it('creates object log entries and completes projects', () => {
-    service.createObjectLogEntry('project-1', { content: 'Log entry note' }).subscribe();
+    service
+      .createObjectLogEntry('project-1', {
+        inventoryNumber: 'INV-001',
+        numberOfObjects: 2,
+        observations: 'Handled during reading room access.',
+      })
+      .subscribe();
 
     const entryRequest = http.expectOne(
       'https://api.example.test/collection-use-projects/project-1/log-entries',
     );
 
     expect(entryRequest.request.method).toBe('POST');
-    expect(entryRequest.request.body).toEqual({ content: 'Log entry note' });
+    expect(entryRequest.request.body).toEqual({
+      inventoryNumber: 'INV-001',
+      numberOfObjects: 2,
+      observations: 'Handled during reading room access.',
+    });
     entryRequest.flush({
       id: 'entry-1',
-      collectionUseProjectId: 'project-1',
-      content: 'Log entry note',
+      objectReference: {
+        inventoryNumber: 'INV-001',
+        displayTitle: null,
+        objectName: null,
+        briefDescriptionSnapshot: null,
+      },
+      numberOfObjects: 2,
       addedAt: '2026-06-01T10:00:00',
-      addedBy: 'permission-1',
-      objects: [],
+      addedBy: {
+        permissionId: 'permission-1',
+        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
+        group: 'COLLECTIONS_MANAGEMENT',
+      },
+      observations: 'Handled during reading room access.',
       attachments: [],
     });
 
@@ -91,6 +110,71 @@ describe('ProjectApiService', () => {
           group: 'COLLECTIONS_MANAGEMENT',
         },
         note: 'Completed',
+      },
+    });
+  });
+
+  it('lists object log entries with filters and access log metadata', () => {
+    service
+      .listObjectLogEntries('project-1', { addedBy: 'permission-1', page: 1, size: 10 })
+      .subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/log-entries?addedBy=permission-1&page=1&size=10',
+    );
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('addedBy')).toBe('permission-1');
+    request.flush({
+      projectId: 'project-1',
+      accessLog: {
+        id: 'access-log-1',
+        referenceNumber: 'OAL-1A2B3C4D',
+        projectId: 'project-1',
+        dateConclusion: null,
+        curator: null,
+      },
+      content: [],
+      page: 1,
+      size: 10,
+      totalElements: 0,
+      totalPages: 0,
+    });
+  });
+
+  it('gets and concludes object access logs', () => {
+    service.getObjectAccessLog('project-1').subscribe();
+
+    const getRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/object-access-log',
+    );
+
+    expect(getRequest.request.method).toBe('GET');
+    getRequest.flush({
+      id: 'access-log-1',
+      referenceNumber: 'OAL-1A2B3C4D',
+      projectId: 'project-1',
+      dateConclusion: null,
+      curator: null,
+    });
+
+    service.concludeObjectAccessLog('project-1').subscribe();
+
+    const concludeRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/object-access-log/conclusion',
+    );
+
+    expect(concludeRequest.request.method).toBe('POST');
+    expect(concludeRequest.request.body).toEqual({});
+    concludeRequest.flush({
+      id: 'access-log-1',
+      referenceNumber: 'OAL-1A2B3C4D',
+      projectId: 'project-1',
+      dateConclusion: '2026-06-04T16:00:00',
+      curator: {
+        permissionId: 'permission-1',
+        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
+        group: 'COLLECTIONS_MANAGEMENT',
       },
     });
   });

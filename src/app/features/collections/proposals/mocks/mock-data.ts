@@ -6,6 +6,7 @@ import { Page, PageQuery } from '@shared/models/page.model';
 import { ProposalStatus } from '@shared/models/collection-use-status.model';
 
 import {
+  ObjectAccessLog,
   ObjectLogEntry,
   ObjectOccurrenceEntry,
   UseEvent,
@@ -547,7 +548,8 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     id: 'proj-2',
     referenceNumber: 'VR-2026-002',
     title: 'Science history exhibition on botanical illustration',
-    purpose: 'Selection and display of botanical illustration materials for a science history exhibition.',
+    purpose:
+      'Selection and display of botanical illustration materials for a science history exhibition.',
     type: 'EXHIBITION',
     status: 'CREATED',
     beginDate: '2026-07-01',
@@ -687,22 +689,31 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
   'proj-3': [
     {
       id: 'entry-101',
-      collectionUseProjectId: 'proj-3',
-      content:
-        'Reviewed the zoological field notebooks. First batch of 12 notebooks identified and compared with Atlantic forest specimen records.',
+      objectReference: {
+        inventoryNumber: 'INV-ZOO-1892-001',
+        displayTitle: 'Atlantic forest field notebook',
+        objectName: 'Field notebook',
+        briefDescriptionSnapshot:
+          'Zoological field notebook used for Atlantic forest specimen records.',
+      },
+      numberOfObjects: 1,
       addedAt: '2026-06-04T11:00:00Z',
       addedBy: P['carol'],
-      objects: [],
+      observations: 'Reviewed and compared with specimen records.',
       attachments: [],
     },
     {
       id: 'entry-102',
-      collectionUseProjectId: 'proj-3',
-      content:
-        'Photographic documentation of three field sketches completed. Cross-referenced with catalogue references and updated the shared inventory list.',
+      objectReference: {
+        inventoryNumber: 'INV-ZOO-1892-002',
+        displayTitle: 'Field sketch set',
+        objectName: 'Sketches',
+        briefDescriptionSnapshot: 'Three field sketches cross-referenced with catalogue records.',
+      },
+      numberOfObjects: 3,
       addedAt: '2026-06-05T09:30:00Z',
       addedBy: P['carol'],
-      objects: [],
+      observations: 'Photographic documentation completed.',
       attachments: [],
     },
   ],
@@ -710,6 +721,16 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
   'proj-5': [],
   'proj-6': [],
   'proj-7': [],
+};
+
+export const SEED_PROJECT_OBJECT_ACCESS_LOGS: Record<string, ObjectAccessLog> = {
+  'proj-3': {
+    id: 'oal-proj-3',
+    referenceNumber: 'OAL-PROJ3',
+    projectId: 'proj-3',
+    dateConclusion: null,
+    curator: null,
+  },
 };
 
 export const SEED_PROJECT_OCCURRENCE_ENTRIES: Record<string, ObjectOccurrenceEntry[]> = {
@@ -738,6 +759,7 @@ export interface MockSeed {
   readonly messages?: Record<string, Message[]>;
   readonly projects?: readonly MutableProjectState[];
   readonly projectEvents?: Record<string, UseEvent[]>;
+  readonly objectAccessLogs?: Record<string, ObjectAccessLog>;
   readonly logEntries?: Record<string, ObjectLogEntry[]>;
   readonly occurrenceEntries?: Record<string, ObjectOccurrenceEntry[]>;
 }
@@ -750,6 +772,7 @@ export const TEST_SEED: MockSeed = {
   messages: SEED_MESSAGES,
   projects: SEED_PROJECTS,
   projectEvents: SEED_PROJECT_EVENTS,
+  objectAccessLogs: SEED_PROJECT_OBJECT_ACCESS_LOGS,
   logEntries: SEED_PROJECT_LOG_ENTRIES,
   occurrenceEntries: SEED_PROJECT_OCCURRENCE_ENTRIES,
 };
@@ -763,6 +786,9 @@ export class MockProjectState {
   );
   readonly logEntries = new Map<string, ObjectLogEntry[]>(
     Object.entries(this.seed?.logEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
+  );
+  readonly objectAccessLogs = new Map<string, ObjectAccessLog>(
+    Object.entries(this.seed?.objectAccessLogs ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   readonly occurrenceEntries = new Map<string, ObjectOccurrenceEntry[]>(
     Object.entries(this.seed?.occurrenceEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
@@ -793,6 +819,7 @@ export class MockProjectState {
     };
     this.projects.set(project.id, project);
     this.logEntries.set(project.id, []);
+    this.objectAccessLogs.delete(project.id);
     this.occurrenceEntries.set(project.id, []);
     this.events.set(project.id, [
       {
@@ -847,6 +874,14 @@ export class MockProjectState {
 
   nextEntryId(): string {
     return `entry-${this.nextId++}`;
+  }
+
+  nextObjectAccessLogId(): string {
+    return `oal-${this.nextId++}`;
+  }
+
+  nextObjectAccessLogReference(): string {
+    return `OAL-${String(this.nextId++).padStart(8, '0')}`;
   }
 
   nextFileReference(): string {

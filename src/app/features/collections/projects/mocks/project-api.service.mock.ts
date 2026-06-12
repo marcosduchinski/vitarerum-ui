@@ -11,6 +11,7 @@ import {
   CreateObjectLogEntryRequest,
   CreateObjectOccurrenceEntryRequest,
   NoteRequest,
+  ObjectAccessLog,
   ObjectLogEntriesPage,
   ObjectLogEntriesQuery,
   ObjectLogEntry,
@@ -86,26 +87,34 @@ export class ProjectApiServiceMock {
   ): Observable<ObjectLogEntry> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (p.status === 'CANCELLED') {
+    const currentPrincipal = this.currentPrincipal();
+    if (currentPrincipal.group === 'EXTERNAL' && p.status !== 'IN_PROGRESS') {
       return throwError(() => ({
         status: 409,
-        error: 'INVALID_PROJECT_STATUS',
-        message: 'Entries cannot be added to a cancelled project',
+        error: 'INVALID_TRANSITION',
+        message: 'Entries can only be added while the project is IN_PROGRESS',
+      }));
+    }
+    const accessLog = this.ensureObjectAccessLog(projectId);
+    if (accessLog.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Object access log is already concluded',
       }));
     }
     const entry: ObjectLogEntry = {
       id: this.state.nextEntryId(),
-      collectionUseProjectId: projectId,
-      content: request.content,
+      objectReference: {
+        inventoryNumber: request.inventoryNumber,
+        displayTitle: null,
+        objectName: null,
+        briefDescriptionSnapshot: null,
+      },
+      numberOfObjects: request.numberOfObjects,
       addedAt: new Date().toISOString(),
-      addedBy: this.currentPrincipal(),
-      objects:
-        request.objects?.map((inv) => ({
-          inventoryNumber: inv,
-          displayTitle: null,
-          objectName: null,
-          briefDescriptionSnapshot: null,
-        })) ?? [],
+      addedBy: currentPrincipal,
+      observations: request.observations ?? null,
       attachments: [],
     };
     const current = this.state.logEntries.get(projectId) ?? [];
@@ -122,7 +131,59 @@ export class ProjectApiServiceMock {
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     let items = this.state.logEntries.get(projectId) ?? [];
     if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
-    return of({ ...makePageFrom(items, query), projectId });
+    return of({
+      ...makePageFrom(items, query),
+      projectId,
+      accessLog: this.state.objectAccessLogs.get(projectId) ?? null,
+    });
+  }
+
+  getObjectAccessLog(projectId: string): Observable<ObjectAccessLog> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const accessLog = this.state.objectAccessLogs.get(projectId);
+    if (!accessLog) {
+      return throwError(() => ({
+        status: 404,
+        error: 'OBJECT_ACCESS_LOG_NOT_FOUND',
+        message: 'No object_access_log found with id uuid',
+      }));
+    }
+    return of(accessLog);
+  }
+
+  concludeObjectAccessLog(projectId: string): Observable<ObjectAccessLog> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const accessLog = this.state.objectAccessLogs.get(projectId);
+    if (!accessLog) {
+      return throwError(() => ({
+        status: 404,
+        error: 'OBJECT_ACCESS_LOG_NOT_FOUND',
+        message: 'No object_access_log found with id uuid',
+      }));
+    }
+    const currentPrincipal = this.currentPrincipal();
+    if (
+      currentPrincipal.group !== 'CURATORIAL' &&
+      currentPrincipal.group !== 'COLLECTIONS_MANAGEMENT'
+    ) {
+      return throwError(() => ({ status: 403, error: 'FORBIDDEN' }));
+    }
+    if (accessLog.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Object access log is already concluded',
+      }));
+    }
+    const concluded: ObjectAccessLog = {
+      ...accessLog,
+      dateConclusion: new Date().toISOString(),
+      curator: currentPrincipal,
+    };
+    this.state.objectAccessLogs.set(projectId, concluded);
+    return of(concluded);
   }
 
   uploadLogEntryAttachment(
@@ -133,6 +194,21 @@ export class ProjectApiServiceMock {
   ): Observable<Attachment> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const accessLog = this.state.objectAccessLogs.get(projectId);
+    if (accessLog?.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Object access log is already concluded',
+      }));
+    }
+    if (this.currentPrincipal().group === 'EXTERNAL' && p.status !== 'IN_PROGRESS') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Entries can only be added while the project is IN_PROGRESS',
+      }));
+    }
     const allEntries = this.state.logEntries.get(projectId) ?? [];
     const entry = allEntries.find((e) => e.id === entryId);
     if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
@@ -293,5 +369,19 @@ export class ProjectApiServiceMock {
           (p) => p.user.id === session.user.id || p.user.email === session.user.email,
         ) ?? P['alice'])
       : P['alice'];
+  }
+
+  private ensureObjectAccessLog(projectId: string): ObjectAccessLog {
+    const current = this.state.objectAccessLogs.get(projectId);
+    if (current) return current;
+    const accessLog: ObjectAccessLog = {
+      id: this.state.nextObjectAccessLogId(),
+      referenceNumber: this.state.nextObjectAccessLogReference(),
+      projectId,
+      dateConclusion: null,
+      curator: null,
+    };
+    this.state.objectAccessLogs.set(projectId, accessLog);
+    return accessLog;
   }
 }

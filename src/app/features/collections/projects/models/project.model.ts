@@ -45,13 +45,21 @@ export interface Attachment {
   readonly uploadedAt: string;
 }
 
+export interface ObjectAccessLog {
+  readonly id: string;
+  readonly referenceNumber: string;
+  readonly projectId: string;
+  readonly dateConclusion: string | null;
+  readonly curator: PermissionPrincipal | null;
+}
+
 export interface ObjectLogEntry {
   readonly id: string;
-  readonly collectionUseProjectId: string;
-  readonly content: string;
+  readonly objectReference: ObjectReference;
+  readonly numberOfObjects: number;
   readonly addedAt: string;
   readonly addedBy: PermissionPrincipal;
-  readonly objects: readonly ObjectReference[];
+  readonly observations: string | null;
   readonly attachments: readonly Attachment[];
 }
 
@@ -100,6 +108,7 @@ export interface ProjectEventsQuery extends PageQuery {
 
 export interface ObjectLogEntriesPage extends Page<ObjectLogEntry> {
   readonly projectId: string;
+  readonly accessLog: ObjectAccessLog | null;
 }
 
 export interface ObjectOccurrenceEntriesPage extends Page<ObjectOccurrenceEntry> {
@@ -119,8 +128,9 @@ export interface ReasonRequest {
 }
 
 export interface CreateObjectLogEntryRequest {
-  readonly content: string;
-  readonly objects?: readonly string[];
+  readonly inventoryNumber: string;
+  readonly numberOfObjects: number;
+  readonly observations?: string;
 }
 
 export interface CreateObjectOccurrenceEntryRequest {

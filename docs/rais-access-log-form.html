@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAIS — Object Access Log · MUHNAC</title>
+<style>
+  /* ---- Design tokens ---------------------------------------------------- */
+  :root{
+    --ink:        #1d211f;   /* near-black, slightly green */
+    --ink-soft:   #4b524e;
+    --muted:      #8a918c;   /* EN subtitle grey, matches the original */
+    --line:       #d7d9d4;
+    --line-soft:  #e8e9e4;
+    --paper:      #ffffff;
+    --panel:      #f6f6f2;   /* admin band / filled-by-museum */
+    --panel-2:    #fbfbf8;
+    --moss:       #46604a;   /* herbarium green accent */
+    --moss-soft:  #eef2ec;
+    --danger:     #9a3b2e;
+    --focus:      #46604a;
+    --radius:     6px;
+    --font:       "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono:       "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:#ecece7; color:var(--ink);
+    font-family:var(--font); font-size:14px; line-height:1.45;
+  }
+
+  .sheet{
+    max-width:1180px; margin:28px auto; background:var(--paper);
+    border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:0 1px 3px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.05);
+    overflow:hidden;
+  }
+
+  /* ---- Masthead --------------------------------------------------------- */
+  .masthead{
+    display:flex; align-items:center; gap:18px;
+    padding:22px 32px; border-bottom:1px solid var(--line);
+  }
+  .crest{
+    font-weight:800; font-size:26px; letter-spacing:.02em; line-height:1;
+    border:2px solid var(--ink); border-radius:4px; padding:6px 10px;
+  }
+  .masthead .org{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+  .masthead .org strong{ display:block; font-size:13px; letter-spacing:.06em; color:var(--ink); }
+  .masthead .spacer{ flex:1; }
+  .formcode{
+    text-align:right; font-size:11px; color:var(--muted); letter-spacing:.04em;
+  }
+  .formcode .v{ font-family:var(--mono); }
+
+  .title-row{
+    text-align:center; padding:18px 32px 4px;
+  }
+  .title-row h1{
+    margin:0; color:var(--moss); font-size:20px; letter-spacing:.04em;
+    font-weight:700; text-transform:uppercase;
+  }
+  .title-row p{ margin:4px 0 0; color:var(--muted); font-size:12px; }
+
+  form{ padding:14px 32px 32px; }
+
+  /* ---- Section scaffolding ---------------------------------------------- */
+  .section{ margin-top:22px; }
+  .section > .band{
+    display:flex; align-items:center; gap:8px;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-soft); font-weight:700;
+    padding:7px 12px; background:var(--panel); border:1px solid var(--line);
+    border-bottom:none; border-top-left-radius:var(--radius); border-top-right-radius:var(--radius);
+  }
+  .section.museum > .band{ color:#5a4a2e; background:#f3efe6; }
+  .band .hint{ font-weight:400; letter-spacing:.02em; text-transform:none; color:var(--muted); }
+
+  .panel{
+    border:1px solid var(--line); border-bottom-left-radius:var(--radius); border-bottom-right-radius:var(--radius);
+    background:var(--paper); padding:16px;
+  }
+  .museum .panel{ background:var(--panel-2); }
+
+  /* ---- Fields ----------------------------------------------------------- */
+  .grid{ display:grid; gap:14px 18px; }
+  .cols-4{ grid-template-columns:repeat(4,1fr); }
+  .cols-2{ grid-template-columns:repeat(2,1fr); }
+
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:12px; font-weight:600; color:var(--ink); }
+  .field label .en{ display:block; font-weight:400; color:var(--muted); font-size:11px; }
+  .field .req{ color:var(--danger); margin-left:2px; }
+
+  input, select, textarea{
+    font-family:inherit; font-size:13px; color:var(--ink);
+    padding:8px 10px; border:1px solid var(--line); border-radius:5px;
+    background:var(--paper); width:100%;
+  }
+  input[readonly]{ background:var(--moss-soft); color:var(--ink-soft); }
+  input:focus, select:focus, textarea:focus{
+    outline:none; border-color:var(--focus); box-shadow:0 0 0 3px rgba(70,96,74,.15);
+  }
+  input.invalid, select.invalid{ border-color:var(--danger); box-shadow:0 0 0 3px rgba(154,59,46,.12); }
+  .field .error{ font-size:11px; color:var(--danger); min-height:0; }
+
+  /* ---- Object table (the FormArray) ------------------------------------- */
+  .objtable{ width:100%; border-collapse:collapse; }
+  .objtable th{
+    font-size:10px; letter-spacing:.06em; text-transform:uppercase; text-align:left;
+    color:var(--ink-soft); font-weight:700; padding:8px 8px; border-bottom:2px solid var(--line);
+    background:var(--panel-2); vertical-align:bottom;
+  }
+  .objtable th .en{ display:block; font-weight:400; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .objtable td{ padding:5px 6px; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+  .objtable input, .objtable select{ padding:7px 8px; font-size:12px; }
+  .objtable .num{ width:46px; text-align:center; color:var(--muted); font-size:12px; padding-top:13px; }
+  .objtable .qty input{ text-align:right; }
+  .row-del{
+    border:none; background:transparent; color:var(--muted); cursor:pointer;
+    font-size:16px; line-height:1; padding:8px 6px; border-radius:4px;
+  }
+  .row-del:hover{ color:var(--danger); background:#f7eceb; }
+
+  /* column widths */
+  col.c-num{ width:40px; }  col.c-inv{ width:120px; }  col.c-qty{ width:90px; }
+  col.c-date{ width:130px; }  col.c-del{ width:34px; }
+
+  .addrow{
+    margin-top:12px; display:inline-flex; align-items:center; gap:7px;
+    border:1px dashed var(--moss); color:var(--moss); background:var(--moss-soft);
+    padding:8px 14px; border-radius:5px; font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .addrow:hover{ background:#e3ebe1; }
+
+  /* ---- Closure / actions ------------------------------------------------ */
+  .closure{ display:grid; grid-template-columns:1fr 280px; gap:18px; align-items:start; }
+  .actions{
+    margin-top:26px; padding-top:18px; border-top:1px solid var(--line);
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
+  .btn{
+    font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    padding:10px 18px; border-radius:6px; border:1px solid transparent;
+  }
+  .btn-primary{ background:var(--moss); color:#fff; }
+  .btn-primary:hover{ background:#3a5040; }
+  .btn-ghost{ background:#fff; border-color:var(--line); color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--ink-soft); }
+  .actions .sp{ flex:1; }
+
+  pre.payload{
+    margin:18px 32px 28px; background:#1d211f; color:#d8e0d5;
+    border-radius:8px; padding:18px; font-family:var(--mono); font-size:12px;
+    line-height:1.5; overflow:auto; max-height:340px; display:none;
+  }
+  pre.payload.show{ display:block; }
+
+  footer.inst{
+    padding:18px 32px 26px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:flex-end;
+    color:var(--muted); font-size:11px; line-height:1.5;
+  }
+
+  @media (max-width:820px){
+    .cols-4{ grid-template-columns:repeat(2,1fr); }
+    .closure{ grid-template-columns:1fr; }
+    .objwrap{ overflow-x:auto; }
+    .objtable{ min-width:760px; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- Masthead ----------------------------------------------------------- -->
+  <div class="masthead">
+    <div class="crest">U·L</div>
+    <div class="org">
+      Universidade de Lisboa
+      <strong>Museu Nacional de História Natural e da Ciência</strong>
+    </div>
+    <div class="spacer"></div>
+    <div class="formcode">Formulário <strong>RAIS</strong><br><span class="v">v02.2025</span></div>
+  </div>
+
+  <div class="title-row">
+    <h1>Object Access Log — Coleções (RAIS)</h1>
+    <p>Registo de Acesso In Situ · Registo de objetos consultados</p>
+  </div>
+
+  <form id="raisForm" novalidate>
+
+    <!-- 1. Museum-filled header ----------------------------------------- -->
+    <div class="section museum">
+      <div class="band">A preencher pelo MUHNAC <span class="hint">(Reserved — filled by the museum)</span></div>
+      <div class="panel">
+        <div class="grid cols-4">
+          <div class="field">
+            <label>N.Ref.<span class="en">Reference no.</span></label>
+            <input name="refNumber" value="MUHNAC/IICT-2026-" placeholder="MUHNAC/IICT-2026-001">
+          </div>
+          <div class="field">
+            <label>Cat.<span class="en">Category</span></label>
+            <input name="category" value="RAIS" readonly>
+          </div>
+          <div class="field">
+            <label>Data<span class="en">Date</span></label>
+            <input type="date" name="requestDate">
+          </div>
+          <div class="field">
+            <label>Requerente / Instituição<span class="en">Requester / Institution</span></label>
+            <input name="requesterType" placeholder="Visitante">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Requester ----------------------------------------------------- -->
+    <div class="section">
+      <div class="band">Requerente <span class="hint">Requester</span></div>
+      <div class="panel">
+        <div class="grid cols-2">
+          <div class="field">
+            <label>Nome <span class="req">*</span><span class="en">Name</span></label>
+            <input name="name" required>
+            <span class="error" data-for="name"></span>
+          </div>
+          <div class="field">
+            <label>Email <span class="req">*</span><span class="en">Email</span></label>
+            <input type="email" name="email" required>
+            <span class="error" data-for="email"></span>
+          </div>
+          <div class="field">
+            <label>Coleção <span class="req">*</span><span class="en">Collection</span></label>
+            <select name="collection" required>
+              <option value="">— Selecionar —</option>
+              <option>Zoologia</option>
+              <option>Botânica / Herbário</option>
+              <option>Geologia / Mineralogia</option>
+              <option>Paleontologia</option>
+              <option>Antropologia</option>
+              <option>Instrumentos Científicos</option>
+              <option>Arquivo / Documentos</option>
+            </select>
+            <span class="error" data-for="collection"></span>
+          </div>
+          <div class="field">
+            <label>Curador<span class="en">Curator</span></label>
+            <input name="curator">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Object access table (FormArray) ------------------------------ -->
+    <div class="section">
+      <div class="band">Objetos consultados <span class="hint">Objects accessed</span></div>
+      <div class="panel">
+        <div class="objwrap">
+          <table class="objtable">
+            <colgroup>
+              <col class="c-num"><col class="c-inv"><col><col><col class="c-qty"><col class="c-date"><col><col class="c-del">
+            </colgroup>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Nº Inv.<span class="en">Inventory no.</span></th>
+                <th>Designação<span class="en">Name (nome, taxon, etc.)</span></th>
+                <th>Tipo<span class="en">Type (peles, tecidos, ovos…)</span></th>
+                <th>Nº Obj.<span class="en"># Objects</span></th>
+                <th>Data<span class="en">Date</span></th>
+                <th>Observações<span class="en">Observations</span></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="objBody"><!-- rows injected by JS --></tbody>
+          </table>
+        </div>
+        <button type="button" class="addrow" id="addRowBtn">+ Adicionar objeto / Add object</button>
+      </div>
+    </div>
+
+    <!-- 4. Closure ------------------------------------------------------- -->
+    <div class="section">
+      <div class="band">Conclusão <span class="hint">Closure</span></div>
+      <div class="panel">
+        <div class="closure">
+          <div class="field">
+            <label>Assinatura (Investigador/a)<span class="en">Signature (Researcher)</span></label>
+            <input name="signature" placeholder="Nome do investigador / researcher name">
+          </div>
+          <div class="field">
+            <label>Data da conclusão e retorno<span class="en">Conclusion &amp; object return date</span></label>
+            <input type="date" name="returnDate">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions ---------------------------------------------------------- -->
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Registar acesso / Submit</button>
+      <button type="button" class="btn btn-ghost" id="previewBtn">Pré-visualizar payload</button>
+      <div class="sp"></div>
+      <button type="reset" class="btn btn-ghost">Limpar</button>
+    </div>
+  </form>
+
+  <pre class="payload" id="payload"></pre>
+
+  <footer class="inst">
+    <div>Museus da Universidade de Lisboa — MUHNAC<br>Rua da Escola Politécnica, 56 · 1250-102 Lisboa</div>
+    <div>Página gerada · protótipo HTML</div>
+  </footer>
+</div>
+
+<script>
+  const TYPES = ["peles","tecidos","ovos","documentos","desenhos","esqueletos","amostras","outro"];
+
+  function rowTemplate(i){
+    const opts = TYPES.map(t=>`<option>${t}</option>`).join("");
+    return `
+      <tr data-index="${i}">
+        <td class="num">${i+1}</td>
+        <td><input name="inventoryNo"></td>
+        <td><input name="designation"></td>
+        <td><select name="type"><option value="">—</option>${opts}</select></td>
+        <td class="qty"><input type="number" name="quantity" min="1" value="1"></td>
+        <td><input type="date" name="accessDate"></td>
+        <td><input name="observations"></td>
+        <td><button type="button" class="row-del" title="Remover linha">×</button></td>
+      </tr>`;
+  }
+
+  const body = document.getElementById("objBody");
+  let counter = 0;
+
+  function addRow(){
+    body.insertAdjacentHTML("beforeend", rowTemplate(counter++));
+  }
+  function renumber(){
+    [...body.querySelectorAll("tr")].forEach((tr,idx)=>{
+      tr.querySelector(".num").textContent = idx+1;
+    });
+  }
+
+  // start with 3 empty rows
+  addRow(); addRow(); addRow();
+
+  document.getElementById("addRowBtn").addEventListener("click", addRow);
+  body.addEventListener("click", e=>{
+    if(e.target.classList.contains("row-del")){
+      if(body.querySelectorAll("tr").length > 1) e.target.closest("tr").remove();
+      else e.target.closest("tr").querySelectorAll("input,select").forEach(el=>el.value = el.name==="quantity"?"1":"");
+      renumber();
+    }
+  });
+
+  // ---- Serialize to the domain-shaped payload --------------------------
+  function collect(){
+    const f = document.getElementById("raisForm");
+    const get = n => (f.querySelector(`[name="${n}"]`)?.value || "").trim();
+    const objects = [...body.querySelectorAll("tr")].map(tr=>{
+      const v = n => (tr.querySelector(`[name="${n}"]`)?.value || "").trim();
+      return {
+        inventoryNo: v("inventoryNo"),
+        designation: v("designation"),
+        type:        v("type"),
+        quantity:    Number(v("quantity")) || null,
+        accessDate:  v("accessDate"),
+        observations:v("observations")
+      };
+    }).filter(o => o.inventoryNo || o.designation); // drop blank rows
+
+    return {
+      refNumber: get("refNumber"),
+      category:  get("category"),
+      requestDate: get("requestDate"),
+      requesterType: get("requesterType"),
+      researcher: { name: get("name"), email: get("email") },
+      collection: get("collection"),
+      curator: get("curator"),
+      objects,
+      signature: get("signature"),
+      returnDate: get("returnDate")
+    };
+  }
+
+  // ---- Minimal validation ----------------------------------------------
+  function validate(){
+    let ok = true;
+    document.querySelectorAll("[required]").forEach(el=>{
+      const err = document.querySelector(`.error[data-for="${el.name}"]`);
+      const bad = !el.value.trim() || (el.type==="email" && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value));
+      el.classList.toggle("invalid", bad);
+      if(err) err.textContent = bad ? "Campo obrigatório / required" : "";
+      if(bad) ok = false;
+    });
+    return ok;
+  }
+
+  document.getElementById("previewBtn").addEventListener("click", ()=>{
+    const pre = document.getElementById("payload");
+    pre.textContent = JSON.stringify(collect(), null, 2);
+    pre.classList.add("show");
+    pre.scrollIntoView({behavior:"smooth", block:"nearest"});
+  });
+
+  document.getElementById("raisForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    if(!validate()){ document.querySelector(".invalid")?.focus(); return; }
+    const pre = document.getElementById("payload");
+    pre.textContent = "// ✓ válido — payload pronto a enviar\n" + JSON.stringify(collect(), null, 2);
+    pre.classList.add("show");
+    pre.scrollIntoView({behavior:"smooth", block:"nearest"});
+  });
+</script>
+</body>
+</html>
