@@ -9,6 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -44,14 +45,19 @@ const TERMINAL_FETCH_SIZE = 100;
 })
 export class ProposalsRejectedPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
 
+  // Refetch when the active role changes: requests carry X-Permission-Id.
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
+
   protected readonly proposalsResource = resource({
     params: () => ({
+      currentPermissionId: this.currentPermissionId(),
       search: this.appliedSearch().trim(),
     }),
     loader: ({ params }) =>

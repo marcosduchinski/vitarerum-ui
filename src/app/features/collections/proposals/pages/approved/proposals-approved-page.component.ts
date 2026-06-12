@@ -11,6 +11,7 @@ import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -44,14 +45,19 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 export class ProposalsApprovedPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly router = inject(Router);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
 
+  // Refetch when the active role changes: requests carry X-Permission-Id.
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
+
   protected readonly proposalsResource = resource({
     params: () => ({
+      currentPermissionId: this.currentPermissionId(),
       page: this.currentPage(),
       size: this.pageSize(),
       search: this.appliedSearch().trim(),
@@ -98,10 +104,7 @@ export class ProposalsApprovedPageComponent {
         label: 'View details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate([
-            '/p/collections/proposals/approved',
-            context.proposalId,
-          ]);
+          void this.router.navigate(['/p/collections/proposals/approved', context.proposalId]);
         },
       },
     ];

@@ -1,3 +1,5 @@
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { IdentityServiceMock } from '@core/auth/identity.service.mock';
 import { Router, provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -87,7 +89,11 @@ describe('ProjectsPendingPageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ProjectsPendingPageComponent],
-      providers: [provideRouter([]), { provide: PROJECT_API_SERVICE, useValue: projectService }],
+      providers: [
+        { provide: IDENTITY_SERVICE, useClass: IdentityServiceMock },
+        provideRouter([]),
+        { provide: PROJECT_API_SERVICE, useValue: projectService },
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);

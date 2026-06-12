@@ -16,13 +16,32 @@ function mockPermissions(accountId: string, groups: readonly GroupName[]): Sessi
 }
 
 const MOCK_ACCOUNTS: Record<string, MockAccount> = {
-  'alice@ext.example.com':       { id: 'u-alice', name: 'Alice Ferreira', groups: ['EXTERNAL'] },
-  'bob@collections.example.com': { id: 'u-bob',   name: 'Bob Santos',    groups: ['COLLECTIONS_MANAGEMENT'] },
-  'carol@curatorial.example.com':{ id: 'u-carol', name: 'Carol Souza',   groups: ['CURATORIAL'] },
-  'dan@direction.example.com':   { id: 'u-dan',   name: 'Dan Oliveira',  groups: ['DIRECTION'] },
-  'eve@admin.example.com':       { id: 'u-eve',   name: 'Eve Lima',      groups: ['SYS_ADMIN'] },
-  'fran@staff.example.com':      { id: 'u-fran',  name: 'Fran Costa',    groups: ['COLLECTIONS_MANAGEMENT', 'CURATORIAL', 'DIRECTION'] },
-  'greg@collections.example.com':{ id: 'u-greg',  name: 'Greg Viana',    groups: ['COLLECTIONS_MANAGEMENT'] },
+  'alice@ext.example.com': { id: 'u-alice', name: 'Alice Ferreira', groups: ['EXTERNAL'] },
+  'bob@collections.example.com': {
+    id: 'u-bob',
+    name: 'Bob Santos',
+    groups: ['COLLECTIONS_MANAGEMENT'],
+  },
+  'carol@curatorial.example.com': { id: 'u-carol', name: 'Carol Souza', groups: ['CURATORIAL'] },
+  'dan@direction.example.com': { id: 'u-dan', name: 'Dan Oliveira', groups: ['DIRECTION'] },
+  'eve@admin.example.com': { id: 'u-eve', name: 'Eve Lima', groups: ['SYS_ADMIN'] },
+  'fran@staff.example.com': {
+    id: 'u-fran',
+    name: 'Fran Costa',
+    groups: ['COLLECTIONS_MANAGEMENT', 'CURATORIAL', 'DIRECTION'],
+  },
+  'greg@collections.example.com': {
+    id: 'u-greg',
+    name: 'Greg Viana',
+    groups: ['COLLECTIONS_MANAGEMENT'],
+  },
+  // Spans all three audiences (external / staff / admin) so the topbar role
+  // switcher can be exercised across every menu + landing transition in dev.
+  'hugo@mixed.example.com': {
+    id: 'u-hugo',
+    name: 'Hugo Prado',
+    groups: ['EXTERNAL', 'COLLECTIONS_MANAGEMENT', 'SYS_ADMIN'],
+  },
 };
 
 const UNKNOWN_ACCOUNT: MockAccount = { id: 'mock-user', name: '', groups: ['EXTERNAL'] };
@@ -84,9 +103,7 @@ export class IdentityServiceMock implements IdentityService {
     const session = this.session();
     if (!session) return;
     // Keep current group if still in the new list, otherwise switch to first available
-    const group = groups.includes(session.group as GroupName)
-      ? session.group
-      : (groups[0] ?? null);
+    const group = groups.includes(session.group as GroupName) ? session.group : (groups[0] ?? null);
     this.sessionState.set({
       ...session,
       group,

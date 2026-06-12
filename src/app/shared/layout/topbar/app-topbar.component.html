@@ -21,12 +21,11 @@
       <select
         id="role-switcher"
         class="layout-topbar-role-select"
-        [value]="currentGroup()"
         (change)="onGroupChange($event)"
         aria-label="Switch active role"
       >
         @for (g of availableGroups(); track g.value) {
-          <option [value]="g.value">{{ g.label }}</option>
+          <option [value]="g.value" [selected]="g.value === currentGroup()">{{ g.label }}</option>
         }
       </select>
     }

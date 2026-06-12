@@ -11,6 +11,7 @@ import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -50,14 +51,19 @@ const TYPE_LABELS: Record<UseType, string> = {
 export class ProjectsPendingPageComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
   private readonly router = inject(Router);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   protected readonly currentPage = signal(0);
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
   protected readonly pageSize = PAGE_SIZE;
 
+  // Refetch when the active role changes: requests carry X-Permission-Id.
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
+
   protected readonly projectsResource = resource({
     params: () => ({
+      currentPermissionId: this.currentPermissionId(),
       page: this.currentPage(),
       size: this.pageSize,
       search: this.appliedSearch().trim(),
@@ -68,7 +74,9 @@ export class ProjectsPendingPageComponent {
         // means "pending" — no proposal-approval filter is needed (or in the contract).
         this.projectService.listProjects({
           status: 'CREATED',
-          ...params,
+          page: params.page,
+          size: params.size,
+          search: params.search,
         }),
       ),
   });

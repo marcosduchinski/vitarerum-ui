@@ -1,3 +1,5 @@
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { IdentityServiceMock } from '@core/auth/identity.service.mock';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -60,6 +62,8 @@ describe('ProposalsRejectedPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ProposalsRejectedPageComponent],
       providers: [
+        { provide: IDENTITY_SERVICE, useClass: IdentityServiceMock },
+
         provideRouter([]),
         { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
       ],

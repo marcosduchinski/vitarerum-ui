@@ -9,6 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -44,14 +45,19 @@ const TYPE_LABELS: Record<UseType, string> = {
 })
 export class ProjectsCancelledPageComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
+  private readonly identity = inject(IDENTITY_SERVICE);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly searchDraft = signal('');
   protected readonly appliedSearch = signal('');
 
+  // Refetch when the active role changes: requests carry X-Permission-Id.
+  protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
+
   protected readonly projectsResource = resource({
     params: () => ({
+      currentPermissionId: this.currentPermissionId(),
       page: this.currentPage(),
       size: this.pageSize(),
       search: this.appliedSearch().trim(),
@@ -60,7 +66,9 @@ export class ProjectsCancelledPageComponent {
       firstValueFrom(
         this.projectService.listProjects({
           status: 'CANCELLED',
-          ...params,
+          page: params.page,
+          size: params.size,
+          search: params.search,
         }),
       ),
   });
