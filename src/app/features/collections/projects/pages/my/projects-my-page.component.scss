@@ -30,7 +30,7 @@
 
   strong {
     color: var(--color-text);
-    font-weight: 800;
+    font-weight: 600;
   }
 
   p {
@@ -73,7 +73,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: var(--focus-ring);
     }
   }
 }
@@ -148,7 +148,7 @@
   margin: 0;
   color: var(--color-subtle);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -169,7 +169,7 @@
   background: var(--status-review-bg);
   color: var(--status-review-text);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -198,7 +198,7 @@
   dt {
     color: var(--color-subtle);
     font-size: 0.64rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }

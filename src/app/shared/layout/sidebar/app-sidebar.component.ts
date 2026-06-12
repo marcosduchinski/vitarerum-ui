@@ -8,6 +8,7 @@ import { AppMenuComponent } from '@layout/menu/app-menu.component';
   standalone: true,
   imports: [RouterLink, AppMenuComponent],
   templateUrl: './app-sidebar.component.html',
+  styleUrl: './app-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppSidebarComponent {}

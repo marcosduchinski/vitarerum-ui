@@ -24,17 +24,17 @@ import { routes } from './app.routes';
 const VitarerumPreset = definePreset(Aura, {
   semantic: {
     primary: {
-      50: '#eef2ff',
-      100: '#dce3fd',
-      200: '#b9c7fb',
-      300: '#8fa5f8',
-      400: '#6583f4',
-      500: '#4361ee',
-      600: '#3451d1',
-      700: '#2a41b0',
-      800: '#20318a',
-      900: '#152065',
-      950: '#0a1040',
+      50: '#edf0fb',
+      100: '#dae1f7',
+      200: '#b5c3ef',
+      300: '#8da3e6',
+      400: '#5c75da',
+      500: '#2c4bce',
+      600: '#1f3aab',
+      700: '#1a308e',
+      800: '#142470',
+      900: '#0e1a52',
+      950: '#080f33',
     },
     colorScheme: {
       light: {

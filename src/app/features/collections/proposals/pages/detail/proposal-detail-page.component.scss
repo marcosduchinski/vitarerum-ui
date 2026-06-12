@@ -22,7 +22,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: var(--focus-ring);
     }
   }
 
@@ -118,7 +118,7 @@
 .forward-panel__eyebrow {
   color: var(--color-subtle);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -232,7 +232,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: var(--focus-ring);
     }
   }
 }
@@ -277,7 +277,7 @@
 .detail-card__title {
   margin: 0;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-subtle);
@@ -390,7 +390,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: var(--focus-ring);
     }
   }
 }

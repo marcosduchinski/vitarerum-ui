@@ -49,7 +49,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: var(--focus-ring);
     }
   }
 }
@@ -151,10 +151,10 @@
   border-bottom: none;
   box-shadow: inset 0 -1px 0 var(--color-line);
   color: var(--color-subtle);
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.09em;
 }
 
 .proposals-table td {
@@ -166,7 +166,7 @@
 }
 
 .proposals-table tbody tr:hover {
-  background: color-mix(in srgb, var(--color-accent-soft) 50%, var(--color-panel));
+  background: color-mix(in srgb, var(--color-panel-muted) 55%, var(--color-panel));
 }
 
 .proposals-table__ref {
@@ -178,7 +178,7 @@
 
 .proposals-table__title {
   color: var(--color-accent-strong);
-  font-weight: 700;
+  font-weight: 600;
   overflow-wrap: break-word;
   text-decoration: none;
 
@@ -365,7 +365,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: var(--focus-ring);
     }
   }
 

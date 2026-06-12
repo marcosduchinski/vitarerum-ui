@@ -21,7 +21,7 @@
 
 .submit-form__section-title {
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-subtle);
@@ -68,12 +68,14 @@
   color: var(--color-text);
   font-size: 0.9375rem;
   width: 100%;
-  transition: border-color 120ms, box-shadow 120ms;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms;
 
   &:focus {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    box-shadow: var(--focus-ring);
   }
 
   &--textarea {

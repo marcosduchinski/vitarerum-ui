@@ -8,7 +8,8 @@
   align-items: center;
   padding: 0 2rem;
   background: var(--color-sidebar);
-  color: #fafafa;
+  color: #f5f4ef;
+  border-bottom: 1px solid rgba(245, 244, 239, 0.08);
 }
 
 .layout-topbar-logo-container {
@@ -20,14 +21,21 @@
 
 .layout-topbar-logo {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   padding: 0.25rem 0.5rem;
-  color: #ffffff;
-  font-size: 1.125rem;
-  font-weight: 900;
-  letter-spacing: 0.01em;
+  color: #f5f4ef;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
   text-decoration: none;
   border-radius: var(--radius-sm);
+
+  /* The wordmark's full stop — the one warm flourish in the ink frame. */
+  &::after {
+    content: '.';
+    color: #d96b41;
+  }
 }
 
 .layout-topbar-actions {
@@ -46,32 +54,35 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: #fafafa;
+  color: rgba(245, 244, 239, 0.72);
   cursor: pointer;
-  transition: background-color var(--element-transition-duration, 120ms) ease;
+  transition:
+    background-color var(--element-transition-duration, 120ms) ease,
+    color var(--element-transition-duration, 120ms) ease;
 
   i {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 }
 
 .layout-topbar-action:hover {
-  background-color: var(--color-cta);
+  background-color: rgba(245, 244, 239, 0.1);
+  color: #f5f4ef;
 }
 
 .layout-topbar-action:focus-visible {
-  outline: 2px solid var(--color-cta);
+  outline: 2px solid #d96b41;
   outline-offset: 2px;
 }
 
 .layout-topbar-role-select {
   height: 2.25rem;
   padding: 0 0.625rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(245, 244, 239, 0.16);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fafafa;
-  font-size: 0.875rem;
+  background: rgba(245, 244, 239, 0.06);
+  color: #f5f4ef;
+  font-size: 0.85rem;
   font-family: inherit;
   cursor: pointer;
   max-width: 14rem;
@@ -86,7 +97,7 @@
 }
 
 .layout-topbar-role-select:focus {
-  outline: 2px solid var(--color-cta);
+  outline: 2px solid #d96b41;
   outline-offset: 2px;
 }
 
