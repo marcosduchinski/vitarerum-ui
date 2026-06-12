@@ -10,7 +10,8 @@
     </button>
 
     <a class="layout-topbar-logo" routerLink="/p/dashboard" aria-label="Vitarerum — home">
-      Vitarerum
+      <app-logo-mark class="layout-topbar-logo__mark" />
+      <span class="layout-topbar-logo__text">Vitarerum</span>
     </a>
   </div>
 
@@ -34,7 +35,9 @@
       type="button"
       class="layout-topbar-action"
       (click)="layoutService.toggleDarkMode()"
-      [attr.aria-label]="layoutService.isDarkTheme() ? 'Switch to light mode' : 'Switch to dark mode'"
+      [attr.aria-label]="
+        layoutService.isDarkTheme() ? 'Switch to light mode' : 'Switch to dark mode'
+      "
     >
       <i
         class="pi"

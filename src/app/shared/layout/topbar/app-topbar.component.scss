@@ -21,7 +21,8 @@
 
 .layout-topbar-logo {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.55rem;
   padding: 0.25rem 0.5rem;
   color: #f5f4ef;
   font-family: var(--font-display);
@@ -32,10 +33,16 @@
   border-radius: var(--radius-sm);
 
   /* The wordmark's full stop — the one warm flourish in the ink frame. */
-  &::after {
+  .layout-topbar-logo__text::after {
     content: '.';
-    color: #d96b41;
+    color: var(--brand-vermilion);
   }
+}
+
+/* Knockout variant: navy is invisible on the ink shell, so ink shapes go paper. */
+.layout-topbar-logo__mark {
+  width: 1.35rem;
+  --logo-ink: #f5f4ef;
 }
 
 .layout-topbar-actions {
@@ -71,7 +78,7 @@
 }
 
 .layout-topbar-action:focus-visible {
-  outline: 2px solid #d96b41;
+  outline: 2px solid var(--brand-vermilion);
   outline-offset: 2px;
 }
 
@@ -97,7 +104,7 @@
 }
 
 .layout-topbar-role-select:focus {
-  outline: 2px solid #d96b41;
+  outline: 2px solid var(--brand-vermilion);
   outline-offset: 2px;
 }
 

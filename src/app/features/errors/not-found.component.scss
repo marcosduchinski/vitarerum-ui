@@ -21,6 +21,11 @@ h1 {
   margin: 0;
 }
 
+.not-found__mark {
+  width: 3rem;
+  justify-self: center;
+}
+
 p {
   color: var(--color-coral);
   font-family: var(--font-display);

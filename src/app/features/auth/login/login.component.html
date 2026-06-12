@@ -5,7 +5,7 @@
 
       <header class="login-header">
         <div class="header-branding">
-          <div class="app-logo" aria-hidden="true">V</div>
+          <app-logo-mark class="app-logo" />
           <div class="app-info">
             <h2 class="app-name">Vitarerum</h2>
             <p class="app-subtitle">Collection management</p>
@@ -19,7 +19,6 @@
 
       <form (submit)="submit($event)" novalidate class="login-form">
         <fieldset [disabled]="loading()" class="form-fieldset">
-
           <div class="form-group">
             <label for="email">Email address</label>
             <div class="input-wrapper">
@@ -61,7 +60,6 @@
               <p id="password-error" class="field-error" role="alert">Password is required</p>
             }
           </div>
-
         </fieldset>
 
         @if (loginError()) {

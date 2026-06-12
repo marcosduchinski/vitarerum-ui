@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { LogoMarkComponent } from '@shared/components/logo-mark/logo-mark.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
+  imports: [LogoMarkComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,9 +30,7 @@ export class LoginComponent {
   );
   protected readonly emailFormat = computed(
     () =>
-      (this.submitted() || this.emailTouched()) &&
-      !!this.email() &&
-      !this.email().includes('@'),
+      (this.submitted() || this.emailTouched()) && !!this.email() && !this.email().includes('@'),
   );
   protected readonly passwordRequired = computed(
     () => (this.submitted() || this.passwordTouched()) && !this.password(),

@@ -6,6 +6,7 @@ import { Menu } from 'primeng/menu';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
 import { LayoutService } from '@layout/layout.service';
+import { LogoMarkComponent } from '@shared/components/logo-mark/logo-mark.component';
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External researcher',
@@ -18,7 +19,7 @@ const GROUP_LABELS: Record<GroupName, string> = {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [RouterLink, Menu],
+  imports: [RouterLink, Menu, LogoMarkComponent],
   templateUrl: './app-topbar.component.html',
   styleUrl: './app-topbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,12 +33,10 @@ export class AppTopbarComponent {
   protected readonly currentGroup = computed(() => this.session()?.group ?? null);
 
   protected readonly availableGroups = computed(() =>
-    (this.session()?.availableGroups ?? []).map(g => ({ value: g, label: GROUP_LABELS[g] })),
+    (this.session()?.availableGroups ?? []).map((g) => ({ value: g, label: GROUP_LABELS[g] })),
   );
 
-  protected readonly showSwitcher = computed(
-    () => this.availableGroups().length > 1,
-  );
+  protected readonly showSwitcher = computed(() => this.availableGroups().length > 1);
 
   protected readonly userMenuItems = computed<MenuItem[]>(() => {
     const name = this.session()?.user.displayName;

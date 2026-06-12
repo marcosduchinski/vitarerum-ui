@@ -1,6 +1,7 @@
 .layout-sidebar-logo {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.55rem;
   min-height: 3rem;
   margin: 0.5rem 0 0.75rem;
   padding: 0 1rem;
@@ -10,10 +11,15 @@
   font-weight: 600;
   text-decoration: none;
 
-  &::after {
+  .layout-sidebar-logo__text::after {
     content: '.';
-    color: #d96b41;
+    color: var(--brand-vermilion);
   }
+}
+
+.layout-sidebar-logo__mark {
+  width: 1.35rem;
+  --logo-ink: #f5f4ef;
 }
 
 /* On desktop the topbar already carries the wordmark right above this spot —

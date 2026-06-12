@@ -4,7 +4,7 @@
   place-items: center;
   padding: 1.5rem;
   background:
-    radial-gradient(60rem 40rem at 70% -10%, rgba(217, 107, 65, 0.07), transparent 60%),
+    radial-gradient(60rem 40rem at 70% -10%, rgba(244, 62, 26, 0.06), transparent 60%),
     radial-gradient(50rem 36rem at 10% 110%, rgba(125, 147, 236, 0.06), transparent 60%), #1b1916;
 }
 
@@ -51,23 +51,8 @@
 }
 
 .app-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 12px;
-  background: #1b1916;
-  color: #f5f4ef;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
+  width: 2.6rem;
   flex-shrink: 0;
-
-  &::after {
-    content: '.';
-    color: #d96b41;
-  }
 }
 
 :is(h1, h2, p) {
