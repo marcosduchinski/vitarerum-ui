@@ -190,16 +190,26 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    const manageFilesButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Manage files'),
+    const headers = Array.from(root.querySelectorAll<HTMLTableCellElement>('thead th')).map(
+      (header) => header.textContent?.trim(),
     );
-    expect(manageFilesButton).toBeTruthy();
-    expect(manageFilesButton?.getAttribute('aria-expanded')).toBe('false');
+    expect(headers).not.toContain('Files');
+    expect(root.querySelector('select[aria-label="Object entry media type"]')).toBeNull();
 
-    manageFilesButton!.click();
+    const objectToggle = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.getAttribute('aria-controls') === 'object-entry-files-entry-101',
+    );
+    expect(objectToggle).toBeTruthy();
+    const toggleButton = objectToggle!;
+    expect(toggleButton.classList.contains('object-register__toggle')).toBe(true);
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
+    expect(toggleButton.getAttribute('aria-label')).toBe('Show attachments for INV-ZOO-1892-001');
+
+    toggleButton.click();
     fixture.detectChanges();
 
-    expect(manageFilesButton?.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleButton.getAttribute('aria-label')).toBe('Hide attachments for INV-ZOO-1892-001');
     expect(root.querySelector('.object-register__details-row')).toBeTruthy();
 
     const objectFileInput = root.querySelector<HTMLInputElement>(
@@ -210,11 +220,6 @@ describe('project log pages', () => {
       value: [new File(['object'], 'object-photo.jpg', { type: 'image/jpeg' })],
     });
     objectFileInput.dispatchEvent(new Event('change'));
-    root.querySelector<HTMLSelectElement>('select[aria-label="Object entry media type"]')!.value =
-      'IMAGE';
-    root
-      .querySelector<HTMLSelectElement>('select[aria-label="Object entry media type"]')!
-      .dispatchEvent(new Event('change'));
     root
       .querySelector<HTMLFormElement>('form[aria-label="Upload file for INV-ZOO-1892-001"]')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -240,10 +245,11 @@ describe('project log pages', () => {
     expect(root.querySelector('.object-register__details-row')).toBeNull();
 
     const toggle = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
-      button.textContent?.includes('Manage files'),
+      button.getAttribute('aria-controls')?.startsWith('object-entry-files-'),
     );
     expect(toggle).toBeTruthy();
     expect(toggle?.getAttribute('aria-controls')).toMatch(/^object-entry-files-/);
+    expect(toggle?.classList.contains('object-register__toggle')).toBe(true);
 
     toggle!.click();
     fixture.detectChanges();

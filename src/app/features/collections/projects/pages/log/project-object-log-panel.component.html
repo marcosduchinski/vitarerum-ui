@@ -144,10 +144,13 @@
           <table class="object-register__table">
             <caption style="height: 1px; overflow: hidden">
               Object access entries with inventory number, quantity, date, actor, observations, and
-              files.
+              expandable attachment details.
             </caption>
             <thead>
               <tr>
+                <th scope="col" class="object-register__expand-header">
+                  <span class="sr-only"></span>
+                </th>
                 <th scope="col">No.</th>
                 <th scope="col">Inventory</th>
                 <th scope="col">Object</th>
@@ -155,12 +158,32 @@
                 <th scope="col">Date</th>
                 <th scope="col">Added by</th>
                 <th scope="col">Observations</th>
-                <th scope="col">Files</th>
               </tr>
             </thead>
             <tbody>
               @for (entry of logEntries(); track entry.id; let index = $index) {
                 <tr>
+                  <td class="object-register__expand-cell">
+                    <button
+                      type="button"
+                      class="object-register__toggle"
+                      [attr.aria-expanded]="expandedObjectEntryId() === entry.id"
+                      [attr.aria-controls]="'object-entry-files-' + entry.id"
+                      [attr.aria-label]="
+                        (expandedObjectEntryId() === entry.id
+                          ? 'Hide attachments for '
+                          : 'Show attachments for ') + entry.objectReference.inventoryNumber
+                      "
+                      (click)="toggleObjectAttachments(entry.id)"
+                    >
+                      <span
+                        class="pi"
+                        [class.pi-plus]="expandedObjectEntryId() !== entry.id"
+                        [class.pi-minus]="expandedObjectEntryId() === entry.id"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                  </td>
                   <td class="object-register__index">{{ index + 1 }}</td>
                   <td>
                     <span class="object-register__inventory">
@@ -179,23 +202,6 @@
                   <td>{{ dateLabel(entry.addedAt) }}</td>
                   <td>{{ entry.addedBy.user.name }}</td>
                   <td>{{ entry.observations ?? '—' }}</td>
-                  <td>
-                    <div class="file-cell">
-                      <span class="file-cell__count">
-                        {{ entry.attachments.length }}
-                        {{ entry.attachments.length === 1 ? 'file' : 'files' }}
-                      </span>
-                      <button
-                        type="button"
-                        class="file-cell__toggle"
-                        [attr.aria-expanded]="expandedObjectEntryId() === entry.id"
-                        [attr.aria-controls]="'object-entry-files-' + entry.id"
-                        (click)="toggleObjectAttachments(entry.id)"
-                      >
-                        {{ expandedObjectEntryId() === entry.id ? 'Hide files' : 'Manage files' }}
-                      </button>
-                    </div>
-                  </td>
                 </tr>
                 @if (expandedObjectEntryId() === entry.id) {
                   <tr class="object-register__details-row">
@@ -244,16 +250,6 @@
                             (change)="onObjectAttachmentFileInput(entry.id, $event)"
                             aria-label="Object entry file"
                           />
-                          <select
-                            [disabled]="!canAddObjectEntries()"
-                            (change)="onObjectAttachmentMediaTypeInput(entry.id, $event)"
-                            aria-label="Object entry media type"
-                          >
-                            <option value="DOCUMENT">Document</option>
-                            <option value="IMAGE">Image</option>
-                            <option value="VIDEO">Video</option>
-                            <option value="OTHER">Other</option>
-                          </select>
                           <button
                             type="submit"
                             [disabled]="

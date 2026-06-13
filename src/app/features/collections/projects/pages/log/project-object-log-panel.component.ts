@@ -15,7 +15,6 @@ import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
-import { MediaType } from '@shared/models/collection-use-status.model';
 
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
@@ -93,7 +92,6 @@ export class ProjectObjectLogPanelComponent {
     () => this.objectInventoryNumber().trim().length > 0 && this.objectNumberOfObjects() >= 1,
   );
   protected readonly objectAttachmentFiles = signal<Record<string, File | null>>({});
-  protected readonly objectAttachmentMediaTypes = signal<Record<string, MediaType>>({});
   protected readonly objectAttachmentUploading = signal<Record<string, boolean>>({});
   protected readonly objectAttachmentErrors = signal<Record<string, ApiError | null>>({});
   protected readonly expandedObjectEntryId = signal<string | null>(null);
@@ -146,14 +144,6 @@ export class ProjectObjectLogPanelComponent {
     );
   }
 
-  protected onObjectAttachmentMediaTypeInput(entryId: string, event: Event): void {
-    this.setEntryRecord(
-      this.objectAttachmentMediaTypes,
-      entryId,
-      (event.target as HTMLSelectElement).value as MediaType,
-    );
-  }
-
   protected async uploadObjectAttachment(entryId: string, event: Event): Promise<void> {
     event.preventDefault();
     const file = this.objectAttachmentFiles()[entryId];
@@ -163,12 +153,7 @@ export class ProjectObjectLogPanelComponent {
     this.setEntryRecord(this.objectAttachmentErrors, entryId, null);
     try {
       await firstValueFrom(
-        this.projectService.uploadLogEntryAttachment(
-          this.projectId(),
-          entryId,
-          file,
-          this.objectAttachmentMediaTypes()[entryId] ?? 'DOCUMENT',
-        ),
+        this.projectService.uploadLogEntryAttachment(this.projectId(), entryId, file, 'DOCUMENT'),
       );
       this.setEntryRecord(this.objectAttachmentFiles, entryId, null);
       this.logResource.reload();
