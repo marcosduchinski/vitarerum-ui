@@ -122,7 +122,10 @@
               </thead>
               <tbody>
                 @for (entry of logEntries(); track entry.id) {
-                  <tr>
+                  <tr
+                    class="object-register__row"
+                    [class.object-register__row--open]="expandedObjectEntryId() === entry.id"
+                  >
                     <td class="object-register__expand-cell">
                       <button
                         type="button"

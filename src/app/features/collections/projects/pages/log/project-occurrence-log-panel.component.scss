@@ -314,6 +314,17 @@
   }
 }
 
+// Row affordance + open-state highlight. An expanded row is tinted and drops
+// its bottom border so it visually fuses with the drawer that opens below it.
+.occurrence-register__row:hover:not(.occurrence-register__row--open) > td {
+  background: color-mix(in srgb, var(--color-accent-soft) 45%, transparent);
+}
+
+.occurrence-register__row--open > td {
+  background: var(--color-accent-soft);
+  border-bottom-color: transparent;
+}
+
 .occurrence-register__expand-header,
 .occurrence-register__expand-cell {
   text-align: center;
@@ -398,19 +409,25 @@
   color: var(--color-text);
 }
 
+// Level-1 drawer: an inset panel that reads as a tray opening beneath the row —
+// left accent rail, recessed surface, soft inset top shadow, and indentation.
 .occurrence-details {
   display: grid;
   gap: 0.75rem;
-  padding: 0.9rem 1rem 1rem;
-  border-top: 1px solid var(--color-line);
-  background: var(--color-bg);
+  padding: 0.95rem 1rem 1.1rem 1.4rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-panel-muted);
+  box-shadow: inset 0 7px 9px -8px rgba(15, 23, 42, 0.3);
 }
 
 .occurrence-details__table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
   background: var(--color-panel);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 6px 14px -10px rgba(15, 23, 42, 0.22);
 }
 
 .occurrence-details__table {
@@ -476,15 +493,24 @@
 
 .occurrence-register__details-row td {
   padding: 0;
-  background: var(--color-panel);
+  background: var(--color-panel-muted);
 }
 
 .entry-files {
   display: grid;
   gap: 0.75rem;
-  padding: 0.9rem 1rem 1rem;
-  border-top: 1px solid var(--color-line);
-  background: var(--color-bg);
+  padding: 0.95rem 1rem 1.1rem 1.4rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-panel-muted);
+  box-shadow: inset 0 7px 9px -8px rgba(15, 23, 42, 0.3);
+}
+
+// Level-2 drawer (attachments nested under an occurrence row): a step deeper —
+// indented further, a lighter surface, and a quieter rail than level 1.
+.occurrence-details .entry-files {
+  padding-left: 1.9rem;
+  border-left-color: var(--color-line-strong);
+  background: var(--color-bg-raised);
 }
 
 .entry-files__header {

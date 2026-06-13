@@ -248,6 +248,17 @@
   }
 }
 
+// Row affordance + open-state highlight. An expanded row is tinted and drops
+// its bottom border so it visually fuses with the drawer that opens below it.
+.object-register__row:hover:not(.object-register__row--open) > td {
+  background: color-mix(in srgb, var(--color-accent-soft) 45%, transparent);
+}
+
+.object-register__row--open > td {
+  background: var(--color-accent-soft);
+  border-bottom-color: transparent;
+}
+
 .object-register__expand-header,
 .object-register__expand-cell {
   text-align: center;
@@ -346,15 +357,18 @@
 
 .object-register__details-row td {
   padding: 0;
-  background: var(--color-panel);
+  background: var(--color-panel-muted);
 }
 
+// Drawer: an inset panel that reads as a tray opening beneath the row — left
+// accent rail, recessed surface, soft inset top shadow, and indentation.
 .entry-files {
   display: grid;
   gap: 0.75rem;
-  padding: 0.9rem 1rem 1rem;
-  border-top: 1px solid var(--color-line);
-  background: var(--color-bg);
+  padding: 0.95rem 1rem 1.1rem 1.4rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-panel-muted);
+  box-shadow: inset 0 7px 9px -8px rgba(15, 23, 42, 0.3);
 }
 
 .entry-files__header {

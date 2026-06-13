@@ -104,11 +104,18 @@
 }
 
 .project-card {
+  // Status drives the badge + left rail colour; CREATED uses the neutral
+  // default below, the other states override via [data-status].
+  --card-status-bg: var(--status-submitted-bg);
+  --card-status-text: var(--status-submitted-text);
+
+  position: relative;
   display: grid;
   grid-template-rows: auto auto minmax(2.7rem, auto) 1fr auto;
   gap: 0.7rem;
   min-height: 100%;
-  padding: 0.85rem;
+  padding: 0.85rem 0.85rem 0.85rem 1.05rem;
+  overflow: clip;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-panel);
@@ -118,10 +125,55 @@
     box-shadow 120ms,
     transform 120ms;
 
+  // Status rail down the left edge — echoes the accent rails on the log drawers.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--card-status-text);
+  }
+
   &:hover {
     border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-line));
     box-shadow: 0 0.65rem 1.4rem rgba(15, 23, 42, 0.08);
     transform: translateY(-1px);
+  }
+}
+
+.project-card[data-status='IN_PROGRESS'] {
+  --card-status-bg: var(--status-review-bg);
+  --card-status-text: var(--status-review-text);
+}
+
+.project-card[data-status='COMPLETED'] {
+  --card-status-bg: var(--status-approved-bg);
+  --card-status-text: var(--status-approved-text);
+}
+
+.project-card[data-status='CANCELLED'] {
+  --card-status-bg: var(--status-cancelled-bg);
+  --card-status-text: var(--status-cancelled-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .project-card {
+    animation: project-card-reveal 360ms ease both;
+  }
+
+  .project-card:nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .project-card:nth-child(3) {
+    animation-delay: 140ms;
+  }
+}
+
+@keyframes project-card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
   }
 }
 
@@ -134,12 +186,15 @@
 
 .project-card h2 {
   display: -webkit-box;
-  min-height: 2.35rem;
+  min-height: 2.6rem;
   margin: 0;
   overflow: hidden;
+  font-family: var(--font-display);
   color: var(--color-text);
-  font-size: 0.95rem;
-  line-height: 1.25;
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -147,10 +202,11 @@
 .project-card__reference {
   margin: 0;
   color: var(--color-subtle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
@@ -161,16 +217,26 @@
 .project-card__status {
   display: inline-flex;
   flex: 0 0 auto;
+  gap: 0.35rem;
   align-items: center;
   min-height: 1.35rem;
-  padding: 0.1rem 0.45rem;
-  border: 1px solid color-mix(in srgb, var(--status-review-text) 18%, transparent);
+  padding: 0.1rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--card-status-text) 20%, transparent);
   border-radius: 999px;
-  background: var(--status-review-bg);
-  color: var(--status-review-text);
+  background: var(--card-status-bg);
+  color: var(--card-status-text);
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
+
+  // Crisp status dot in front of the label.
+  &::before {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
 }
 
 .project-card__purpose {

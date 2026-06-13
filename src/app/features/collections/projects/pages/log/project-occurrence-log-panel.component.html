@@ -110,7 +110,10 @@
             </thead>
             <tbody>
               @for (row of occurrenceObjectRows(); track row.key; let index = $index) {
-                <tr>
+                <tr
+                  class="occurrence-register__row"
+                  [class.occurrence-register__row--open]="expandedObjectKey() === row.key"
+                >
                   <td class="occurrence-register__expand-cell">
                     <button
                       type="button"
@@ -199,7 +202,12 @@
                               </thead>
                               <tbody>
                                 @for (entry of row.occurrences; track entry.id) {
-                                  <tr>
+                                  <tr
+                                    class="occurrence-register__row"
+                                    [class.occurrence-register__row--open]="
+                                      expandedOccurrenceEntryId() === entry.id
+                                    "
+                                  >
                                     <td class="occurrence-register__expand-cell">
                                       <button
                                         type="button"
