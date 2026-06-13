@@ -68,6 +68,7 @@ export interface ObjectLogEntry {
   readonly addedAt: string;
   readonly addedBy: PermissionPrincipal;
   readonly observations: string | null;
+  readonly requestedObjectId?: string | null;
   readonly attachments: readonly Attachment[];
 }
 
@@ -80,6 +81,7 @@ export interface ObjectOccurrenceEntry {
   readonly reportedBy: PermissionPrincipal;
   readonly detailedDescription: string;
   readonly testimonial: string | null;
+  readonly requestedObjectId?: string | null;
   readonly attachments: readonly Attachment[];
 }
 
@@ -142,6 +144,13 @@ export interface CreateObjectLogEntryRequest {
   readonly inventoryNumber: string;
   readonly numberOfObjects: number;
   readonly observations?: string;
+  readonly requestedObjectId?: string;
+}
+
+export interface UpdateObjectLogEntryRequest {
+  readonly addedAt?: string;
+  readonly numberOfObjects?: number;
+  readonly observations?: string | null;
 }
 
 export interface CreateObjectOccurrenceEntryRequest {
@@ -151,4 +160,5 @@ export interface CreateObjectOccurrenceEntryRequest {
   readonly location: string;
   readonly detailedDescription: string;
   readonly testimonial?: string;
+  readonly requestedObjectId?: string;
 }

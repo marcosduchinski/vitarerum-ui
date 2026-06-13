@@ -143,6 +143,46 @@ describe('ProjectApiService', () => {
     });
   });
 
+  it('updates object log entries with the editable fields', () => {
+    service
+      .updateObjectLogEntry('project-1', 'entry-1', {
+        addedAt: '2026-06-02T14:30:00Z',
+        numberOfObjects: 3,
+        observations: null,
+      })
+      .subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/log-entries/entry-1',
+    );
+
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({
+      addedAt: '2026-06-02T14:30:00Z',
+      numberOfObjects: 3,
+      observations: null,
+    });
+    request.flush({
+      id: 'entry-1',
+      objectReference: {
+        inventoryNumber: 'INV-001',
+        displayTitle: null,
+        objectName: null,
+        briefDescriptionSnapshot: null,
+      },
+      numberOfObjects: 3,
+      addedAt: '2026-06-02T14:30:00Z',
+      addedBy: {
+        permissionId: 'permission-1',
+        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
+        group: 'COLLECTIONS_MANAGEMENT',
+      },
+      observations: null,
+      requestedObjectId: null,
+      attachments: [],
+    });
+  });
+
   it('gets and concludes object access logs', () => {
     service.getObjectAccessLog('project-1').subscribe();
 

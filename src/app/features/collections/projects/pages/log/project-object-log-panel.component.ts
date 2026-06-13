@@ -16,6 +16,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
+import { ObjectLogEntry, UpdateObjectLogEntryRequest } from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 @Component({
@@ -54,7 +55,7 @@ export class ProjectObjectLogPanelComponent {
     () => this.identity.session()?.group === 'EXTERNAL',
   );
   protected readonly projectInProgress = computed(() => this.project()?.status === 'IN_PROGRESS');
-  protected readonly canAddObjectEntries = computed(
+  protected readonly canEditObjectEntries = computed(
     () => !this.accessLogConcluded() && (!this.isExternalResearcher() || this.projectInProgress()),
   );
   protected readonly objectAccessMessage = computed(() => {
@@ -83,56 +84,92 @@ export class ProjectObjectLogPanelComponent {
   protected readonly concludeConfirmOpen = signal(false);
   protected readonly concludeSubmitting = signal(false);
   protected readonly concludeError = signal<ApiError | null>(null);
-  protected readonly objectInventoryNumber = signal('');
-  protected readonly objectNumberOfObjects = signal(1);
-  protected readonly objectObservations = signal('');
-  protected readonly objectSubmitting = signal(false);
-  protected readonly objectSubmitError = signal<ApiError | null>(null);
-  protected readonly objectFormValid = computed(
-    () => this.objectInventoryNumber().trim().length > 0 && this.objectNumberOfObjects() >= 1,
+  protected readonly objectDraftAddedAt = signal<Record<string, string>>({});
+  protected readonly objectDraftNumberOfObjects = signal<Record<string, number>>({});
+  protected readonly objectDraftObservations = signal<Record<string, string>>({});
+  protected readonly objectSaveSubmitting = signal(false);
+  protected readonly objectSaveError = signal<ApiError | null>(null);
+  protected readonly objectRowsValid = computed(() =>
+    this.logEntries().every(
+      (entry) =>
+        this.draftAddedAt(entry).trim().length > 0 && this.draftNumberOfObjects(entry) >= 1,
+    ),
+  );
+  protected readonly hasObjectDraftChanges = computed(() =>
+    this.logEntries().some((entry) => this.isObjectEntryDirty(entry)),
   );
   protected readonly objectAttachmentFiles = signal<Record<string, File | null>>({});
   protected readonly objectAttachmentUploading = signal<Record<string, boolean>>({});
   protected readonly objectAttachmentErrors = signal<Record<string, ApiError | null>>({});
   protected readonly expandedObjectEntryId = signal<string | null>(null);
 
-  protected onObjectInventoryInput(event: Event): void {
-    this.objectInventoryNumber.set((event.target as HTMLInputElement).value);
+  protected draftAddedAt(entry: ObjectLogEntry): string {
+    return this.objectDraftAddedAt()[entry.id] ?? this.dateTimeInputValue(entry.addedAt);
   }
 
-  protected onObjectQuantityInput(event: Event): void {
+  protected draftNumberOfObjects(entry: ObjectLogEntry): number {
+    return this.objectDraftNumberOfObjects()[entry.id] ?? entry.numberOfObjects;
+  }
+
+  protected draftObservations(entry: ObjectLogEntry): string {
+    return this.objectDraftObservations()[entry.id] ?? entry.observations ?? '';
+  }
+
+  protected onObjectAddedAtInput(entryId: string, event: Event): void {
+    this.setEntryRecord(this.objectDraftAddedAt, entryId, (event.target as HTMLInputElement).value);
+  }
+
+  protected onObjectQuantityInput(entryId: string, event: Event): void {
     const value = Number((event.target as HTMLInputElement).value);
-    this.objectNumberOfObjects.set(Number.isFinite(value) ? value : 0);
+    this.setEntryRecord(
+      this.objectDraftNumberOfObjects,
+      entryId,
+      Number.isFinite(value) ? value : 0,
+    );
   }
 
-  protected onObjectObservationsInput(event: Event): void {
-    this.objectObservations.set((event.target as HTMLTextAreaElement).value);
+  protected onObjectObservationsInput(entryId: string, event: Event): void {
+    this.setEntryRecord(
+      this.objectDraftObservations,
+      entryId,
+      (event.target as HTMLTextAreaElement).value,
+    );
   }
 
-  protected async addObjectEntry(event: Event): Promise<void> {
+  protected async saveObjectEntries(event: Event): Promise<void> {
     event.preventDefault();
-    const inventoryNumber = this.objectInventoryNumber().trim();
-    const observations = this.objectObservations().trim();
-    if (!this.objectFormValid() || this.objectSubmitting() || !this.canAddObjectEntries()) return;
+    if (
+      this.objectSaveSubmitting() ||
+      !this.canEditObjectEntries() ||
+      !this.objectRowsValid() ||
+      !this.hasObjectDraftChanges()
+    ) {
+      return;
+    }
 
-    this.objectSubmitting.set(true);
-    this.objectSubmitError.set(null);
+    const dirtyEntries = this.logEntries().filter((entry) => this.isObjectEntryDirty(entry));
+    this.objectSaveSubmitting.set(true);
+    this.objectSaveError.set(null);
     try {
-      await firstValueFrom(
-        this.projectService.createObjectLogEntry(this.projectId(), {
-          inventoryNumber,
-          numberOfObjects: this.objectNumberOfObjects(),
-          ...(observations ? { observations } : {}),
-        }),
+      await Promise.all(
+        dirtyEntries.map((entry) =>
+          firstValueFrom(
+            this.projectService.updateObjectLogEntry(
+              this.projectId(),
+              entry.id,
+              this.updateRequestFor(entry),
+            ),
+          ),
+        ),
       );
-      this.objectInventoryNumber.set('');
-      this.objectNumberOfObjects.set(1);
-      this.objectObservations.set('');
+      this.objectDraftAddedAt.set({});
+      this.objectDraftNumberOfObjects.set({});
+      this.objectDraftObservations.set({});
       this.logResource.reload();
     } catch (err) {
-      this.objectSubmitError.set(toApiError(err));
+      this.objectSaveError.set(toApiError(err));
     } finally {
-      this.objectSubmitting.set(false);
+      this.objectSaveSubmitting.set(false);
     }
   }
 
@@ -147,7 +184,7 @@ export class ProjectObjectLogPanelComponent {
   protected async uploadObjectAttachment(entryId: string, event: Event): Promise<void> {
     event.preventDefault();
     const file = this.objectAttachmentFiles()[entryId];
-    if (!file || this.objectAttachmentUploading()[entryId] || !this.canAddObjectEntries()) return;
+    if (!file || this.objectAttachmentUploading()[entryId] || !this.canEditObjectEntries()) return;
 
     this.setEntryRecord(this.objectAttachmentUploading, entryId, true);
     this.setEntryRecord(this.objectAttachmentErrors, entryId, null);
@@ -198,17 +235,35 @@ export class ProjectObjectLogPanelComponent {
     return date.slice(0, 10);
   }
 
-  protected objectLabel(entry: {
-    readonly objectReference: {
-      readonly displayTitle: string | null;
-      readonly objectName: string | null;
-    };
-  }): string {
+  protected dateTimeInputValue(date: string): string {
+    return date.slice(0, 16);
+  }
+
+  private isObjectEntryDirty(entry: ObjectLogEntry): boolean {
     return (
-      entry.objectReference.displayTitle ??
-      entry.objectReference.objectName ??
-      'Uncatalogued object'
+      this.draftAddedAt(entry) !== this.dateTimeInputValue(entry.addedAt) ||
+      this.draftNumberOfObjects(entry) !== entry.numberOfObjects ||
+      this.draftObservations(entry) !== (entry.observations ?? '')
     );
+  }
+
+  private updateRequestFor(entry: ObjectLogEntry): UpdateObjectLogEntryRequest {
+    const addedAt = this.draftAddedAt(entry);
+    const numberOfObjects = this.draftNumberOfObjects(entry);
+    const observations = this.draftObservations(entry);
+    return {
+      ...(addedAt !== this.dateTimeInputValue(entry.addedAt)
+        ? { addedAt: this.apiDateTimeValue(addedAt) }
+        : {}),
+      ...(numberOfObjects !== entry.numberOfObjects ? { numberOfObjects } : {}),
+      ...(observations !== (entry.observations ?? '')
+        ? { observations: observations.trim() ? observations : null }
+        : {}),
+    };
+  }
+
+  private apiDateTimeValue(value: string): string {
+    return value.length === 16 ? `${value}:00` : value;
   }
 
   private setEntryRecord<T>(

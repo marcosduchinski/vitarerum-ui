@@ -23,6 +23,7 @@ import {
   ProjectEventsQuery,
   ProjectListQuery,
   ReasonRequest,
+  UpdateObjectLogEntryRequest,
   UseEvent,
 } from '../models/project.model';
 import { ProjectTransitionResult } from '../services/project-api.service';
@@ -116,12 +117,63 @@ export class ProjectApiServiceMock {
       addedAt: new Date().toISOString(),
       addedBy: currentPrincipal,
       observations: request.observations ?? null,
+      requestedObjectId: request.requestedObjectId ?? null,
       attachments: [],
     };
     const current = this.state.logEntries.get(projectId) ?? [];
     current.push(entry);
     this.state.logEntries.set(projectId, current);
     return of(entry);
+  }
+
+  updateObjectLogEntry(
+    projectId: string,
+    entryId: string,
+    request: UpdateObjectLogEntryRequest,
+  ): Observable<ObjectLogEntry> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const accessLog = this.state.objectAccessLogs.get(projectId);
+    if (accessLog?.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Cannot edit entries of a concluded object access log',
+      }));
+    }
+    if (this.currentPrincipal().group === 'EXTERNAL' && p.status !== 'IN_PROGRESS') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Entries can only be edited while the project is IN_PROGRESS',
+      }));
+    }
+    if (request.numberOfObjects !== undefined && request.numberOfObjects < 1) {
+      return throwError(() => ({ status: 422, error: 'VALIDATION_ERROR' }));
+    }
+
+    const allEntries = this.state.logEntries.get(projectId) ?? [];
+    const idx = allEntries.findIndex((e) => e.id === entryId);
+    if (idx < 0) {
+      return throwError(() => ({
+        status: 404,
+        error: 'ENTRY_NOT_FOUND',
+        message: `No entry found with id ${entryId}`,
+      }));
+    }
+
+    const current = allEntries[idx];
+    const updated: ObjectLogEntry = {
+      ...current,
+      ...(request.addedAt !== undefined ? { addedAt: request.addedAt } : {}),
+      ...(request.numberOfObjects !== undefined
+        ? { numberOfObjects: request.numberOfObjects }
+        : {}),
+      ...(request.observations !== undefined ? { observations: request.observations } : {}),
+    };
+    allEntries[idx] = updated;
+    this.state.logEntries.set(projectId, allEntries);
+    return of(updated);
   }
 
   listObjectLogEntries(
@@ -261,6 +313,7 @@ export class ProjectApiServiceMock {
       reportedBy: currentPrincipal,
       detailedDescription: request.detailedDescription,
       testimonial: request.testimonial ?? null,
+      requestedObjectId: request.requestedObjectId ?? null,
       attachments: [],
     };
     const current = this.state.occurrenceEntries.get(projectId) ?? [];

@@ -312,8 +312,10 @@ package "Collection Use" <<Bounded Context>> {
         - addedAt: DateTime
         - addedBy: PermissionId
         - observations: String?
+        - requestedObjectId: RequestedObjectId?
         - attachments: List<Attachment>
         + addAttachment(...)
+        + edit(...)
         }
 
 
@@ -339,6 +341,7 @@ package "Collection Use" <<Bounded Context>> {
         - reportedBy: PermissionId
         - detailedDescription: String
         - testimonial: String?
+        - requestedObjectId: RequestedObjectId?
         - attachments: List<Attachment>
         + addAttachment(...)
         }
@@ -361,6 +364,7 @@ package "Collection Use" <<Bounded Context>> {
         ObjectLogEntry *-- "0..*" Attachment
         ObjectLogEntry *-- "1..1" ObjectReference
         ObjectLogEntry ..> Permission : addedBy
+        ObjectLogEntry ..> RequestedObject : requestedObjectId
 
         ObjectOccurrenceLog "1..1" -- CollectionUseProject : collectionUseProjectId
         ObjectOccurrenceLog *-- "0..*" ObjectOccurrenceEntry
@@ -370,6 +374,7 @@ package "Collection Use" <<Bounded Context>> {
         ObjectOccurrenceEntry *-- "0..*" Attachment
         ObjectOccurrenceEntry *-- "1..1" ObjectReference
         ObjectOccurrenceEntry ..> Permission : reportedBy
+        ObjectOccurrenceEntry ..> RequestedObject : requestedObjectId
 }
 
 @enduml

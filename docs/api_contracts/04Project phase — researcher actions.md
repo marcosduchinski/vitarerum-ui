@@ -280,11 +280,12 @@ projectId : UUID (required)
 {
   "inventoryNumber": "INV-001",
   "numberOfObjects": 2,
-  "observations": "string"
+  "observations": "string",
+  "requestedObjectId": "uuid"
 }
 ```
 
-`observations` is optional; `numberOfObjects` must be ≥ 1.
+`observations` is optional; `numberOfObjects` must be ≥ 1. `requestedObjectId` is optional — when present it links this access to the `RequestedObject` it fulfils; it must belong to this project's proposal and its inventory number must match `inventoryNumber` (otherwise `422`).
 
 **Response `201 Created`**
 ```json
@@ -304,17 +305,59 @@ projectId : UUID (required)
     "group": "EXTERNAL"
   },
   "observations": "string",
+  "requestedObjectId": "uuid",
   "attachments": []
 }
 ```
 
-`addedBy` is a full permission object, not a bare UUID. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
+`addedBy` is a full permission object, not a bare UUID. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in. `requestedObjectId` is `null` when the entry isn't linked to a requested object.
 
 **Response `409 Conflict`**
 ```json
 {
   "error": "INVALID_TRANSITION",
   "message": "Entries can only be added while the project is IN_PROGRESS"
+}
+```
+
+---
+
+### `PATCH /collection-use-projects/{projectId}/log-entries/{entryId}`
+
+**Description** — Edit an existing object log entry. Only the entry's editable fields may be changed: `addedAt`, `numberOfObjects` and `observations`. The entry's object (`inventoryNumber` / `objectReference`), its `addedBy` and its `requestedObjectId` are immutable. The request is a partial update: only the fields present in the body are changed — omit a field to leave it untouched, send `observations: null` to clear it. For non-staff callers the project must be `IN_PROGRESS` (`409` otherwise), and the entry cannot be edited once the access log is concluded (`409`).
+
+**Path parameters**
+```
+projectId : UUID (required)
+entryId   : UUID (required)
+```
+
+**Request body** (all fields optional)
+```json
+{
+  "addedAt": "2025-06-03T14:00:00",
+  "numberOfObjects": 3,
+  "observations": "string"
+}
+```
+
+`numberOfObjects`, when present, must be ≥ 1 (otherwise `422`).
+
+**Response `200 OK`** — the updated `ObjectLogEntry`, same shape as the `POST` response.
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "ENTRY_NOT_FOUND",
+  "message": "No entry found with id uuid"
+}
+```
+
+**Response `409 Conflict`**
+```json
+{
+  "error": "INVALID_TRANSITION",
+  "message": "Cannot edit entries of a concluded object access log"
 }
 ```
 
@@ -364,6 +407,7 @@ size    : Integer  (default 20)
         "group": "EXTERNAL"
       },
       "observations": "string",
+      "requestedObjectId": "uuid",
       "attachments": [
         {
           "fileReference": "string",
@@ -477,11 +521,12 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
   "occurrenceDate": "2025-06-03T11:30:00",
   "location": "Conservation lab, room 2",
   "detailedDescription": "string",
-  "testimonial": "string"
+  "testimonial": "string",
+  "requestedObjectId": "uuid"
 }
 ```
 
-`testimonial` is optional; `numberOfObjects` must be ≥ 1; `occurrenceDate` is when the occurrence happened (client-supplied), `location` and `detailedDescription` are required.
+`testimonial` is optional; `numberOfObjects` must be ≥ 1; `occurrenceDate` is when the occurrence happened (client-supplied), `location` and `detailedDescription` are required. `requestedObjectId` is optional — when present it links this occurrence to the `RequestedObject` it concerns; same validation as on log entries (must belong to this project's proposal and match `inventoryNumber`, else `422`).
 
 **Response `201 Created`**
 ```json
@@ -503,6 +548,7 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
   },
   "detailedDescription": "string",
   "testimonial": "string",
+  "requestedObjectId": "uuid",
   "attachments": []
 }
 ```
@@ -620,7 +666,7 @@ The project's first `UseEvent` is `REQUESTED`, recorded when the curator approve
 
 A few conventions worth noting across this group:
 
-**Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number): each entry records a `numberOfObjects` and optional `observations`. `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number): each entry records `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and an optional `testimonial`. Both logs are created lazily on the first entry, reject entries and attachments once concluded, and are restricted to `IN_PROGRESS` projects for researchers.
+**Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number): each entry records a `numberOfObjects` and optional `observations`. `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number): each entry records `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and an optional `testimonial`. Both logs are created lazily on the first entry, reject entries and attachments once concluded, and are restricted to `IN_PROGRESS` projects for researchers. Either entry may optionally carry `requestedObjectId` linking it back to the `RequestedObject` it fulfils (log entry) or concerns (occurrence entry), giving end-to-end traceability from request → visit → attachments for a given object.
 
 **`objects` reference inventory items** — the request `objects` field accepts inventory-number strings; the server resolves each to an `ObjectReference` snapshot (`inventoryNumber`, `displayTitle`, `objectName`, `briefDescriptionSnapshot`). Only `inventoryNumber` is populated until a real object catalog is wired in.
 

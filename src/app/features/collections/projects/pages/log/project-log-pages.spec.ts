@@ -106,7 +106,7 @@ describe('project log pages', () => {
     );
   });
 
-  it('enables structured object entry submission when required fields are valid', async () => {
+  it('edits existing object access log rows and saves dirty fields', async () => {
     const state = TestBed.inject(MockProjectState);
     const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
     fixture.componentRef.setInput('projectId', 'proj-3');
@@ -115,37 +115,50 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    const submit = root.querySelector<HTMLButtonElement>('.object-entry-form__submit')!;
-    expect(submit.disabled).toBe(true);
+    expect(root.querySelector('#object-inventory-number')).toBeNull();
+    expect(root.textContent).not.toContain('Register object');
 
-    root.querySelector<HTMLInputElement>('#object-inventory-number')!.value = 'INV-NEW-001';
-    root
-      .querySelector<HTMLInputElement>('#object-inventory-number')!
-      .dispatchEvent(new Event('input'));
-    root.querySelector<HTMLInputElement>('#object-number-of-objects')!.value = '4';
-    root
-      .querySelector<HTMLInputElement>('#object-number-of-objects')!
-      .dispatchEvent(new Event('input'));
-    root.querySelector<HTMLTextAreaElement>('#object-observations')!.value = 'Handled in room 2.';
-    root
-      .querySelector<HTMLTextAreaElement>('#object-observations')!
-      .dispatchEvent(new Event('input'));
+    const save = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Save',
+    )!;
+    expect(save).toBeTruthy();
+    expect(save.disabled).toBe(true);
+
+    const dateInput = root.querySelector<HTMLInputElement>(
+      'input[aria-label="Access date for INV-ZOO-1892-001"]',
+    )!;
+    const quantityInput = root.querySelector<HTMLInputElement>(
+      'input[aria-label="Number of objects for INV-ZOO-1892-001"]',
+    )!;
+    const observationsInput = root.querySelector<HTMLTextAreaElement>(
+      'textarea[aria-label="Observations for INV-ZOO-1892-001"]',
+    )!;
+
+    expect(dateInput.value).toBe('2026-06-04T11:00');
+    expect(quantityInput.value).toBe('1');
+    expect(observationsInput.value).toBe('Reviewed and compared with specimen records.');
+
+    dateInput.value = '2026-06-06T12:30';
+    dateInput.dispatchEvent(new Event('input'));
+    quantityInput.value = '4';
+    quantityInput.dispatchEvent(new Event('input'));
+    observationsInput.value = 'Handled in room 2.';
+    observationsInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    expect(submit.disabled).toBe(false);
+    expect(save.disabled).toBe(false);
 
-    root
-      .querySelector<HTMLFormElement>('.object-entry-form')!
-      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    save.click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(
-      state.logEntries
-        .get('proj-3')
-        ?.some((entry) => entry.objectReference.inventoryNumber === 'INV-NEW-001'),
-    ).toBe(true);
+    const entry = state.logEntries.get('proj-3')?.find((item) => item.id === 'entry-101');
+    expect(entry?.objectReference.inventoryNumber).toBe('INV-ZOO-1892-001');
+    expect(entry?.addedAt).toBe('2026-06-06T12:30:00');
+    expect(entry?.numberOfObjects).toBe(4);
+    expect(entry?.observations).toBe('Handled in room 2.');
+    expect(save.disabled).toBe(true);
   });
 
   it('allows curatorial staff to conclude an open access log', async () => {
@@ -256,9 +269,23 @@ describe('project log pages', () => {
 
     const detailRow = root.querySelector<HTMLTableRowElement>('.object-register__details-row');
     expect(detailRow).toBeTruthy();
-    expect(detailRow?.querySelector('td')?.getAttribute('colspan')).toBe('8');
+    expect(detailRow?.querySelector('td')?.getAttribute('colspan')).toBe('5');
     expect(root.textContent).toContain('Entry files');
     expect(root.querySelector('input[aria-label="Object entry file"]')).toBeTruthy();
+  });
+
+  it('shows no save button when the object access log has no rows', async () => {
+    const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.textContent).toContain('No object access entries have been added yet.');
+    expect(root.textContent).not.toContain('Save');
+    expect(root.querySelector('.object-register-form__save')).toBeNull();
   });
 
   it('locks researcher entry controls when the project is not in progress', async () => {
@@ -278,10 +305,17 @@ describe('project log pages', () => {
     expect(text).toContain(
       'Researcher entries are only available while the project is in progress.',
     );
-    expect(root.querySelector<HTMLInputElement>('#object-inventory-number')?.disabled).toBe(true);
-    expect(root.querySelector<HTMLButtonElement>('.object-entry-form__submit')?.disabled).toBe(
-      true,
-    );
+    expect(
+      root.querySelector<HTMLInputElement>(
+        'input[aria-label="Number of objects for INV-ZOO-1892-001"]',
+      )?.disabled,
+    ).toBe(true);
+    expect(
+      root.querySelector<HTMLTextAreaElement>(
+        'textarea[aria-label="Observations for INV-ZOO-1892-001"]',
+      )?.disabled,
+    ).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.object-register-form__save')).toBeNull();
   });
 
   it('describes locked researcher controls with live status messages', async () => {
@@ -300,7 +334,9 @@ describe('project log pages', () => {
     expect(root.querySelector('#object-access-lock-message')?.getAttribute('role')).toBe('status');
     expect(
       root
-        .querySelector<HTMLInputElement>('#object-inventory-number')
+        .querySelector<HTMLInputElement>(
+          'input[aria-label="Number of objects for INV-ZOO-1892-001"]',
+        )
         ?.getAttribute('aria-describedby'),
     ).toBe('object-access-lock-message');
     expect(
@@ -351,14 +387,15 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    root.querySelector<HTMLInputElement>('#object-inventory-number')!.value = 'INV-STAFF-001';
-    root
-      .querySelector<HTMLInputElement>('#object-inventory-number')!
-      .dispatchEvent(new Event('input'));
+    const quantityInput = root.querySelector<HTMLInputElement>(
+      'input[aria-label="Number of objects for INV-ZOO-1892-001"]',
+    )!;
+    quantityInput.value = '2';
+    quantityInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    expect(root.querySelector<HTMLInputElement>('#object-inventory-number')?.disabled).toBe(false);
-    expect(root.querySelector<HTMLButtonElement>('.object-entry-form__submit')?.disabled).toBe(
+    expect(quantityInput.disabled).toBe(false);
+    expect(root.querySelector<HTMLButtonElement>('.object-register-form__save')?.disabled).toBe(
       false,
     );
   });

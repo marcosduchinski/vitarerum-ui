@@ -25,6 +25,7 @@ import {
   ProjectEventsQuery,
   ProjectListQuery,
   ReasonRequest,
+  UpdateObjectLogEntryRequest,
   UseEvent,
 } from '../models/project.model';
 import { MediaType, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
@@ -97,6 +98,17 @@ export class ProjectApiService {
     return this.http.get<ObjectLogEntriesPage>(
       this.url(`/collection-use-projects/${projectId}/log-entries`),
       { params: buildHttpParams(query) },
+    );
+  }
+
+  updateObjectLogEntry(
+    projectId: string,
+    entryId: string,
+    request: UpdateObjectLogEntryRequest,
+  ): Observable<ObjectLogEntry> {
+    return this.http.patch<ObjectLogEntry>(
+      this.url(`/collection-use-projects/${projectId}/log-entries/${entryId}`),
+      request,
     );
   }
 

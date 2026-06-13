@@ -123,6 +123,34 @@ describe('ProjectApiServiceMock', () => {
     expect(accessLog.dateConclusion).toBeNull();
   });
 
+  it('updates editable object log entry fields', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
+    const entry = await firstValueFrom(
+      service.createObjectLogEntry('proj-4', {
+        inventoryNumber: 'INV-EDIT-001',
+        numberOfObjects: 1,
+        observations: 'Initial note.',
+      }),
+    );
+
+    const updated = await firstValueFrom(
+      service.updateObjectLogEntry('proj-4', entry.id, {
+        addedAt: '2026-06-05T12:30:00Z',
+        numberOfObjects: 3,
+        observations: null,
+      }),
+    );
+
+    expect(updated.objectReference.inventoryNumber).toBe('INV-EDIT-001');
+    expect(updated.addedBy.permissionId).toBe(entry.addedBy.permissionId);
+    expect(updated.addedAt).toBe('2026-06-05T12:30:00Z');
+    expect(updated.numberOfObjects).toBe(3);
+    expect(updated.observations).toBeNull();
+
+    const page = await firstValueFrom(service.listObjectLogEntries('proj-4'));
+    expect(page.content.find((item) => item.id === entry.id)?.numberOfObjects).toBe(3);
+  });
+
   it('rejects object access log lookup before the first object entry', async () => {
     await expect(firstValueFrom(service.getObjectAccessLog('proj-4'))).rejects.toMatchObject({
       status: 404,
@@ -426,6 +454,17 @@ describe('ProjectApiServiceMock', () => {
     await expect(
       firstValueFrom(
         service.uploadLogEntryAttachment('proj-4', entry.id, new File(['x'], 'x.jpg'), 'IMAGE'),
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_TRANSITION',
+    });
+
+    await expect(
+      firstValueFrom(
+        service.updateObjectLogEntry('proj-4', entry.id, {
+          observations: 'Too late.',
+        }),
       ),
     ).rejects.toMatchObject({
       status: 409,
