@@ -1,9 +1,11 @@
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   inject,
   input,
+  PLATFORM_ID,
   resource,
   signal,
 } from '@angular/core';
@@ -16,7 +18,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
-import { ObjectLogEntry, ObjectOccurrenceEntry } from '../../models/project.model';
+import { Attachment, ObjectLogEntry, ObjectOccurrenceEntry } from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 interface OccurrenceObjectRow {
@@ -44,6 +46,8 @@ interface OccurrenceObjectRow {
 export class ProjectOccurrenceLogPanelComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly document = inject(DOCUMENT);
 
   readonly projectId = input.required<string>();
 
@@ -158,6 +162,11 @@ export class ProjectOccurrenceLogPanelComponent {
   protected readonly occurrenceAttachmentFiles = signal<Record<string, File | null>>({});
   protected readonly occurrenceAttachmentUploading = signal<Record<string, boolean>>({});
   protected readonly occurrenceAttachmentErrors = signal<Record<string, ApiError | null>>({});
+  // Download state is keyed by the attachment's fileReference.
+  protected readonly occurrenceAttachmentDownloading = signal<Record<string, boolean>>({});
+  protected readonly occurrenceAttachmentDownloadErrors = signal<Record<string, ApiError | null>>(
+    {},
+  );
   protected readonly expandedOccurrenceEntryId = signal<string | null>(null);
 
   protected toggleObjectOccurrences(rowKey: string): void {
@@ -357,6 +366,38 @@ export class ProjectOccurrenceLogPanelComponent {
     } finally {
       this.setEntryRecord(this.occurrenceAttachmentUploading, entryId, false);
     }
+  }
+
+  protected async downloadOccurrenceAttachment(
+    entryId: string,
+    attachment: Attachment,
+  ): Promise<void> {
+    const ref = attachment.fileReference;
+    if (this.occurrenceAttachmentDownloading()[ref]) return;
+
+    this.setEntryRecord(this.occurrenceAttachmentDownloading, ref, true);
+    this.setEntryRecord(this.occurrenceAttachmentDownloadErrors, ref, null);
+    try {
+      const blob = await firstValueFrom(
+        this.projectService.downloadOccurrenceEntryAttachment(this.projectId(), entryId, ref),
+      );
+      this.saveBlob(blob, attachment.fileName);
+    } catch (err) {
+      this.setEntryRecord(this.occurrenceAttachmentDownloadErrors, ref, toApiError(err));
+    } finally {
+      this.setEntryRecord(this.occurrenceAttachmentDownloading, ref, false);
+    }
+  }
+
+  private saveBlob(blob: Blob, fileName: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const url = URL.createObjectURL(blob);
+    const anchor = this.document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   protected toggleOccurrenceAttachments(entryId: string): void {

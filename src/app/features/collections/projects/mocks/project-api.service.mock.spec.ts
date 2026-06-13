@@ -420,18 +420,14 @@ describe('ProjectApiServiceMock', () => {
   it('ignores requestedBy for a non-staff caller and forces their own id', async () => {
     // Even when an external caller asks for another requester, the list is
     // forced back to their own permissionId.
-    const page = await firstValueFrom(
-      service.listProjects({ requestedBy: 'perm-hugo', size: 20 }),
-    );
+    const page = await firstValueFrom(service.listProjects({ requestedBy: 'perm-hugo', size: 20 }));
 
     expect(page.content.every((p) => p.requestedBy?.permissionId === 'perm-alice')).toBe(true);
   });
 
   it('honors requestedBy for a staff caller', async () => {
     session.set(staffSession());
-    const page = await firstValueFrom(
-      service.listProjects({ requestedBy: 'perm-hugo', size: 20 }),
-    );
+    const page = await firstValueFrom(service.listProjects({ requestedBy: 'perm-hugo', size: 20 }));
 
     expect(page.totalElements).toBeGreaterThan(0);
     expect(page.content.every((p) => p.requestedBy?.permissionId === 'perm-hugo')).toBe(true);

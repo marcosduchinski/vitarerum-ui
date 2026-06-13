@@ -144,6 +144,24 @@ export class ProjectApiService {
     );
   }
 
+  // Downloads a log-entry attachment's binary content. The endpoint streams the
+  // file (Content-Disposition: attachment); the Bearer token is added by the
+  // auth interceptor, so it must be fetched here rather than linked directly.
+  downloadLogEntryAttachment(
+    projectId: string,
+    entryId: string,
+    fileReference: string,
+  ): Observable<Blob> {
+    return this.http.get(
+      this.url(
+        `/collection-use-projects/${projectId}/log-entries/${entryId}/attachments/${encodeURIComponent(
+          fileReference,
+        )}`,
+      ),
+      { responseType: 'blob' },
+    );
+  }
+
   createObjectOccurrenceEntry(
     projectId: string,
     request: CreateObjectOccurrenceEntryRequest,
@@ -201,6 +219,23 @@ export class ProjectApiService {
     return this.http.post<Attachment>(
       this.url(`/collection-use-projects/${projectId}/occurrence-entries/${entryId}/attachments`),
       body,
+    );
+  }
+
+  // Downloads an occurrence-entry attachment's binary content. Same streaming
+  // contract as the log-entry attachment download.
+  downloadOccurrenceEntryAttachment(
+    projectId: string,
+    entryId: string,
+    fileReference: string,
+  ): Observable<Blob> {
+    return this.http.get(
+      this.url(
+        `/collection-use-projects/${projectId}/occurrence-entries/${entryId}/attachments/${encodeURIComponent(
+          fileReference,
+        )}`,
+      ),
+      { responseType: 'blob' },
     );
   }
 

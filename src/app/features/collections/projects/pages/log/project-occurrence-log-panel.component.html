@@ -287,12 +287,57 @@
                                                 track attachment.fileReference
                                               ) {
                                                 <li>
-                                                  <span class="attachment-list__name">
-                                                    {{ attachment.fileName }}
-                                                  </span>
-                                                  <span class="attachment-list__meta">
-                                                    {{ attachment.mediaType }}
-                                                  </span>
+                                                  <div class="attachment-list__info">
+                                                    <span class="attachment-list__name">
+                                                      {{ attachment.fileName }}
+                                                    </span>
+                                                    <span class="attachment-list__meta">
+                                                      {{ attachment.mediaType }}
+                                                    </span>
+                                                  </div>
+                                                  <button
+                                                    type="button"
+                                                    class="attachment-list__download"
+                                                    [disabled]="
+                                                      occurrenceAttachmentDownloading()[
+                                                        attachment.fileReference
+                                                      ]
+                                                    "
+                                                    [attr.aria-label]="
+                                                      'Download ' + attachment.fileName
+                                                    "
+                                                    (click)="
+                                                      downloadOccurrenceAttachment(
+                                                        entry.id,
+                                                        attachment
+                                                      )
+                                                    "
+                                                  >
+                                                    <span
+                                                      class="pi pi-download"
+                                                      aria-hidden="true"
+                                                    ></span>
+                                                    {{
+                                                      occurrenceAttachmentDownloading()[
+                                                        attachment.fileReference
+                                                      ]
+                                                        ? 'Downloading…'
+                                                        : 'Download'
+                                                    }}
+                                                  </button>
+                                                  @if (
+                                                    occurrenceAttachmentDownloadErrors()[
+                                                      attachment.fileReference
+                                                    ]
+                                                  ) {
+                                                    <app-error-message
+                                                      [apiError]="
+                                                        occurrenceAttachmentDownloadErrors()[
+                                                          attachment.fileReference
+                                                        ]!
+                                                      "
+                                                    />
+                                                  }
                                                 </li>
                                               }
                                             </ul>
@@ -393,79 +438,79 @@
         </header>
 
         <div class="occurrence-modal__body">
-        <dl class="occurrence-modal__object">
-          <div>
-            <dt>Inventory</dt>
-            <dd>{{ selectedObject.objectReference.inventoryNumber }}</dd>
-          </div>
-          <div>
-            <dt>Objects</dt>
-            <dd>{{ selectedObject.numberOfObjects }}</dd>
-          </div>
-        </dl>
+          <dl class="occurrence-modal__object">
+            <div>
+              <dt>Inventory</dt>
+              <dd>{{ selectedObject.objectReference.inventoryNumber }}</dd>
+            </div>
+            <div>
+              <dt>Objects</dt>
+              <dd>{{ selectedObject.numberOfObjects }}</dd>
+            </div>
+          </dl>
 
-        <div class="occurrence-entry-form__grid">
-          <div class="occurrence-entry-form__field">
-            <label for="occurrence-date">Occurrence date</label>
-            <input
-              id="occurrence-date"
-              type="datetime-local"
-              [value]="occurrenceDate()"
-              (input)="onOccurrenceDateInput($event)"
-              [attr.aria-invalid]="!occurrenceDate().trim() || null"
-              required
-            />
+          <div class="occurrence-entry-form__grid">
+            <div class="occurrence-entry-form__field">
+              <label for="occurrence-date">Occurrence date</label>
+              <input
+                id="occurrence-date"
+                type="datetime-local"
+                [value]="occurrenceDate()"
+                (input)="onOccurrenceDateInput($event)"
+                [attr.aria-invalid]="!occurrenceDate().trim() || null"
+                required
+              />
+            </div>
+
+            <div class="occurrence-entry-form__field">
+              <label for="occurrence-location">Location</label>
+              <input
+                id="occurrence-location"
+                type="text"
+                [value]="occurrenceLocation()"
+                (input)="onOccurrenceLocationInput($event)"
+                [attr.aria-invalid]="!occurrenceLocation().trim() || null"
+                required
+              />
+            </div>
+
+            <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+              <label for="occurrence-description">Detailed description</label>
+              <textarea
+                id="occurrence-description"
+                rows="3"
+                [value]="occurrenceDescription()"
+                (input)="onOccurrenceDescriptionInput($event)"
+                [attr.aria-invalid]="!occurrenceDescription().trim() || null"
+                required
+              ></textarea>
+            </div>
+
+            <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+              <label for="occurrence-testimonial">Testimonial</label>
+              <textarea
+                id="occurrence-testimonial"
+                rows="3"
+                [value]="occurrenceTestimonial()"
+                (input)="onOccurrenceTestimonialInput($event)"
+              ></textarea>
+            </div>
+
+            <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+              <label for="occurrence-files">Files</label>
+              <input
+                id="occurrence-files"
+                type="file"
+                multiple
+                aria-label="Occurrence files"
+                (change)="onOccurrenceFilesInput($event)"
+              />
+            </div>
           </div>
 
-          <div class="occurrence-entry-form__field">
-            <label for="occurrence-location">Location</label>
-            <input
-              id="occurrence-location"
-              type="text"
-              [value]="occurrenceLocation()"
-              (input)="onOccurrenceLocationInput($event)"
-              [attr.aria-invalid]="!occurrenceLocation().trim() || null"
-              required
-            />
-          </div>
-
-          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
-            <label for="occurrence-description">Detailed description</label>
-            <textarea
-              id="occurrence-description"
-              rows="3"
-              [value]="occurrenceDescription()"
-              (input)="onOccurrenceDescriptionInput($event)"
-              [attr.aria-invalid]="!occurrenceDescription().trim() || null"
-              required
-            ></textarea>
-          </div>
-
-          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
-            <label for="occurrence-testimonial">Testimonial</label>
-            <textarea
-              id="occurrence-testimonial"
-              rows="3"
-              [value]="occurrenceTestimonial()"
-              (input)="onOccurrenceTestimonialInput($event)"
-            ></textarea>
-          </div>
-
-          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
-            <label for="occurrence-files">Files</label>
-            <input
-              id="occurrence-files"
-              type="file"
-              multiple
-              aria-label="Occurrence files"
-              (change)="onOccurrenceFilesInput($event)"
-            />
-          </div>
-        </div>
-
-        @if (occurrenceSubmitError()) {
-          <app-error-message [apiError]="occurrenceSubmitError()!" />
-        }
+          @if (occurrenceSubmitError()) {
+            <app-error-message [apiError]="occurrenceSubmitError()!" />
+          }
         </div>
 
         <footer class="occurrence-modal__actions">
@@ -525,82 +570,82 @@
         </header>
 
         <div class="occurrence-modal__body">
-        <dl class="occurrence-modal__object">
-          <div>
-            <dt>Inventory</dt>
-            <dd>{{ entry.objectReference.inventoryNumber }}</dd>
-          </div>
-          <div>
-            <dt>Reported by</dt>
-            <dd>{{ entry.reportedBy.user.name }}</dd>
-          </div>
-        </dl>
+          <dl class="occurrence-modal__object">
+            <div>
+              <dt>Inventory</dt>
+              <dd>{{ entry.objectReference.inventoryNumber }}</dd>
+            </div>
+            <div>
+              <dt>Reported by</dt>
+              <dd>{{ entry.reportedBy.user.name }}</dd>
+            </div>
+          </dl>
 
-        <div class="occurrence-entry-form__grid">
-          <div class="occurrence-entry-form__field occurrence-entry-form__field--quantity">
-            <label for="occurrence-edit-number-of-objects">No. objects</label>
-            <input
-              id="occurrence-edit-number-of-objects"
-              type="number"
-              min="1"
-              step="1"
-              [value]="occurrenceEditNumberOfObjects()"
-              (input)="onOccurrenceEditQuantityInput($event)"
-              [attr.aria-invalid]="occurrenceEditNumberOfObjects() < 1 || null"
-              required
-            />
+          <div class="occurrence-entry-form__grid">
+            <div class="occurrence-entry-form__field occurrence-entry-form__field--quantity">
+              <label for="occurrence-edit-number-of-objects">No. objects</label>
+              <input
+                id="occurrence-edit-number-of-objects"
+                type="number"
+                min="1"
+                step="1"
+                [value]="occurrenceEditNumberOfObjects()"
+                (input)="onOccurrenceEditQuantityInput($event)"
+                [attr.aria-invalid]="occurrenceEditNumberOfObjects() < 1 || null"
+                required
+              />
+            </div>
+
+            <div class="occurrence-entry-form__field">
+              <label for="occurrence-edit-date">Occurrence date</label>
+              <input
+                id="occurrence-edit-date"
+                type="datetime-local"
+                [value]="occurrenceEditDate()"
+                (input)="onOccurrenceEditDateInput($event)"
+                [attr.aria-invalid]="!occurrenceEditDate().trim() || null"
+                required
+              />
+            </div>
+
+            <div class="occurrence-entry-form__field">
+              <label for="occurrence-edit-location">Location</label>
+              <input
+                id="occurrence-edit-location"
+                type="text"
+                [value]="occurrenceEditLocation()"
+                (input)="onOccurrenceEditLocationInput($event)"
+                [attr.aria-invalid]="!occurrenceEditLocation().trim() || null"
+                required
+              />
+            </div>
+
+            <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+              <label for="occurrence-edit-description">Detailed description</label>
+              <textarea
+                id="occurrence-edit-description"
+                rows="3"
+                [value]="occurrenceEditDescription()"
+                (input)="onOccurrenceEditDescriptionInput($event)"
+                [attr.aria-invalid]="!occurrenceEditDescription().trim() || null"
+                required
+              ></textarea>
+            </div>
+
+            <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+              <label for="occurrence-edit-testimonial">Testimonial</label>
+              <textarea
+                id="occurrence-edit-testimonial"
+                rows="3"
+                [value]="occurrenceEditTestimonial()"
+                (input)="onOccurrenceEditTestimonialInput($event)"
+              ></textarea>
+            </div>
           </div>
 
-          <div class="occurrence-entry-form__field">
-            <label for="occurrence-edit-date">Occurrence date</label>
-            <input
-              id="occurrence-edit-date"
-              type="datetime-local"
-              [value]="occurrenceEditDate()"
-              (input)="onOccurrenceEditDateInput($event)"
-              [attr.aria-invalid]="!occurrenceEditDate().trim() || null"
-              required
-            />
-          </div>
-
-          <div class="occurrence-entry-form__field">
-            <label for="occurrence-edit-location">Location</label>
-            <input
-              id="occurrence-edit-location"
-              type="text"
-              [value]="occurrenceEditLocation()"
-              (input)="onOccurrenceEditLocationInput($event)"
-              [attr.aria-invalid]="!occurrenceEditLocation().trim() || null"
-              required
-            />
-          </div>
-
-          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
-            <label for="occurrence-edit-description">Detailed description</label>
-            <textarea
-              id="occurrence-edit-description"
-              rows="3"
-              [value]="occurrenceEditDescription()"
-              (input)="onOccurrenceEditDescriptionInput($event)"
-              [attr.aria-invalid]="!occurrenceEditDescription().trim() || null"
-              required
-            ></textarea>
-          </div>
-
-          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
-            <label for="occurrence-edit-testimonial">Testimonial</label>
-            <textarea
-              id="occurrence-edit-testimonial"
-              rows="3"
-              [value]="occurrenceEditTestimonial()"
-              (input)="onOccurrenceEditTestimonialInput($event)"
-            ></textarea>
-          </div>
-        </div>
-
-        @if (occurrenceEditError()) {
-          <app-error-message [apiError]="occurrenceEditError()!" />
-        }
+          @if (occurrenceEditError()) {
+            <app-error-message [apiError]="occurrenceEditError()!" />
+          }
         </div>
 
         <footer class="occurrence-modal__actions">

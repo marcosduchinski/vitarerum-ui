@@ -225,12 +225,37 @@
                                 track attachment.fileReference
                               ) {
                                 <li>
-                                  <span class="attachment-list__name">{{
-                                    attachment.fileName
-                                  }}</span>
-                                  <span class="attachment-list__meta">
-                                    {{ attachment.mediaType }}
-                                  </span>
+                                  <div class="attachment-list__info">
+                                    <span class="attachment-list__name">{{
+                                      attachment.fileName
+                                    }}</span>
+                                    <span class="attachment-list__meta">
+                                      {{ attachment.mediaType }}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    class="attachment-list__download"
+                                    [disabled]="
+                                      objectAttachmentDownloading()[attachment.fileReference]
+                                    "
+                                    [attr.aria-label]="'Download ' + attachment.fileName"
+                                    (click)="downloadObjectAttachment(entry.id, attachment)"
+                                  >
+                                    <span class="pi pi-download" aria-hidden="true"></span>
+                                    {{
+                                      objectAttachmentDownloading()[attachment.fileReference]
+                                        ? 'Downloading…'
+                                        : 'Download'
+                                    }}
+                                  </button>
+                                  @if (objectAttachmentDownloadErrors()[attachment.fileReference]) {
+                                    <app-error-message
+                                      [apiError]="
+                                        objectAttachmentDownloadErrors()[attachment.fileReference]!
+                                      "
+                                    />
+                                  }
                                 </li>
                               }
                             </ul>

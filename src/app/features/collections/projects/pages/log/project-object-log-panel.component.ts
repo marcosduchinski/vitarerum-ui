@@ -1,9 +1,11 @@
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   inject,
   input,
+  PLATFORM_ID,
   resource,
   signal,
 } from '@angular/core';
@@ -16,7 +18,11 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
-import { ObjectLogEntry, UpdateObjectLogEntryRequest } from '../../models/project.model';
+import {
+  Attachment,
+  ObjectLogEntry,
+  UpdateObjectLogEntryRequest,
+} from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 @Component({
@@ -35,6 +41,8 @@ import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 export class ProjectObjectLogPanelComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly document = inject(DOCUMENT);
 
   readonly projectId = input.required<string>();
 
@@ -101,6 +109,9 @@ export class ProjectObjectLogPanelComponent {
   protected readonly objectAttachmentFiles = signal<Record<string, File | null>>({});
   protected readonly objectAttachmentUploading = signal<Record<string, boolean>>({});
   protected readonly objectAttachmentErrors = signal<Record<string, ApiError | null>>({});
+  // Download state is keyed by the attachment's fileReference.
+  protected readonly objectAttachmentDownloading = signal<Record<string, boolean>>({});
+  protected readonly objectAttachmentDownloadErrors = signal<Record<string, ApiError | null>>({});
   protected readonly expandedObjectEntryId = signal<string | null>(null);
 
   protected draftAddedAt(entry: ObjectLogEntry): string {
@@ -199,6 +210,35 @@ export class ProjectObjectLogPanelComponent {
     } finally {
       this.setEntryRecord(this.objectAttachmentUploading, entryId, false);
     }
+  }
+
+  protected async downloadObjectAttachment(entryId: string, attachment: Attachment): Promise<void> {
+    const ref = attachment.fileReference;
+    if (this.objectAttachmentDownloading()[ref]) return;
+
+    this.setEntryRecord(this.objectAttachmentDownloading, ref, true);
+    this.setEntryRecord(this.objectAttachmentDownloadErrors, ref, null);
+    try {
+      const blob = await firstValueFrom(
+        this.projectService.downloadLogEntryAttachment(this.projectId(), entryId, ref),
+      );
+      this.saveBlob(blob, attachment.fileName);
+    } catch (err) {
+      this.setEntryRecord(this.objectAttachmentDownloadErrors, ref, toApiError(err));
+    } finally {
+      this.setEntryRecord(this.objectAttachmentDownloading, ref, false);
+    }
+  }
+
+  private saveBlob(blob: Blob, fileName: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const url = URL.createObjectURL(blob);
+    const anchor = this.document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   protected toggleObjectAttachments(entryId: string): void {

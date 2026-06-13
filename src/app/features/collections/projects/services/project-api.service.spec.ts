@@ -243,6 +243,25 @@ describe('ProjectApiService', () => {
     });
   });
 
+  it('downloads a log entry attachment as a blob with an encoded file reference', () => {
+    let received: Blob | undefined;
+
+    service
+      .downloadLogEntryAttachment('project-1', 'entry-1', 'files/sub dir/photo.jpg')
+      .subscribe((blob) => (received = blob));
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/log-entries/entry-1/attachments/files%2Fsub%20dir%2Fphoto.jpg',
+    );
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+
+    const blob = new Blob(['file-bytes']);
+    request.flush(blob);
+    expect(received).toBe(blob);
+  });
+
   it('creates object occurrence entries with the revised contract payload', () => {
     service
       .createObjectOccurrenceEntry('project-1', {
@@ -357,5 +376,24 @@ describe('ProjectApiService', () => {
         group: 'COLLECTIONS_MANAGEMENT',
       },
     });
+  });
+
+  it('downloads an occurrence entry attachment as a blob', () => {
+    let received: Blob | undefined;
+
+    service
+      .downloadOccurrenceEntryAttachment('project-1', 'entry-1', 'files/report.pdf')
+      .subscribe((blob) => (received = blob));
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/occurrence-entries/entry-1/attachments/files%2Freport.pdf',
+    );
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+
+    const blob = new Blob(['file-bytes']);
+    request.flush(blob);
+    expect(received).toBe(blob);
   });
 });
