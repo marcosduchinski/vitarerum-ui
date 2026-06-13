@@ -365,7 +365,16 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="occurrence-modal-title"
+      (keydown.escape)="closeAddOccurrence()"
     >
+      <button
+        type="button"
+        class="occurrence-modal__backdrop"
+        tabindex="-1"
+        aria-label="Close occurrence form"
+        [disabled]="occurrenceSubmitting()"
+        (click)="closeAddOccurrence()"
+      ></button>
       <form class="occurrence-modal__panel" (submit)="addOccurrenceEntry($event)">
         <header class="occurrence-modal__header">
           <div>
@@ -383,6 +392,7 @@
           </button>
         </header>
 
+        <div class="occurrence-modal__body">
         <dl class="occurrence-modal__object">
           <div>
             <dt>Inventory</dt>
@@ -456,6 +466,7 @@
         @if (occurrenceSubmitError()) {
           <app-error-message [apiError]="occurrenceSubmitError()!" />
         }
+        </div>
 
         <footer class="occurrence-modal__actions">
           <button
@@ -486,7 +497,16 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="occurrence-edit-modal-title"
+      (keydown.escape)="closeEditOccurrence()"
     >
+      <button
+        type="button"
+        class="occurrence-modal__backdrop"
+        tabindex="-1"
+        aria-label="Close occurrence edit form"
+        [disabled]="occurrenceEditSubmitting()"
+        (click)="closeEditOccurrence()"
+      ></button>
       <form class="occurrence-modal__panel" (submit)="updateOccurrenceEntry($event)">
         <header class="occurrence-modal__header">
           <div>
@@ -504,6 +524,7 @@
           </button>
         </header>
 
+        <div class="occurrence-modal__body">
         <dl class="occurrence-modal__object">
           <div>
             <dt>Inventory</dt>
@@ -580,6 +601,7 @@
         @if (occurrenceEditError()) {
           <app-error-message [apiError]="occurrenceEditError()!" />
         }
+        </div>
 
         <footer class="occurrence-modal__actions">
           <button

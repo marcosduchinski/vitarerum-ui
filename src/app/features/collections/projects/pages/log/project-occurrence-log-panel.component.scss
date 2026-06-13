@@ -566,24 +566,49 @@
 .occurrence-modal {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  // Above the app shell menu (1000) and topbar (997) so the dialog is never
+  // overlapped; matches the shared confirm-modal top layer.
+  z-index: 1200;
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.42);
+  animation: occurrence-modal-overlay-in 160ms ease-out;
+}
+
+.occurrence-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--color-text) 55%, transparent);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
 }
 
 .occurrence-modal__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(42rem, 100%);
+  max-height: min(46rem, calc(100dvh - 2rem));
+  overflow: hidden;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+  box-shadow: 0 1.5rem 4rem rgba(15, 23, 42, 0.28);
+  animation: occurrence-modal-panel-in 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.occurrence-modal__body {
   display: grid;
   gap: 1rem;
-  width: min(42rem, 100%);
-  max-height: min(44rem, calc(100vh - 2rem));
-  overflow: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1rem;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-panel);
-  box-shadow: var(--shadow-panel);
 }
 
 .occurrence-modal__header,
@@ -592,13 +617,37 @@
   gap: 0.75rem;
   align-items: center;
   justify-content: space-between;
+  padding: 0.9rem 1rem;
 }
 
 .occurrence-modal__header {
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-bg-raised);
+
   h3 {
     margin: 0;
     color: var(--color-text);
-    font-size: 1rem;
+    font-size: 1.05rem;
+  }
+}
+
+@keyframes occurrence-modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes occurrence-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .occurrence-modal,
+  .occurrence-modal__panel {
+    animation: none;
   }
 }
 
@@ -663,6 +712,23 @@
 
 .occurrence-modal__actions {
   justify-content: flex-end;
+  border-top: 1px solid var(--color-line);
+  background: var(--color-bg-raised);
+}
+
+// The shared occurrence-entry-form grid is tuned for a wide inline form; inside
+// the constrained modal panel its column min-widths overflow and squeeze the
+// inputs. Override to a tidy two-column layout that fits the 42rem dialog.
+.occurrence-modal .occurrence-entry-form__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.occurrence-modal .occurrence-entry-form__field--quantity input {
+  text-align: left;
 }
 
 .occurrence-modal__secondary {
