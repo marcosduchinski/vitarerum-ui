@@ -433,6 +433,27 @@ describe('ProjectApiServiceMock', () => {
     expect(page.content.every((p) => p.requestedBy?.permissionId === 'perm-hugo')).toBe(true);
   });
 
+  it('downloads an uploaded log entry attachment as a blob', async () => {
+    session.set(staffSession());
+    const file = new File(['x'], 'evidence.pdf', { type: 'application/pdf' });
+    const attachment = await firstValueFrom(
+      service.uploadLogEntryAttachment('proj-3', 'entry-101', file, 'DOCUMENT'),
+    );
+
+    const blob = await firstValueFrom(
+      service.downloadLogEntryAttachment('proj-3', 'entry-101', attachment.fileReference),
+    );
+
+    expect(blob).toBeInstanceOf(Blob);
+    expect(blob.size).toBeGreaterThan(0);
+  });
+
+  it('rejects downloading an unknown log entry attachment with 404', async () => {
+    await expect(
+      firstValueFrom(service.downloadLogEntryAttachment('proj-3', 'entry-101', 'no-such-ref')),
+    ).rejects.toMatchObject({ status: 404, error: 'ATTACHMENT_NOT_FOUND' });
+  });
+
   it('rejects researcher object log entries outside IN_PROGRESS', async () => {
     state.projects.get('proj-4')!.status = 'COMPLETED';
 

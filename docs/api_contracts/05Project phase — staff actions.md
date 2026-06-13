@@ -325,6 +325,12 @@ note      : String    (optional)
 
 ---
 
+### `GET /collection-use-projects/{projectId}/log-entries/{entryId}/attachments/{fileReference}` · `.../occurrence-entries/{entryId}/attachments/{fileReference}`
+
+**Description** — Download the raw bytes of an attachment on a log / occurrence entry, keyed by the entry's `attachments[].fileReference`. The response is the binary file (not JSON), with `Content-Disposition: attachment` and a `Content-Type` derived from the file name's extension (falling back to `application/octet-stream`). `404` when the entry doesn't belong to this project (`ENTRY_NOT_FOUND`) or no attachment with that `fileReference` exists (`ATTACHMENT_NOT_FOUND`).
+
+---
+
 ### `GET /collection-use-projects/{projectId}/events`
 
 **Description** — Get the immutable audit trail of the project lifecycle ordered chronologically. Staff see the complete event history including transitions triggered by the researcher, and can filter by `type`.

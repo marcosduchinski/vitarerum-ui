@@ -246,12 +246,14 @@ describe('ProjectApiService', () => {
   it('downloads a log entry attachment as a blob with an encoded file reference', () => {
     let received: Blob | undefined;
 
+    // The backend's {file_reference} is a flat segment; encoding protects special
+    // characters (e.g. spaces) within it.
     service
-      .downloadLogEntryAttachment('project-1', 'entry-1', 'files/sub dir/photo.jpg')
+      .downloadLogEntryAttachment('project-1', 'entry-1', 'att 12.jpg')
       .subscribe((blob) => (received = blob));
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects/project-1/log-entries/entry-1/attachments/files%2Fsub%20dir%2Fphoto.jpg',
+      'https://api.example.test/collection-use-projects/project-1/log-entries/entry-1/attachments/att%2012.jpg',
     );
 
     expect(request.request.method).toBe('GET');
@@ -382,11 +384,11 @@ describe('ProjectApiService', () => {
     let received: Blob | undefined;
 
     service
-      .downloadOccurrenceEntryAttachment('project-1', 'entry-1', 'files/report.pdf')
+      .downloadOccurrenceEntryAttachment('project-1', 'entry-1', 'report-2024.pdf')
       .subscribe((blob) => (received = blob));
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects/project-1/occurrence-entries/entry-1/attachments/files%2Freport.pdf',
+      'https://api.example.test/collection-use-projects/project-1/occurrence-entries/entry-1/attachments/report-2024.pdf',
     );
 
     expect(request.request.method).toBe('GET');

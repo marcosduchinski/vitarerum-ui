@@ -515,6 +515,23 @@ note      : String    (optional)
 
 ---
 
+### `GET /collection-use-projects/{projectId}/log-entries/{entryId}/attachments/{fileReference}`
+
+**Description** — Downloads the raw bytes of an attachment previously uploaded to an object log entry. `fileReference` is the value returned in the entry's `attachments[].fileReference`. The response streams the file with a `Content-Disposition: attachment` header and a `Content-Type` derived from the file name's extension (falling back to `application/octet-stream`). Subject to the same project-access rules as the rest of the project's endpoints.
+
+**Path parameters**
+```
+projectId     : UUID   (required)
+entryId       : UUID   (required)
+fileReference : String (required) the attachment's fileReference
+```
+
+**Response `200 OK`** — the file bytes (binary body; not JSON).
+
+**Response `404 Not Found`** — when the entry doesn't exist or belong to this project (`ENTRY_NOT_FOUND`), or no attachment with that `fileReference` is stored (`ATTACHMENT_NOT_FOUND`).
+
+---
+
 ### `POST /collection-use-projects/{projectId}/occurrence-entries`
 
 **Description** — Researcher records an **object occurrence entry** in the project's **object occurrence log** — a structured report of one occurrence involving a collection object (when, where, what happened, optional testimonial). The occurrence log (one per project, with its own `OOL-XXXXXXXX` reference number) is created automatically on the first entry. Researcher restricted to `IN_PROGRESS`; the caller's `permissionId` is recorded as `reportedBy`; `inventoryNumber` is resolved to an `ObjectReference` snapshot. Entries cannot be added once the occurrence log is concluded (`409`).
@@ -647,6 +664,12 @@ size       : Integer  (default 20)
 ### `POST /collection-use-projects/{projectId}/occurrence-entries/{entryId}/attachments`
 
 **Description** — Uploads a file to an existing occurrence entry. Same `multipart/form-data` body, responses, and status rules as the log-entry attachment endpoint; rejected with `409` once the occurrence log is concluded.
+
+---
+
+### `GET /collection-use-projects/{projectId}/occurrence-entries/{entryId}/attachments/{fileReference}`
+
+**Description** — Downloads the raw bytes of an attachment previously uploaded to an occurrence entry. Identical behavior to the log-entry attachment download (binary body, `Content-Disposition: attachment`, `Content-Type` guessed from the file name), keyed by the entry's `attachments[].fileReference`. `404` when the entry doesn't belong to this project (`ENTRY_NOT_FOUND`) or no attachment with that `fileReference` exists (`ATTACHMENT_NOT_FOUND`).
 
 ---
 
