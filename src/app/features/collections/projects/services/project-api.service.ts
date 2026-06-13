@@ -48,7 +48,9 @@ export class ProjectApiService {
 
   listProjects(query: ProjectListQuery = {}): Observable<Page<CollectionUseProjectSummary>> {
     const serverQuery = { ...query };
-    delete serverQuery.requestedBy;
+    // `requestedBy` is now an honored server-side filter (staff-only; non-staff
+    // callers are auto-scoped to their own permissionId regardless). `assignedTo`
+    // is still not implemented by the backend, so keep stripping it.
     delete serverQuery.assignedTo;
     return this.http.get<Page<CollectionUseProjectSummary>>(this.url('/collection-use-projects'), {
       params: buildHttpParams(serverQuery),

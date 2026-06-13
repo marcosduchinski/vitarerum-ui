@@ -8,16 +8,17 @@
 
 **Query parameters**
 ```
-status   : UseStatus  (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
-type     : UseType    (optional) EXHIBITION | RESEARCH | OTHER
-dateFrom : LocalDate  (optional) reserved — accepted but not yet applied
-dateTo   : LocalDate  (optional) reserved — accepted but not yet applied
-search   : String     (optional) reserved — accepted but not yet applied
-page     : Integer     (default 0)
-size     : Integer     (default 20)
+status      : UseStatus    (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
+type        : UseType      (optional) EXHIBITION | RESEARCH | OTHER
+requestedBy : PermissionId (optional) scope to projects requested by this permission
+dateFrom    : LocalDate    (optional) reserved — accepted but not yet applied
+dateTo      : LocalDate    (optional) reserved — accepted but not yet applied
+search      : String       (optional) reserved — accepted but not yet applied
+page        : Integer       (default 0)
+size        : Integer       (default 20)
 ```
 
-> `requestedBy`, `assignedTo`, `referenceNumber`, and `proposalApproved` filters from the original design are **not implemented**.
+> `requestedBy` is honored only for staff callers — e.g. pass the caller's own `permissionId` for a staff "my projects" view. For non-staff callers it is ignored and the list is always scoped to their own id. The `assignedTo`, `referenceNumber`, and `proposalApproved` filters from the original design are **not implemented**.
 
 **Response `200 OK`**
 ```json

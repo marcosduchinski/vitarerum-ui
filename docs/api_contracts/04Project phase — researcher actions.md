@@ -8,14 +8,17 @@
 
 **Query parameters**
 ```
-status   : UseStatus  (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
-type     : UseType    (optional) EXHIBITION | RESEARCH | OTHER
-dateFrom : LocalDate  (optional) reserved — accepted but not yet applied
-dateTo   : LocalDate  (optional) reserved — accepted but not yet applied
-search   : String     (optional) reserved — accepted but not yet applied
-page     : Integer     (default 0)
-size     : Integer     (default 20)
+status      : UseStatus    (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
+type        : UseType      (optional) EXHIBITION | RESEARCH | OTHER
+requestedBy : PermissionId (optional) staff-only; ignored for non-staff callers
+dateFrom    : LocalDate    (optional) reserved — accepted but not yet applied
+dateTo      : LocalDate    (optional) reserved — accepted but not yet applied
+search      : String       (optional) reserved — accepted but not yet applied
+page        : Integer       (default 0)
+size        : Integer       (default 20)
 ```
+
+> `requestedBy` has no effect for a non-staff caller: the list is always forced to their own `permissionId`, so it cannot be used to see another researcher's projects.
 
 **Response `200 OK`**
 ```json

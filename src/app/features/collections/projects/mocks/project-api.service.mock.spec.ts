@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
@@ -25,9 +25,17 @@ describe('ProjectApiServiceMock', () => {
           useValue: {
             session: session.asReadonly(),
             isAuthenticated: signal(true).asReadonly(),
+            isStaff: computed(() => {
+              const group = session()?.group;
+              return group != null && group !== 'EXTERNAL';
+            }),
             signIn: () => {},
             signOut: () => {},
             getAccessToken: () => 'mock-token',
+            getPermissionId: () => {
+              const id = session()?.user.id;
+              return id ? `perm-${id.replace(/^u-/, '')}` : null;
+            },
             setGroup: () => {},
             updateAvailableGroups: () => {},
           },
@@ -380,22 +388,53 @@ describe('ProjectApiServiceMock', () => {
   });
 
   it('filters projects by status', async () => {
+    session.set(staffSession());
     const page = await firstValueFrom(service.listProjects({ status: 'IN_PROGRESS' }));
     expect(page.content.every((p) => p.status === 'IN_PROGRESS')).toBe(true);
   });
 
   it('has created project examples for proposals', async () => {
+    session.set(staffSession());
     const page = await firstValueFrom(service.listProjects({ status: 'CREATED', size: 20 }));
     expect(page.totalElements).toBeGreaterThan(0);
   });
 
   it('filters projects to those with proposals assigned to a specific reviewer', async () => {
+    session.set(staffSession());
     const page = await firstValueFrom(service.listProjects({ assignedTo: 'perm-bob', size: 20 }));
 
     expect(page.totalElements).toBeGreaterThan(0);
     expect(page.content.every((p) => p.proposal.assignedTo?.permissionId === 'perm-bob')).toBe(
       true,
     );
+  });
+
+  it('scopes a non-staff list to the caller’s own requested projects', async () => {
+    // Default session is the external researcher Alice (perm-alice).
+    const page = await firstValueFrom(service.listProjects({ size: 20 }));
+
+    expect(page.totalElements).toBeGreaterThan(0);
+    expect(page.content.every((p) => p.requestedBy?.permissionId === 'perm-alice')).toBe(true);
+  });
+
+  it('ignores requestedBy for a non-staff caller and forces their own id', async () => {
+    // Even when an external caller asks for another requester, the list is
+    // forced back to their own permissionId.
+    const page = await firstValueFrom(
+      service.listProjects({ requestedBy: 'perm-hugo', size: 20 }),
+    );
+
+    expect(page.content.every((p) => p.requestedBy?.permissionId === 'perm-alice')).toBe(true);
+  });
+
+  it('honors requestedBy for a staff caller', async () => {
+    session.set(staffSession());
+    const page = await firstValueFrom(
+      service.listProjects({ requestedBy: 'perm-hugo', size: 20 }),
+    );
+
+    expect(page.totalElements).toBeGreaterThan(0);
+    expect(page.content.every((p) => p.requestedBy?.permissionId === 'perm-hugo')).toBe(true);
   });
 
   it('rejects researcher object log entries outside IN_PROGRESS', async () => {

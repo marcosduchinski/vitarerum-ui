@@ -177,13 +177,13 @@ describe('ProjectsMyPageComponent', () => {
     document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
-  it('loads in-progress projects only', async () => {
+  it('scopes the list to the logged-in staff user as requester', async () => {
     const fixture = TestBed.createComponent(ProjectsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'IN_PROGRESS',
+      requestedBy: 'permission-staff',
       page: 0,
       size: 3,
       search: '',
@@ -236,7 +236,7 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'IN_PROGRESS',
+      requestedBy: 'permission-staff',
       page: 1,
       size: 3,
       search: '',
@@ -270,7 +270,7 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'IN_PROGRESS',
+      requestedBy: 'permission-staff',
       page: 0,
       size: 3,
       search: 'notebook',
@@ -284,7 +284,7 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
 
     expect(projectService.queries.at(-1)).toEqual({
-      status: 'IN_PROGRESS',
+      requestedBy: 'permission-staff',
       page: 0,
       size: 3,
       search: '',

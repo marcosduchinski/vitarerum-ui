@@ -43,11 +43,13 @@ describe('ProjectApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
+      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&requestedBy=user-1&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
     );
 
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.has('requestedBy')).toBe(false);
+    // `requestedBy` is an honored server-side filter; `assignedTo` is not
+    // implemented and is stripped before the request.
+    expect(request.request.params.get('requestedBy')).toBe('user-1');
     expect(request.request.params.has('assignedTo')).toBe(false);
     request.flush({ content: [], page: 3, size: 15, totalElements: 0, totalPages: 0 });
   });

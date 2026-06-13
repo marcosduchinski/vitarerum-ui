@@ -68,11 +68,13 @@ export class ProjectsMyPageComponent {
       page: this.currentPage(),
       size: this.pageSize,
       search: this.appliedSearch().trim(),
-      isExternalRequester: this.isExternalRequester(),
-      currentPermissionId: this.isExternalRequester() ? this.currentPermissionId() : null,
+      currentPermissionId: this.currentPermissionId(),
     }),
+    // "My projects" is always scoped to the logged-in user as the requester.
+    // The backend honors `requestedBy` for staff and auto-scopes non-staff
+    // callers to their own permission, so the same query works for every user.
     loader: ({ params }) => {
-      if (params.isExternalRequester && !params.currentPermissionId) {
+      if (!params.currentPermissionId) {
         return Promise.resolve({
           content: [],
           page: params.page,
@@ -82,20 +84,9 @@ export class ProjectsMyPageComponent {
         });
       }
 
-      if (params.isExternalRequester) {
-        return firstValueFrom(
-          this.projectService.listProjects({
-            requestedBy: params.currentPermissionId ?? undefined,
-            page: params.page,
-            size: params.size,
-            search: params.search,
-          }),
-        );
-      }
-
       return firstValueFrom(
         this.projectService.listProjects({
-          status: 'IN_PROGRESS',
+          requestedBy: params.currentPermissionId,
           page: params.page,
           size: params.size,
           search: params.search,

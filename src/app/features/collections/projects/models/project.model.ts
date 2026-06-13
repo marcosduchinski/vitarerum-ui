@@ -100,9 +100,12 @@ export interface ProjectListQuery extends PageQuery {
   readonly dateFrom?: string;
   readonly dateTo?: string;
   readonly search?: string;
-  // Client-side scoping helpers. The backend auto-scopes non-staff callers by the
-  // acting permission, so these are honoured by the mock and ignored server-side.
+  // `requestedBy` is an honored server-side filter: staff may scope to any
+  // requester's permissionId (e.g. their own for a "my projects" view), while
+  // non-staff callers are always auto-scoped to their own permissionId.
   readonly requestedBy?: string;
+  // `assignedTo` is not implemented server-side; stripped before the request and
+  // honoured only by the mock.
   readonly assignedTo?: string;
 }
 
