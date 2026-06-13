@@ -9,6 +9,7 @@ import {
   ObjectAccessLog,
   ObjectLogEntry,
   ObjectOccurrenceEntry,
+  ObjectOccurrenceLog,
   UseEvent,
 } from '@features/collections/projects/models/project.model';
 import {
@@ -733,6 +734,8 @@ export const SEED_PROJECT_OBJECT_ACCESS_LOGS: Record<string, ObjectAccessLog> = 
   },
 };
 
+export const SEED_PROJECT_OBJECT_OCCURRENCE_LOGS: Record<string, ObjectOccurrenceLog> = {};
+
 export const SEED_PROJECT_OCCURRENCE_ENTRIES: Record<string, ObjectOccurrenceEntry[]> = {
   'proj-1': [],
   'proj-2': [],
@@ -760,6 +763,7 @@ export interface MockSeed {
   readonly projects?: readonly MutableProjectState[];
   readonly projectEvents?: Record<string, UseEvent[]>;
   readonly objectAccessLogs?: Record<string, ObjectAccessLog>;
+  readonly objectOccurrenceLogs?: Record<string, ObjectOccurrenceLog>;
   readonly logEntries?: Record<string, ObjectLogEntry[]>;
   readonly occurrenceEntries?: Record<string, ObjectOccurrenceEntry[]>;
 }
@@ -773,6 +777,7 @@ export const TEST_SEED: MockSeed = {
   projects: SEED_PROJECTS,
   projectEvents: SEED_PROJECT_EVENTS,
   objectAccessLogs: SEED_PROJECT_OBJECT_ACCESS_LOGS,
+  objectOccurrenceLogs: SEED_PROJECT_OBJECT_OCCURRENCE_LOGS,
   logEntries: SEED_PROJECT_LOG_ENTRIES,
   occurrenceEntries: SEED_PROJECT_OCCURRENCE_ENTRIES,
 };
@@ -789,6 +794,9 @@ export class MockProjectState {
   );
   readonly objectAccessLogs = new Map<string, ObjectAccessLog>(
     Object.entries(this.seed?.objectAccessLogs ?? {}).map(([k, v]) => [k, structuredClone(v)]),
+  );
+  readonly objectOccurrenceLogs = new Map<string, ObjectOccurrenceLog>(
+    Object.entries(this.seed?.objectOccurrenceLogs ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   readonly occurrenceEntries = new Map<string, ObjectOccurrenceEntry[]>(
     Object.entries(this.seed?.occurrenceEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
@@ -821,6 +829,7 @@ export class MockProjectState {
     this.logEntries.set(project.id, []);
     this.objectAccessLogs.delete(project.id);
     this.occurrenceEntries.set(project.id, []);
+    this.objectOccurrenceLogs.delete(project.id);
     this.events.set(project.id, [
       {
         occurredAt: proposal.submittedAt,
@@ -882,6 +891,14 @@ export class MockProjectState {
 
   nextObjectAccessLogReference(): string {
     return `OAL-${String(this.nextId++).padStart(8, '0')}`;
+  }
+
+  nextObjectOccurrenceLogId(): string {
+    return `ool-${this.nextId++}`;
+  }
+
+  nextObjectOccurrenceLogReference(): string {
+    return `OOL-${String(this.nextId++).padStart(8, '0')}`;
   }
 
   nextFileReference(): string {

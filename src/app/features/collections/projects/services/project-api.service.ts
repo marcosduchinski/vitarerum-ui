@@ -20,6 +20,7 @@ import {
   ObjectOccurrenceEntriesPage,
   ObjectOccurrenceEntriesQuery,
   ObjectOccurrenceEntry,
+  ObjectOccurrenceLog,
   ProjectEventsPage,
   ProjectEventsQuery,
   ProjectListQuery,
@@ -44,8 +45,11 @@ export class ProjectApiService {
   private readonly apiBaseUrl = inject(API_BASE_URL);
 
   listProjects(query: ProjectListQuery = {}): Observable<Page<CollectionUseProjectSummary>> {
+    const serverQuery = { ...query };
+    delete serverQuery.requestedBy;
+    delete serverQuery.assignedTo;
     return this.http.get<Page<CollectionUseProjectSummary>>(this.url('/collection-use-projects'), {
-      params: buildHttpParams(query),
+      params: buildHttpParams(serverQuery),
     });
   }
 
@@ -142,6 +146,19 @@ export class ProjectApiService {
     return this.http.get<ObjectOccurrenceEntriesPage>(
       this.url(`/collection-use-projects/${projectId}/occurrence-entries`),
       { params: buildHttpParams(query) },
+    );
+  }
+
+  getObjectOccurrenceLog(projectId: string): Observable<ObjectOccurrenceLog> {
+    return this.http.get<ObjectOccurrenceLog>(
+      this.url(`/collection-use-projects/${projectId}/object-occurrence-log`),
+    );
+  }
+
+  concludeObjectOccurrenceLog(projectId: string): Observable<ObjectOccurrenceLog> {
+    return this.http.post<ObjectOccurrenceLog>(
+      this.url(`/collection-use-projects/${projectId}/object-occurrence-log/conclusion`),
+      {},
     );
   }
 

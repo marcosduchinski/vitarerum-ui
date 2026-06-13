@@ -316,16 +316,34 @@ package "Collection Use" <<Bounded Context>> {
         + addAttachment(...)
         }
 
-        class ObjectOccurrenceEntry <<Aggregate Root>> #ffb7b2 {
-        - id: ObjectOccurrenceEntryId
+
+        class ObjectOccurrenceLog <<Aggregate Root>> #ffb7b2 {
+        - id: ObjectOccurrenceLogId
+        - referenceNumber : ReferenceNumber
         - collectionUseProjectId: CollectionUseProjectId
-        - content: String
-        - addedAt: DateTime
-        - addedBy: PermissionId
+        - dateConclusion: DateTime?
+        - curator: PermissionId?
+        - objects: List<ObjectOccurrenceEntry>
+        + addObjectOccurrenceEntry(...)
+        + conclude(...)
+        }
+
+
+        class ObjectOccurrenceEntry <<Entity>> #ffb7b2 {
+        - id: ObjectOccurrenceEntryId
+        - objectOccurrenceLogId: ObjectOccurrenceLogId
+        - objectReference: ObjectReference
+        - numberOfObjects: Int
+        - occurrenceDate: DateTime
+        - location: String
+        - reportedBy: PermissionId
+        - detailedDescription: String
+        - testimonial: String?
         - attachments: List<Attachment>
-        - objects: List<ObjectReference>
         + addAttachment(...)
         }
+
+
 
         CollectionUseProject *-- ReferenceNumber
         CollectionUseProject *-- "0..*" UseEvent
@@ -344,10 +362,14 @@ package "Collection Use" <<Bounded Context>> {
         ObjectLogEntry *-- "1..1" ObjectReference
         ObjectLogEntry ..> Permission : addedBy
 
+        ObjectOccurrenceLog "1..1" -- CollectionUseProject : collectionUseProjectId
+        ObjectOccurrenceLog *-- "0..*" ObjectOccurrenceEntry
+        ObjectOccurrenceLog *-- ReferenceNumber
+        ObjectOccurrenceLog ..> Permission : curator
+
         ObjectOccurrenceEntry *-- "0..*" Attachment
-        ObjectOccurrenceEntry *-- "0..*" ObjectReference
-        ObjectOccurrenceEntry ..> CollectionUseProject : collectionUseProjectId
-        ObjectOccurrenceEntry ..> Permission : addedBy
+        ObjectOccurrenceEntry *-- "1..1" ObjectReference
+        ObjectOccurrenceEntry ..> Permission : reportedBy
 }
 
 @enduml

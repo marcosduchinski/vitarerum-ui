@@ -27,7 +27,7 @@ describe('ProjectApiService', () => {
     http.verify();
   });
 
-  it('lists projects with staff filters', () => {
+  it('lists projects with implemented server filters only', () => {
     service
       .listProjects({
         status: 'IN_PROGRESS',
@@ -43,11 +43,12 @@ describe('ProjectApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&requestedBy=user-1&assignedTo=permission-1&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
+      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
     );
 
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.get('assignedTo')).toBe('permission-1');
+    expect(request.request.params.has('requestedBy')).toBe(false);
+    expect(request.request.params.has('assignedTo')).toBe(false);
     request.flush({ content: [], page: 3, size: 15, totalElements: 0, totalPages: 0 });
   });
 
@@ -197,6 +198,122 @@ describe('ProjectApiService', () => {
       fileName: 'photo.jpg',
       mediaType: 'IMAGE',
       uploadedAt: '2026-06-01T10:00:00',
+    });
+  });
+
+  it('creates object occurrence entries with the revised contract payload', () => {
+    service
+      .createObjectOccurrenceEntry('project-1', {
+        inventoryNumber: 'INV-001',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-03T11:30:00',
+        location: 'Conservation lab, room 2',
+        detailedDescription: 'Surface abrasion reported during handling.',
+        testimonial: 'Observed by the researcher.',
+      })
+      .subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/occurrence-entries',
+    );
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      inventoryNumber: 'INV-001',
+      numberOfObjects: 1,
+      occurrenceDate: '2026-06-03T11:30:00',
+      location: 'Conservation lab, room 2',
+      detailedDescription: 'Surface abrasion reported during handling.',
+      testimonial: 'Observed by the researcher.',
+    });
+    request.flush({
+      id: 'occurrence-1',
+      objectReference: {
+        inventoryNumber: 'INV-001',
+        displayTitle: null,
+        objectName: null,
+        briefDescriptionSnapshot: null,
+      },
+      numberOfObjects: 1,
+      occurrenceDate: '2026-06-03T11:30:00',
+      location: 'Conservation lab, room 2',
+      reportedBy: {
+        permissionId: 'permission-1',
+        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
+        group: 'COLLECTIONS_MANAGEMENT',
+      },
+      detailedDescription: 'Surface abrasion reported during handling.',
+      testimonial: 'Observed by the researcher.',
+      attachments: [],
+    });
+  });
+
+  it('lists object occurrence entries with reportedBy filters and occurrence log metadata', () => {
+    service
+      .listObjectOccurrenceEntries('project-1', {
+        reportedBy: 'permission-1',
+        page: 1,
+        size: 10,
+      })
+      .subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/occurrence-entries?reportedBy=permission-1&page=1&size=10',
+    );
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('reportedBy')).toBe('permission-1');
+    request.flush({
+      projectId: 'project-1',
+      occurrenceLog: {
+        id: 'occurrence-log-1',
+        referenceNumber: 'OOL-1A2B3C4D',
+        projectId: 'project-1',
+        dateConclusion: null,
+        curator: null,
+      },
+      content: [],
+      page: 1,
+      size: 10,
+      totalElements: 0,
+      totalPages: 0,
+    });
+  });
+
+  it('gets and concludes object occurrence logs', () => {
+    service.getObjectOccurrenceLog('project-1').subscribe();
+
+    const getRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/object-occurrence-log',
+    );
+
+    expect(getRequest.request.method).toBe('GET');
+    getRequest.flush({
+      id: 'occurrence-log-1',
+      referenceNumber: 'OOL-1A2B3C4D',
+      projectId: 'project-1',
+      dateConclusion: null,
+      curator: null,
+    });
+
+    service.concludeObjectOccurrenceLog('project-1').subscribe();
+
+    const concludeRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/object-occurrence-log/conclusion',
+    );
+
+    expect(concludeRequest.request.method).toBe('POST');
+    expect(concludeRequest.request.body).toEqual({});
+    concludeRequest.flush({
+      id: 'occurrence-log-1',
+      referenceNumber: 'OOL-1A2B3C4D',
+      projectId: 'project-1',
+      dateConclusion: '2026-06-04T16:00:00',
+      curator: {
+        permissionId: 'permission-1',
+        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
+        group: 'COLLECTIONS_MANAGEMENT',
+      },
     });
   });
 });

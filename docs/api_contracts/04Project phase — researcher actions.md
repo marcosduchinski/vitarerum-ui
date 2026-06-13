@@ -467,29 +467,91 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
 
 ### `POST /collection-use-projects/{projectId}/occurrence-entries`
 
-**Description** — Researcher records an object **occurrence entry** — a structured note of which collection objects were accessed or involved in an activity. Researcher restricted to `IN_PROGRESS`; the optional `objects` list is resolved to `ObjectReference` snapshots. Request body: `{ "content": "string", "objects": ["INV-001"] }`; response is the `JournalEntry` (`id`, `content`, `addedAt`, `addedBy`, `objects`, `attachments`).
+**Description** — Researcher records an **object occurrence entry** in the project's **object occurrence log** — a structured report of one occurrence involving a collection object (when, where, what happened, optional testimonial). The occurrence log (one per project, with its own `OOL-XXXXXXXX` reference number) is created automatically on the first entry. Researcher restricted to `IN_PROGRESS`; the caller's `permissionId` is recorded as `reportedBy`; `inventoryNumber` is resolved to an `ObjectReference` snapshot. Entries cannot be added once the occurrence log is concluded (`409`).
 
 **Request body**
 ```json
 {
-  "content": "string",
-  "objects": ["INV-001"]
+  "inventoryNumber": "INV-001",
+  "numberOfObjects": 1,
+  "occurrenceDate": "2025-06-03T11:30:00",
+  "location": "Conservation lab, room 2",
+  "detailedDescription": "string",
+  "testimonial": "string"
 }
 ```
 
-**Response `201 Created`** — same `JournalEntry` shape as the log-entry response (`id`, `content`, `addedAt`, `addedBy`, `objects`, `attachments`).
+`testimonial` is optional; `numberOfObjects` must be ≥ 1; `occurrenceDate` is when the occurrence happened (client-supplied), `location` and `detailedDescription` are required.
+
+**Response `201 Created`**
+```json
+{
+  "id": "uuid",
+  "objectReference": {
+    "inventoryNumber": "INV-001",
+    "displayTitle": null,
+    "objectName": null,
+    "briefDescriptionSnapshot": null
+  },
+  "numberOfObjects": 1,
+  "occurrenceDate": "2025-06-03T11:30:00",
+  "location": "Conservation lab, room 2",
+  "reportedBy": {
+    "permissionId": "uuid",
+    "user": { "id": "uuid", "name": "string", "email": "string" },
+    "group": "EXTERNAL"
+  },
+  "detailedDescription": "string",
+  "testimonial": "string",
+  "attachments": []
+}
+```
 
 ---
 
 ### `GET /collection-use-projects/{projectId}/occurrence-entries`
 
-**Description** — List all occurrence entries for a project, ordered chronologically. Same query parameters (`addedBy`, `page`, `size`) as `GET /collection-use-projects/{projectId}/log-entries`; the response envelope carries `JournalEntry` items (`id`, `content`, `addedAt`, `addedBy`, `objects`, `attachments`) and has no `accessLog` field.
+**Description** — List all occurrence entries for a project's occurrence log, ordered chronologically by `occurrenceDate`. Includes the `occurrenceLog` header (`null` if no entry has been added yet) and `attachments` per entry.
+
+**Query parameters**
+```
+reportedBy : UUID     (optional) filter by permissionId
+page       : Integer  (default 0)
+size       : Integer  (default 20)
+```
+
+**Response `200 OK`** — same envelope as the log-entries listing, with `occurrenceLog` (`id`, `referenceNumber`, `projectId`, `dateConclusion`, `curator`) in place of `accessLog` and occurrence-entry items as in the `POST` response.
+
+---
+
+### `GET /collection-use-projects/{projectId}/object-occurrence-log`
+
+**Description** — Get the project's object occurrence log header: reference number, conclusion date and the curator who concluded it (both `null` while the log is open). `404` if no entry has been added to the project yet.
+
+**Response `200 OK`**
+```json
+{
+  "id": "uuid",
+  "referenceNumber": "OOL-1A2B3C4D",
+  "projectId": "uuid",
+  "dateConclusion": null,
+  "curator": null
+}
+```
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "OBJECT_OCCURRENCE_LOG_NOT_FOUND",
+  "message": "No object_occurrence_log found with id uuid"
+}
+```
 
 ---
 
 ### `POST /collection-use-projects/{projectId}/occurrence-entries/{entryId}/attachments`
 
-**Description** — Uploads a file to an existing occurrence entry. Same `multipart/form-data` body, responses, and status rules as the log-entry attachment endpoint.
+**Description** — Uploads a file to an existing occurrence entry. Same `multipart/form-data` body, responses, and status rules as the log-entry attachment endpoint; rejected with `409` once the occurrence log is concluded.
 
 ---
 
@@ -558,7 +620,7 @@ The project's first `UseEvent` is `REQUESTED`, recorded when the curator approve
 
 A few conventions worth noting across this group:
 
-**Two distinct journal resources** — `log-entries` belong to the project's **object access log** (`ObjectAccessLog` aggregate, one per project, `OAL-` reference number, concluded by a curator): each entry records exactly one `objectReference` with a `numberOfObjects` and optional `observations`. `occurrence-entries` remain a separate aggregate referencing the project, with narrative `content` and an optional `objects` list resolved to `ObjectReference` snapshots. Both are restricted to `IN_PROGRESS` projects for researchers.
+**Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number): each entry records a `numberOfObjects` and optional `observations`. `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number): each entry records `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and an optional `testimonial`. Both logs are created lazily on the first entry, reject entries and attachments once concluded, and are restricted to `IN_PROGRESS` projects for researchers.
 
 **`objects` reference inventory items** — the request `objects` field accepts inventory-number strings; the server resolves each to an `ObjectReference` snapshot (`inventoryNumber`, `displayTitle`, `objectName`, `briefDescriptionSnapshot`). Only `inventoryNumber` is populated until a real object catalog is wired in.
 

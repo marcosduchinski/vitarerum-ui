@@ -140,7 +140,7 @@ projectId : UUID (required)
 
 ### `POST /collection-use-projects/{projectId}/log-entries` · `.../occurrence-entries`
 
-**Description** — Staff add **object log entries** (to the project's object access log) and **occurrence entries**. Unlike non-staff callers (restricted to `IN_PROGRESS`), staff may add entries at **any** project status — but log entries are rejected with `409` once the access log is concluded. The caller's `permissionId` is recorded as `addedBy`. Request/response shapes are defined in the researcher group (file 04).
+**Description** — Staff add **object log entries** (to the project's object access log) and **object occurrence entries** (to the project's object occurrence log). Unlike non-staff callers (restricted to `IN_PROGRESS`), staff may add entries at **any** project status — but entries are rejected with `409` once the respective log is concluded. The caller's `permissionId` is recorded as `addedBy` / `reportedBy`. Request/response shapes are defined in the researcher group (file 04).
 
 **Request body** — `log-entries`
 ```json
@@ -154,37 +154,41 @@ projectId : UUID (required)
 **Request body** — `occurrence-entries`
 ```json
 {
-  "content": "string",
-  "objects": ["INV-001"]
+  "inventoryNumber": "INV-001",
+  "numberOfObjects": 1,
+  "occurrenceDate": "2025-06-03T11:30:00",
+  "location": "Conservation lab, room 2",
+  "detailedDescription": "string",
+  "testimonial": "string"
 }
 ```
 
-**Response `201 Created`** — the `ObjectLogEntry` (`id`, `objectReference`, `numberOfObjects`, `addedAt`, `addedBy`, `observations`, `attachments`) or the `JournalEntry` (`id`, `content`, `addedAt`, `addedBy`, `objects`, `attachments`) respectively.
+**Response `201 Created`** — the `ObjectLogEntry` (`id`, `objectReference`, `numberOfObjects`, `addedAt`, `addedBy`, `observations`, `attachments`) or the `ObjectOccurrenceEntry` (`id`, `objectReference`, `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription`, `testimonial`, `attachments`) respectively.
 
 ---
 
 ### `GET /collection-use-projects/{projectId}/log-entries` · `.../occurrence-entries`
 
-**Description** — List a project's object log entries / occurrence entries ordered chronologically, including entries from both the researcher and staff. Both accept the `addedBy` filter and `page`/`size`, and return the paginated envelopes defined in file 04 (the `log-entries` envelope includes the `accessLog` header).
+**Description** — List a project's object log entries / occurrence entries ordered chronologically, including entries from both the researcher and staff. Both accept `page`/`size` and a permission filter (`addedBy` on log entries, `reportedBy` on occurrence entries), and return the paginated envelopes defined in file 04 (with the `accessLog` / `occurrenceLog` header respectively).
 
 **Query parameters**
 ```
-addedBy : UUID     (optional) filter by permissionId
-page    : Integer  (default 0)
-size    : Integer  (default 20)
+addedBy / reportedBy : UUID     (optional) filter by permissionId
+page                 : Integer  (default 0)
+size                 : Integer  (default 20)
 ```
 
 ---
 
-### `GET /collection-use-projects/{projectId}/object-access-log`
+### `GET /collection-use-projects/{projectId}/object-access-log` · `.../object-occurrence-log`
 
-**Description** — Get the project's object access log header (`referenceNumber`, `dateConclusion`, `curator`), as defined in file 04. `404` while the project has no entries yet.
+**Description** — Get the project's object access log / object occurrence log header (`referenceNumber`, `dateConclusion`, `curator`), as defined in file 04. `404` while the project has no entries yet.
 
 ---
 
-### `POST /collection-use-projects/{projectId}/object-access-log/conclusion`
+### `POST /collection-use-projects/{projectId}/object-access-log/conclusion` · `.../object-occurrence-log/conclusion`
 
-**Description** — Curator concludes the project's object access log, recording the caller as `curator` and setting `dateConclusion`. Restricted to `CURATORIAL` and `COLLECTIONS_MANAGEMENT` members (`403` otherwise). A concluded log accepts no further entries or attachments.
+**Description** — Curator concludes the project's object access log / object occurrence log, recording the caller as `curator` and setting `dateConclusion`. Restricted to `CURATORIAL` and `COLLECTIONS_MANAGEMENT` members (`403` otherwise). A concluded log accepts no further entries or attachments.
 
 **Path parameters**
 ```
@@ -206,6 +210,8 @@ projectId : UUID (required)
 }
 ```
 
+The occurrence-log variant returns an `OOL-` reference number.
+
 **Response `404 Not Found`**
 ```json
 {
@@ -213,6 +219,8 @@ projectId : UUID (required)
   "message": "No object_access_log found with id uuid"
 }
 ```
+
+(`OBJECT_OCCURRENCE_LOG_NOT_FOUND` for the occurrence-log variant.)
 
 **Response `409 Conflict`**
 ```json
@@ -226,7 +234,7 @@ projectId : UUID (required)
 
 ### `POST /collection-use-projects/{projectId}/log-entries/{entryId}/attachments` · `.../occurrence-entries/{entryId}/attachments`
 
-**Description** — Staff upload a file to an existing log / occurrence entry at any project status (log entries: only while the access log is not concluded). `mediaType` is one of `DOCUMENT`, `IMAGE`, `VIDEO`, `OTHER`.
+**Description** — Staff upload a file to an existing log / occurrence entry at any project status, while the respective log is not concluded (`409` afterwards). `mediaType` is one of `DOCUMENT`, `IMAGE`, `VIDEO`, `OTHER`.
 
 **Request body** — `multipart/form-data`
 ```
@@ -343,6 +351,6 @@ A few conventions worth noting across this group:
 
 **No staff-only project commands** — `start`, `complete`, and `cancel` (file 04) are the only state-changing project commands and carry no group restriction; any authorised caller may invoke them. The earlier `suspend`, `resume`, and `close` commands have been removed, along with the `SUSPENDED` and `CLOSED` states.
 
-**Two distinct journal resources** — `log-entries` belong to the project's **object access log** (`ObjectAccessLog` aggregate, one per project, `OAL-` reference number, concluded by a curator): each entry records exactly one `objectReference` with a `numberOfObjects` and optional `observations`. `occurrence-entries` remain a separate aggregate referencing the project, with narrative `content` and an optional `objects` list resolved to `ObjectReference` snapshots. Both gain the staff `addedBy` filter on their `GET` endpoints and return `addedBy` as a full `PermissionDetail`.
+**Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number) with `numberOfObjects` and optional `observations`; `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number) with `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and optional `testimonial`. Both gain the staff permission filter on their `GET` endpoints (`addedBy` / `reportedBy`) and hydrate it as a full `PermissionDetail`.
 
 **Shared endpoints are not repeated** — `GET /collection-use-projects/{projectId}` and `GET /collection-use-projects/{projectId}/events` follow the same response structure as the researcher group. The only difference is access scope (staff see all, plus a populated `requestedBy`).

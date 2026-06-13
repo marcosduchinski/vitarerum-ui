@@ -70,6 +70,33 @@ export const PROJECTS_ROUTES: Routes = [
       ),
   },
   {
+    path: ':id/occurrences/research',
+    title: 'Research Occurrences',
+    canActivate: [projectLogAccessGuard],
+    loadComponent: () =>
+      import('./pages/log/project-research-occurrence-log-page.component').then(
+        (m) => m.ProjectResearchOccurrenceLogPageComponent,
+      ),
+  },
+  {
+    path: ':id/occurrences/exhibition',
+    title: 'Exhibition Occurrences',
+    canActivate: [projectLogAccessGuard],
+    loadComponent: () =>
+      import('./pages/log/project-exhibition-occurrence-log-page.component').then(
+        (m) => m.ProjectExhibitionOccurrenceLogPageComponent,
+      ),
+  },
+  {
+    path: ':id/occurrences/other',
+    title: 'Project Occurrences',
+    canActivate: [projectLogAccessGuard],
+    loadComponent: () =>
+      import('./pages/log/project-other-occurrence-log-page.component').then(
+        (m) => m.ProjectOtherOccurrenceLogPageComponent,
+      ),
+  },
+  {
     path: ':id',
     title: 'Project Detail',
     loadComponent: () =>

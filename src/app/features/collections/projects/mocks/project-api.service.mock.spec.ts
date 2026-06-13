@@ -143,15 +143,212 @@ describe('ProjectApiServiceMock', () => {
     expect(entry.objectReference.inventoryNumber).toBe('INV-003');
   });
 
+  it.each(['CREATED', 'CANCELLED'] as const)(
+    'allows staff to create object log entries while project is %s',
+    async (status) => {
+      session.set(staffSession());
+      state.projects.get('proj-4')!.status = status;
+
+      const entry = await firstValueFrom(
+        service.createObjectLogEntry('proj-4', {
+          inventoryNumber: `INV-ACCESS-${status}`,
+          numberOfObjects: 1,
+        }),
+      );
+
+      expect(entry.addedBy.permissionId).toBe('perm-bob');
+      expect(entry.objectReference.inventoryNumber).toBe(`INV-ACCESS-${status}`);
+    },
+  );
+
   it('creates an object occurrence entry and lists it', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
+
     const entry = await firstValueFrom(
-      service.createObjectOccurrenceEntry('proj-4', { content: 'Occurrence note.' }),
+      service.createObjectOccurrenceEntry('proj-4', {
+        inventoryNumber: 'INV-010',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-03T11:30:00Z',
+        location: 'Reading room',
+        detailedDescription: 'Occurrence note.',
+        testimonial: 'Reported during consultation.',
+      }),
     );
     expect(entry.id).toBeTruthy();
-    expect(entry.content).toBe('Occurrence note.');
+    expect(entry.objectReference.inventoryNumber).toBe('INV-010');
+    expect(entry.numberOfObjects).toBe(1);
+    expect(entry.location).toBe('Reading room');
+    expect(entry.reportedBy.permissionId).toBe('perm-alice');
+    expect(entry.detailedDescription).toBe('Occurrence note.');
+    expect(entry.testimonial).toBe('Reported during consultation.');
 
     const page = await firstValueFrom(service.listObjectOccurrenceEntries('proj-4'));
+    expect(page.occurrenceLog?.referenceNumber).toMatch(/^OOL-/);
     expect(page.content.some((e) => e.id === entry.id)).toBe(true);
+  });
+
+  it('gets the object occurrence log created by the first occurrence entry', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
+
+    await firstValueFrom(
+      service.createObjectOccurrenceEntry('proj-4', {
+        inventoryNumber: 'INV-011',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-04T10:00:00Z',
+        location: 'Conservation lab',
+        detailedDescription: 'Condition detail recorded.',
+      }),
+    );
+
+    const occurrenceLog = await firstValueFrom(service.getObjectOccurrenceLog('proj-4'));
+    expect(occurrenceLog.projectId).toBe('proj-4');
+    expect(occurrenceLog.referenceNumber).toMatch(/^OOL-/);
+    expect(occurrenceLog.dateConclusion).toBeNull();
+  });
+
+  it('rejects object occurrence log lookup before the first occurrence entry', async () => {
+    await expect(firstValueFrom(service.getObjectOccurrenceLog('proj-4'))).rejects.toMatchObject({
+      status: 404,
+      error: 'OBJECT_OCCURRENCE_LOG_NOT_FOUND',
+    });
+  });
+
+  it('filters object occurrence entries by reportedBy', async () => {
+    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
+    const entry = await firstValueFrom(
+      service.createObjectOccurrenceEntry('proj-4', {
+        inventoryNumber: 'INV-012',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-04T10:30:00Z',
+        location: 'Reading room',
+        detailedDescription: 'Reported by external researcher.',
+      }),
+    );
+
+    const page = await firstValueFrom(
+      service.listObjectOccurrenceEntries('proj-4', { reportedBy: 'perm-alice' }),
+    );
+
+    expect(page.content).toHaveLength(1);
+    expect(page.content[0].id).toBe(entry.id);
+  });
+
+  it('allows staff to create object occurrence entries outside IN_PROGRESS', async () => {
+    session.set(staffSession());
+    state.projects.get('proj-4')!.status = 'COMPLETED';
+
+    const entry = await firstValueFrom(
+      service.createObjectOccurrenceEntry('proj-4', {
+        inventoryNumber: 'INV-013',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-04T11:00:00Z',
+        location: 'Collections office',
+        detailedDescription: 'Staff annotation after project completion.',
+      }),
+    );
+
+    expect(entry.reportedBy.permissionId).toBe('perm-bob');
+  });
+
+  it.each(['CREATED', 'CANCELLED'] as const)(
+    'allows staff to create object occurrence entries while project is %s',
+    async (status) => {
+      session.set(staffSession());
+      state.projects.get('proj-4')!.status = status;
+
+      const entry = await firstValueFrom(
+        service.createObjectOccurrenceEntry('proj-4', {
+          inventoryNumber: `INV-OCC-${status}`,
+          numberOfObjects: 1,
+          occurrenceDate: '2026-06-04T11:00:00Z',
+          location: 'Collections office',
+          detailedDescription: `Staff occurrence annotation while ${status}.`,
+        }),
+      );
+
+      expect(entry.reportedBy.permissionId).toBe('perm-bob');
+      expect(entry.objectReference.inventoryNumber).toBe(`INV-OCC-${status}`);
+    },
+  );
+
+  it('rejects researcher occurrence entries outside IN_PROGRESS', async () => {
+    state.projects.get('proj-4')!.status = 'COMPLETED';
+
+    await expect(
+      firstValueFrom(
+        service.createObjectOccurrenceEntry('proj-4', {
+          inventoryNumber: 'INV-014',
+          numberOfObjects: 1,
+          occurrenceDate: '2026-06-04T11:30:00Z',
+          location: 'Reading room',
+          detailedDescription: 'Should be rejected.',
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_TRANSITION',
+    });
+  });
+
+  it('allows curatorial staff to conclude an object occurrence log', async () => {
+    session.set(curatorialSession());
+    await firstValueFrom(
+      service.createObjectOccurrenceEntry('proj-4', {
+        inventoryNumber: 'INV-015',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-04T12:00:00Z',
+        location: 'Curatorial room',
+        detailedDescription: 'Curatorial occurrence report.',
+      }),
+    );
+
+    const concluded = await firstValueFrom(service.concludeObjectOccurrenceLog('proj-4'));
+
+    expect(concluded.dateConclusion).toBeTruthy();
+    expect(concluded.curator?.permissionId).toBe('perm-carol');
+  });
+
+  it('rejects occurrence entries and attachments after conclusion', async () => {
+    session.set(curatorialSession());
+    const entry = await firstValueFrom(
+      service.createObjectOccurrenceEntry('proj-4', {
+        inventoryNumber: 'INV-016',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-04T12:30:00Z',
+        location: 'Curatorial room',
+        detailedDescription: 'Occurrence before conclusion.',
+      }),
+    );
+    await firstValueFrom(service.concludeObjectOccurrenceLog('proj-4'));
+
+    await expect(
+      firstValueFrom(
+        service.createObjectOccurrenceEntry('proj-4', {
+          inventoryNumber: 'INV-017',
+          numberOfObjects: 1,
+          occurrenceDate: '2026-06-04T13:00:00Z',
+          location: 'Curatorial room',
+          detailedDescription: 'Occurrence after conclusion.',
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_TRANSITION',
+    });
+
+    await expect(
+      firstValueFrom(
+        service.uploadOccurrenceEntryAttachment(
+          'proj-4',
+          entry.id,
+          new File(['x'], 'occurrence.jpg'),
+          'IMAGE',
+        ),
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_TRANSITION',
+    });
   });
 
   it('filters projects by status', async () => {

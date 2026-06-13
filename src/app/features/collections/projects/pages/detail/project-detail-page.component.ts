@@ -41,7 +41,11 @@ function safeReturnLabel(value: string | undefined): string {
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
   } catch {
     return iso;
   }
@@ -50,7 +54,11 @@ function formatDate(iso: string): string {
 function formatDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   } catch {
     return iso;
@@ -117,9 +125,10 @@ export class ProjectDetailPageComponent {
     () => this.project()?.status === 'CREATED' || this.project()?.status === 'IN_PROGRESS',
   );
   protected readonly canLog = computed(() => {
-    const status = this.project()?.status;
-    const isExternal = this.identity.session()?.group === 'EXTERNAL';
-    return isExternal ? status === 'IN_PROGRESS' : status === 'IN_PROGRESS' || status === 'COMPLETED';
+    const project = this.project();
+    const group = this.identity.session()?.group;
+    if (!project || !group) return false;
+    return group === 'EXTERNAL' ? project.status === 'IN_PROGRESS' : true;
   });
 
   protected readonly acting = signal(false);
@@ -135,12 +144,24 @@ export class ProjectDetailPageComponent {
     return value as WorkflowStatus;
   }
 
-  protected openStartConfirm(): void { this.startConfirmOpen.set(true); }
-  protected closeStartConfirm(): void { this.startConfirmOpen.set(false); }
-  protected openCompleteConfirm(): void { this.completeConfirmOpen.set(true); }
-  protected closeCompleteConfirm(): void { this.completeConfirmOpen.set(false); }
-  protected openCancelConfirm(): void { this.cancelConfirmOpen.set(true); }
-  protected closeCancelConfirm(): void { this.cancelConfirmOpen.set(false); }
+  protected openStartConfirm(): void {
+    this.startConfirmOpen.set(true);
+  }
+  protected closeStartConfirm(): void {
+    this.startConfirmOpen.set(false);
+  }
+  protected openCompleteConfirm(): void {
+    this.completeConfirmOpen.set(true);
+  }
+  protected closeCompleteConfirm(): void {
+    this.completeConfirmOpen.set(false);
+  }
+  protected openCancelConfirm(): void {
+    this.cancelConfirmOpen.set(true);
+  }
+  protected closeCancelConfirm(): void {
+    this.cancelConfirmOpen.set(false);
+  }
 
   protected async start(): Promise<void> {
     if (this.acting()) return;

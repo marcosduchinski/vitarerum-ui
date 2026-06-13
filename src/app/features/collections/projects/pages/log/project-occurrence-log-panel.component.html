@@ -1,0 +1,351 @@
+<div class="occurrence-log">
+  <section class="access-sheet" aria-labelledby="object-occurrence-log-heading">
+    <header class="access-sheet__header">
+      <div>
+        <p class="access-sheet__eyebrow">RAIS · Collection occurrence</p>
+        <h2 id="object-occurrence-log-heading" class="access-sheet__title">
+          Object occurrence log
+        </h2>
+        @if (canConcludeOccurrenceLog()) {
+          <button
+            type="button"
+            class="access-sheet__action"
+            [disabled]="occurrenceConcludeSubmitting()"
+            (click)="openOccurrenceConcludeConfirm()"
+          >
+            {{ occurrenceConcludeSubmitting() ? 'Concluding...' : 'Conclude occurrence log' }}
+          </button>
+        }
+      </div>
+
+      <dl class="access-summary" aria-label="Object occurrence log summary">
+        <div class="access-summary__item">
+          <dt>Reference</dt>
+          <dd>{{ occurrenceLog()?.referenceNumber ?? 'Not issued' }}</dd>
+        </div>
+        <div class="access-summary__item">
+          <dt>Status</dt>
+          <dd>{{ occurrenceLog()?.dateConclusion ? 'Concluded' : 'Open' }}</dd>
+        </div>
+        <div class="access-summary__item">
+          <dt>Conclusion</dt>
+          <dd>
+            {{
+              occurrenceLog()?.dateConclusion ? dateLabel(occurrenceLog()!.dateConclusion!) : '—'
+            }}
+          </dd>
+        </div>
+        <div class="access-summary__item">
+          <dt>Curator</dt>
+          <dd>{{ occurrenceLog()?.curator?.user?.name ?? '—' }}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <app-confirm-modal
+      [open]="occurrenceConcludeConfirmOpen()"
+      title="Conclude occurrence log?"
+      message="This records the conclusion date and prevents more occurrence entries or occurrence attachments."
+      confirmLabel="Conclude log"
+      cancelLabel="Keep open"
+      tone="warning"
+      [pending]="occurrenceConcludeSubmitting()"
+      (confirmed)="concludeOccurrenceLog()"
+      (cancelled)="closeOccurrenceConcludeConfirm()"
+    >
+      @if (occurrenceConcludeError()) {
+        <app-error-message [apiError]="occurrenceConcludeError()!" />
+      }
+    </app-confirm-modal>
+
+    <div class="access-band access-band--occurrence">
+      <span>Occurrences Reported</span>
+      <span class="access-band__hint">Inventory, date, location, description, and files</span>
+    </div>
+
+    <div class="access-sheet__body">
+      @if (projectError()) {
+        <app-error-message [apiError]="projectError()!" (retry)="projectResource.reload()" />
+      }
+
+      <form
+        class="occurrence-entry-form"
+        [class.occurrence-entry-form--locked]="!canAddOccurrenceEntries()"
+        (submit)="addOccurrenceEntry($event)"
+      >
+        @if (occurrenceAccessMessage()) {
+          <p
+            id="object-occurrence-lock-message"
+            class="occurrence-entry-form__locked"
+            role="status"
+          >
+            {{ occurrenceAccessMessage() }}
+          </p>
+        }
+        <div class="occurrence-entry-form__grid">
+          <div class="occurrence-entry-form__field">
+            <label for="occurrence-inventory-number">Inventory no.</label>
+            <input
+              id="occurrence-inventory-number"
+              type="text"
+              autocomplete="off"
+              [value]="occurrenceInventoryNumber()"
+              (input)="onOccurrenceInventoryInput($event)"
+              [attr.aria-invalid]="!occurrenceInventoryNumber().trim() || null"
+              [attr.aria-describedby]="
+                occurrenceAccessMessage() ? 'object-occurrence-lock-message' : null
+              "
+              [disabled]="!canAddOccurrenceEntries()"
+              required
+            />
+          </div>
+
+          <div class="occurrence-entry-form__field occurrence-entry-form__field--quantity">
+            <label for="occurrence-number-of-objects">No. objects</label>
+            <input
+              id="occurrence-number-of-objects"
+              type="number"
+              min="1"
+              step="1"
+              [value]="occurrenceNumberOfObjects()"
+              (input)="onOccurrenceQuantityInput($event)"
+              [attr.aria-invalid]="occurrenceNumberOfObjects() < 1 || null"
+              [attr.aria-describedby]="
+                occurrenceAccessMessage() ? 'object-occurrence-lock-message' : null
+              "
+              [disabled]="!canAddOccurrenceEntries()"
+              required
+            />
+          </div>
+
+          <div class="occurrence-entry-form__field">
+            <label for="occurrence-date">Occurrence date</label>
+            <input
+              id="occurrence-date"
+              type="datetime-local"
+              [value]="occurrenceDate()"
+              (input)="onOccurrenceDateInput($event)"
+              [attr.aria-invalid]="!occurrenceDate().trim() || null"
+              [attr.aria-describedby]="
+                occurrenceAccessMessage() ? 'object-occurrence-lock-message' : null
+              "
+              [disabled]="!canAddOccurrenceEntries()"
+              required
+            />
+          </div>
+
+          <div class="occurrence-entry-form__field">
+            <label for="occurrence-location">Location</label>
+            <input
+              id="occurrence-location"
+              type="text"
+              [value]="occurrenceLocation()"
+              (input)="onOccurrenceLocationInput($event)"
+              [attr.aria-invalid]="!occurrenceLocation().trim() || null"
+              [attr.aria-describedby]="
+                occurrenceAccessMessage() ? 'object-occurrence-lock-message' : null
+              "
+              [disabled]="!canAddOccurrenceEntries()"
+              required
+            />
+          </div>
+
+          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+            <label for="occurrence-description">Detailed description</label>
+            <textarea
+              id="occurrence-description"
+              rows="2"
+              [value]="occurrenceDescription()"
+              (input)="onOccurrenceDescriptionInput($event)"
+              [attr.aria-invalid]="!occurrenceDescription().trim() || null"
+              [attr.aria-describedby]="
+                occurrenceAccessMessage() ? 'object-occurrence-lock-message' : null
+              "
+              [disabled]="!canAddOccurrenceEntries()"
+              required
+            ></textarea>
+          </div>
+
+          <div class="occurrence-entry-form__field occurrence-entry-form__field--wide">
+            <label for="occurrence-testimonial">Testimonial</label>
+            <textarea
+              id="occurrence-testimonial"
+              rows="2"
+              [value]="occurrenceTestimonial()"
+              (input)="onOccurrenceTestimonialInput($event)"
+              [attr.aria-describedby]="
+                occurrenceAccessMessage() ? 'object-occurrence-lock-message' : null
+              "
+              [disabled]="!canAddOccurrenceEntries()"
+            ></textarea>
+          </div>
+        </div>
+
+        @if (occurrenceSubmitError()) {
+          <app-error-message [apiError]="occurrenceSubmitError()!" />
+        }
+
+        <button
+          type="submit"
+          class="occurrence-entry-form__submit"
+          [disabled]="
+            occurrenceSubmitting() || !occurrenceFormValid() || !canAddOccurrenceEntries()
+          "
+        >
+          {{ occurrenceSubmitting() ? 'Registering...' : 'Register occurrence' }}
+        </button>
+      </form>
+
+      @if (occurrenceResource.isLoading()) {
+        <app-loading-state label="Loading object occurrence log…" />
+      } @else if (occurrenceError()) {
+        <app-error-message [apiError]="occurrenceError()!" (retry)="occurrenceResource.reload()" />
+      } @else if (!occurrenceEntries().length) {
+        <app-empty-state
+          title="No occurrences recorded"
+          message="No object occurrence entries have been added yet."
+        />
+      } @else {
+        <div
+          class="occurrence-register"
+          role="region"
+          aria-label="Object occurrence entries"
+          tabindex="0"
+        >
+          <table class="occurrence-register__table">
+            <caption style="height: 1px; overflow: hidden">
+              Object occurrence entries with inventory number, quantity, occurrence date, location,
+              reporter, description, and expandable attachment details.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" class="occurrence-register__expand-header">
+                  <span class="sr-only">Attachments</span>
+                </th>
+                <th scope="col">No.</th>
+                <th scope="col">Inventory</th>
+                <th scope="col">Qty.</th>
+                <th scope="col">Date</th>
+                <th scope="col">Location</th>
+                <th scope="col">Reported by</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of occurrenceEntries(); track entry.id; let index = $index) {
+                <tr>
+                  <td class="occurrence-register__expand-cell">
+                    <button
+                      type="button"
+                      class="occurrence-register__toggle"
+                      [attr.aria-expanded]="expandedOccurrenceEntryId() === entry.id"
+                      [attr.aria-controls]="'occurrence-entry-files-' + entry.id"
+                      [attr.aria-label]="
+                        (expandedOccurrenceEntryId() === entry.id
+                          ? 'Hide attachments for '
+                          : 'Show attachments for ') + entry.objectReference.inventoryNumber
+                      "
+                      (click)="toggleOccurrenceAttachments(entry.id)"
+                    >
+                      <span
+                        class="pi"
+                        [class.pi-plus]="expandedOccurrenceEntryId() !== entry.id"
+                        [class.pi-minus]="expandedOccurrenceEntryId() === entry.id"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                  </td>
+                  <td class="occurrence-register__index">{{ index + 1 }}</td>
+                  <td>
+                    <span class="occurrence-register__inventory">
+                      {{ entry.objectReference.inventoryNumber }}
+                    </span>
+                  </td>
+                  <td>{{ entry.numberOfObjects }}</td>
+                  <td>{{ dateLabel(entry.occurrenceDate) }}</td>
+                  <td>{{ entry.location }}</td>
+                  <td>{{ entry.reportedBy.user.name }}</td>
+                  <td>
+                    {{ entry.detailedDescription }}
+                    @if (entry.testimonial) {
+                      <span class="occurrence-register__description">{{ entry.testimonial }}</span>
+                    }
+                  </td>
+                </tr>
+                @if (expandedOccurrenceEntryId() === entry.id) {
+                  <tr class="occurrence-register__details-row">
+                    <td colspan="8">
+                      <section
+                        class="entry-files"
+                        [id]="'occurrence-entry-files-' + entry.id"
+                        [attr.aria-label]="
+                          'Files for occurrence ' + entry.objectReference.inventoryNumber
+                        "
+                      >
+                        <div class="entry-files__header">
+                          <div>
+                            <h3>Occurrence files</h3>
+                            <p>{{ entry.objectReference.inventoryNumber }}</p>
+                          </div>
+                          <span class="file-cell__count">
+                            {{ entry.attachments.length }}
+                            {{ entry.attachments.length === 1 ? 'file' : 'files' }}
+                          </span>
+                        </div>
+
+                        @if (entry.attachments.length) {
+                          <ul class="attachment-list" aria-label="Occurrence attachments">
+                            @for (attachment of entry.attachments; track attachment.fileReference) {
+                              <li>
+                                <span class="attachment-list__name">{{ attachment.fileName }}</span>
+                                <span class="attachment-list__meta">
+                                  {{ attachment.mediaType }}
+                                </span>
+                              </li>
+                            }
+                          </ul>
+                        } @else {
+                          <p class="entry-files__empty">No files attached to this occurrence.</p>
+                        }
+
+                        <form
+                          class="entry-upload"
+                          [attr.aria-label]="
+                            'Upload file for occurrence ' + entry.objectReference.inventoryNumber
+                          "
+                          (submit)="uploadOccurrenceAttachment(entry.id, $event)"
+                        >
+                          <input
+                            type="file"
+                            [disabled]="!canAddOccurrenceEntries()"
+                            (change)="onOccurrenceAttachmentFileInput(entry.id, $event)"
+                            aria-label="Occurrence entry file"
+                          />
+                          <button
+                            type="submit"
+                            [disabled]="
+                              !canAddOccurrenceEntries() ||
+                              !occurrenceAttachmentFiles()[entry.id] ||
+                              occurrenceAttachmentUploading()[entry.id]
+                            "
+                          >
+                            {{
+                              occurrenceAttachmentUploading()[entry.id] ? 'Uploading...' : 'Upload'
+                            }}
+                          </button>
+                        </form>
+                        @if (occurrenceAttachmentErrors()[entry.id]) {
+                          <app-error-message [apiError]="occurrenceAttachmentErrors()[entry.id]!" />
+                        }
+                      </section>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </section>
+</div>

@@ -307,6 +307,26 @@ describe('ProjectsMyPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/p/collections/projects/project-3/log/other');
   });
 
+  it('navigates to the correct occurrence log page by project type', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProjectsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    buttonByText(cardByReference(fixture.nativeElement, 'VR-2026-051'), 'Occurrences').click();
+    buttonByText(cardByReference(fixture.nativeElement, 'VR-2026-052'), 'Occurrences').click();
+    buttonByText(cardByReference(fixture.nativeElement, 'VR-2026-053'), 'Occurrences').click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      '/p/collections/projects/project-1/occurrences/research',
+    );
+    expect(navigateSpy).toHaveBeenCalledWith(
+      '/p/collections/projects/project-2/occurrences/exhibition',
+    );
+    expect(navigateSpy).toHaveBeenCalledWith('/p/collections/projects/project-3/occurrences/other');
+  });
+
   it('opens secondary actions from the popup menu', async () => {
     const fixture = TestBed.createComponent(ProjectsMyPageComponent);
     fixture.detectChanges();

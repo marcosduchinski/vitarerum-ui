@@ -234,6 +234,11 @@ export class ProjectsMyPageComponent {
     void this.router.navigateByUrl(`/p/collections/projects/${project.id}/log/${logType}`);
   }
 
+  protected occurrences(project: CollectionUseProjectSummary): void {
+    const logType = project.type.toLowerCase();
+    void this.router.navigateByUrl(`/p/collections/projects/${project.id}/occurrences/${logType}`);
+  }
+
   protected toggleActionsMenu(projectId: string): void {
     this.actionsMenuId.update((current) => (current === projectId ? null : projectId));
     this.concludeConfirmProjectId.set(null);

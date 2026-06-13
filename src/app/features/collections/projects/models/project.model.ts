@@ -53,6 +53,14 @@ export interface ObjectAccessLog {
   readonly curator: PermissionPrincipal | null;
 }
 
+export interface ObjectOccurrenceLog {
+  readonly id: string;
+  readonly referenceNumber: string;
+  readonly projectId: string;
+  readonly dateConclusion: string | null;
+  readonly curator: PermissionPrincipal | null;
+}
+
 export interface ObjectLogEntry {
   readonly id: string;
   readonly objectReference: ObjectReference;
@@ -65,11 +73,13 @@ export interface ObjectLogEntry {
 
 export interface ObjectOccurrenceEntry {
   readonly id: string;
-  readonly collectionUseProjectId: string;
-  readonly content: string;
-  readonly addedAt: string;
-  readonly addedBy: PermissionPrincipal;
-  readonly objects: readonly ObjectReference[];
+  readonly objectReference: ObjectReference;
+  readonly numberOfObjects: number;
+  readonly occurrenceDate: string;
+  readonly location: string;
+  readonly reportedBy: PermissionPrincipal;
+  readonly detailedDescription: string;
+  readonly testimonial: string | null;
   readonly attachments: readonly Attachment[];
 }
 
@@ -99,7 +109,7 @@ export interface ObjectLogEntriesQuery extends PageQuery {
 }
 
 export interface ObjectOccurrenceEntriesQuery extends PageQuery {
-  readonly addedBy?: string;
+  readonly reportedBy?: string;
 }
 
 export interface ProjectEventsQuery extends PageQuery {
@@ -113,6 +123,7 @@ export interface ObjectLogEntriesPage extends Page<ObjectLogEntry> {
 
 export interface ObjectOccurrenceEntriesPage extends Page<ObjectOccurrenceEntry> {
   readonly projectId: string;
+  readonly occurrenceLog: ObjectOccurrenceLog | null;
 }
 
 export interface ProjectEventsPage extends Page<UseEvent> {
@@ -134,6 +145,10 @@ export interface CreateObjectLogEntryRequest {
 }
 
 export interface CreateObjectOccurrenceEntryRequest {
-  readonly content: string;
-  readonly objects?: readonly string[];
+  readonly inventoryNumber: string;
+  readonly numberOfObjects: number;
+  readonly occurrenceDate: string;
+  readonly location: string;
+  readonly detailedDescription: string;
+  readonly testimonial?: string;
 }

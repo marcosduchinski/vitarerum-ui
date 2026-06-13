@@ -8,8 +8,11 @@ import { CollectionUseProjectDetail, ProjectEventsPage } from '../../models/proj
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 import { ProjectDetailPageComponent } from './project-detail-page.component';
 
+let currentProject: CollectionUseProjectDetail;
+let currentSession: ReturnType<typeof signal<{ group: string } | null>>;
+
 class IdentityServiceStub {
-  readonly session = signal<{ group: string } | null>({ group: 'COLLECTIONS_MANAGEMENT' }).asReadonly();
+  readonly session = currentSession.asReadonly();
   readonly isAuthenticated = signal(true).asReadonly();
 }
 
@@ -55,17 +58,48 @@ const EVENTS_PAGE: ProjectEventsPage = {
 };
 
 class ProjectApiServiceStub {
-  getProject(_id: string) { return of(PROJECT); }
-  listEvents(_id: string) { return of(EVENTS_PAGE); }
-  startProject(_id: string, _r: unknown) { return of({ id: _id, referenceNumber: 'VR-2026-012', status: 'IN_PROGRESS' as const, lastEvent: EVENTS_PAGE.content[0] }); }
-  completeProject(_id: string, _r: unknown) { return of({ id: _id, referenceNumber: 'VR-2026-012', status: 'COMPLETED' as const, lastEvent: EVENTS_PAGE.content[0] }); }
-  cancelProject(_id: string, _r: unknown) { return of({ id: _id, referenceNumber: 'VR-2026-012', status: 'CANCELLED' as const, lastEvent: EVENTS_PAGE.content[0] }); }
+  getProject(_id: string) {
+    return of(currentProject);
+  }
+  listEvents(_id: string) {
+    return of(EVENTS_PAGE);
+  }
+  startProject(_id: string, _r: unknown) {
+    return of({
+      id: _id,
+      referenceNumber: 'VR-2026-012',
+      status: 'IN_PROGRESS' as const,
+      result: null,
+      lastEvent: EVENTS_PAGE.content[0],
+    });
+  }
+  completeProject(_id: string, _r: unknown) {
+    return of({
+      id: _id,
+      referenceNumber: 'VR-2026-012',
+      status: 'COMPLETED' as const,
+      result: 'COMPLETED' as const,
+      lastEvent: EVENTS_PAGE.content[0],
+    });
+  }
+  cancelProject(_id: string, _r: unknown) {
+    return of({
+      id: _id,
+      referenceNumber: 'VR-2026-012',
+      status: 'CANCELLED' as const,
+      result: 'CANCELLED' as const,
+      lastEvent: EVENTS_PAGE.content[0],
+    });
+  }
 }
 
 describe('ProjectDetailPageComponent', () => {
   let componentRef: ComponentRef<ProjectDetailPageComponent>;
 
   beforeEach(async () => {
+    currentProject = { ...PROJECT };
+    currentSession = signal<{ group: string } | null>({ group: 'COLLECTIONS_MANAGEMENT' });
+
     await TestBed.configureTestingModule({
       imports: [ProjectDetailPageComponent],
       providers: [
@@ -90,6 +124,21 @@ describe('ProjectDetailPageComponent', () => {
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('REQUESTED');
+  });
+
+  it('renders nullable researcher-only requester details without failing', async () => {
+    currentProject = { ...PROJECT, requestedBy: null };
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('Requested by');
+    expect(text).toContain('—');
   });
 
   it('shows Start project button when CREATED', async () => {
@@ -117,5 +166,52 @@ describe('ProjectDetailPageComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('a[href="/p/collections/projects/pending"]')).not.toBeNull();
     expect(el.textContent).toContain('Back to pending projects');
+  });
+
+  it('lets staff open the log for created and cancelled projects', async () => {
+    currentProject = { ...PROJECT, status: 'CANCELLED', result: 'CANCELLED' };
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a')).map(
+      (link) => link.textContent?.trim(),
+    );
+
+    expect(links.some((text) => text?.includes('Open log'))).toBe(true);
+  });
+
+  it('blocks external researchers from opening the log before the project is in progress', async () => {
+    currentSession.set({ group: 'EXTERNAL' });
+    currentProject = { ...PROJECT, status: 'CREATED' };
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).not.toContain('Open log');
+    expect(text).toContain('Log is available once the project is in progress.');
+  });
+
+  it('lets external researchers open the log while the project is in progress', async () => {
+    currentSession.set({ group: 'EXTERNAL' });
+    currentProject = { ...PROJECT, status: 'IN_PROGRESS' };
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('Open log');
   });
 });

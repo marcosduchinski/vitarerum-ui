@@ -134,6 +134,19 @@
               </button>
               <button
                 type="button"
+                class="action-btn"
+                [attr.title]="
+                  !canLog(project)
+                    ? 'Occurrences are available when the project is in progress'
+                    : null
+                "
+                [disabled]="actionProjectId() === project.id || !canLog(project)"
+                (click)="occurrences(project)"
+              >
+                Occurrences
+              </button>
+              <button
+                type="button"
                 class="action-btn action-btn--icon"
                 [class.action-btn--active]="actionsMenuId() === project.id"
                 [disabled]="actionProjectId() === project.id"

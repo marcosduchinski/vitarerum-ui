@@ -18,6 +18,7 @@ import {
   ObjectOccurrenceEntriesPage,
   ObjectOccurrenceEntriesQuery,
   ObjectOccurrenceEntry,
+  ObjectOccurrenceLog,
   ProjectEventsPage,
   ProjectEventsQuery,
   ProjectListQuery,
@@ -230,26 +231,36 @@ export class ProjectApiServiceMock {
   ): Observable<ObjectOccurrenceEntry> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (p.status === 'CANCELLED') {
+    const currentPrincipal = this.currentPrincipal();
+    if (currentPrincipal.group === 'EXTERNAL' && p.status !== 'IN_PROGRESS') {
       return throwError(() => ({
         status: 409,
-        error: 'INVALID_PROJECT_STATUS',
-        message: 'Entries cannot be added to a cancelled project',
+        error: 'INVALID_TRANSITION',
+        message: 'Entries can only be added while the project is IN_PROGRESS',
+      }));
+    }
+    const occurrenceLog = this.ensureObjectOccurrenceLog(projectId);
+    if (occurrenceLog.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Object occurrence log is already concluded',
       }));
     }
     const entry: ObjectOccurrenceEntry = {
       id: this.state.nextEntryId(),
-      collectionUseProjectId: projectId,
-      content: request.content,
-      addedAt: new Date().toISOString(),
-      addedBy: this.currentPrincipal(),
-      objects:
-        request.objects?.map((inv) => ({
-          inventoryNumber: inv,
-          displayTitle: null,
-          objectName: null,
-          briefDescriptionSnapshot: null,
-        })) ?? [],
+      objectReference: {
+        inventoryNumber: request.inventoryNumber,
+        displayTitle: null,
+        objectName: null,
+        briefDescriptionSnapshot: null,
+      },
+      numberOfObjects: request.numberOfObjects,
+      occurrenceDate: request.occurrenceDate,
+      location: request.location,
+      reportedBy: currentPrincipal,
+      detailedDescription: request.detailedDescription,
+      testimonial: request.testimonial ?? null,
       attachments: [],
     };
     const current = this.state.occurrenceEntries.get(projectId) ?? [];
@@ -265,8 +276,62 @@ export class ProjectApiServiceMock {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     let items = this.state.occurrenceEntries.get(projectId) ?? [];
-    if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
-    return of({ ...makePageFrom(items, query), projectId });
+    if (query.reportedBy) {
+      items = items.filter((e) => e.reportedBy.permissionId === query.reportedBy);
+    }
+    return of({
+      ...makePageFrom(items, query),
+      projectId,
+      occurrenceLog: this.state.objectOccurrenceLogs.get(projectId) ?? null,
+    });
+  }
+
+  getObjectOccurrenceLog(projectId: string): Observable<ObjectOccurrenceLog> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const occurrenceLog = this.state.objectOccurrenceLogs.get(projectId);
+    if (!occurrenceLog) {
+      return throwError(() => ({
+        status: 404,
+        error: 'OBJECT_OCCURRENCE_LOG_NOT_FOUND',
+        message: 'No object_occurrence_log found with id uuid',
+      }));
+    }
+    return of(occurrenceLog);
+  }
+
+  concludeObjectOccurrenceLog(projectId: string): Observable<ObjectOccurrenceLog> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const occurrenceLog = this.state.objectOccurrenceLogs.get(projectId);
+    if (!occurrenceLog) {
+      return throwError(() => ({
+        status: 404,
+        error: 'OBJECT_OCCURRENCE_LOG_NOT_FOUND',
+        message: 'No object_occurrence_log found with id uuid',
+      }));
+    }
+    const currentPrincipal = this.currentPrincipal();
+    if (
+      currentPrincipal.group !== 'CURATORIAL' &&
+      currentPrincipal.group !== 'COLLECTIONS_MANAGEMENT'
+    ) {
+      return throwError(() => ({ status: 403, error: 'FORBIDDEN' }));
+    }
+    if (occurrenceLog.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Object occurrence log is already concluded',
+      }));
+    }
+    const concluded: ObjectOccurrenceLog = {
+      ...occurrenceLog,
+      dateConclusion: new Date().toISOString(),
+      curator: currentPrincipal,
+    };
+    this.state.objectOccurrenceLogs.set(projectId, concluded);
+    return of(concluded);
   }
 
   uploadOccurrenceEntryAttachment(
@@ -277,6 +342,21 @@ export class ProjectApiServiceMock {
   ): Observable<Attachment> {
     const p = this.state.projects.get(projectId);
     if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const occurrenceLog = this.state.objectOccurrenceLogs.get(projectId);
+    if (occurrenceLog?.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Object occurrence log is already concluded',
+      }));
+    }
+    if (this.currentPrincipal().group === 'EXTERNAL' && p.status !== 'IN_PROGRESS') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Entries can only be added while the project is IN_PROGRESS',
+      }));
+    }
     const allEntries = this.state.occurrenceEntries.get(projectId) ?? [];
     const entry = allEntries.find((e) => e.id === entryId);
     if (!entry) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
@@ -383,5 +463,19 @@ export class ProjectApiServiceMock {
     };
     this.state.objectAccessLogs.set(projectId, accessLog);
     return accessLog;
+  }
+
+  private ensureObjectOccurrenceLog(projectId: string): ObjectOccurrenceLog {
+    const current = this.state.objectOccurrenceLogs.get(projectId);
+    if (current) return current;
+    const occurrenceLog: ObjectOccurrenceLog = {
+      id: this.state.nextObjectOccurrenceLogId(),
+      referenceNumber: this.state.nextObjectOccurrenceLogReference(),
+      projectId,
+      dateConclusion: null,
+      curator: null,
+    };
+    this.state.objectOccurrenceLogs.set(projectId, occurrenceLog);
+    return occurrenceLog;
   }
 }
