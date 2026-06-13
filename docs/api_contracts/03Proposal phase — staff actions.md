@@ -9,7 +9,7 @@
 **Query parameters**
 ```
 status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECTED | CANCELLED
-type        : UseType          (optional) EXHIBITION | RESEARCH | OTHER
+type        : UseType          (optional) EXHIBITION | RESEARCH | OTHER — filters intendedUse.useType
 requested_by: UUID             (optional) filter by researcher (honoured for staff only)
 assigned_to : UUID             (optional) filter by attendant permissionId
 date_from   : LocalDate        (optional) filter by requested begin date range
@@ -28,7 +28,10 @@ size        : Integer          (default 20)
       "referenceNumber": "VRP-20250115-0001",
       "title": "string",
       "status": "PENDING",
-      "type": "RESEARCH",
+      "intendedUse": {
+        "useType": "RESEARCH",
+        "description": "string"
+      },
       "beginDate": "2025-06-01",
       "endDate": "2025-06-30",
       "requestedBy": {

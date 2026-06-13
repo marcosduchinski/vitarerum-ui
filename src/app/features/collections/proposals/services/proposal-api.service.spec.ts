@@ -95,6 +95,40 @@ describe('ProposalApiService', () => {
     request.flush({ content: [], page: 1, size: 25, totalElements: 0, totalPages: 0 });
   });
 
+  it('normalizes intendedUse.useType into the flat type field', () => {
+    let listType: string | undefined;
+    service.listProposals().subscribe((page) => (listType = page.content[0]?.type));
+    http
+      .expectOne((r) => r.url === 'https://api.example.test/proposals')
+      .flush({
+        content: [
+          {
+            id: 'pr1',
+            referenceNumber: 'VRP-20260101-0001',
+            title: 'Proposal',
+            status: 'PENDING',
+            intendedUse: { useType: 'RESEARCH', description: 'Comparative study' },
+          },
+        ],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+      });
+    expect(listType).toBe('RESEARCH');
+
+    let detailType: string | undefined;
+    service.getProposal('pr1').subscribe((p) => (detailType = p.type));
+    http.expectOne('https://api.example.test/proposals/pr1').flush({
+      id: 'pr1',
+      referenceNumber: 'VRP-20260101-0001',
+      title: 'Proposal',
+      status: 'PENDING',
+      intendedUse: { useType: 'EXHIBITION', description: 'Show' },
+    });
+    expect(detailType).toBe('EXHIBITION');
+  });
+
   it('uploads proposal documents as multipart form data', () => {
     const file = new File(['document'], 'research_form.docx', {
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

@@ -54,6 +54,48 @@ describe('ProjectApiService', () => {
     request.flush({ content: [], page: 3, size: 15, totalElements: 0, totalPages: 0 });
   });
 
+  it('normalizes intendedUse.useType into the flat type field (list + detail)', () => {
+    let listType: string | undefined;
+    service.listProjects().subscribe((page) => (listType = page.content[0]?.type));
+    http
+      .expectOne((r) => r.url === 'https://api.example.test/collection-use-projects')
+      .flush({
+        content: [
+          {
+            id: 'p1',
+            referenceNumber: 'CUP-1',
+            title: 'Project',
+            purpose: '',
+            status: 'IN_PROGRESS',
+            beginDate: '2026-06-01',
+            endDate: '2026-06-30',
+            intendedUse: { useType: 'RESEARCH', description: 'Comparative study' },
+            proposal: { id: 'pr1', status: 'APPROVED' },
+          },
+        ],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+      });
+    expect(listType).toBe('RESEARCH');
+
+    let detailType: string | undefined;
+    service.getProject('p1').subscribe((p) => (detailType = p.type));
+    http.expectOne('https://api.example.test/collection-use-projects/p1').flush({
+      id: 'p1',
+      referenceNumber: 'CUP-1',
+      title: 'Project',
+      purpose: '',
+      status: 'IN_PROGRESS',
+      beginDate: '2026-06-01',
+      endDate: '2026-06-30',
+      intendedUse: { useType: 'EXHIBITION', description: 'Show' },
+      proposal: { id: 'pr1', status: 'APPROVED' },
+    });
+    expect(detailType).toBe('EXHIBITION');
+  });
+
   it('creates object log entries and completes projects', () => {
     service
       .createObjectLogEntry('project-1', {
@@ -77,6 +119,8 @@ describe('ProjectApiService', () => {
       id: 'entry-1',
       objectReference: {
         inventoryNumber: 'INV-001',
+        otherNumber: 'ALT-001',
+        numberOfObjects: 2,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,
@@ -168,6 +212,8 @@ describe('ProjectApiService', () => {
       id: 'entry-1',
       objectReference: {
         inventoryNumber: 'INV-001',
+        otherNumber: null,
+        numberOfObjects: 3,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,
@@ -293,6 +339,8 @@ describe('ProjectApiService', () => {
       id: 'occurrence-1',
       objectReference: {
         inventoryNumber: 'INV-001',
+        otherNumber: null,
+        numberOfObjects: 1,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,

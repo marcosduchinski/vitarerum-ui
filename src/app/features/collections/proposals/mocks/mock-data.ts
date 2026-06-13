@@ -692,6 +692,8 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
       id: 'entry-101',
       objectReference: {
         inventoryNumber: 'INV-ZOO-1892-001',
+        otherNumber: 'ZOO-OLD-0451',
+        numberOfObjects: 1,
         displayTitle: 'Atlantic forest field notebook',
         objectName: 'Field notebook',
         briefDescriptionSnapshot:
@@ -707,6 +709,8 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
       id: 'entry-102',
       objectReference: {
         inventoryNumber: 'INV-ZOO-1892-002',
+        otherNumber: null,
+        numberOfObjects: 3,
         displayTitle: 'Field sketch set',
         objectName: 'Sketches',
         briefDescriptionSnapshot: 'Three field sketches cross-referenced with catalogue records.',

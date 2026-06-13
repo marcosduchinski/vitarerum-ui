@@ -1,5 +1,13 @@
 export type UseType = 'EXHIBITION' | 'RESEARCH' | 'OTHER';
 
+// The backend wraps the use type in a value object: `intendedUse: { useType,
+// description }`. The app reads the flat `useType`; `description` is currently
+// unused but kept for fidelity with the contract.
+export interface IntendedUse {
+  readonly useType: UseType;
+  readonly description: string;
+}
+
 export type ProposalStatus = 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 export type ProposalEventType =

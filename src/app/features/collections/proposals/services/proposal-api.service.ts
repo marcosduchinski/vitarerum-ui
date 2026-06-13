@@ -5,7 +5,7 @@ import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 import { buildHttpParams } from '@core/http/http-params.util';
 import { Page, PageQuery } from '@shared/models/page.model';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import {
   AddProposalWatcherRequest,
@@ -36,6 +36,14 @@ import {
   SendMessageRequest,
 } from '../models/proposal.model';
 
+// The backend returns the use type wrapped as `intendedUse: { useType, description }`.
+// Bridge it to the flat `type` the app reads, tolerating either shape.
+function normalizeProposalType<T extends ProposalSummary>(p: T): T {
+  if (p.type) return p;
+  const useType = p.intendedUse?.useType;
+  return useType ? { ...p, type: useType } : p;
+}
+
 export const PROPOSAL_API_SERVICE = new InjectionToken<ProposalApiService>('PROPOSAL_API_SERVICE');
 
 @Injectable()
@@ -49,23 +57,29 @@ export class ProposalApiService {
 
   listProposals(query: ProposalListQuery = {}): Observable<Page<ProposalSummary>> {
     // The contract uses snake_case filter names; the TS query stays camelCase.
-    return this.http.get<Page<ProposalSummary>>(this.url('/proposals'), {
-      params: buildHttpParams({
-        status: query.status,
-        type: query.type,
-        requested_by: query.requestedBy,
-        assigned_to: query.assignedTo,
-        date_from: query.dateFrom,
-        date_to: query.dateTo,
-        search: query.search,
-        page: query.page,
-        size: query.size,
-      }),
-    });
+    return this.http
+      .get<Page<ProposalSummary>>(this.url('/proposals'), {
+        params: buildHttpParams({
+          status: query.status,
+          type: query.type,
+          requested_by: query.requestedBy,
+          assigned_to: query.assignedTo,
+          date_from: query.dateFrom,
+          date_to: query.dateTo,
+          search: query.search,
+          page: query.page,
+          size: query.size,
+        }),
+      })
+      .pipe(
+        map((page) => ({ ...page, content: page.content.map((p) => normalizeProposalType(p)) })),
+      );
   }
 
   getProposal(proposalId: string): Observable<ProposalDetail> {
-    return this.http.get<ProposalDetail>(this.url(`/proposals/${proposalId}`));
+    return this.http
+      .get<ProposalDetail>(this.url(`/proposals/${proposalId}`))
+      .pipe(map((p) => normalizeProposalType(p)));
   }
 
   addRequestedObjects(

@@ -35,13 +35,7 @@ import {
   RequestedObject,
   SendMessageRequest,
 } from '../models/proposal.model';
-import {
-  makePageFrom,
-  MOCK_SEED,
-  MOCK_USERS,
-  MockProjectState,
-  P,
-} from './mock-data';
+import { makePageFrom, MOCK_SEED, MOCK_USERS, MockProjectState, P } from './mock-data';
 
 @Injectable()
 export class ProposalApiServiceMock {
@@ -140,9 +134,7 @@ export class ProposalApiServiceMock {
     if (query.search) {
       const q = query.search.toLowerCase();
       items = items.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.referenceNumber.toLowerCase().includes(q),
+        (p) => p.title.toLowerCase().includes(q) || p.referenceNumber.toLowerCase().includes(q),
       );
     }
 
@@ -180,6 +172,8 @@ export class ProposalApiServiceMock {
       id: `reqobj-${this.nextId++}`,
       objectReference: {
         inventoryNumber: o.inventoryNumber,
+        otherNumber: null,
+        numberOfObjects: 1,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,
@@ -316,7 +310,12 @@ export class ProposalApiServiceMock {
       note: request.note || null,
     };
     this.proposals.set(proposalId, { ...proposal, status: 'PENDING', assignedTo });
-    this.projectState.syncProposalStatus(proposalId, 'PENDING', assignedTo, this.currentPrincipal());
+    this.projectState.syncProposalStatus(
+      proposalId,
+      'PENDING',
+      assignedTo,
+      this.currentPrincipal(),
+    );
     this.pushEvent(proposalId, evt);
     return of({ id: proposalId, status: 'PENDING', assignedTo, lastEvent: evt });
   }
@@ -336,7 +335,12 @@ export class ProposalApiServiceMock {
       note: request.note || null,
     };
     this.proposals.set(proposalId, { ...proposal, assignedTo });
-    this.projectState.syncProposalStatus(proposalId, proposal.status, assignedTo, this.currentPrincipal());
+    this.projectState.syncProposalStatus(
+      proposalId,
+      proposal.status,
+      assignedTo,
+      this.currentPrincipal(),
+    );
     this.pushEvent(proposalId, evt);
     return of({ id: proposalId, status: proposal.status, assignedTo, lastEvent: evt });
   }
@@ -422,7 +426,11 @@ export class ProposalApiServiceMock {
       triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };
-    const updated = { ...proposal, status: 'APPROVED' as const, collectionUseProject: { ...proposal.collectionUseProject!, status: 'CREATED' as const } };
+    const updated = {
+      ...proposal,
+      status: 'APPROVED' as const,
+      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CREATED' as const },
+    };
     this.proposals.set(proposalId, updated);
     this.projectState.acceptProjectForProposal(updated, now);
     this.pushEvent(proposalId, evt);
@@ -450,7 +458,12 @@ export class ProposalApiServiceMock {
       status: 'REJECTED',
       collectionUseProject: { ...proposal.collectionUseProject!, status: 'CANCELLED' },
     });
-    this.projectState.syncProposalStatus(proposalId, 'REJECTED', proposal.assignedTo, this.currentPrincipal());
+    this.projectState.syncProposalStatus(
+      proposalId,
+      'REJECTED',
+      proposal.assignedTo,
+      this.currentPrincipal(),
+    );
     this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'REJECTED', lastEvent: evt },
@@ -479,9 +492,10 @@ export class ProposalApiServiceMock {
       triggeredBy: this.currentPrincipal(),
       note: request.reason,
     };
-    const hadProject = proposal.collectionUseProject?.status === 'IN_PROGRESS'
-      || proposal.collectionUseProject?.status === 'COMPLETED'
-      || proposal.status === 'APPROVED';
+    const hadProject =
+      proposal.collectionUseProject?.status === 'IN_PROGRESS' ||
+      proposal.collectionUseProject?.status === 'COMPLETED' ||
+      proposal.status === 'APPROVED';
     const updated: ProposalDetail = {
       ...proposal,
       status: 'CANCELLED',
@@ -490,7 +504,12 @@ export class ProposalApiServiceMock {
         : proposal.collectionUseProject,
     };
     this.proposals.set(proposalId, updated);
-    this.projectState.syncProposalStatus(proposalId, 'CANCELLED', proposal.assignedTo, this.currentPrincipal());
+    this.projectState.syncProposalStatus(
+      proposalId,
+      'CANCELLED',
+      proposal.assignedTo,
+      this.currentPrincipal(),
+    );
     this.pushEvent(proposalId, evt);
 
     return of({
@@ -504,9 +523,10 @@ export class ProposalApiServiceMock {
         assignedTo: proposal.assignedTo,
         lastEvent: evt,
       },
-      collectionUseProject: hadProject && proposal.collectionUseProject
-        ? { ...proposal.collectionUseProject, status: 'CANCELLED' }
-        : null,
+      collectionUseProject:
+        hadProject && proposal.collectionUseProject
+          ? { ...proposal.collectionUseProject, status: 'CANCELLED' }
+          : null,
     });
   }
 

@@ -4,7 +4,7 @@ import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 import { buildHttpParams } from '@core/http/http-params.util';
 import { Page } from '@shared/models/page.model';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import {
   Attachment,
@@ -39,6 +39,14 @@ export interface ProjectTransitionResult {
   readonly lastEvent: UseEvent;
 }
 
+// The backend returns the use type wrapped as `intendedUse: { useType, description }`.
+// Bridge it to the flat `type` the app reads, tolerating either shape.
+function normalizeProjectType<T extends CollectionUseProjectSummary>(p: T): T {
+  if (p.type) return p;
+  const useType = p.intendedUse?.useType;
+  return useType ? { ...p, type: useType } : p;
+}
+
 export const PROJECT_API_SERVICE = new InjectionToken<ProjectApiService>('PROJECT_API_SERVICE');
 
 @Injectable()
@@ -52,15 +60,19 @@ export class ProjectApiService {
     // callers are auto-scoped to their own permissionId regardless). `assignedTo`
     // is still not implemented by the backend, so keep stripping it.
     delete serverQuery.assignedTo;
-    return this.http.get<Page<CollectionUseProjectSummary>>(this.url('/collection-use-projects'), {
-      params: buildHttpParams(serverQuery),
-    });
+    return this.http
+      .get<Page<CollectionUseProjectSummary>>(this.url('/collection-use-projects'), {
+        params: buildHttpParams(serverQuery),
+      })
+      .pipe(
+        map((page) => ({ ...page, content: page.content.map((p) => normalizeProjectType(p)) })),
+      );
   }
 
   getProject(projectId: string): Observable<CollectionUseProjectDetail> {
-    return this.http.get<CollectionUseProjectDetail>(
-      this.url(`/collection-use-projects/${projectId}`),
-    );
+    return this.http
+      .get<CollectionUseProjectDetail>(this.url(`/collection-use-projects/${projectId}`))
+      .pipe(map((p) => normalizeProjectType(p)));
   }
 
   startProject(projectId: string, request: NoteRequest): Observable<ProjectTransitionResult> {

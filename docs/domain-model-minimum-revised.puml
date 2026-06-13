@@ -31,6 +31,8 @@ package "Shared Kernel" <<Shared Kernel>> {
 
         class ObjectReference <<Value Object>> #e0afea {
         - inventoryNumber: String
+        - otherNumber: String?
+        - numberOfObjects: Integer
         - displayTitle: String?
         - objectName: String?
         - briefDescriptionSnapshot: String?
@@ -93,7 +95,7 @@ package "User Request" <<Bounded Context>> {
         - referenceNumber: ReferenceNumber
         - title: String
         - collectionUseProjectId: CollectionUseProjectId
-        - type: UseType
+        - intendedUse: IntendedUse
         - beginDate: LocalDate
         - endDate: LocalDate
         - status: ProposalStatus
@@ -115,6 +117,11 @@ package "User Request" <<Bounded Context>> {
         + directionClarify(...)
         + approve(...)
         + reject(...)
+        }
+
+        class IntendedUse <<Value Object>> #ffeead {
+        - useType: UseType
+        - description: String
         }
 
         enum UseType #ffeead {
@@ -197,10 +204,12 @@ package "User Request" <<Bounded Context>> {
         - attachments: List<MessageAttachment>
         }
 
+        Proposal *-- "1..1" IntendedUse
         Proposal *-- "0..*" ProposalEvent
         Proposal *-- "0..*" RequestedDocument
         Proposal *-- "0..*" RequestedObject
         Proposal *-- "0..*" Document
+        IntendedUse ..> UseType : useType
 
         RequestedDocument *-- DocumentType
         RequestedObject *-- ObjectReference
@@ -235,7 +244,7 @@ package "Collection Use" <<Bounded Context>> {
         - referenceNumber: ReferenceNumber
         - title: String
         - purpose: String
-        - type: UseType
+        - intendedUse: IntendedUse
         - status: UseStatus
         - beginDate: LocalDate
         - endDate: LocalDate
@@ -351,6 +360,7 @@ package "Collection Use" <<Bounded Context>> {
 
 
         CollectionUseProject *-- ReferenceNumber
+        CollectionUseProject *-- "1..1" IntendedUse
         CollectionUseProject *-- "0..*" UseEvent
         CollectionUseProject ..> Proposal : proposalId
         CollectionUseProject ..> Permission : requestedBy
