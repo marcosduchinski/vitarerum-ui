@@ -284,6 +284,7 @@ package "Collection Use" <<Bounded Context>> {
         - fileName: String
         - mediaType: MediaType
         - uploadedAt: DateTime
+        - note: String?
         }
 
         enum MediaType #ffb7b2 {
@@ -344,6 +345,7 @@ package "Collection Use" <<Bounded Context>> {
         - requestedObjectId: RequestedObjectId?
         - attachments: List<Attachment>
         + addAttachment(...)
+        + edit(...)
         }
 
 

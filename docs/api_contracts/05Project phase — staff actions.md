@@ -194,6 +194,31 @@ entryId   : UUID (required)
 
 ---
 
+### `PATCH /collection-use-projects/{projectId}/occurrence-entries/{entryId}`
+
+**Description** — Edit an existing object occurrence entry. Only `numberOfObjects`, `occurrenceDate`, `location`, `detailedDescription` and `testimonial` are editable; the entry's object, `reportedBy` and `requestedObjectId` are immutable. Partial update — only fields present in the body change (`testimonial: null` clears it). Staff may edit at any project status, but not once the occurrence log is concluded (`409`). Request/response shapes are defined in the researcher group (file 04).
+
+**Path parameters**
+```
+projectId : UUID (required)
+entryId   : UUID (required)
+```
+
+**Request body** (all fields optional)
+```json
+{
+  "numberOfObjects": 2,
+  "occurrenceDate": "2025-06-03T11:30:00",
+  "location": "Conservation lab, room 2",
+  "detailedDescription": "string",
+  "testimonial": "string"
+}
+```
+
+**Response `200 OK`** — the updated `ObjectOccurrenceEntry` (shape as in file 04).
+
+---
+
 ### `GET /collection-use-projects/{projectId}/log-entries` · `.../occurrence-entries`
 
 **Description** — List a project's object log entries / occurrence entries ordered chronologically, including entries from both the researcher and staff. Both accept `page`/`size` and a permission filter (`addedBy` on log entries, `reportedBy` on occurrence entries), and return the paginated envelopes defined in file 04 (with the `accessLog` / `occurrenceLog` header respectively).
@@ -261,12 +286,13 @@ The occurrence-log variant returns an `OOL-` reference number.
 
 ### `POST /collection-use-projects/{projectId}/log-entries/{entryId}/attachments` · `.../occurrence-entries/{entryId}/attachments`
 
-**Description** — Staff upload a file to an existing log / occurrence entry at any project status, while the respective log is not concluded (`409` afterwards). `mediaType` is one of `DOCUMENT`, `IMAGE`, `VIDEO`, `OTHER`.
+**Description** — Staff upload a file to an existing log / occurrence entry at any project status, while the respective log is not concluded (`409` afterwards). `mediaType` is one of `DOCUMENT`, `IMAGE`, `VIDEO`, `OTHER`. `note` is an optional free-text description of the attachment.
 
 **Request body** — `multipart/form-data`
 ```
 file      : File      (required)
 mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
+note      : String    (optional)
 ```
 
 **Response `201 Created`**
@@ -275,7 +301,8 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
   "fileReference": "string",
   "fileName": "conservation_note.pdf",
   "mediaType": "DOCUMENT",
-  "uploadedAt": "2025-06-04T10:15:00"
+  "uploadedAt": "2025-06-04T10:15:00",
+  "note": "string"
 }
 ```
 

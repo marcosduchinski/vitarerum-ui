@@ -362,17 +362,13 @@ describe('project log pages', () => {
     expect(text).toContain(
       'Researcher occurrence reports are only available while the project is in progress.',
     );
-    expect(root.querySelector<HTMLInputElement>('#occurrence-inventory-number')?.disabled).toBe(
-      true,
+    const addOccurrenceButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Add occurrence'),
     );
-    expect(root.querySelector<HTMLButtonElement>('.occurrence-entry-form button')?.disabled).toBe(
-      true,
+    expect(addOccurrenceButton?.disabled).toBe(true);
+    expect(addOccurrenceButton?.getAttribute('aria-describedby')).toBe(
+      'object-occurrence-lock-message',
     );
-    expect(
-      root
-        .querySelector<HTMLInputElement>('#occurrence-inventory-number')
-        ?.getAttribute('aria-describedby'),
-    ).toBe('object-occurrence-lock-message');
   });
 
   it('keeps staff entry controls available outside in-progress projects', async () => {
@@ -411,11 +407,12 @@ describe('project log pages', () => {
     expect(root.textContent).toContain('Object occurrence log');
     expect(root.textContent).toContain('Occurrences Reported');
     expect(root.querySelector('#object-occurrence-log-heading')).toBeTruthy();
-    expect(root.querySelector('#occurrence-inventory-number')).toBeTruthy();
-    expect(root.textContent).toContain('No object occurrence entries have been added yet.');
+    expect(root.querySelector('#occurrence-inventory-number')).toBeNull();
+    expect(root.textContent).toContain('INV-ZOO-1892-001');
+    expect(root.textContent).toContain('Add occurrence');
   });
 
-  it('registers object occurrence entries with required contract fields', async () => {
+  it('registers object occurrence entries from an object row with required contract fields', async () => {
     const state = TestBed.inject(MockProjectState);
     const fixture = TestBed.createComponent(ProjectOccurrenceLogPanelComponent);
     fixture.componentRef.setInput('projectId', 'proj-3');
@@ -424,19 +421,19 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    const submit = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
-      button.textContent?.includes('Register occurrence'),
+    const addOccurrence = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Add occurrence'),
     )!;
+    addOccurrence.click();
+    fixture.detectChanges();
+
+    const submit = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.textContent?.includes('Save occurrence'),
+    )!;
+    expect(root.textContent).toContain('Add occurrence');
+    expect(root.textContent).toContain('INV-ZOO-1892-001');
     expect(submit.disabled).toBe(true);
 
-    root.querySelector<HTMLInputElement>('#occurrence-inventory-number')!.value = 'INV-OCC-001';
-    root
-      .querySelector<HTMLInputElement>('#occurrence-inventory-number')!
-      .dispatchEvent(new Event('input'));
-    root.querySelector<HTMLInputElement>('#occurrence-number-of-objects')!.value = '2';
-    root
-      .querySelector<HTMLInputElement>('#occurrence-number-of-objects')!
-      .dispatchEvent(new Event('input'));
     root.querySelector<HTMLInputElement>('#occurrence-date')!.value = '2026-06-03T11:30';
     root.querySelector<HTMLInputElement>('#occurrence-date')!.dispatchEvent(new Event('input'));
     root.querySelector<HTMLInputElement>('#occurrence-location')!.value = 'Conservation lab';
@@ -456,7 +453,7 @@ describe('project log pages', () => {
     expect(submit.disabled).toBe(false);
 
     root
-      .querySelector<HTMLFormElement>('.occurrence-entry-form')!
+      .querySelector<HTMLFormElement>('.occurrence-modal__panel')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
     await fixture.whenStable();
@@ -464,8 +461,8 @@ describe('project log pages', () => {
 
     const entry = state.occurrenceEntries
       .get('proj-3')
-      ?.find((item) => item.objectReference.inventoryNumber === 'INV-OCC-001');
-    expect(entry?.numberOfObjects).toBe(2);
+      ?.find((item) => item.objectReference.inventoryNumber === 'INV-ZOO-1892-001');
+    expect(entry?.numberOfObjects).toBe(1);
     expect(entry?.location).toBe('Conservation lab');
     expect(entry?.reportedBy.permissionId).toBe('perm-carol');
     expect(state.objectOccurrenceLogs.get('proj-3')?.referenceNumber).toMatch(/^OOL-/);
@@ -476,7 +473,7 @@ describe('project log pages', () => {
     const projectService = TestBed.inject(PROJECT_API_SERVICE);
     const entry = await firstValueFrom(
       projectService.createObjectOccurrenceEntry('proj-3', {
-        inventoryNumber: 'INV-OCC-002',
+        inventoryNumber: 'INV-ZOO-1892-001',
         numberOfObjects: 1,
         occurrenceDate: '2026-06-03T11:30',
         location: 'Reading room',
@@ -491,11 +488,14 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    const headers = Array.from(root.querySelectorAll<HTMLTableCellElement>('thead th')).map(
-      (header) => header.textContent?.trim(),
-    );
-    expect(headers).not.toContain('Files');
     expect(root.querySelector('select[aria-label="Occurrence entry media type"]')).toBeNull();
+
+    const objectToggle = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.getAttribute('aria-controls')?.startsWith('object-occurrences-'),
+    );
+    expect(objectToggle).toBeTruthy();
+    objectToggle!.click();
+    fixture.detectChanges();
 
     const occurrenceToggle = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
       (button) => button.getAttribute('aria-controls') === `occurrence-entry-files-${entry.id}`,
@@ -504,13 +504,17 @@ describe('project log pages', () => {
     const toggleButton = occurrenceToggle!;
     expect(toggleButton.classList.contains('occurrence-register__toggle')).toBe(true);
     expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
-    expect(toggleButton.getAttribute('aria-label')).toBe('Show attachments for INV-OCC-002');
+    expect(toggleButton.getAttribute('aria-label')).toBe(
+      'Show files for occurrence INV-ZOO-1892-001',
+    );
 
     toggleButton.click();
     fixture.detectChanges();
 
     expect(toggleButton.getAttribute('aria-expanded')).toBe('true');
-    expect(toggleButton.getAttribute('aria-label')).toBe('Hide attachments for INV-OCC-002');
+    expect(toggleButton.getAttribute('aria-label')).toBe(
+      'Hide files for occurrence INV-ZOO-1892-001',
+    );
     expect(root.textContent).toContain('Occurrence files');
     const fileInput = root.querySelector<HTMLInputElement>(
       'input[aria-label="Occurrence entry file"]',
@@ -521,7 +525,9 @@ describe('project log pages', () => {
     });
     fileInput.dispatchEvent(new Event('change'));
     root
-      .querySelector<HTMLFormElement>('form[aria-label="Upload file for occurrence INV-OCC-002"]')!
+      .querySelector<HTMLFormElement>(
+        'form[aria-label="Upload file for occurrence INV-ZOO-1892-001"]',
+      )!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
     await fixture.whenStable();
@@ -532,6 +538,77 @@ describe('project log pages', () => {
         ?.find((item) => item.id === entry.id)
         ?.attachments.some((attachment) => attachment.fileName === 'occurrence-photo.jpg'),
     ).toBe(true);
+  });
+
+  it('edits object occurrence entries from the expanded object row', async () => {
+    const state = TestBed.inject(MockProjectState);
+    const projectService = TestBed.inject(PROJECT_API_SERVICE);
+    const entry = await firstValueFrom(
+      projectService.createObjectOccurrenceEntry('proj-3', {
+        inventoryNumber: 'INV-ZOO-1892-001',
+        numberOfObjects: 1,
+        occurrenceDate: '2026-06-03T11:30',
+        location: 'Reading room',
+        detailedDescription: 'Occurrence detail.',
+        testimonial: 'Original note.',
+      }),
+    );
+
+    const fixture = TestBed.createComponent(ProjectOccurrenceLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const objectToggle = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.getAttribute('aria-controls')?.startsWith('object-occurrences-'),
+    )!;
+    objectToggle.click();
+    fixture.detectChanges();
+
+    const edit = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Edit',
+    )!;
+    edit.click();
+    fixture.detectChanges();
+
+    root.querySelector<HTMLInputElement>('#occurrence-edit-number-of-objects')!.value = '2';
+    root
+      .querySelector<HTMLInputElement>('#occurrence-edit-number-of-objects')!
+      .dispatchEvent(new Event('input'));
+    root.querySelector<HTMLInputElement>('#occurrence-edit-date')!.value = '2026-06-04T15:45';
+    root
+      .querySelector<HTMLInputElement>('#occurrence-edit-date')!
+      .dispatchEvent(new Event('input'));
+    root.querySelector<HTMLInputElement>('#occurrence-edit-location')!.value = 'Conservation lab';
+    root
+      .querySelector<HTMLInputElement>('#occurrence-edit-location')!
+      .dispatchEvent(new Event('input'));
+    root.querySelector<HTMLTextAreaElement>('#occurrence-edit-description')!.value =
+      'Updated occurrence detail.';
+    root
+      .querySelector<HTMLTextAreaElement>('#occurrence-edit-description')!
+      .dispatchEvent(new Event('input'));
+    root.querySelector<HTMLTextAreaElement>('#occurrence-edit-testimonial')!.value =
+      'Updated note.';
+    root
+      .querySelector<HTMLTextAreaElement>('#occurrence-edit-testimonial')!
+      .dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    root
+      .querySelector<HTMLFormElement>('.occurrence-modal__panel')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const updated = state.occurrenceEntries.get('proj-3')?.find((item) => item.id === entry.id);
+    expect(updated?.numberOfObjects).toBe(2);
+    expect(updated?.occurrenceDate).toBe('2026-06-04T15:45');
+    expect(updated?.location).toBe('Conservation lab');
+    expect(updated?.detailedDescription).toBe('Updated occurrence detail.');
+    expect(updated?.testimonial).toBe('Updated note.');
   });
 
   it('allows curatorial staff to conclude an open occurrence log', async () => {

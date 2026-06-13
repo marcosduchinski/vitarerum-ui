@@ -24,6 +24,7 @@ import {
   ProjectListQuery,
   ReasonRequest,
   UpdateObjectLogEntryRequest,
+  UpdateObjectOccurrenceEntryRequest,
   UseEvent,
 } from '../models/project.model';
 import { ProjectTransitionResult } from '../services/project-api.service';
@@ -337,6 +338,66 @@ export class ProjectApiServiceMock {
       projectId,
       occurrenceLog: this.state.objectOccurrenceLogs.get(projectId) ?? null,
     });
+  }
+
+  updateObjectOccurrenceEntry(
+    projectId: string,
+    entryId: string,
+    request: UpdateObjectOccurrenceEntryRequest,
+  ): Observable<ObjectOccurrenceEntry> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const occurrenceLog = this.state.objectOccurrenceLogs.get(projectId);
+    if (occurrenceLog?.dateConclusion) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Cannot edit entries of a concluded object occurrence log',
+      }));
+    }
+    if (this.currentPrincipal().group === 'EXTERNAL' && p.status !== 'IN_PROGRESS') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Entries can only be edited while the project is IN_PROGRESS',
+      }));
+    }
+    if (request.numberOfObjects !== undefined && request.numberOfObjects < 1) {
+      return throwError(() => ({ status: 422, error: 'VALIDATION_ERROR' }));
+    }
+    if (request.location !== undefined && !request.location.trim()) {
+      return throwError(() => ({ status: 422, error: 'VALIDATION_ERROR' }));
+    }
+    if (request.detailedDescription !== undefined && !request.detailedDescription.trim()) {
+      return throwError(() => ({ status: 422, error: 'VALIDATION_ERROR' }));
+    }
+
+    const allEntries = this.state.occurrenceEntries.get(projectId) ?? [];
+    const idx = allEntries.findIndex((e) => e.id === entryId);
+    if (idx < 0) {
+      return throwError(() => ({
+        status: 404,
+        error: 'ENTRY_NOT_FOUND',
+        message: `No entry found with id ${entryId}`,
+      }));
+    }
+
+    const current = allEntries[idx];
+    const updated: ObjectOccurrenceEntry = {
+      ...current,
+      ...(request.numberOfObjects !== undefined
+        ? { numberOfObjects: request.numberOfObjects }
+        : {}),
+      ...(request.occurrenceDate !== undefined ? { occurrenceDate: request.occurrenceDate } : {}),
+      ...(request.location !== undefined ? { location: request.location } : {}),
+      ...(request.detailedDescription !== undefined
+        ? { detailedDescription: request.detailedDescription }
+        : {}),
+      ...(request.testimonial !== undefined ? { testimonial: request.testimonial } : {}),
+    };
+    allEntries[idx] = updated;
+    this.state.occurrenceEntries.set(projectId, allEntries);
+    return of(updated);
   }
 
   getObjectOccurrenceLog(projectId: string): Observable<ObjectOccurrenceLog> {

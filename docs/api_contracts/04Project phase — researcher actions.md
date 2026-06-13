@@ -413,7 +413,8 @@ size    : Integer  (default 20)
           "fileReference": "string",
           "fileName": "photo_01.jpg",
           "mediaType": "IMAGE",
-          "uploadedAt": "2025-06-03T14:05:00"
+          "uploadedAt": "2025-06-03T14:05:00",
+          "note": "string"
         }
       ]
     }
@@ -459,7 +460,7 @@ projectId : UUID (required)
 
 ### `POST /collection-use-projects/{projectId}/log-entries/{entryId}/attachments`
 
-**Description** — Uploads a file to an existing object log entry. For non-staff callers the project must be `IN_PROGRESS`, and the access log must not be concluded (`409`). `mediaType` declares the kind of file: `DOCUMENT`, `IMAGE`, `VIDEO`, or `OTHER`.
+**Description** — Uploads a file to an existing object log entry. For non-staff callers the project must be `IN_PROGRESS`, and the access log must not be concluded (`409`). `mediaType` declares the kind of file: `DOCUMENT`, `IMAGE`, `VIDEO`, or `OTHER`. `note` is an optional free-text description of the attachment.
 
 **Path parameters**
 ```
@@ -471,6 +472,7 @@ entryId   : UUID (required)
 ```
 file      : File      (required)
 mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
+note      : String    (optional)
 ```
 
 **Response `201 Created`**
@@ -479,7 +481,8 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
   "fileReference": "string",
   "fileName": "fieldwork_notes.pdf",
   "mediaType": "DOCUMENT",
-  "uploadedAt": "2025-06-03T14:10:00"
+  "uploadedAt": "2025-06-03T14:10:00",
+  "note": "string"
 }
 ```
 
@@ -550,6 +553,49 @@ mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
   "testimonial": "string",
   "requestedObjectId": "uuid",
   "attachments": []
+}
+```
+
+---
+
+### `PATCH /collection-use-projects/{projectId}/occurrence-entries/{entryId}`
+
+**Description** — Edit an existing object occurrence entry. Only the entry's editable fields may be changed: `numberOfObjects`, `occurrenceDate`, `location`, `detailedDescription` and `testimonial`. The entry's object (`inventoryNumber` / `objectReference`), its `reportedBy` and its `requestedObjectId` are immutable. The request is a partial update: only the fields present in the body are changed — omit a field to leave it untouched, send `testimonial: null` to clear it. For non-staff callers the project must be `IN_PROGRESS` (`409` otherwise), and the entry cannot be edited once the occurrence log is concluded (`409`).
+
+**Path parameters**
+```
+projectId : UUID (required)
+entryId   : UUID (required)
+```
+
+**Request body** (all fields optional)
+```json
+{
+  "numberOfObjects": 2,
+  "occurrenceDate": "2025-06-03T11:30:00",
+  "location": "Conservation lab, room 2",
+  "detailedDescription": "string",
+  "testimonial": "string"
+}
+```
+
+`numberOfObjects`, when present, must be ≥ 1; `location` and `detailedDescription`, when present, must be non-empty (otherwise `422`).
+
+**Response `200 OK`** — the updated `ObjectOccurrenceEntry`, same shape as the `POST` response.
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "ENTRY_NOT_FOUND",
+  "message": "No entry found with id uuid"
+}
+```
+
+**Response `409 Conflict`**
+```json
+{
+  "error": "INVALID_TRANSITION",
+  "message": "Cannot edit entries of a concluded object occurrence log"
 }
 ```
 

@@ -26,6 +26,7 @@ import {
   ProjectListQuery,
   ReasonRequest,
   UpdateObjectLogEntryRequest,
+  UpdateObjectOccurrenceEntryRequest,
   UseEvent,
 } from '../models/project.model';
 import { MediaType, UseResult, UseStatus } from '@shared/models/collection-use-status.model';
@@ -158,6 +159,17 @@ export class ProjectApiService {
     return this.http.get<ObjectOccurrenceEntriesPage>(
       this.url(`/collection-use-projects/${projectId}/occurrence-entries`),
       { params: buildHttpParams(query) },
+    );
+  }
+
+  updateObjectOccurrenceEntry(
+    projectId: string,
+    entryId: string,
+    request: UpdateObjectOccurrenceEntryRequest,
+  ): Observable<ObjectOccurrenceEntry> {
+    return this.http.patch<ObjectOccurrenceEntry>(
+      this.url(`/collection-use-projects/${projectId}/occurrence-entries/${entryId}`),
+      request,
     );
   }
 

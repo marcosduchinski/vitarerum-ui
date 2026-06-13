@@ -162,3 +162,11 @@ export interface CreateObjectOccurrenceEntryRequest {
   readonly testimonial?: string;
   readonly requestedObjectId?: string;
 }
+
+export interface UpdateObjectOccurrenceEntryRequest {
+  readonly numberOfObjects?: number;
+  readonly occurrenceDate?: string;
+  readonly location?: string;
+  readonly detailedDescription?: string;
+  readonly testimonial?: string | null;
+}
