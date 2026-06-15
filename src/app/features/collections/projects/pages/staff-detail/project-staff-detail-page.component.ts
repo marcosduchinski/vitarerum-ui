@@ -19,10 +19,17 @@ import {
   WorkflowStatus,
 } from '@shared/components/status-chip/status-chip.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
+import { UseType } from '@shared/models/collection-use-status.model';
 
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 type StaffProjectPanel = 'overview' | 'tasks';
+
+const LOG_ROUTE_SEGMENTS: Record<UseType, string> = {
+  EXHIBITION: 'exhibition',
+  IN_SITU_VISIT: 'research',
+  OTHER: 'other',
+};
 
 function safeReturnTo(value: string | undefined): string {
   return value?.startsWith('/p/collections') ? value : '/p/collections/projects/my';
@@ -114,6 +121,11 @@ export class ProjectStaffDetailPageComponent {
       project.actions?.canCancel ??
       (project.status === 'CREATED' || project.status === 'IN_PROGRESS')
     );
+  });
+  protected readonly canOpenLogTasks = computed(() => this.project()?.status === 'IN_PROGRESS');
+  protected readonly logRouteSegment = computed(() => {
+    const type = this.project()?.type;
+    return type ? LOG_ROUTE_SEGMENTS[type] : 'research';
   });
 
   protected readonly activePanel = signal<StaffProjectPanel>('overview');

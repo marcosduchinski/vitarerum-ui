@@ -78,6 +78,11 @@ describe('ProjectsInProgressPageComponent', () => {
         { provide: PROJECT_API_SERVICE, useValue: projectService },
       ],
     }).compileComponents();
+
+    await TestBed.inject(IDENTITY_SERVICE).signIn({
+      email: 'bob@collections.example.com',
+      password: 'password',
+    });
   });
 
   it('loads in-progress projects only', async () => {
@@ -101,7 +106,9 @@ describe('ProjectsInProgressPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const text = compiled.textContent ?? '';
-    const viewLink = compiled.querySelector<HTMLAnchorElement>('a[aria-label="View VR-2026-061"]');
+    const detailLink = compiled.querySelector<HTMLAnchorElement>(
+      'a[aria-label="Detail VR-2026-061"]',
+    );
 
     expect(text).toContain('Reference');
     expect(text).toContain('Assigned staff');
@@ -111,7 +118,9 @@ describe('ProjectsInProgressPageComponent', () => {
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('1-20 of 25 projects');
-    expect(viewLink?.getAttribute('href')).toBe('/p/collections/projects/project-1');
+    expect(detailLink?.getAttribute('href')).toBe(
+      '/p/collections/projects/collections/project-1?returnTo=%2Fp%2Fcollections%2Fprojects%2Fin-progress&returnLabel=in%20progress%20projects',
+    );
   });
 
   it('applies and clears search from the first page', async () => {

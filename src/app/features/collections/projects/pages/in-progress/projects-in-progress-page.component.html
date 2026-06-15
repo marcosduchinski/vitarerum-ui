@@ -78,7 +78,11 @@
                   <td>
                     <a
                       class="projects-table__title"
-                      [routerLink]="['/p/collections/projects', project.id]"
+                      [routerLink]="detailRoute(project.id)"
+                      [queryParams]="{
+                        returnTo: '/p/collections/projects/in-progress',
+                        returnLabel: 'in progress projects',
+                      }"
                     >
                       {{ project.title }}
                     </a>
@@ -113,10 +117,14 @@
                     <div class="projects-table__actions">
                       <a
                         class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/projects', project.id]"
-                        aria-label="View {{ project.referenceNumber }}"
+                        [routerLink]="detailRoute(project.id)"
+                        [queryParams]="{
+                          returnTo: '/p/collections/projects/in-progress',
+                          returnLabel: 'in progress projects',
+                        }"
+                        aria-label="Detail {{ project.referenceNumber }}"
                       >
-                        View
+                        Detail
                       </a>
                     </div>
                   </td>
@@ -134,10 +142,7 @@
               </span>
               <label class="projects-pagination__size" for="projects-page-size">
                 Rows
-                <select
-                  id="projects-page-size"
-                  (change)="onPageSizeChange($event)"
-                >
+                <select id="projects-page-size" (change)="onPageSizeChange($event)">
                   @for (size of pageSizeOptions; track size) {
                     <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
                   }

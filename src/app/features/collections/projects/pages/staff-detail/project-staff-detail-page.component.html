@@ -181,6 +181,49 @@
               {{ acting() ? 'Cancelling...' : 'Cancel project' }}
             </button>
           </section>
+
+          @if (canOpenLogTasks()) {
+            <section class="detail-card task-card" aria-labelledby="object-access-log-task-heading">
+              <div class="task-card__content">
+                <p class="task-card__eyebrow">{{ taskEyebrow() }}</p>
+                <h2 id="object-access-log-task-heading" class="detail-card__title">
+                  Object access log
+                </h2>
+                <p class="task-card__description">
+                  Review and update the object access register for this active project.
+                </p>
+              </div>
+              <a
+                class="action-btn action-btn--primary"
+                [routerLink]="['/p/collections/projects', id(), 'log', logRouteSegment()]"
+              >
+                <span class="pi pi-file-edit" aria-hidden="true"></span>
+                Open access log
+              </a>
+            </section>
+
+            <section
+              class="detail-card task-card"
+              aria-labelledby="object-occurrence-log-task-heading"
+            >
+              <div class="task-card__content">
+                <p class="task-card__eyebrow">{{ taskEyebrow() }}</p>
+                <h2 id="object-occurrence-log-task-heading" class="detail-card__title">
+                  Object occurrence log
+                </h2>
+                <p class="task-card__description">
+                  Record or inspect object occurrences reported during this active project.
+                </p>
+              </div>
+              <a
+                class="action-btn action-btn--primary"
+                [routerLink]="['/p/collections/projects', id(), 'occurrences', logRouteSegment()]"
+              >
+                <span class="pi pi-clipboard" aria-hidden="true"></span>
+                Open occurrence log
+              </a>
+            </section>
+          }
         </section>
       }
     }

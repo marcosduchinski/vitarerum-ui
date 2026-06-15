@@ -166,6 +166,30 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     expect(buttonByText(compiled, 'Cancel project').disabled).toBe(false);
   });
 
+  it('shows object access and occurrence log tasks for in-progress projects', async () => {
+    projectService.project = {
+      ...PROJECT,
+      type: 'EXHIBITION',
+      status: 'IN_PROGRESS',
+    };
+
+    const compiled = await render();
+    tabByName(compiled, 'Tasks').click();
+    componentRef.changeDetectorRef.detectChanges();
+
+    const accessLogLink = linkByText(compiled, 'Open access log');
+    const occurrenceLogLink = linkByText(compiled, 'Open occurrence log');
+
+    expect(compiled.textContent).toContain('Object access log');
+    expect(compiled.textContent).toContain('Object occurrence log');
+    expect(accessLogLink.getAttribute('href')).toBe(
+      '/p/collections/projects/proj-22/log/exhibition',
+    );
+    expect(occurrenceLogLink.getAttribute('href')).toBe(
+      '/p/collections/projects/proj-22/occurrences/exhibition',
+    );
+  });
+
   it('confirms cancellation and navigates to cancelled projects', async () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const compiled = await render();
@@ -202,4 +226,12 @@ function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {
   );
   expect(button).not.toBeNull();
   return button!;
+}
+
+function linkByText(root: HTMLElement, text: string): HTMLAnchorElement {
+  const link = Array.from(root.querySelectorAll<HTMLAnchorElement>('a')).find((item) =>
+    item.textContent?.includes(text),
+  );
+  expect(link).not.toBeNull();
+  return link!;
 }

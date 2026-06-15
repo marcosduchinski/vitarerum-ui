@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
@@ -27,6 +28,12 @@ const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',
   IN_SITU_VISIT: 'In-situ visit',
   OTHER: 'Other',
+};
+
+const DETAIL_ROUTE_PREFIX: Partial<Record<GroupName, readonly string[]>> = {
+  COLLECTIONS_MANAGEMENT: ['/p/collections/projects/collections'],
+  CURATORIAL: ['/p/collections/projects/curatorial'],
+  DIRECTION: ['/p/collections/projects/direction'],
 };
 
 @Component({
@@ -94,6 +101,12 @@ export class ProjectsInProgressPageComponent {
 
   protected requesterLabel(project: CollectionUseProjectSummary): string {
     return project.requestedBy?.user.name ?? 'Unknown requester';
+  }
+
+  protected detailRoute(projectId: string): readonly string[] {
+    const group = this.identity.session()?.group;
+    const prefix = group ? DETAIL_ROUTE_PREFIX[group] : undefined;
+    return [...(prefix ?? ['/p/collections/projects']), projectId];
   }
 
   protected requesterEmail(project: CollectionUseProjectSummary): string {
