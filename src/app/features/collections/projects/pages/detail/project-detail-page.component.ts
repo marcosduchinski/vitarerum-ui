@@ -24,6 +24,8 @@ import { UseType } from '@shared/models/collection-use-status.model';
 
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
+type ExternalProjectPanel = 'overview' | 'tasks';
+
 const LOG_ROUTE: Record<UseType, string> = {
   IN_SITU_VISIT: 'research',
   EXHIBITION: 'exhibition',
@@ -126,13 +128,9 @@ export class ProjectDetailPageComponent {
   protected readonly canCancel = computed(
     () => this.project()?.status === 'CREATED' || this.project()?.status === 'IN_PROGRESS',
   );
-  protected readonly canLog = computed(() => {
-    const project = this.project();
-    const group = this.identity.session()?.group;
-    if (!project || !group) return false;
-    return group === 'EXTERNAL' ? project.status === 'IN_PROGRESS' : true;
-  });
+  protected readonly canLog = computed(() => this.project()?.status === 'IN_PROGRESS');
 
+  protected readonly activePanel = signal<ExternalProjectPanel>('overview');
   protected readonly acting = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly startConfirmOpen = signal(false);
@@ -146,19 +144,26 @@ export class ProjectDetailPageComponent {
     return value as WorkflowStatus;
   }
 
+  protected selectPanel(panel: ExternalProjectPanel): void {
+    this.activePanel.set(panel);
+  }
+
   protected openStartConfirm(): void {
+    if (!this.canStart()) return;
     this.startConfirmOpen.set(true);
   }
   protected closeStartConfirm(): void {
     this.startConfirmOpen.set(false);
   }
   protected openCompleteConfirm(): void {
+    if (!this.canComplete()) return;
     this.completeConfirmOpen.set(true);
   }
   protected closeCompleteConfirm(): void {
     this.completeConfirmOpen.set(false);
   }
   protected openCancelConfirm(): void {
+    if (!this.canCancel()) return;
     this.cancelConfirmOpen.set(true);
   }
   protected closeCancelConfirm(): void {
@@ -166,7 +171,7 @@ export class ProjectDetailPageComponent {
   }
 
   protected async start(): Promise<void> {
-    if (this.acting()) return;
+    if (this.acting() || !this.canStart()) return;
     this.acting.set(true);
     this.actionError.set(null);
     try {
@@ -183,7 +188,7 @@ export class ProjectDetailPageComponent {
   }
 
   protected async complete(): Promise<void> {
-    if (this.acting()) return;
+    if (this.acting() || !this.canComplete()) return;
     this.acting.set(true);
     this.actionError.set(null);
     try {
@@ -200,7 +205,7 @@ export class ProjectDetailPageComponent {
   }
 
   protected async cancel(): Promise<void> {
-    if (this.acting()) return;
+    if (this.acting() || !this.canCancel()) return;
     this.acting.set(true);
     this.actionError.set(null);
     try {

@@ -149,7 +149,7 @@ describe('ProjectDetailPageComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     expect(text).toContain('Requested by');
-    expect(text).toContain('—');
+    expect(text).toContain('-');
   });
 
   it('shows Start project button for external researchers when CREATED', async () => {
@@ -159,6 +159,9 @@ describe('ProjectDetailPageComponent', () => {
     componentRef.setInput('id', 'proj-12');
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
+
+    selectTab(fixture.nativeElement, 'Tasks');
     fixture.detectChanges();
 
     const buttons = Array.from(
@@ -174,6 +177,9 @@ describe('ProjectDetailPageComponent', () => {
     componentRef.setInput('id', 'proj-12');
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
+
+    selectTab(fixture.nativeElement, 'Tasks');
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -193,7 +199,7 @@ describe('ProjectDetailPageComponent', () => {
     expect(el.textContent).toContain('Back to pending projects');
   });
 
-  it('lets staff open the log for created and cancelled projects', async () => {
+  it('disables log and completion tasks for terminal projects', async () => {
     currentProject = { ...PROJECT, status: 'CANCELLED', result: 'CANCELLED' };
     const fixture = TestBed.createComponent(ProjectDetailPageComponent);
     componentRef = fixture.componentRef;
@@ -202,11 +208,20 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a')).map(
-      (link) => link.textContent?.trim(),
-    );
+    selectTab(fixture.nativeElement, 'Tasks');
+    fixture.detectChanges();
 
-    expect(links.some((text) => text?.includes('Open log'))).toBe(true);
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    const accessLogLink = linkByText(fixture.nativeElement, 'Open access log');
+    const occurrenceLogLink = linkByText(fixture.nativeElement, 'Open occurrence log');
+    const completeButton = buttonByText(fixture.nativeElement, 'Complete project');
+    const cancelButton = buttonByText(fixture.nativeElement, 'Cancel project');
+
+    expect(text).toContain('This task is available once the project is in progress.');
+    expect(accessLogLink.hasAttribute('href')).toBe(false);
+    expect(occurrenceLogLink.hasAttribute('href')).toBe(false);
+    expect(completeButton.disabled).toBe(true);
+    expect(cancelButton.disabled).toBe(true);
   });
 
   it('blocks external researchers from opening the log before the project is in progress', async () => {
@@ -219,13 +234,19 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    selectTab(fixture.nativeElement, 'Tasks');
+    fixture.detectChanges();
 
-    expect(text).not.toContain('Open log');
-    expect(text).toContain('Log is available once the project is in progress.');
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    const accessLogLink = linkByText(fixture.nativeElement, 'Open access log');
+    const occurrenceLogLink = linkByText(fixture.nativeElement, 'Open occurrence log');
+
+    expect(text).toContain('This task is available once the project is in progress.');
+    expect(accessLogLink.hasAttribute('href')).toBe(false);
+    expect(occurrenceLogLink.hasAttribute('href')).toBe(false);
   });
 
-  it('lets external researchers open the log while the project is in progress', async () => {
+  it('lets external researchers open access and occurrence logs while the project is in progress', async () => {
     currentSession.set({ group: 'EXTERNAL' });
     currentProject = { ...PROJECT, status: 'IN_PROGRESS' };
     const fixture = TestBed.createComponent(ProjectDetailPageComponent);
@@ -235,8 +256,41 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    selectTab(fixture.nativeElement, 'Tasks');
+    fixture.detectChanges();
 
-    expect(text).toContain('Open log');
+    const accessLogLink = linkByText(fixture.nativeElement, 'Open access log');
+    const occurrenceLogLink = linkByText(fixture.nativeElement, 'Open occurrence log');
+    const completeButton = buttonByText(fixture.nativeElement, 'Complete project');
+
+    expect(accessLogLink.getAttribute('href')).toBe('/p/collections/projects/proj-12/log/research');
+    expect(occurrenceLogLink.getAttribute('href')).toBe(
+      '/p/collections/projects/proj-12/occurrences/research',
+    );
+    expect(completeButton.disabled).toBe(false);
   });
 });
+
+function selectTab(root: HTMLElement, label: 'Overview' | 'Tasks'): void {
+  const tab = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((button) =>
+    button.textContent?.includes(label),
+  );
+  expect(tab).not.toBeNull();
+  tab!.click();
+}
+
+function buttonByText(root: HTMLElement, label: string): HTMLButtonElement {
+  const button = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((item) =>
+    item.textContent?.includes(label),
+  );
+  expect(button).not.toBeNull();
+  return button!;
+}
+
+function linkByText(root: HTMLElement, label: string): HTMLAnchorElement {
+  const link = Array.from(root.querySelectorAll<HTMLAnchorElement>('a')).find((item) =>
+    item.textContent?.includes(label),
+  );
+  expect(link).not.toBeNull();
+  return link!;
+}
