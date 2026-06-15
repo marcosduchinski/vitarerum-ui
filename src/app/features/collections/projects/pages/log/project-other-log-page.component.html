@@ -4,7 +4,7 @@
     title="Project log"
     description="Object access log and object entries for this project."
   >
-    <a class="back-link" routerLink="/p/collections/projects/my">Back to my projects</a>
+    <a class="back-link" [routerLink]="projectDetailRoute()">Back to the project</a>
   </app-page-header>
 
   <app-project-object-log-panel [projectId]="id()" />

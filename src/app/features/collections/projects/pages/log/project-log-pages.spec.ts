@@ -43,6 +43,15 @@ function curatorialSession(): IdentitySession {
   };
 }
 
+function collectionsSession(): IdentitySession {
+  return {
+    accessToken: 'mock-token',
+    user: { id: 'u-bob', email: 'bob@collections.example.com', displayName: 'Bob Santos' },
+    group: 'COLLECTIONS_MANAGEMENT',
+    availableGroups: ['COLLECTIONS_MANAGEMENT'],
+  };
+}
+
 function researcherSession(): IdentitySession {
   return {
     accessToken: 'mock-token',
@@ -78,6 +87,25 @@ describe('project log pages', () => {
 
   it('renders the research access log page', () => {
     expect(render(ProjectResearchLogPageComponent)).toContain('Research log');
+  });
+
+  it('links external researchers back to the generic project detail', () => {
+    identitySession.set(researcherSession());
+
+    expect(render(ProjectResearchLogPageComponent, '/p/collections/projects/proj-3')).toContain(
+      'Research log',
+    );
+  });
+
+  it('links collections managers back to the collections project detail', () => {
+    identitySession.set(collectionsSession());
+
+    expect(
+      renderOccurrence(
+        ProjectResearchOccurrenceLogPageComponent,
+        '/p/collections/projects/collections/proj-3',
+      ),
+    ).toContain('Research occurrences');
   });
 
   it('renders the research occurrence log page', () => {
@@ -655,7 +683,10 @@ describe('project log pages', () => {
   });
 });
 
-function render<T extends { readonly id: () => string }>(component: Type<T>): string {
+function render<T extends { readonly id: () => string }>(
+  component: Type<T>,
+  expectedBackLink = '/p/collections/projects/curatorial/proj-3',
+): string {
   const fixture = TestBed.createComponent(component);
   const componentRef: ComponentRef<T> = fixture.componentRef;
   componentRef.setInput('id', 'proj-3');
@@ -666,13 +697,17 @@ function render<T extends { readonly id: () => string }>(component: Type<T>): st
   );
   const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  expect(backLink?.getAttribute('href')).toBe('/p/collections/projects/my');
+  expect(backLink?.getAttribute('href')).toBe(expectedBackLink);
+  expect(backLink?.textContent).toContain('Back to the project');
   expect(text).toContain('Object access log');
   expect(text).not.toContain('Object occurrence log');
   return text;
 }
 
-function renderOccurrence<T extends { readonly id: () => string }>(component: Type<T>): string {
+function renderOccurrence<T extends { readonly id: () => string }>(
+  component: Type<T>,
+  expectedBackLink = '/p/collections/projects/curatorial/proj-3',
+): string {
   const fixture = TestBed.createComponent(component);
   const componentRef: ComponentRef<T> = fixture.componentRef;
   componentRef.setInput('id', 'proj-3');
@@ -683,7 +718,8 @@ function renderOccurrence<T extends { readonly id: () => string }>(component: Ty
   );
   const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  expect(backLink?.getAttribute('href')).toBe('/p/collections/projects/my');
+  expect(backLink?.getAttribute('href')).toBe(expectedBackLink);
+  expect(backLink?.textContent).toContain('Back to the project');
   expect(text).toContain('Object occurrence log');
   expect(text).not.toContain('Object access log');
   return text;

@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
+import { projectDetailRouteForGroup } from './project-detail-route.util';
 import { ProjectObjectLogPanelComponent } from './project-object-log-panel.component';
 
 @Component({
@@ -14,5 +16,11 @@ import { ProjectObjectLogPanelComponent } from './project-object-log-panel.compo
   styleUrl: './project-log-page.scss',
 })
 export class ProjectOtherLogPageComponent {
+  private readonly identity = inject(IDENTITY_SERVICE);
+
   readonly id = input.required<string>();
+
+  protected readonly projectDetailRoute = computed(() =>
+    projectDetailRouteForGroup(this.id(), this.identity.session()?.group),
+  );
 }
