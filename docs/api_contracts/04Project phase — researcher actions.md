@@ -89,6 +89,12 @@ projectId : UUID (required)
   "endDate": "2025-06-30",
   "authorisedBy": null,
   "authorisedAt": null,
+  "actions": {
+    "canStart": false,
+    "canComplete": true,
+    "canCancel": true,
+    "canOpenLog": true
+  },
   "proposal": {
     "id": "uuid",
     "referenceNumber": "VRP-20250115-0001",
@@ -103,7 +109,11 @@ projectId : UUID (required)
 }
 ```
 
-`authorisedBy` / `authorisedAt` and the hydrated `requestedBy` object are populated only for staff callers — all three are `null` for a researcher. `CollectionUseProject.requestedBy` remains the ownership field used for access control. The detail view does not embed an entries summary; use `GET /collection-use-projects/{projectId}/log-entries` and `.../occurrence-entries` for the paginated lists.
+`authorisedBy` / `authorisedAt` and the hydrated `requestedBy` object are populated only for staff callers — all three are `null` for a researcher. `CollectionUseProject.requestedBy` remains the ownership field used for access control.
+
+`actions` is a convenience permission block for the active caller. For researchers, `canStart` is `true` only when the project is `CREATED`; `canComplete` is `true` only when the project is `IN_PROGRESS`; `canCancel` is `true` for non-terminal projects; `canOpenLog` is `true` only once the project is `IN_PROGRESS`. The backend remains authoritative: commands still return `403`/`409` when the caller or state is invalid.
+
+Researcher project detail intentionally omits staff review context such as requested objects, proposal documents, watchers, and conversation summaries. Use the proposal endpoints for researcher-facing proposal data, and use `GET /collection-use-projects/{projectId}/log-entries` / `.../occurrence-entries` for paginated project log content.
 
 **Response `403 Forbidden`**
 ```json

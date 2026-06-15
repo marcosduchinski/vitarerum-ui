@@ -107,14 +107,16 @@
             </dl>
 
             <footer class="project-card__actions">
-              <button
-                type="button"
-                class="action-btn action-btn--primary"
-                [disabled]="actionProjectId() === project.id"
-                (click)="start(project.id)"
-              >
-                {{ actionProjectId() === project.id ? 'Starting...' : 'Start' }}
-              </button>
+              @if (isExternal()) {
+                <button
+                  type="button"
+                  class="action-btn action-btn--primary"
+                  [disabled]="actionProjectId() === project.id"
+                  (click)="start(project.id)"
+                >
+                  {{ actionProjectId() === project.id ? 'Starting...' : 'Start' }}
+                </button>
+              }
               <button
                 type="button"
                 class="action-btn action-btn--icon"

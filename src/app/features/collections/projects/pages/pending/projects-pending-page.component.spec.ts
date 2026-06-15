@@ -81,6 +81,7 @@ class ProjectApiServiceStub {
 }
 
 describe('ProjectsPendingPageComponent', () => {
+  let identity: IdentityServiceMock;
   let projectService: ProjectApiServiceStub;
   let router: Router;
 
@@ -96,6 +97,7 @@ describe('ProjectsPendingPageComponent', () => {
       ],
     }).compileComponents();
 
+    identity = TestBed.inject(IDENTITY_SERVICE) as IdentityServiceMock;
     router = TestBed.inject(Router);
   });
 
@@ -246,6 +248,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('starts a pending project and reloads the list', async () => {
+    await identity.signIn({ email: 'alice@ext.example.com', password: 'pw' });
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -263,6 +266,17 @@ describe('ProjectsPendingPageComponent', () => {
     expect(projectService.queries).toHaveLength(2);
   });
 
+  it('hides Start from staff users', async () => {
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'pw' });
+    const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Start');
+    expect(projectService.started).toEqual([]);
+  });
+
   it('opens secondary actions from the popup menu', async () => {
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
@@ -273,12 +287,13 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('View');
+    expect(document.body.textContent).toContain('Detail');
     expect(document.body.textContent).toContain('Cancel');
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Cancel');
   });
 
-  it('navigates to project detail from the popup menu', async () => {
+  it('navigates collections staff to the collections project detail route', async () => {
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'pw' });
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
@@ -289,11 +304,59 @@ describe('ProjectsPendingPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    menuItemByText('View').click();
+    menuItemByText('Detail').click();
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects', PROJECT.id], {
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects/collections', PROJECT.id], {
+      queryParams: {
+        returnTo: '/p/collections/projects/pending',
+        returnLabel: 'pending projects',
+      },
+    });
+  });
+
+  it('navigates curatorial staff to the curatorial project detail route', async () => {
+    await identity.signIn({ email: 'carol@curatorial.example.com', password: 'pw' });
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    openActionsMenu(fixture.nativeElement, PROJECT.referenceNumber);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    menuItemByText('Detail').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects/curatorial', PROJECT.id], {
+      queryParams: {
+        returnTo: '/p/collections/projects/pending',
+        returnLabel: 'pending projects',
+      },
+    });
+  });
+
+  it('navigates direction staff to the direction project detail route', async () => {
+    await identity.signIn({ email: 'dan@direction.example.com', password: 'pw' });
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    openActionsMenu(fixture.nativeElement, PROJECT.referenceNumber);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    menuItemByText('Detail').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects/direction', PROJECT.id], {
       queryParams: {
         returnTo: '/p/collections/projects/pending',
         returnLabel: 'pending projects',

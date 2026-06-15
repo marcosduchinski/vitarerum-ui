@@ -12,6 +12,7 @@ import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -31,6 +32,12 @@ const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',
   IN_SITU_VISIT: 'In-situ visit',
   OTHER: 'Other',
+};
+
+const DETAIL_ROUTE_PREFIX: Partial<Record<GroupName, readonly string[]>> = {
+  COLLECTIONS_MANAGEMENT: ['/p/collections/projects/collections'],
+  CURATORIAL: ['/p/collections/projects/curatorial'],
+  DIRECTION: ['/p/collections/projects/direction'],
 };
 
 @Component({
@@ -60,6 +67,7 @@ export class ProjectsPendingPageComponent {
 
   // Refetch when the active role changes: requests carry X-Permission-Id.
   protected readonly currentPermissionId = computed(() => this.identity.getPermissionId());
+  protected readonly isExternal = computed(() => this.identity.session()?.group === 'EXTERNAL');
 
   protected readonly projectsResource = resource({
     params: () => ({
@@ -108,10 +116,10 @@ export class ProjectsPendingPageComponent {
 
     return [
       {
-        label: 'View',
+        label: 'Detail',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/projects', projectId], {
+          void this.router.navigate(this.detailRoute(projectId), {
             queryParams: {
               returnTo: '/p/collections/projects/pending',
               returnLabel: 'pending projects',
@@ -130,6 +138,12 @@ export class ProjectsPendingPageComponent {
 
   protected requesterLabel(project: CollectionUseProjectSummary): string {
     return project.requestedBy?.user.name ?? 'Unknown requester';
+  }
+
+  private detailRoute(projectId: string): readonly string[] {
+    const group = this.identity.session()?.group;
+    const prefix = group ? DETAIL_ROUTE_PREFIX[group] : undefined;
+    return [...(prefix ?? ['/p/collections/projects']), projectId];
   }
 
   protected requesterEmail(project: CollectionUseProjectSummary): string {

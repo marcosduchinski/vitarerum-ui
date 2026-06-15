@@ -97,6 +97,30 @@ export const PROJECTS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'collections/:id',
+    title: 'Project Detail',
+    loadComponent: () =>
+      import('./pages/collections-detail/project-collections-detail-page.component').then(
+        (m) => m.ProjectCollectionsDetailPageComponent,
+      ),
+  },
+  {
+    path: 'curatorial/:id',
+    title: 'Project Detail',
+    loadComponent: () =>
+      import('./pages/curatorial-detail/project-curatorial-detail-page.component').then(
+        (m) => m.ProjectCuratorialDetailPageComponent,
+      ),
+  },
+  {
+    path: 'direction/:id',
+    title: 'Project Detail',
+    loadComponent: () =>
+      import('./pages/direction-detail/project-direction-detail-page.component').then(
+        (m) => m.ProjectDirectionDetailPageComponent,
+      ),
+  },
+  {
     path: ':id',
     title: 'Project Detail',
     loadComponent: () =>

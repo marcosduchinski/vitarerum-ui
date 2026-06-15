@@ -119,7 +119,9 @@ export class ProjectDetailPageComponent {
     return type ? LOG_ROUTE[type] : 'research';
   });
 
-  protected readonly canStart = computed(() => this.project()?.status === 'CREATED');
+  protected readonly canStart = computed(
+    () => this.identity.session()?.group === 'EXTERNAL' && this.project()?.status === 'CREATED',
+  );
   protected readonly canComplete = computed(() => this.project()?.status === 'IN_PROGRESS');
   protected readonly canCancel = computed(
     () => this.project()?.status === 'CREATED' || this.project()?.status === 'IN_PROGRESS',

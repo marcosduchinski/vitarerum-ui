@@ -141,7 +141,8 @@ describe('ProjectDetailPageComponent', () => {
     expect(text).toContain('—');
   });
 
-  it('shows Start project button when CREATED', async () => {
+  it('shows Start project button for external researchers when CREATED', async () => {
+    currentSession.set({ group: 'EXTERNAL' });
     const fixture = TestBed.createComponent(ProjectDetailPageComponent);
     componentRef = fixture.componentRef;
     componentRef.setInput('id', 'proj-12');
@@ -153,6 +154,19 @@ describe('ProjectDetailPageComponent', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
     ).map((b) => b.textContent?.trim());
     expect(buttons.some((t) => t?.includes('Start project'))).toBe(true);
+  });
+
+  it('hides Start project button from staff users when CREATED', async () => {
+    currentSession.set({ group: 'COLLECTIONS_MANAGEMENT' });
+    const fixture = TestBed.createComponent(ProjectDetailPageComponent);
+    componentRef = fixture.componentRef;
+    componentRef.setInput('id', 'proj-12');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).not.toContain('Start project');
   });
 
   it('uses safe return inputs for the back link', () => {

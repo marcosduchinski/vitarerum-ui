@@ -103,6 +103,16 @@ projectId : UUID (required)
   "endDate": "2025-06-30",
   "authorisedBy": null,
   "authorisedAt": null,
+  "actions": {
+    "canStart": false,
+    "canComplete": false,
+    "canCancel": true,
+    "canOpenLog": true,
+    "canCreateObjectLogEntry": true,
+    "canCreateOccurrenceEntry": true,
+    "canConcludeObjectAccessLog": true,
+    "canConcludeObjectOccurrenceLog": true
+  },
   "proposal": {
     "id": "uuid",
     "referenceNumber": "VRP-20250115-0001",
@@ -129,11 +139,130 @@ projectId : UUID (required)
       "email": "string"
     },
     "group": "EXTERNAL"
+  },
+  "staffContext": {
+    "viewerGroup": "COLLECTIONS_MANAGEMENT | CURATORIAL | DIRECTION | SYS_ADMIN",
+    "proposal": {
+      "id": "uuid",
+      "referenceNumber": "VRP-20250115-0001",
+      "title": "string",
+      "status": "APPROVED",
+      "submittedAt": "2025-01-15T10:30:00",
+      "submittedBy": {
+        "permissionId": "uuid",
+        "user": { "id": "uuid", "name": "string", "email": "string" },
+        "group": "EXTERNAL"
+      },
+      "assignedTo": {
+        "permissionId": "uuid",
+        "user": { "id": "uuid", "name": "string", "email": "string" },
+        "group": "CURATORIAL"
+      },
+      "watchers": [
+        {
+          "permissionId": "uuid",
+          "user": { "id": "uuid", "name": "string", "email": "string" },
+          "group": "COLLECTIONS_MANAGEMENT"
+        }
+      ]
+    },
+    "requestedObjects": [
+      {
+        "id": "uuid",
+        "objectReference": {
+          "inventoryNumber": "INV-001",
+          "displayTitle": null,
+          "objectName": null,
+          "briefDescriptionSnapshot": null
+        },
+        "category": "manuscript",
+        "description": "string",
+        "requestedAt": "2025-01-15T10:30:00",
+        "requestedBy": {
+          "permissionId": "uuid",
+          "user": { "id": "uuid", "name": "string", "email": "string" },
+          "group": "EXTERNAL"
+        }
+      }
+    ],
+    "requestedDocuments": [
+      {
+        "id": "uuid",
+        "type": "RESEARCH_FORM",
+        "description": "string",
+        "requestedAt": "2025-01-16T09:00:00",
+        "requestedBy": {
+          "permissionId": "uuid",
+          "user": { "id": "uuid", "name": "string", "email": "string" },
+          "group": "COLLECTIONS_MANAGEMENT"
+        }
+      }
+    ],
+    "documents": [
+      {
+        "id": "uuid",
+        "type": "RESEARCH_FORM",
+        "fileName": "research_form.docx",
+        "fileReference": "string",
+        "submittedAt": "2025-01-16T10:00:00",
+        "submittedBy": {
+          "permissionId": "uuid",
+          "user": { "id": "uuid", "name": "string", "email": "string" },
+          "group": "EXTERNAL"
+        }
+      }
+    ],
+    "conversationSummary": {
+      "conversationId": "uuid",
+      "totalMessages": 4,
+      "lastMessageAt": "2025-01-18T16:20:00",
+      "lastMessageBy": {
+        "permissionId": "uuid",
+        "user": { "id": "uuid", "name": "string", "email": "string" },
+        "group": "CURATORIAL"
+      }
+    },
+    "logSummary": {
+      "accessLog": {
+        "id": "uuid",
+        "referenceNumber": "OAL-1A2B3C4D",
+        "projectId": "uuid",
+        "dateConclusion": null,
+        "curator": null
+      },
+      "occurrenceLog": {
+        "id": "uuid",
+        "referenceNumber": "OOL-1A2B3C4D",
+        "projectId": "uuid",
+        "dateConclusion": null,
+        "curator": null
+      },
+      "objectLogEntryCount": 7,
+      "occurrenceEntryCount": 2,
+      "attachmentCount": 3
+    },
+    "directionContext": {
+      "latestQuestion": "string",
+      "latestClarification": "string",
+      "referredAt": "2025-01-17T11:00:00",
+      "clarifiedAt": "2025-01-18T09:00:00"
+    }
   }
 }
 ```
 
-> `requestedBy` is a required `PermissionId` on `CollectionUseProject`; the API hydrates it as a permission detail for staff callers and returns `null` for non-staff. `authorisedBy` / `authorisedAt` are nullable fields on the response that are **not currently populated by any flow** — they remain `null` (the approval flow that previously set them was removed). The detail view does not embed an `entries` summary; use the `log-entries` / `occurrence-entries` list endpoints.
+> `requestedBy` is a required `PermissionId` on `CollectionUseProject`; the API hydrates it as a permission detail for staff callers and returns `null` for non-staff. `authorisedBy` / `authorisedAt` are nullable fields on the response that are **not currently populated by any flow** — they remain `null` (the approval flow that previously set them was removed).
+
+`actions` is a convenience permission block for the active caller and current project state. Staff callers never receive `canStart: true` or `canComplete: true`; those lifecycle commands are researcher actions. Staff log permissions depend on active group and log conclusion state. The backend remains authoritative and must still return `403`/`409` for invalid commands.
+
+`staffContext` is populated only for staff callers and is the backing data for the role-specific detail pages:
+
+- `COLLECTIONS_MANAGEMENT` uses `proposal`, `requestedDocuments`, `documents`, `conversationSummary`, and `logSummary` for operational follow-up.
+- `CURATORIAL` uses `requestedObjects`, `documents`, `proposal.assignedTo`, `logSummary`, and project/proposal status for collection review.
+- `DIRECTION` uses `proposal`, `conversationSummary`, `directionContext`, project status, and lifecycle events for oversight/clarification.
+- `SYS_ADMIN` may receive the same `staffContext` as a read-only administrative view.
+
+Arrays must be present and empty when there is no data. `conversationSummary`, `logSummary.accessLog`, `logSummary.occurrenceLog`, and `directionContext` may be `null` when not applicable. The detail response intentionally embeds summary counts only; use the existing paginated `log-entries`, `occurrence-entries`, `events`, proposal `documents`, and proposal `conversation` endpoints for full lists.
 
 **Response `404 Not Found`**
 ```json
