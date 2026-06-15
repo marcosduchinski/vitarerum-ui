@@ -1,3 +1,4 @@
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { Page, PageQuery } from '@shared/models/page.model';
 import { ObjectReference } from '@shared/models/object-reference.model';
@@ -89,7 +90,91 @@ export interface ObjectOccurrenceEntry {
   readonly attachments: readonly Attachment[];
 }
 
-export interface CollectionUseProjectDetail extends CollectionUseProjectSummary {}
+export interface ProjectActionPermissions {
+  readonly canStart: boolean;
+  readonly canComplete: boolean;
+  readonly canCancel: boolean;
+  readonly canOpenLog: boolean;
+  readonly canCreateObjectLogEntry: boolean;
+  readonly canCreateOccurrenceEntry: boolean;
+  readonly canConcludeObjectAccessLog: boolean;
+  readonly canConcludeObjectOccurrenceLog: boolean;
+}
+
+export interface ProjectStaffProposalContext {
+  readonly id: string;
+  readonly referenceNumber: string;
+  readonly title: string;
+  readonly status: ProposalStatus;
+  readonly submittedAt: string;
+  readonly submittedBy: PermissionPrincipal;
+  readonly assignedTo: PermissionPrincipal | null;
+  readonly watchers: readonly PermissionPrincipal[];
+}
+
+export interface ProjectRequestedObjectContext {
+  readonly id: string;
+  readonly objectReference: ObjectReference;
+  readonly category: string;
+  readonly description: string;
+  readonly requestedAt: string;
+  readonly requestedBy: PermissionPrincipal;
+}
+
+export interface ProjectRequestedDocumentContext {
+  readonly id: string;
+  readonly type: string;
+  readonly description: string;
+  readonly requestedAt: string;
+  readonly requestedBy: PermissionPrincipal;
+}
+
+export interface ProjectDocumentContext {
+  readonly id: string;
+  readonly type: string;
+  readonly fileName: string;
+  readonly fileReference?: string;
+  readonly submittedAt: string;
+  readonly submittedBy: PermissionPrincipal;
+}
+
+export interface ProjectConversationSummary {
+  readonly conversationId: string;
+  readonly totalMessages: number;
+  readonly lastMessageAt: string | null;
+  readonly lastMessageBy: PermissionPrincipal | null;
+}
+
+export interface ProjectLogSummary {
+  readonly accessLog: ObjectAccessLog | null;
+  readonly occurrenceLog: ObjectOccurrenceLog | null;
+  readonly objectLogEntryCount: number;
+  readonly occurrenceEntryCount: number;
+  readonly attachmentCount: number;
+}
+
+export interface ProjectDirectionContext {
+  readonly latestQuestion: string | null;
+  readonly latestClarification: string | null;
+  readonly referredAt: string | null;
+  readonly clarifiedAt: string | null;
+}
+
+export interface ProjectStaffContext {
+  readonly viewerGroup: Exclude<GroupName, 'EXTERNAL'>;
+  readonly proposal: ProjectStaffProposalContext;
+  readonly requestedObjects: readonly ProjectRequestedObjectContext[];
+  readonly requestedDocuments: readonly ProjectRequestedDocumentContext[];
+  readonly documents: readonly ProjectDocumentContext[];
+  readonly conversationSummary: ProjectConversationSummary | null;
+  readonly logSummary: ProjectLogSummary;
+  readonly directionContext: ProjectDirectionContext | null;
+}
+
+export interface CollectionUseProjectDetail extends CollectionUseProjectSummary {
+  readonly actions: ProjectActionPermissions;
+  readonly staffContext: ProjectStaffContext | null;
+}
 
 export interface UseEvent {
   readonly occurredAt: string;

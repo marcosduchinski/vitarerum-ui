@@ -52,6 +52,56 @@ describe('ProjectApiServiceMock', () => {
     expect(page.totalElements).toBeGreaterThan(0);
   });
 
+  it('returns researcher project detail actions without staff context', async () => {
+    const detail = await firstValueFrom(service.getProject('proj-4'));
+
+    expect(detail.actions).toMatchObject({
+      canStart: true,
+      canComplete: false,
+      canCancel: true,
+      canOpenLog: false,
+      canCreateObjectLogEntry: false,
+      canCreateOccurrenceEntry: false,
+    });
+    expect(detail.staffContext).toBeNull();
+  });
+
+  it('returns staff project detail context from seeded proposal data', async () => {
+    session.set(staffSession());
+
+    const detail = await firstValueFrom(service.getProject('proj-4'));
+
+    expect(detail.actions).toMatchObject({
+      canStart: false,
+      canCancel: true,
+      canOpenLog: true,
+      canCreateObjectLogEntry: true,
+      canCreateOccurrenceEntry: true,
+    });
+    expect(detail.staffContext?.viewerGroup).toBe('COLLECTIONS_MANAGEMENT');
+    expect(detail.staffContext?.proposal).toMatchObject({
+      id: 'prop-4',
+      referenceNumber: 'VRP-20260601-0004',
+      submittedBy: { permissionId: 'perm-alice' },
+      assignedTo: { permissionId: 'perm-bob' },
+    });
+    expect(detail.staffContext?.documents.map((document) => document.fileName)).toContain(
+      'laboratory-instruments-exhibition-brief.pdf',
+    );
+    expect(detail.staffContext?.conversationSummary).toMatchObject({
+      conversationId: 'conv-4',
+      totalMessages: 1,
+      lastMessageBy: { permissionId: 'perm-alice' },
+    });
+    expect(detail.staffContext?.logSummary).toMatchObject({
+      accessLog: null,
+      occurrenceLog: null,
+      objectLogEntryCount: 0,
+      occurrenceEntryCount: 0,
+      attachmentCount: 0,
+    });
+  });
+
   it('transitions CREATED → IN_PROGRESS and updates event log', async () => {
     const result = await firstValueFrom(
       service.startProject('proj-4', { note: 'Starting access.' }),

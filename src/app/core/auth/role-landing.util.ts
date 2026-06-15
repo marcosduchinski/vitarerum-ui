@@ -12,6 +12,12 @@ const ADMIN_PREFIX = '/p/admin';
 const STAFF_PROPOSAL_PAGES = ['new', 'my-assignments', 'others', 'approved', 'rejected'];
 const EXTERNAL_PROPOSAL_PAGES = ['submit', 'my'];
 const STAFF_PROJECT_PAGES = ['pending', 'in-progress', 'completed', 'cancelled'];
+const STAFF_PROJECT_DETAIL_SEGMENTS: Partial<Record<GroupName, string>> = {
+  COLLECTIONS_MANAGEMENT: 'collections',
+  CURATORIAL: 'curatorial',
+  DIRECTION: 'direction',
+};
+const STAFF_PROJECT_DETAIL_SEGMENT_SET = new Set(Object.values(STAFF_PROJECT_DETAIL_SEGMENTS));
 
 const STAFF_PROPOSALS_LANDING = `${PROPOSALS_PREFIX}/new`;
 const EXTERNAL_PROPOSALS_LANDING = `${PROPOSALS_PREFIX}/my`;
@@ -22,6 +28,10 @@ function firstSegmentAfter(prefix: string, path: string): string {
   return path.slice(prefix.length).split('/').filter(Boolean)[0] ?? '';
 }
 
+function secondSegmentAfter(prefix: string, path: string): string {
+  return path.slice(prefix.length).split('/').filter(Boolean)[1] ?? '';
+}
+
 /**
  * Where to navigate after the active group changes, or `null` to stay on the
  * current page. Keeps the user inside the section they were working in
@@ -29,6 +39,7 @@ function firstSegmentAfter(prefix: string, path: string): string {
  */
 export function roleLandingUrl(group: GroupName, currentUrl: string): string | null {
   const path = currentUrl.split(/[?#]/)[0] ?? '';
+  const suffix = currentUrl.slice(path.length);
   const staff = group !== 'EXTERNAL';
 
   if (path.startsWith(ADMIN_PREFIX)) {
@@ -48,6 +59,20 @@ export function roleLandingUrl(group: GroupName, currentUrl: string): string | n
 
   if (path.startsWith(PROJECTS_PREFIX)) {
     const segment = firstSegmentAfter(PROJECTS_PREFIX, path);
+    if (STAFF_PROJECT_DETAIL_SEGMENT_SET.has(segment)) {
+      if (!staff) {
+        return PROJECTS_LANDING;
+      }
+
+      const targetSegment = STAFF_PROJECT_DETAIL_SEGMENTS[group];
+      const projectId = secondSegmentAfter(PROJECTS_PREFIX, path);
+      if (!targetSegment || !projectId || targetSegment === segment) {
+        return null;
+      }
+
+      return `${PROJECTS_PREFIX}/${targetSegment}/${projectId}${suffix}`;
+    }
+
     if (STAFF_PROJECT_PAGES.includes(segment) && !staff) {
       return PROJECTS_LANDING;
     }

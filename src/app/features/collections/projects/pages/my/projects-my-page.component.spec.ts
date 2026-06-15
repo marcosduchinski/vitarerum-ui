@@ -372,7 +372,7 @@ describe('ProjectsMyPageComponent', () => {
   });
 
   it('navigates to project detail from the popup menu', async () => {
-    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ProjectsMyPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -386,7 +386,46 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(`/p/collections/projects/${PROJECTS[0].id}`);
+    expect(navigateSpy).toHaveBeenCalledWith(
+      ['/p/collections/projects/collections', PROJECTS[0].id],
+      {
+        queryParams: {
+          returnTo: '/p/collections/projects/my',
+          returnLabel: 'my projects',
+        },
+      },
+    );
+  });
+
+  it('navigates curatorial users to the curatorial project detail page', async () => {
+    activeSession = {
+      ...STAFF_SESSION,
+      group: 'CURATORIAL',
+      availableGroups: ['CURATORIAL'],
+    };
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProjectsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    openActionsMenu(fixture.nativeElement, PROJECTS[0].referenceNumber);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    menuItemByText('View').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      ['/p/collections/projects/curatorial', PROJECTS[0].id],
+      {
+        queryParams: {
+          returnTo: '/p/collections/projects/my',
+          returnLabel: 'my projects',
+        },
+      },
+    );
   });
 
   it('confirms concluding a project from the popup menu and reloads the list', async () => {

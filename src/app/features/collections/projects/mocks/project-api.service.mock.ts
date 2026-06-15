@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { Page } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
@@ -19,9 +20,11 @@ import {
   ObjectOccurrenceEntriesQuery,
   ObjectOccurrenceEntry,
   ObjectOccurrenceLog,
+  ProjectActionPermissions,
   ProjectEventsPage,
   ProjectEventsQuery,
   ProjectListQuery,
+  ProjectStaffContext,
   ReasonRequest,
   UpdateObjectLogEntryRequest,
   UpdateObjectOccurrenceEntryRequest,
@@ -552,7 +555,123 @@ export class ProjectApiServiceMock {
   }
 
   private toDetail(p: MutableProjectState): CollectionUseProjectDetail {
-    return this.toSummary(p);
+    const group = this.identity.session()?.group ?? null;
+    const isStaffGroup = group !== null && group !== 'EXTERNAL';
+
+    return {
+      ...this.toSummary(p),
+      actions: this.projectActions(p, group),
+      staffContext: isStaffGroup
+        ? this.staffContext(p, group as Exclude<GroupName, 'EXTERNAL'>)
+        : null,
+    };
+  }
+
+  private projectActions(
+    p: MutableProjectState,
+    group: GroupName | null,
+  ): ProjectActionPermissions {
+    const isExternal = group === 'EXTERNAL' || group === null;
+    const isLogManager = group === 'CURATORIAL' || group === 'COLLECTIONS_MANAGEMENT';
+    const accessLog = this.state.objectAccessLogs.get(p.id) ?? null;
+    const occurrenceLog = this.state.objectOccurrenceLogs.get(p.id) ?? null;
+    const accessLogOpen = accessLog?.dateConclusion == null;
+    const occurrenceLogOpen = occurrenceLog?.dateConclusion == null;
+
+    return {
+      canStart: isExternal && p.status === 'CREATED',
+      canComplete: isExternal && p.status === 'IN_PROGRESS',
+      canCancel: p.status === 'CREATED' || p.status === 'IN_PROGRESS',
+      canOpenLog: !isExternal || p.status === 'IN_PROGRESS',
+      canCreateObjectLogEntry: isExternal
+        ? p.status === 'IN_PROGRESS' && accessLogOpen
+        : accessLogOpen,
+      canCreateOccurrenceEntry: isExternal
+        ? p.status === 'IN_PROGRESS' && occurrenceLogOpen
+        : occurrenceLogOpen,
+      canConcludeObjectAccessLog: isLogManager && accessLog !== null && accessLogOpen,
+      canConcludeObjectOccurrenceLog: isLogManager && occurrenceLog !== null && occurrenceLogOpen,
+    };
+  }
+
+  private staffContext(p: MutableProjectState, viewerGroup: Exclude<GroupName, 'EXTERNAL'>) {
+    const proposal = this.state.proposals.get(p.proposalId);
+    const messages = proposal ? (this.state.messages.get(proposal.conversationId) ?? []) : [];
+    const lastMessage = messages.at(-1);
+    const proposalEvents = proposal ? (this.state.proposalEvents.get(proposal.id) ?? []) : [];
+    const forwarded = proposalEvents.filter((event) => event.type === 'FORWARDED').at(-1);
+    const clarified = proposalEvents
+      .filter((event) => event.type === 'APPROVED' || event.type === 'REJECTED')
+      .at(-1);
+    const logEntries = this.state.logEntries.get(p.id) ?? [];
+    const occurrenceEntries = this.state.occurrenceEntries.get(p.id) ?? [];
+    const attachmentCount =
+      logEntries.reduce((total, entry) => total + entry.attachments.length, 0) +
+      occurrenceEntries.reduce((total, entry) => total + entry.attachments.length, 0);
+
+    return {
+      viewerGroup,
+      proposal: {
+        id: proposal?.id ?? p.proposalId,
+        referenceNumber: proposal?.referenceNumber ?? p.referenceNumber,
+        title: proposal?.title ?? p.title,
+        status: proposal?.status ?? p.proposalStatus,
+        submittedAt: proposal?.submittedAt ?? p.beginDate,
+        submittedBy: proposal?.requestedBy ?? p.requestedBy,
+        assignedTo: proposal?.assignedTo ?? p.proposalAssignedTo ?? null,
+        watchers: proposal?.watchers ?? [],
+      },
+      requestedObjects:
+        proposal?.requestedObjects.map((item) => ({
+          id: item.id,
+          objectReference: item.objectReference,
+          category: item.category,
+          description: item.description,
+          requestedAt: item.requestedAt,
+          requestedBy: item.requestedBy,
+        })) ?? [],
+      requestedDocuments:
+        proposal?.requestedDocuments?.map((item) => ({
+          id: item.id,
+          type: item.type,
+          description: item.description,
+          requestedAt: item.requestedAt,
+          requestedBy: item.requestedBy,
+        })) ?? [],
+      documents:
+        proposal?.documents.map((item) => ({
+          id: item.id,
+          type: item.type,
+          fileName: item.fileName,
+          fileReference: item.fileReference,
+          submittedAt: item.submittedAt,
+          submittedBy: item.submittedBy,
+        })) ?? [],
+      conversationSummary: proposal
+        ? {
+            conversationId: proposal.conversationId,
+            totalMessages: messages.length,
+            lastMessageAt: lastMessage?.sentAt ?? null,
+            lastMessageBy: lastMessage ? this.principalByEmail(lastMessage.sender) : null,
+          }
+        : null,
+      logSummary: {
+        accessLog: this.state.objectAccessLogs.get(p.id) ?? null,
+        occurrenceLog: this.state.objectOccurrenceLogs.get(p.id) ?? null,
+        objectLogEntryCount: logEntries.length,
+        occurrenceEntryCount: occurrenceEntries.length,
+        attachmentCount,
+      },
+      directionContext:
+        forwarded || clarified
+          ? {
+              latestQuestion: forwarded?.note ?? null,
+              latestClarification: clarified?.note ?? null,
+              referredAt: forwarded?.occurredAt ?? null,
+              clarifiedAt: clarified?.occurredAt ?? null,
+            }
+          : null,
+    } satisfies ProjectStaffContext;
   }
 
   private transition(
@@ -601,6 +720,10 @@ export class ProjectApiServiceMock {
           (p) => p.user.id === session.user.id || p.user.email === session.user.email,
         ) ?? P['alice'])
       : P['alice'];
+  }
+
+  private principalByEmail(email: string) {
+    return Object.values(P).find((p) => p.user.email === email) ?? null;
   }
 
   private ensureObjectAccessLog(projectId: string): ObjectAccessLog {

@@ -12,6 +12,7 @@ import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -37,6 +38,12 @@ const LOG_ROUTE_SEGMENTS: Record<UseType, string> = {
   EXHIBITION: 'exhibition',
   IN_SITU_VISIT: 'research',
   OTHER: 'other',
+};
+
+const DETAIL_ROUTE_PREFIX: Partial<Record<GroupName, readonly string[]>> = {
+  COLLECTIONS_MANAGEMENT: ['/p/collections/projects/collections'],
+  CURATORIAL: ['/p/collections/projects/curatorial'],
+  DIRECTION: ['/p/collections/projects/direction'],
 };
 
 @Component({
@@ -149,7 +156,12 @@ export class ProjectsMyPageComponent {
         label: 'View',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigateByUrl(`/p/collections/projects/${projectId}`);
+          void this.router.navigate(this.detailRoute(projectId), {
+            queryParams: {
+              returnTo: '/p/collections/projects/my',
+              returnLabel: 'my projects',
+            },
+          });
         },
       },
       {
@@ -168,6 +180,12 @@ export class ProjectsMyPageComponent {
 
   protected requesterLabel(project: CollectionUseProjectSummary): string {
     return project.requestedBy?.user.name ?? 'Unknown requester';
+  }
+
+  private detailRoute(projectId: string): readonly string[] {
+    const group = this.identity.session()?.group;
+    const prefix = group ? DETAIL_ROUTE_PREFIX[group] : undefined;
+    return [...(prefix ?? ['/p/collections/projects']), projectId];
   }
 
   protected requesterEmail(project: CollectionUseProjectSummary): string {

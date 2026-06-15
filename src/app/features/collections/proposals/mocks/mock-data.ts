@@ -787,6 +787,15 @@ export const TEST_SEED: MockSeed = {
 export class MockProjectState {
   private readonly seed = inject(MOCK_SEED, { optional: true });
 
+  readonly proposals = new Map<string, ProposalDetail>(
+    (this.seed?.proposals ?? []).map((p) => [p.id, structuredClone(p)]),
+  );
+  readonly proposalEvents = new Map<string, ProposalEvent[]>(
+    Object.entries(this.seed?.proposalEvents ?? {}).map(([k, v]) => [k, structuredClone(v)]),
+  );
+  readonly messages = new Map<string, Message[]>(
+    Object.entries(this.seed?.messages ?? {}).map(([k, v]) => [k, structuredClone(v)]),
+  );
   readonly projects = new Map<string, MutableProjectState>(
     (this.seed?.projects ?? []).map((p) => [p.id, structuredClone(p)]),
   );
@@ -836,6 +845,7 @@ export class MockProjectState {
       proposalAssignedTo: proposal.assignedTo,
     };
     this.projects.set(project.id, project);
+    this.proposals.set(proposal.id, structuredClone(proposal));
     if (!existingProject) {
       this.logEntries.set(project.id, []);
       this.objectAccessLogs.delete(project.id);

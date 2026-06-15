@@ -39,6 +39,17 @@ const PROJECT: CollectionUseProjectDetail = {
       group: 'COLLECTIONS_MANAGEMENT',
     },
   },
+  actions: {
+    canStart: true,
+    canComplete: false,
+    canCancel: true,
+    canOpenLog: false,
+    canCreateObjectLogEntry: false,
+    canCreateOccurrenceEntry: false,
+    canConcludeObjectAccessLog: false,
+    canConcludeObjectOccurrenceLog: false,
+  },
+  staffContext: null,
 };
 
 const EVENTS_PAGE: ProjectEventsPage = {

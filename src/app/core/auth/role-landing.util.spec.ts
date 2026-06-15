@@ -32,11 +32,27 @@ describe('roleLandingUrl', () => {
     expect(roleLandingUrl('DIRECTION', '/p/collections/projects/pending')).toBeNull();
   });
 
+  it('moves staff users between role-specific project detail pages', () => {
+    expect(roleLandingUrl('COLLECTIONS_MANAGEMENT', '/p/collections/projects/curatorial/55')).toBe(
+      '/p/collections/projects/collections/55',
+    );
+    expect(
+      roleLandingUrl(
+        'DIRECTION',
+        '/p/collections/projects/collections/55?returnTo=%2Fp%2Fcollections%2Fprojects%2Fmy',
+      ),
+    ).toBe('/p/collections/projects/direction/55?returnTo=%2Fp%2Fcollections%2Fprojects%2Fmy');
+    expect(roleLandingUrl('CURATORIAL', '/p/collections/projects/curatorial/55')).toBeNull();
+  });
+
   it('moves an external user off staff project pages', () => {
     expect(roleLandingUrl('EXTERNAL', '/p/collections/projects/pending')).toBe(
       '/p/collections/projects/my',
     );
     expect(roleLandingUrl('EXTERNAL', '/p/collections/projects/in-progress')).toBe(
+      '/p/collections/projects/my',
+    );
+    expect(roleLandingUrl('EXTERNAL', '/p/collections/projects/curatorial/55')).toBe(
       '/p/collections/projects/my',
     );
   });
