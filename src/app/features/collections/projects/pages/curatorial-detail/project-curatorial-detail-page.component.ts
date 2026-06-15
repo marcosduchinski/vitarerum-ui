@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { ProjectDetailPageComponent } from '../detail/project-detail-page.component';
+import { ProjectStaffDetailPageComponent } from '../staff-detail/project-staff-detail-page.component';
 
 @Component({
   selector: 'app-project-curatorial-detail-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProjectDetailPageComponent],
+  imports: [ProjectStaffDetailPageComponent],
   template: `
-    <app-project-detail-page
+    <app-project-staff-detail-page
+      sectionLabel="Curatorial"
       [id]="id()"
       [returnTo]="returnTo()"
       [returnLabel]="returnLabel()"
