@@ -123,7 +123,10 @@ export class ProposalSubmitPageComponent {
       const response = await firstValueFrom(
         this.proposalService.createProposal({
           title: this.title().trim(),
-          type: this.type() as UseType,
+          intendedUse: {
+            useType: this.type() as UseType,
+            description: this.purpose().trim(),
+          },
           purpose: this.purpose().trim(),
           beginDate: this.beginDate(),
           endDate: this.endDate(),

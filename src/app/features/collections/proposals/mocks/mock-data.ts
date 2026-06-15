@@ -5,6 +5,7 @@ import { UserDetail } from '@core/auth/models/user.model';
 import { Page, PageQuery } from '@shared/models/page.model';
 import { ProposalStatus } from '@shared/models/collection-use-status.model';
 
+import { ApproveProposalRequest } from '../models/proposal-actions.model';
 import {
   ObjectAccessLog,
   ObjectLogEntry,
@@ -13,10 +14,10 @@ import {
   UseEvent,
 } from '@features/collections/projects/models/project.model';
 import {
-  CreateProposalRequest,
   Message,
   ProposalDetail,
   ProposalEvent,
+  ProposalProjectSummary,
 } from '../models/proposal.model';
 
 export const MOCK_GROUPS: Group[] = [
@@ -806,53 +807,56 @@ export class MockProjectState {
   );
   private nextId = 200;
 
-  createRequestedProject(
+  materializeProjectForProposal(
     proposal: ProposalDetail,
-    request: CreateProposalRequest,
-    referenceNumber: string,
-  ): void {
+    request: ApproveProposalRequest,
+    occurredAt: string,
+  ): ProposalProjectSummary & { status: 'CREATED' } {
+    const existing = proposal.collectionUseProject;
+    const existingProject = existing ? this.projects.get(existing.id) : null;
+    const projectId = existing?.id ?? `proj-${proposal.id.replace(/^prop-/, '')}`;
+    const referenceNumber =
+      existing?.referenceNumber && existing.referenceNumber.trim()
+        ? existing.referenceNumber
+        : `CUP-${String(this.nextId++).padStart(8, '0')}`;
+
     const project: MutableProjectState = {
-      id: proposal.collectionUseProject!.id,
+      id: projectId,
       referenceNumber,
       title: request.title,
       purpose: request.purpose,
-      type: request.type,
-      status: 'CREATED',
+      type: proposal.type,
+      status: existingProject?.status ?? 'CREATED',
+      result: existingProject?.result ?? null,
       beginDate: request.beginDate,
       endDate: request.endDate,
       requestedBy: proposal.requestedBy,
       proposalId: proposal.id,
-      proposalStatus: proposal.status,
+      proposalStatus: 'APPROVED',
       proposalAssignedTo: proposal.assignedTo,
     };
     this.projects.set(project.id, project);
-    this.logEntries.set(project.id, []);
-    this.objectAccessLogs.delete(project.id);
-    this.occurrenceEntries.set(project.id, []);
-    this.objectOccurrenceLogs.delete(project.id);
-    this.events.set(project.id, [
-      {
-        occurredAt: proposal.submittedAt,
-        type: 'REQUESTED',
-        triggeredBy: proposal.requestedBy,
-        note: null,
-      },
-    ]);
-  }
+    if (!existingProject) {
+      this.logEntries.set(project.id, []);
+      this.objectAccessLogs.delete(project.id);
+      this.occurrenceEntries.set(project.id, []);
+      this.objectOccurrenceLogs.delete(project.id);
+      this.events.set(project.id, [
+        {
+          occurredAt,
+          type: 'REQUESTED',
+          triggeredBy: proposal.requestedBy,
+          note: null,
+        },
+      ]);
+    }
 
-  acceptProjectForProposal(
-    proposal: ProposalDetail,
-    occurredAt: string,
-  ): MutableProjectState | null {
-    const project = this.projects.get(proposal.collectionUseProject!.id);
-    if (!project) return null;
-
-    // Proposal approval updates project metadata but does not change UseStatus:
-    // the project stays CREATED until staff explicitly starts it via startProject().
-    project.proposalStatus = 'APPROVED';
-    project.proposalAssignedTo = proposal.assignedTo;
-
-    return project;
+    return {
+      id: project.id,
+      referenceNumber: project.referenceNumber,
+      title: project.title,
+      status: 'CREATED',
+    };
   }
 
   syncProposalStatus(

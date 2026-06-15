@@ -30,7 +30,7 @@ describe('ProposalApiService', () => {
   it('creates a proposal with the documented body', () => {
     const body = {
       title: 'Specimen study',
-      type: 'IN_SITU_VISIT' as const,
+      intendedUse: { useType: 'IN_SITU_VISIT' as const, description: 'Research' },
       purpose: 'Research',
       beginDate: '2026-06-01',
       endDate: '2026-06-30',
@@ -46,7 +46,7 @@ describe('ProposalApiService', () => {
       proposal: {
         id: 'proposal-1',
         status: 'SUBMITTED',
-        type: 'IN_SITU_VISIT',
+        intendedUse: { useType: 'IN_SITU_VISIT', description: 'Research' },
         requestedBy: {
           permissionId: 'permission-1',
           user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
@@ -60,7 +60,7 @@ describe('ProposalApiService', () => {
         referenceNumber: 'CUP-2026-0001',
         title: 'Specimen study',
         purpose: 'Research',
-        type: 'IN_SITU_VISIT',
+        intendedUse: { useType: 'IN_SITU_VISIT', description: 'Research' },
         status: 'CREATED',
         beginDate: '2026-06-01',
         endDate: '2026-06-30',

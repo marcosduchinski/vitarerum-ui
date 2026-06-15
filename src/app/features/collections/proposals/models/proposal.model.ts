@@ -119,7 +119,7 @@ export interface CreateProposalRequestObject {
 
 export interface CreateProposalRequest {
   readonly title: string;
-  readonly type: UseType;
+  readonly intendedUse: IntendedUse;
   readonly purpose: string;
   readonly beginDate: string;
   readonly endDate: string;

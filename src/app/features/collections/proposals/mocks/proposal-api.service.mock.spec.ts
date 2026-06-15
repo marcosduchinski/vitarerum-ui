@@ -152,7 +152,7 @@ describe('ProposalApiServiceMock', () => {
       }),
     );
     expect(result.proposal.status).toBe('APPROVED');
-    expect(result.collectionUseProject.status).toBe('CREATED');
+    expect(result.collectionUseProject?.status).toBe('CREATED');
 
     const events = await firstValueFrom(service.listEvents('prop-3'));
     const last = events.content[events.content.length - 1];
@@ -220,24 +220,94 @@ describe('ProposalApiServiceMock', () => {
     const created = await firstValueFrom(
       service.createProposal({
         title: 'New study',
-        type: 'IN_SITU_VISIT',
+        intendedUse: { useType: 'IN_SITU_VISIT', description: 'Test' },
         purpose: 'Test',
         beginDate: '2026-07-01',
         endDate: '2026-12-31',
       }),
     );
     expect(created.proposal.status).toBe('SUBMITTED');
+    expect(created.proposal).not.toHaveProperty('collectionUseProject');
+
+    const detail = await firstValueFrom(service.getProposal(created.proposal.id));
+    expect(detail.collectionUseProject).toBeUndefined();
 
     const page = await firstValueFrom(service.listProposals());
     const found = page.content.find((p) => p.id === created.proposal.id);
     expect(found).toBeDefined();
+    expect(found?.collectionUseProject).toBeUndefined();
+  });
+
+  it('materializes a project only when a new proposal is approved', async () => {
+    const projectService = TestBed.inject(ProjectApiServiceMock);
+    const created = await firstValueFrom(
+      service.createProposal({
+        title: 'New study',
+        intendedUse: { useType: 'IN_SITU_VISIT', description: 'Test' },
+        purpose: 'Test',
+        beginDate: '2026-07-01',
+        endDate: '2026-12-31',
+      }),
+    );
+
+    const result = await firstValueFrom(
+      service.approveProposal(created.proposal.id, {
+        title: 'Approved project',
+        purpose: 'Approved purpose',
+        beginDate: '2026-08-01',
+        endDate: '2026-09-30',
+        note: 'Approved',
+      }),
+    );
+
+    expect(result.collectionUseProject).toMatchObject({
+      title: 'Approved project',
+      status: 'CREATED',
+    });
+    const projectSummary = result.collectionUseProject;
+    expect(projectSummary).not.toBeNull();
+
+    const detail = await firstValueFrom(service.getProposal(created.proposal.id));
+    expect(detail.collectionUseProject).toEqual(projectSummary);
+
+    if (!projectSummary) throw new Error('Expected approved proposal to materialize a project');
+    const project = await firstValueFrom(projectService.getProject(projectSummary.id));
+    expect(project).toMatchObject({
+      title: 'Approved project',
+      purpose: 'Approved purpose',
+      status: 'CREATED',
+      proposal: { id: created.proposal.id, status: 'APPROVED' },
+    });
+  });
+
+  it('rejects a new pre-approval proposal without a project', async () => {
+    const created = await firstValueFrom(
+      service.createProposal({
+        title: 'Rejected study',
+        intendedUse: { useType: 'OTHER', description: 'Test' },
+        purpose: 'Test',
+        beginDate: '2026-07-01',
+        endDate: '2026-12-31',
+      }),
+    );
+
+    const result = await firstValueFrom(
+      service.rejectProposal(created.proposal.id, { reason: 'Out of scope' }),
+    );
+
+    expect(result.proposal.status).toBe('REJECTED');
+    expect(result.collectionUseProject).toBeNull();
+
+    const detail = await firstValueFrom(service.getProposal(created.proposal.id));
+    expect(detail.status).toBe('REJECTED');
+    expect(detail.collectionUseProject).toBeUndefined();
   });
 
   it('seeds the opening message once from the initialMessage fields (Business Rule 01)', async () => {
     const created = await firstValueFrom(
       service.createProposal({
         title: 'New study',
-        type: 'IN_SITU_VISIT',
+        intendedUse: { useType: 'IN_SITU_VISIT', description: 'Test' },
         purpose: 'Test',
         beginDate: '2026-07-01',
         endDate: '2026-12-31',
@@ -261,7 +331,7 @@ describe('ProposalApiServiceMock', () => {
     const created = await firstValueFrom(
       service.createProposal({
         title: 'Fallback study',
-        type: 'IN_SITU_VISIT',
+        intendedUse: { useType: 'IN_SITU_VISIT', description: 'Fallback purpose text' },
         purpose: 'Fallback purpose text',
         beginDate: '2026-07-01',
         endDate: '2026-12-31',

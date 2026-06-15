@@ -73,9 +73,11 @@ export interface ProposalDecisionResult {
     readonly status: ProposalStatus;
     readonly lastEvent: ProposalEvent;
   };
-  readonly collectionUseProject: ProposalProjectSummary & {
-    readonly status: UseStatus;
-  };
+  readonly collectionUseProject:
+    | (ProposalProjectSummary & {
+        readonly status: UseStatus;
+      })
+    | null;
 }
 
 // Cancel returns a richer proposal summary, and `collectionUseProject` is null

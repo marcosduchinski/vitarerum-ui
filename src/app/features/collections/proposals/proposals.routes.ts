@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { externalGuard } from '@core/guards/external.guard';
 import { staffGuard } from '@core/guards/staff.guard';
 
 export const PROPOSALS_ROUTES: Routes = [
@@ -14,6 +15,7 @@ export const PROPOSALS_ROUTES: Routes = [
   {
     path: 'submit',
     title: 'Submit Proposal',
+    canMatch: [externalGuard],
     loadComponent: () =>
       import('./pages/submit/proposal-submit-page.component').then(
         (m) => m.ProposalSubmitPageComponent,

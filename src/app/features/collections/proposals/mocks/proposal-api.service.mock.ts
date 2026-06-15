@@ -55,12 +55,10 @@ export class ProposalApiServiceMock {
 
   createProposal(request: CreateProposalRequest): Observable<CreateProposalResponse> {
     const id = `prop-${this.nextId}`;
-    const projectId = `proj-${this.nextId}`;
     this.nextId++;
     const now = new Date().toISOString();
     const seq = this.proposals.size + 1;
     const proposalRef = `VRP-${now.slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(4, '0')}`;
-    const refNum = `VR-${new Date().getFullYear()}-${String(seq).padStart(3, '0')}`;
     const convId = `conv-${id}`;
 
     const proposal: ProposalDetail = {
@@ -68,17 +66,12 @@ export class ProposalApiServiceMock {
       referenceNumber: proposalRef,
       title: request.title,
       status: 'SUBMITTED',
-      type: request.type,
+      type: request.intendedUse.useType,
+      intendedUse: request.intendedUse,
       beginDate: request.beginDate,
       endDate: request.endDate,
       requestedBy: this.currentPrincipal(),
       assignedTo: null,
-      collectionUseProject: {
-        id: projectId,
-        referenceNumber: refNum,
-        title: request.title,
-        status: 'CREATED',
-      },
       submittedAt: now,
       watchers: [],
       conversationId: convId,
@@ -87,7 +80,6 @@ export class ProposalApiServiceMock {
     };
 
     this.proposals.set(id, proposal);
-    this.projectState.createRequestedProject(proposal, request, refNum);
     this.events.set(id, [
       { occurredAt: now, type: 'SUBMITTED', triggeredBy: this.currentPrincipal(), note: null },
     ]);
@@ -112,6 +104,7 @@ export class ProposalApiServiceMock {
         title: proposal.title,
         status: proposal.status,
         type: proposal.type,
+        intendedUse: proposal.intendedUse,
         beginDate: proposal.beginDate,
         endDate: proposal.endDate,
         requestedBy: proposal.requestedBy,
@@ -424,17 +417,21 @@ export class ProposalApiServiceMock {
       triggeredBy: this.currentPrincipal(),
       note: request.note || null,
     };
+    const collectionUseProject = this.projectState.materializeProjectForProposal(
+      proposal,
+      request,
+      now,
+    );
     const updated = {
       ...proposal,
       status: 'APPROVED' as const,
-      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CREATED' as const },
+      collectionUseProject,
     };
     this.proposals.set(proposalId, updated);
-    this.projectState.acceptProjectForProposal(updated, now);
     this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'APPROVED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CREATED' },
+      collectionUseProject,
     });
   }
 
@@ -451,10 +448,13 @@ export class ProposalApiServiceMock {
       triggeredBy: this.currentPrincipal(),
       note: request.reason,
     };
+    const collectionUseProject = proposal.collectionUseProject
+      ? { ...proposal.collectionUseProject, status: 'CANCELLED' as const }
+      : null;
     this.proposals.set(proposalId, {
       ...proposal,
       status: 'REJECTED',
-      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CANCELLED' },
+      ...(collectionUseProject ? { collectionUseProject } : {}),
     });
     this.projectState.syncProposalStatus(
       proposalId,
@@ -465,7 +465,7 @@ export class ProposalApiServiceMock {
     this.pushEvent(proposalId, evt);
     return of({
       proposal: { id: proposalId, status: 'REJECTED', lastEvent: evt },
-      collectionUseProject: { ...proposal.collectionUseProject!, status: 'CANCELLED' },
+      collectionUseProject,
     });
   }
 
