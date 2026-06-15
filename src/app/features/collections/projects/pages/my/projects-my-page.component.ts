@@ -29,8 +29,14 @@ const CANCEL_REASON = 'Cancelled from my projects.';
 
 const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
+  IN_SITU_VISIT: 'In-situ visit',
   OTHER: 'Other',
+};
+
+const LOG_ROUTE_SEGMENTS: Record<UseType, string> = {
+  EXHIBITION: 'exhibition',
+  IN_SITU_VISIT: 'research',
+  OTHER: 'other',
 };
 
 @Component({
@@ -221,12 +227,12 @@ export class ProjectsMyPageComponent {
   }
 
   protected log(project: CollectionUseProjectSummary): void {
-    const logType = project.type.toLowerCase();
+    const logType = LOG_ROUTE_SEGMENTS[project.type];
     void this.router.navigateByUrl(`/p/collections/projects/${project.id}/log/${logType}`);
   }
 
   protected occurrences(project: CollectionUseProjectSummary): void {
-    const logType = project.type.toLowerCase();
+    const logType = LOG_ROUTE_SEGMENTS[project.type];
     void this.router.navigateByUrl(`/p/collections/projects/${project.id}/occurrences/${logType}`);
   }
 

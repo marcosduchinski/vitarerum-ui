@@ -9,7 +9,7 @@
 **Query parameters**
 ```
 status      : UseStatus    (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
-type        : UseType      (optional) EXHIBITION | RESEARCH | OTHER — filters intendedUse.useType
+type        : UseType      (optional) EXHIBITION | IN_SITU_VISIT | OTHER — filters intendedUse.useType
 requestedBy : PermissionId (optional) scope to projects requested by this permission
 dateFrom    : LocalDate    (optional) reserved — accepted but not yet applied
 dateTo      : LocalDate    (optional) reserved — accepted but not yet applied
@@ -31,7 +31,7 @@ size        : Integer       (default 20)
       "purpose": "string",
       "note": null,
       "intendedUse": {
-        "useType": "RESEARCH",
+        "useType": "IN_SITU_VISIT",
         "description": "string"
       },
       "status": "IN_PROGRESS",
@@ -94,7 +94,7 @@ projectId : UUID (required)
   "purpose": "string",
   "note": null,
   "intendedUse": {
-    "useType": "RESEARCH",
+    "useType": "IN_SITU_VISIT",
     "description": "string"
   },
   "status": "IN_PROGRESS",

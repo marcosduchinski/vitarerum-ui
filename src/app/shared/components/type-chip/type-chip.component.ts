@@ -9,7 +9,7 @@ interface TypePresentation {
 
 const TYPE_PRESENTATION = {
   EXHIBITION: { label: 'Exhibition', tone: 'exhibition' },
-  RESEARCH: { label: 'Research', tone: 'research' },
+  IN_SITU_VISIT: { label: 'In-situ visit', tone: 'research' },
   OTHER: { label: 'Other', tone: 'other' },
 } as const satisfies Record<UseType, TypePresentation>;
 

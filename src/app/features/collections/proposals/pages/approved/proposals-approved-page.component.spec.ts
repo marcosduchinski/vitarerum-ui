@@ -15,7 +15,7 @@ const APPROVED_PROPOSAL: ProposalSummary = {
   referenceNumber: 'VR-2026-001',
   title: 'Approved research request',
   status: 'APPROVED',
-  type: 'RESEARCH',
+  type: 'IN_SITU_VISIT',
   requestedBy: {
     permissionId: 'permission-external',
     user: { id: 'user-1', name: 'Alice Ferreira', email: 'alice@example.test' },

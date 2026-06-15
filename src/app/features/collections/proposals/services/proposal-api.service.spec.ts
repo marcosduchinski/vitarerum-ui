@@ -30,7 +30,7 @@ describe('ProposalApiService', () => {
   it('creates a proposal with the documented body', () => {
     const body = {
       title: 'Specimen study',
-      type: 'RESEARCH' as const,
+      type: 'IN_SITU_VISIT' as const,
       purpose: 'Research',
       beginDate: '2026-06-01',
       endDate: '2026-06-30',
@@ -46,7 +46,7 @@ describe('ProposalApiService', () => {
       proposal: {
         id: 'proposal-1',
         status: 'SUBMITTED',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         requestedBy: {
           permissionId: 'permission-1',
           user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
@@ -60,7 +60,7 @@ describe('ProposalApiService', () => {
         referenceNumber: 'CUP-2026-0001',
         title: 'Specimen study',
         purpose: 'Research',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         status: 'CREATED',
         beginDate: '2026-06-01',
         endDate: '2026-06-30',
@@ -73,7 +73,7 @@ describe('ProposalApiService', () => {
     service
       .listProposals({
         status: 'PENDING',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         requestedBy: 'permission-external',
         assignedTo: 'permission-1',
         dateFrom: '2026-01-01',
@@ -85,7 +85,7 @@ describe('ProposalApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/proposals?status=PENDING&type=RESEARCH&requested_by=permission-external&assigned_to=permission-1&date_from=2026-01-01&date_to=2026-01-31&search=CUP&page=1&size=25',
+      'https://api.example.test/proposals?status=PENDING&type=IN_SITU_VISIT&requested_by=permission-external&assigned_to=permission-1&date_from=2026-01-01&date_to=2026-01-31&search=CUP&page=1&size=25',
     );
 
     expect(request.request.method).toBe('GET');
@@ -107,7 +107,7 @@ describe('ProposalApiService', () => {
             referenceNumber: 'VRP-20260101-0001',
             title: 'Proposal',
             status: 'PENDING',
-            intendedUse: { useType: 'RESEARCH', description: 'Comparative study' },
+            intendedUse: { useType: 'IN_SITU_VISIT', description: 'Comparative study' },
           },
         ],
         page: 0,
@@ -115,7 +115,7 @@ describe('ProposalApiService', () => {
         totalElements: 1,
         totalPages: 1,
       });
-    expect(listType).toBe('RESEARCH');
+    expect(listType).toBe('IN_SITU_VISIT');
 
     let detailType: string | undefined;
     service.getProposal('pr1').subscribe((p) => (detailType = p.type));

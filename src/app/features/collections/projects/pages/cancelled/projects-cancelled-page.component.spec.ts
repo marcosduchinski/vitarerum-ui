@@ -15,7 +15,7 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 5 
   referenceNumber: `VR-2026-${String(index + 51).padStart(3, '0')}`,
   title: index === 2 ? 'Cancelled railway survey access' : 'Cancelled manuscript request',
   purpose: 'Request cancelled before or during execution.',
-  type: index % 3 === 1 ? 'EXHIBITION' : index % 3 === 2 ? 'OTHER' : 'RESEARCH',
+  type: index % 3 === 1 ? 'EXHIBITION' : index % 3 === 2 ? 'OTHER' : 'IN_SITU_VISIT',
   status: 'CANCELLED',
   result: 'CANCELLED',
   beginDate: '2026-06-10',
@@ -107,7 +107,7 @@ describe('ProjectsCancelledPageComponent', () => {
     expect(text).toContain('Assigned staff');
     expect(text).toContain('VR-2026-051');
     expect(text).toContain('Cancelled manuscript request');
-    expect(text).toContain('Research');
+    expect(text).toContain('In-situ visit');
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(viewLink?.getAttribute('href')).toBe('/p/collections/projects/project-1');

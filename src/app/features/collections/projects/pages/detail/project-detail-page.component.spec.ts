@@ -21,7 +21,7 @@ const PROJECT: CollectionUseProjectDetail = {
   referenceNumber: 'VR-2026-012',
   title: 'Atlantic forest zoology specimens',
   purpose: 'Comparative study of specimen records.',
-  type: 'RESEARCH',
+  type: 'IN_SITU_VISIT',
   status: 'CREATED',
   beginDate: '2026-07-01',
   endDate: '2026-12-31',

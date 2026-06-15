@@ -40,7 +40,7 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 4 
   referenceNumber: `VR-2026-${String(index + 51).padStart(3, '0')}`,
   title: index === 2 ? 'Field notebook transcription' : 'Illuminated manuscripts access',
   purpose: 'Active collection-use work with staff supervision.',
-  type: index === 1 ? 'EXHIBITION' : index === 2 ? 'OTHER' : 'RESEARCH',
+  type: index === 1 ? 'EXHIBITION' : index === 2 ? 'OTHER' : 'IN_SITU_VISIT',
   status: 'IN_PROGRESS',
   result: null,
   beginDate: '2026-06-10',
@@ -216,7 +216,7 @@ describe('ProjectsMyPageComponent', () => {
 
     expect(text).toContain('VR-2026-051');
     expect(text).toContain('Illuminated manuscripts access');
-    expect(text).toContain('Research');
+    expect(text).toContain('In-situ visit');
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('In progress');

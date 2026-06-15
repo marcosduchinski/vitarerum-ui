@@ -172,8 +172,6 @@ export class ProposalApiServiceMock {
       id: `reqobj-${this.nextId++}`,
       objectReference: {
         inventoryNumber: o.inventoryNumber,
-        otherNumber: null,
-        numberOfObjects: 1,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,

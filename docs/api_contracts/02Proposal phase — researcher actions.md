@@ -11,7 +11,7 @@
 {
   "title": "string",
   "intendedUse": {
-    "useType": "EXHIBITION | RESEARCH | OTHER",
+    "useType": "EXHIBITION | IN_SITU_VISIT | OTHER",
     "description": "string"
   },
   "purpose": "string",
@@ -30,7 +30,7 @@
 }
 ```
 
-`intendedUse` describes how the collection will be used: a categorised `useType` (`EXHIBITION` · `RESEARCH` · `OTHER`) and a free-text `description` (optional, defaults to an empty string). `initialMessageRecipient` defaults to `collections@museum.pt` when omitted or blank. `initialMessageSubject` falls back to `title` and `initialMessageBody` falls back to `purpose` when omitted. The sender of the seeded message is resolved from the authenticated caller. `requestedObjects` is optional — each item names a collection object (by inventory number) the researcher wishes to use; the server resolves it to an `ObjectReference` snapshot. More objects can be added later via `POST /proposals/{proposalId}/requested-objects`.
+`intendedUse` describes how the collection will be used: a categorised `useType` (`EXHIBITION` · `IN_SITU_VISIT` · `OTHER`) and a free-text `description` (optional, defaults to an empty string). `initialMessageRecipient` defaults to `collections@museum.pt` when omitted or blank. `initialMessageSubject` falls back to `title` and `initialMessageBody` falls back to `purpose` when omitted. The sender of the seeded message is resolved from the authenticated caller. `requestedObjects` is optional — each item names a collection object (by inventory number) the researcher wishes to use; the server resolves it to an `ObjectReference` snapshot. More objects can be added later via `POST /proposals/{proposalId}/requested-objects`.
 
 **Response `201 Created`**
 ```json
@@ -41,7 +41,7 @@
     "title": "string",
     "status": "SUBMITTED",
     "intendedUse": {
-      "useType": "RESEARCH",
+      "useType": "IN_SITU_VISIT",
       "description": "string"
     },
     "beginDate": "2025-06-01",
@@ -125,7 +125,7 @@ proposalId : UUID (required)
   "title": "string",
   "status": "PENDING",
   "intendedUse": {
-    "useType": "RESEARCH",
+    "useType": "IN_SITU_VISIT",
     "description": "string"
   },
   "beginDate": "2025-06-01",
@@ -207,8 +207,6 @@ proposalId : UUID (required)
       "id": "uuid",
       "objectReference": {
         "inventoryNumber": "INV-001",
-        "otherNumber": null,
-        "numberOfObjects": 1,
         "displayTitle": null,
         "objectName": null,
         "briefDescriptionSnapshot": null
@@ -231,7 +229,7 @@ proposalId : UUID (required)
 }
 ```
 
-`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`), the top-level `title` is the title submitted with the proposal, and `beginDate` / `endDate` are the requested use period. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings, `status` is the placeholder `CREATED`, and `requestedBy` is `null`. After approval these reflect the real project (`CUP-XXXXXXXX`) and its `requestedBy` permission. `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. On `objectReference`, `numberOfObjects` defaults to `1` for requested objects and `otherNumber` is an optional secondary catalogue number; `otherNumber` and the descriptive fields (`displayTitle`, `objectName`, `briefDescriptionSnapshot`) are `null` until a real object catalog is wired in.
+`status` is a `ProposalStatus` — one of `SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`. The top-level `referenceNumber` is the proposal reference (`VRP-YYYYMMDD-XXXX`), the top-level `title` is the title submitted with the proposal, and `beginDate` / `endDate` are the requested use period. `collectionUseProject` is always present in the shape, but until the proposal is approved no project exists yet: its `referenceNumber` and `title` are empty strings, `status` is the placeholder `CREATED`, and `requestedBy` is `null`. After approval these reflect the real project (`CUP-XXXXXXXX`) and its `requestedBy` permission. `requestedDocuments` lists the document types a staff attendant has formally requested (via `POST /proposals/{proposalId}/request-documents`); `documents` lists the files actually uploaded; `requestedObjects` lists the collection objects the researcher asked to use. `submittedBy`, `requestedBy` are full permission objects, not bare ids. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in.
 
 **Response `404 Not Found`**
 ```json

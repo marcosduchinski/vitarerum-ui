@@ -159,7 +159,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     status: 'SUBMITTED',
     beginDate: '2026-06-01',
     endDate: '2026-12-31',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     requestedBy: P['alice'],
     assignedTo: null,
     collectionUseProject: {
@@ -222,7 +222,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     status: 'APPROVED',
     beginDate: '2026-06-10',
     endDate: '2027-02-28',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     requestedBy: P['hugo'],
     assignedTo: P['carol'],
     collectionUseProject: {
@@ -308,7 +308,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     status: 'REJECTED',
     beginDate: '2026-07-15',
     endDate: '2027-01-31',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     requestedBy: P['hugo'],
     assignedTo: P['bob'],
     collectionUseProject: {
@@ -331,7 +331,7 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     status: 'APPROVED',
     beginDate: '2026-06-01',
     endDate: '2026-06-05',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     requestedBy: P['hugo'],
     assignedTo: P['dan'],
     collectionUseProject: {
@@ -518,7 +518,7 @@ export interface MutableProjectState {
   referenceNumber: string;
   title: string;
   purpose: string;
-  type: 'EXHIBITION' | 'RESEARCH' | 'OTHER';
+  type: 'EXHIBITION' | 'IN_SITU_VISIT' | 'OTHER';
   status: import('@shared/models/collection-use-status.model').UseStatus;
   result?: import('@shared/models/collection-use-status.model').UseResult | null;
   note?: string | null;
@@ -536,7 +536,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     referenceNumber: 'VR-2026-001',
     title: 'Zoology specimen catalogues from Atlantic forest surveys',
     purpose: 'Research comparing zoological specimen catalogues and collecting routes.',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     status: 'CREATED',
     beginDate: '2026-06-01',
     endDate: '2026-12-31',
@@ -565,7 +565,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     referenceNumber: 'VR-2026-003',
     title: 'Comparative study of zoological field notebooks',
     purpose: 'Research comparing zoological field notebooks, sketches, and specimen lists.',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     status: 'IN_PROGRESS',
     beginDate: '2026-06-10',
     endDate: '2027-02-28',
@@ -608,7 +608,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     referenceNumber: 'VR-2026-006',
     title: 'Botanical herbarium records of medicinal plant collections',
     purpose: 'Research on botanical herbarium records and medicinal plant classification.',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     status: 'CANCELLED',
     result: 'CANCELLED',
     beginDate: '2026-07-15',
@@ -623,7 +623,7 @@ export const SEED_PROJECTS: MutableProjectState[] = [
     referenceNumber: 'VR-2026-007',
     title: 'Photographic history of Rio de Janeiro port, 1890–1930',
     purpose: 'Research on photographic records documenting Rio de Janeiro port history.',
-    type: 'RESEARCH',
+    type: 'IN_SITU_VISIT',
     status: 'COMPLETED',
     result: 'COMPLETED',
     beginDate: '2026-06-01',
@@ -692,8 +692,6 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
       id: 'entry-101',
       objectReference: {
         inventoryNumber: 'INV-ZOO-1892-001',
-        otherNumber: 'ZOO-OLD-0451',
-        numberOfObjects: 1,
         displayTitle: 'Atlantic forest field notebook',
         objectName: 'Field notebook',
         briefDescriptionSnapshot:
@@ -709,8 +707,6 @@ export const SEED_PROJECT_LOG_ENTRIES: Record<string, ObjectLogEntry[]> = {
       id: 'entry-102',
       objectReference: {
         inventoryNumber: 'INV-ZOO-1892-002',
-        otherNumber: null,
-        numberOfObjects: 3,
         displayTitle: 'Field sketch set',
         objectName: 'Sketches',
         briefDescriptionSnapshot: 'Three field sketches cross-referenced with catalogue records.',

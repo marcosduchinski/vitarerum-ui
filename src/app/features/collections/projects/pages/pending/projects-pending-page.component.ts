@@ -29,7 +29,7 @@ const CANCEL_REASON = 'Cancelled from created projects awaiting start.';
 
 const TYPE_LABELS: Record<UseType, string> = {
   EXHIBITION: 'Exhibition',
-  RESEARCH: 'Research',
+  IN_SITU_VISIT: 'In-situ visit',
   OTHER: 'Other',
 };
 

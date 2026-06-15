@@ -19,7 +19,7 @@ const PROPOSAL: ProposalDetail = {
   referenceNumber: 'VR-2026-002',
   title: 'Manuscript digitisation request',
   status: 'PENDING',
-  type: 'RESEARCH',
+  type: 'IN_SITU_VISIT',
   beginDate: '2026-07-01',
   endDate: '2026-12-31',
   requestedBy: {
@@ -98,10 +98,7 @@ describe('ProposalOthersDetailPageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ProposalOthersDetailPageComponent],
-      providers: [
-        provideRouter([]),
-        { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
-      ],
+      providers: [provideRouter([]), { provide: PROPOSAL_API_SERVICE, useValue: proposalService }],
     }).compileComponents();
   });
 
@@ -157,7 +154,9 @@ describe('ProposalOthersDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(proposalService.assignCalls).toEqual([{ proposalId: 'proposal-1', payload: { note: '' } }]);
+    expect(proposalService.assignCalls).toEqual([
+      { proposalId: 'proposal-1', payload: { note: '' } },
+    ]);
     expect(navigateSpy).toHaveBeenCalledWith([
       '/p/collections/proposals/my-assignments',
       'proposal-1',

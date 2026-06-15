@@ -31,7 +31,7 @@ describe('ProjectApiService', () => {
     service
       .listProjects({
         status: 'IN_PROGRESS',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         requestedBy: 'user-1',
         assignedTo: 'permission-1',
         dateFrom: '2026-06-01',
@@ -43,7 +43,7 @@ describe('ProjectApiService', () => {
       .subscribe();
 
     const request = http.expectOne(
-      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=RESEARCH&requestedBy=user-1&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
+      'https://api.example.test/collection-use-projects?status=IN_PROGRESS&type=IN_SITU_VISIT&requestedBy=user-1&dateFrom=2026-06-01&dateTo=2026-06-30&search=specimen&page=3&size=15',
     );
 
     expect(request.request.method).toBe('GET');
@@ -69,7 +69,7 @@ describe('ProjectApiService', () => {
             status: 'IN_PROGRESS',
             beginDate: '2026-06-01',
             endDate: '2026-06-30',
-            intendedUse: { useType: 'RESEARCH', description: 'Comparative study' },
+            intendedUse: { useType: 'IN_SITU_VISIT', description: 'Comparative study' },
             proposal: { id: 'pr1', status: 'APPROVED' },
           },
         ],
@@ -78,7 +78,7 @@ describe('ProjectApiService', () => {
         totalElements: 1,
         totalPages: 1,
       });
-    expect(listType).toBe('RESEARCH');
+    expect(listType).toBe('IN_SITU_VISIT');
 
     let detailType: string | undefined;
     service.getProject('p1').subscribe((p) => (detailType = p.type));
@@ -119,8 +119,6 @@ describe('ProjectApiService', () => {
       id: 'entry-1',
       objectReference: {
         inventoryNumber: 'INV-001',
-        otherNumber: 'ALT-001',
-        numberOfObjects: 2,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,
@@ -212,8 +210,6 @@ describe('ProjectApiService', () => {
       id: 'entry-1',
       objectReference: {
         inventoryNumber: 'INV-001',
-        otherNumber: null,
-        numberOfObjects: 3,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,
@@ -339,8 +335,6 @@ describe('ProjectApiService', () => {
       id: 'occurrence-1',
       objectReference: {
         inventoryNumber: 'INV-001',
-        otherNumber: null,
-        numberOfObjects: 1,
         displayTitle: null,
         objectName: null,
         briefDescriptionSnapshot: null,

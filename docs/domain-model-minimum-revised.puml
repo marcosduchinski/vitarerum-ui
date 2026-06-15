@@ -31,8 +31,6 @@ package "Shared Kernel" <<Shared Kernel>> {
 
         class ObjectReference <<Value Object>> #e0afea {
         - inventoryNumber: String
-        - otherNumber: String?
-        - numberOfObjects: Integer
         - displayTitle: String?
         - objectName: String?
         - briefDescriptionSnapshot: String?
@@ -126,7 +124,7 @@ package "User Request" <<Bounded Context>> {
 
         enum UseType #ffeead {
         EXHIBITION
-        RESEARCH
+        IN_SITU_VISIT
         OTHER
         }
 

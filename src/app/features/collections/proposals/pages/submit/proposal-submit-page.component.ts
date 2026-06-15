@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -16,7 +10,7 @@ import { UseType } from '@shared/models/collection-use-status.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 const USE_TYPES: { value: UseType; label: string }[] = [
-  { value: 'RESEARCH', label: 'Research' },
+  { value: 'IN_SITU_VISIT', label: 'In-situ visit' },
   { value: 'EXHIBITION', label: 'Exhibition' },
   { value: 'OTHER', label: 'Other' },
 ];
@@ -35,8 +29,10 @@ export class ProposalSubmitPageComponent {
 
   protected readonly useTypes = USE_TYPES;
 
-  protected readonly title = signal('Palaeontology specimen records from late Cretaceous excavations');
-  protected readonly type = signal<UseType | ''>('RESEARCH');
+  protected readonly title = signal(
+    'Palaeontology specimen records from late Cretaceous excavations',
+  );
+  protected readonly type = signal<UseType | ''>('IN_SITU_VISIT');
   protected readonly purpose = signal(
     'Comparative research on palaeontology specimen records and excavation documentation from late Cretaceous periods across South American sites.',
   );
@@ -81,16 +77,33 @@ export class ProposalSubmitPageComponent {
   );
 
   protected onInput(field: string, event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value;
+    const value = (event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)
+      .value;
     switch (field) {
-      case 'title': this.title.set(value); break;
-      case 'type': this.type.set(value as UseType); break;
-      case 'purpose': this.purpose.set(value); break;
-      case 'beginDate': this.beginDate.set(value); break;
-      case 'endDate': this.endDate.set(value); break;
-      case 'recipient': this.recipient.set(value); break;
-      case 'subject': this.subject.set(value); break;
-      case 'body': this.body.set(value); break;
+      case 'title':
+        this.title.set(value);
+        break;
+      case 'type':
+        this.type.set(value as UseType);
+        break;
+      case 'purpose':
+        this.purpose.set(value);
+        break;
+      case 'beginDate':
+        this.beginDate.set(value);
+        break;
+      case 'endDate':
+        this.endDate.set(value);
+        break;
+      case 'recipient':
+        this.recipient.set(value);
+        break;
+      case 'subject':
+        this.subject.set(value);
+        break;
+      case 'body':
+        this.body.set(value);
+        break;
     }
   }
 

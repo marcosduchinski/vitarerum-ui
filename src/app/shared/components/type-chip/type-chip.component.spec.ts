@@ -12,12 +12,15 @@ import { getUseTypePresentation, TypeChipComponent } from './type-chip.component
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class TypeChipHostComponent {
-  type: UseType = 'RESEARCH';
+  type: UseType = 'IN_SITU_VISIT';
 }
 
 describe('TypeChipComponent', () => {
   it('maps use types to labels and tones', () => {
-    expect(getUseTypePresentation('RESEARCH')).toEqual({ label: 'Research', tone: 'research' });
+    expect(getUseTypePresentation('IN_SITU_VISIT')).toEqual({
+      label: 'In-situ visit',
+      tone: 'research',
+    });
     expect(getUseTypePresentation('EXHIBITION')).toEqual({
       label: 'Exhibition',
       tone: 'exhibition',
@@ -37,8 +40,8 @@ describe('TypeChipComponent', () => {
 
     const chip = fixture.nativeElement.querySelector('.type-chip') as HTMLElement | null;
 
-    expect(chip?.textContent?.trim()).toBe('Research');
+    expect(chip?.textContent?.trim()).toBe('In-situ visit');
     expect(chip?.classList.contains('type-chip--research')).toBe(true);
-    expect(chip?.getAttribute('aria-label')).toBe('Proposal type: Research');
+    expect(chip?.getAttribute('aria-label')).toBe('Proposal type: In-situ visit');
   });
 });

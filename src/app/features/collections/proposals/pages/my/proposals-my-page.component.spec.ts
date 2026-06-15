@@ -42,7 +42,7 @@ const PROPOSAL: ProposalSummary = {
   referenceNumber: 'VR-2026-001',
   title: 'Photographic history of Rio de Janeiro port, 1890-1930',
   status: 'SUBMITTED',
-  type: 'RESEARCH',
+  type: 'IN_SITU_VISIT',
   requestedBy: {
     permissionId: 'permission-external',
     user: { id: 'user-1', name: 'Alice Ferreira', email: 'alice@example.test' },
@@ -211,9 +211,7 @@ describe('ProposalsMyPageComponent', () => {
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('My proposals');
     expect(compiled.textContent).toContain('Reference');
-    expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/proposal-1"]'),
-    ).not.toBeNull();
+    expect(compiled.querySelector('a[href^="/p/collections/proposals/proposal-1"]')).not.toBeNull();
     expect(compiled.querySelector('a[href^="/p/collections/proposals/my/proposal-1"]')).toBeNull();
     expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });

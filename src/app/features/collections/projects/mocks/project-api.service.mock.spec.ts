@@ -179,22 +179,6 @@ describe('ProjectApiServiceMock', () => {
     expect(entry.objectReference.inventoryNumber).toBe('INV-003');
   });
 
-  it('mirrors the entry quantity onto objectReference.numberOfObjects', async () => {
-    session.set(staffSession());
-    state.projects.get('proj-4')!.status = 'IN_PROGRESS';
-
-    const entry = await firstValueFrom(
-      service.createObjectLogEntry('proj-4', {
-        inventoryNumber: 'INV-MIRROR',
-        numberOfObjects: 4,
-      }),
-    );
-
-    expect(entry.objectReference.numberOfObjects).toBe(entry.numberOfObjects);
-    expect(entry.objectReference.numberOfObjects).toBe(4);
-    expect(entry.objectReference.otherNumber).toBeNull();
-  });
-
   it.each(['CREATED', 'CANCELLED'] as const)(
     'allows staff to create object log entries while project is %s',
     async (status) => {

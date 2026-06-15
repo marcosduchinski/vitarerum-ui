@@ -25,7 +25,7 @@ import { UseType } from '@shared/models/collection-use-status.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 const LOG_ROUTE: Record<UseType, string> = {
-  RESEARCH: 'research',
+  IN_SITU_VISIT: 'research',
   EXHIBITION: 'exhibition',
   OTHER: 'other',
 };

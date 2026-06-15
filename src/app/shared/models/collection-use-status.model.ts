@@ -1,4 +1,4 @@
-export type UseType = 'EXHIBITION' | 'RESEARCH' | 'OTHER';
+export type UseType = 'EXHIBITION' | 'IN_SITU_VISIT' | 'OTHER';
 
 // The backend wraps the use type in a value object: `intendedUse: { useType,
 // description }`. The app reads the flat `useType`; `description` is currently

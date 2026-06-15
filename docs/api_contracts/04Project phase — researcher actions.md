@@ -9,7 +9,7 @@
 **Query parameters**
 ```
 status      : UseStatus    (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
-type        : UseType      (optional) EXHIBITION | RESEARCH | OTHER — filters intendedUse.useType
+type        : UseType      (optional) EXHIBITION | IN_SITU_VISIT | OTHER — filters intendedUse.useType
 requestedBy : PermissionId (optional) staff-only; ignored for non-staff callers
 dateFrom    : LocalDate    (optional) reserved — accepted but not yet applied
 dateTo      : LocalDate    (optional) reserved — accepted but not yet applied
@@ -31,7 +31,7 @@ size        : Integer       (default 20)
       "purpose": "string",
       "note": null,
       "intendedUse": {
-        "useType": "RESEARCH",
+        "useType": "IN_SITU_VISIT",
         "description": "string"
       },
       "status": "CREATED",
@@ -80,7 +80,7 @@ projectId : UUID (required)
   "purpose": "string",
   "note": null,
   "intendedUse": {
-    "useType": "RESEARCH",
+    "useType": "IN_SITU_VISIT",
     "description": "string"
   },
   "status": "IN_PROGRESS",
@@ -302,8 +302,6 @@ projectId : UUID (required)
   "id": "uuid",
   "objectReference": {
     "inventoryNumber": "INV-001",
-    "otherNumber": null,
-    "numberOfObjects": 2,
     "displayTitle": null,
     "objectName": null,
     "briefDescriptionSnapshot": null
@@ -321,7 +319,7 @@ projectId : UUID (required)
 }
 ```
 
-`addedBy` is a full permission object, not a bare UUID. On `objectReference`, `numberOfObjects` mirrors the entry's `numberOfObjects` and `otherNumber` is an optional secondary catalogue number (`null` when absent); the remaining catalogue fields (`displayTitle`, `objectName`, `briefDescriptionSnapshot`) are `null` until a real object catalog is wired in. `requestedObjectId` is `null` when the entry isn't linked to a requested object.
+`addedBy` is a full permission object, not a bare UUID. `objectReference` fields other than `inventoryNumber` are `null` until a real object catalog is wired in. `requestedObjectId` is `null` when the entry isn't linked to a requested object.
 
 **Response `409 Conflict`**
 ```json
@@ -406,8 +404,6 @@ size    : Integer  (default 20)
       "id": "uuid",
       "objectReference": {
         "inventoryNumber": "INV-001",
-        "otherNumber": null,
-        "numberOfObjects": 1,
         "displayTitle": null,
         "objectName": null,
         "briefDescriptionSnapshot": null
@@ -567,8 +563,6 @@ fileReference : String (required) the attachment's fileReference
   "id": "uuid",
   "objectReference": {
     "inventoryNumber": "INV-001",
-    "otherNumber": null,
-    "numberOfObjects": 1,
     "displayTitle": null,
     "objectName": null,
     "briefDescriptionSnapshot": null
@@ -752,7 +746,7 @@ A few conventions worth noting across this group:
 
 **Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number): each entry records a `numberOfObjects` and optional `observations`. `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number): each entry records `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and an optional `testimonial`. Both logs are created lazily on the first entry, reject entries and attachments once concluded, and are restricted to `IN_PROGRESS` projects for researchers. Either entry may optionally carry `requestedObjectId` linking it back to the `RequestedObject` it fulfils (log entry) or concerns (occurrence entry), giving end-to-end traceability from request → visit → attachments for a given object.
 
-**`objects` reference inventory items** — the request `objects` field accepts inventory-number strings; the server resolves each to an `ObjectReference` snapshot (`inventoryNumber`, `otherNumber`, `numberOfObjects`, `displayTitle`, `objectName`, `briefDescriptionSnapshot`). `numberOfObjects` mirrors the owning entry's quantity (defaulting to `1`); `otherNumber` and the descriptive fields are `null` until a real object catalog is wired in.
+**`objects` reference inventory items** — the request `objects` field accepts inventory-number strings; the server resolves each to an `ObjectReference` snapshot (`inventoryNumber`, `displayTitle`, `objectName`, `briefDescriptionSnapshot`). Only `inventoryNumber` is populated until a real object catalog is wired in.
 
 **`addedBy` is a full permission object** — entry responses return `addedBy` as a nested `PermissionDetail`, not a bare UUID.
 

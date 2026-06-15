@@ -9,7 +9,7 @@
 **Query parameters**
 ```
 status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECTED | CANCELLED
-type        : UseType          (optional) EXHIBITION | RESEARCH | OTHER — filters intendedUse.useType
+type        : UseType          (optional) EXHIBITION | IN_SITU_VISIT | OTHER — filters intendedUse.useType
 requested_by: UUID             (optional) filter by researcher (honoured for staff only)
 assigned_to : UUID             (optional) filter by attendant permissionId
 date_from   : LocalDate        (optional) filter by requested begin date range
@@ -29,7 +29,7 @@ size        : Integer          (default 20)
       "title": "string",
       "status": "PENDING",
       "intendedUse": {
-        "useType": "RESEARCH",
+        "useType": "IN_SITU_VISIT",
         "description": "string"
       },
       "beginDate": "2025-06-01",

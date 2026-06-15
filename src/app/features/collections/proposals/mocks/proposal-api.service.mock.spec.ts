@@ -142,7 +142,15 @@ describe('ProposalApiServiceMock', () => {
   });
 
   it('transitions to APPROVED and updates event log', async () => {
-    const result = await firstValueFrom(service.approveProposal('prop-3', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Looks good' }));
+    const result = await firstValueFrom(
+      service.approveProposal('prop-3', {
+        title: 'T',
+        purpose: 'P',
+        beginDate: '2026-06-01',
+        endDate: '2026-06-30',
+        note: 'Looks good',
+      }),
+    );
     expect(result.proposal.status).toBe('APPROVED');
     expect(result.collectionUseProject.status).toBe('CREATED');
 
@@ -154,7 +162,15 @@ describe('ProposalApiServiceMock', () => {
   it('propagates proposal APPROVED status to the associated project', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
 
-    await firstValueFrom(service.approveProposal('prop-3', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Looks good' }));
+    await firstValueFrom(
+      service.approveProposal('prop-3', {
+        title: 'T',
+        purpose: 'P',
+        beginDate: '2026-06-01',
+        endDate: '2026-06-30',
+        note: 'Looks good',
+      }),
+    );
 
     const project = await firstValueFrom(projectService.getProject('proj-3'));
     expect(project).toMatchObject({
@@ -165,9 +181,19 @@ describe('ProposalApiServiceMock', () => {
 
   it('cancels a proposal, records a CANCELLED event and cascades the project', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
-    await firstValueFrom(service.approveProposal('prop-3', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Approved' }));
+    await firstValueFrom(
+      service.approveProposal('prop-3', {
+        title: 'T',
+        purpose: 'P',
+        beginDate: '2026-06-01',
+        endDate: '2026-06-30',
+        note: 'Approved',
+      }),
+    );
 
-    const result = await firstValueFrom(service.cancelProposal('prop-3', { reason: 'Trip cancelled' }));
+    const result = await firstValueFrom(
+      service.cancelProposal('prop-3', { reason: 'Trip cancelled' }),
+    );
     expect(result.proposal.status).toBe('CANCELLED');
     expect(result.proposal.lastEvent.note).toBe('Trip cancelled');
     expect(result.collectionUseProject?.status).toBe('CANCELLED');
@@ -194,7 +220,7 @@ describe('ProposalApiServiceMock', () => {
     const created = await firstValueFrom(
       service.createProposal({
         title: 'New study',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         purpose: 'Test',
         beginDate: '2026-07-01',
         endDate: '2026-12-31',
@@ -211,7 +237,7 @@ describe('ProposalApiServiceMock', () => {
     const created = await firstValueFrom(
       service.createProposal({
         title: 'New study',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         purpose: 'Test',
         beginDate: '2026-07-01',
         endDate: '2026-12-31',
@@ -235,7 +261,7 @@ describe('ProposalApiServiceMock', () => {
     const created = await firstValueFrom(
       service.createProposal({
         title: 'Fallback study',
-        type: 'RESEARCH',
+        type: 'IN_SITU_VISIT',
         purpose: 'Fallback purpose text',
         beginDate: '2026-07-01',
         endDate: '2026-12-31',
@@ -272,7 +298,15 @@ describe('ProposalApiServiceMock', () => {
 
   it('filters proposals by status', async () => {
     await firstValueFrom(service.assignProposal('prop-1', { note: 'Assuming' }));
-    await firstValueFrom(service.approveProposal('prop-2', { title: 'T', purpose: 'P', beginDate: '2026-06-01', endDate: '2026-06-30', note: 'Approved' }));
+    await firstValueFrom(
+      service.approveProposal('prop-2', {
+        title: 'T',
+        purpose: 'P',
+        beginDate: '2026-06-01',
+        endDate: '2026-06-30',
+        note: 'Approved',
+      }),
+    );
 
     const pending = await firstValueFrom(service.listProposals({ status: 'PENDING' }));
     const approved = await firstValueFrom(service.listProposals({ status: 'APPROVED' }));

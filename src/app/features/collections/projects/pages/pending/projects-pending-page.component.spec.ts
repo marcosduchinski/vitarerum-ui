@@ -18,7 +18,7 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 5 
       ? 'Railway archive glass plate negatives'
       : 'Conservation study for ceramic collection',
   purpose: 'Document handling requirements before the conservation work starts.',
-  type: 'RESEARCH',
+  type: 'IN_SITU_VISIT',
   status: 'CREATED',
   beginDate: '2026-06-10',
   endDate: '2026-06-20',
@@ -127,7 +127,7 @@ describe('ProjectsPendingPageComponent', () => {
 
     expect(text).toContain('VR-2026-041');
     expect(text).toContain('Conservation study for ceramic collection');
-    expect(text).toContain('Research');
+    expect(text).toContain('In-situ visit');
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('2026-06-10 to 2026-06-20');

@@ -15,7 +15,7 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 25
   referenceNumber: `VR-2026-${String(index + 81).padStart(3, '0')}`,
   title: index === 4 ? 'Completed railway archive conservation' : 'Completed manuscript access',
   purpose: 'Completed collection-use work with staff supervision.',
-  type: index % 3 === 1 ? 'EXHIBITION' : index % 3 === 2 ? 'OTHER' : 'RESEARCH',
+  type: index % 3 === 1 ? 'EXHIBITION' : index % 3 === 2 ? 'OTHER' : 'IN_SITU_VISIT',
   status: 'COMPLETED',
   result: 'COMPLETED',
   beginDate: '2026-06-10',
@@ -107,7 +107,7 @@ describe('ProjectsCompletedPageComponent', () => {
     expect(text).toContain('Assigned staff');
     expect(text).toContain('VR-2026-081');
     expect(text).toContain('Completed manuscript access');
-    expect(text).toContain('Research');
+    expect(text).toContain('In-situ visit');
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('1-20 of 25 projects');
