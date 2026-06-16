@@ -413,9 +413,7 @@ package "Collection Use" <<Bounded Context>> {
       - archivedAt: DateTime?
       + start(...)
       + addTurn(...)
-      + startProposalAgentRun(...)
-      + recordProposalAgentResult(...)
-      + archive(...)
+      + searchObjects(...)
     }
 
     enum StaffAgentType #d5e8d4 {
