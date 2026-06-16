@@ -131,7 +131,6 @@ export interface ProjectStaffProposalContext {
   readonly submittedAt: string;
   readonly submittedBy: PermissionPrincipal;
   readonly assignedTo: PermissionPrincipal | null;
-  readonly watchers: readonly PermissionPrincipal[];
 }
 
 export interface ProjectRequestedObjectContext {

@@ -29,13 +29,9 @@ import {
 } from '../../components/proposal-conversation-section/proposal-conversation-section.component';
 import { ProposalEventsSectionComponent } from '../../components/proposal-events-section/proposal-events-section.component';
 import { ProposalOverviewSectionComponent } from '../../components/proposal-overview-section/proposal-overview-section.component';
-import {
-  ProposalWatchersSectionComponent,
-  StaffWatcherOption,
-} from '../../components/proposal-watchers-section/proposal-watchers-section.component';
-import { PROPOSAL_DETAIL_GROUP_LABELS } from '../../proposal-detail.presentation';
+import { PROPOSAL_DETAIL_GROUP_LABELS, StaffOption } from '../../proposal-detail.presentation';
 
-type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
+type MyDetailPanel = 'overview' | 'conversation';
 
 @Component({
   selector: 'app-proposal-my-detail-page',
@@ -50,7 +46,6 @@ type MyDetailPanel = 'overview' | 'watchers' | 'conversation';
     ConfirmModalComponent,
     ProposalOverviewSectionComponent,
     ProposalConversationSectionComponent,
-    ProposalWatchersSectionComponent,
     ProposalEventsSectionComponent,
   ],
   templateUrl: './proposal-my-detail-page.component.html',
@@ -85,8 +80,7 @@ export class ProposalMyDetailPageComponent {
   protected readonly proposal = computed(() => this.proposalResource.value() ?? null);
   protected readonly messages = computed(() => this.conversationResource.value()?.messages ?? []);
   protected readonly events = computed(() => this.eventsResource.value()?.content ?? []);
-  protected readonly watchers = computed(() => this.proposal()?.watchers ?? []);
-  protected readonly staffOptions = computed<StaffWatcherOption[]>(() =>
+  protected readonly staffOptions = computed<StaffOption[]>(() =>
     (this.staffUsersResource.value()?.content ?? []).flatMap((u) =>
       u.permissions.flatMap((p) => {
         const groupName = groupNameOf(p.group);
@@ -100,10 +94,6 @@ export class ProposalMyDetailPageComponent {
       }),
     ),
   );
-  protected readonly watcherOptions = computed<StaffWatcherOption[]>(() => {
-    const watcherIds = new Set(this.watchers().map((watcher) => watcher.permissionId));
-    return this.staffOptions().filter((option) => !watcherIds.has(option.permissionId));
-  });
   protected readonly proposalError = computed<ApiError | null>(() => {
     const err = this.proposalResource.error();
     return err ? toApiError(err) : null;
@@ -120,10 +110,7 @@ export class ProposalMyDetailPageComponent {
   protected readonly forwardTargetPermissionId = signal('');
   protected readonly forwardNote = signal('');
   protected readonly replyResetVersion = signal(0);
-  protected readonly watcherResetVersion = signal(0);
   protected readonly sendingMessage = signal(false);
-  protected readonly addingWatcher = signal(false);
-  protected readonly removingWatcherId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly messageError = signal<ApiError | null>(null);
 
@@ -185,7 +172,10 @@ export class ProposalMyDetailPageComponent {
 
     try {
       await firstValueFrom(
-        this.proposalService.forwardProposal(this.id(), { targetPermissionId, note: this.forwardNote() }),
+        this.proposalService.forwardProposal(this.id(), {
+          targetPermissionId,
+          note: this.forwardNote(),
+        }),
       );
       this.forwardModalOpen.set(false);
       this.proposalResource.reload();
@@ -230,39 +220,6 @@ export class ProposalMyDetailPageComponent {
       this.messageError.set(toApiError(err));
     } finally {
       this.sendingMessage.set(false);
-    }
-  }
-
-  protected async addWatcher(permissionId: string): Promise<void> {
-    if (!permissionId || this.addingWatcher()) return;
-
-    this.addingWatcher.set(true);
-    this.actionError.set(null);
-
-    try {
-      await firstValueFrom(this.proposalService.addWatcher(this.id(), { permissionId }));
-      this.watcherResetVersion.update((version) => version + 1);
-      this.proposalResource.reload();
-    } catch (err) {
-      this.actionError.set(toApiError(err));
-    } finally {
-      this.addingWatcher.set(false);
-    }
-  }
-
-  protected async removeWatcher(permissionId: string): Promise<void> {
-    if (this.removingWatcherId()) return;
-
-    this.removingWatcherId.set(permissionId);
-    this.actionError.set(null);
-
-    try {
-      await firstValueFrom(this.proposalService.removeWatcher(this.id(), permissionId));
-      this.proposalResource.reload();
-    } catch (err) {
-      this.actionError.set(toApiError(err));
-    } finally {
-      this.removingWatcherId.set(null);
     }
   }
 

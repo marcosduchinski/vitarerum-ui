@@ -5,7 +5,6 @@ import { Page, PageQuery } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
 import {
-  AddProposalWatcherRequest,
   AddRequestedObjectsRequest,
   ApproveProposalRequest,
   AssignProposalRequest,
@@ -73,7 +72,6 @@ export class ProposalApiServiceMock {
       requestedBy: this.currentPrincipal(),
       assignedTo: null,
       submittedAt: now,
-      watchers: [],
       conversationId: convId,
       documents: [],
       requestedObjects: [],
@@ -366,42 +364,6 @@ export class ProposalApiServiceMock {
     };
     this.pushEvent(proposalId, evt);
     return of({ id: proposalId, status: proposal.status, lastEvent: evt });
-  }
-
-  addWatcher(
-    proposalId: string,
-    request: AddProposalWatcherRequest,
-  ): Observable<PermissionPrincipal> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-
-    const watcher = this.findPrincipalByPermissionId(request.permissionId);
-    if (!watcher) return throwError(() => ({ status: 404, error: 'PERMISSION_NOT_FOUND' }));
-
-    if (!proposal.watchers.some((w) => w.permissionId === watcher.permissionId)) {
-      this.proposals.set(proposalId, {
-        ...proposal,
-        watchers: [...proposal.watchers, watcher],
-      });
-    }
-
-    return of(watcher);
-  }
-
-  removeWatcher(proposalId: string, permissionId: string): Observable<void> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-
-    if (!proposal.watchers.some((w) => w.permissionId === permissionId)) {
-      return throwError(() => ({ status: 404, error: 'WATCHER_NOT_FOUND' }));
-    }
-
-    this.proposals.set(proposalId, {
-      ...proposal,
-      watchers: proposal.watchers.filter((w) => w.permissionId !== permissionId),
-    });
-
-    return of(undefined);
   }
 
   approveProposal(

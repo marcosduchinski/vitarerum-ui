@@ -128,7 +128,6 @@ export class ProposalDetailPageComponent {
   protected readonly backLabel = computed(() => `Back to ${safeReturnLabel(this.returnLabel())}`);
   protected readonly messages = computed(() => this.conversationResource.value()?.messages ?? []);
   protected readonly events = computed(() => this.eventsResource.value()?.content ?? []);
-  protected readonly watchers = computed(() => this.proposal()?.watchers ?? []);
   // Routing actions (assume/forward) are staff-only. This shared detail page is
   // reachable by external researchers via their own proposals, so gate on isStaff
   // in addition to the proposal being in an assignable state.
@@ -153,7 +152,6 @@ export class ProposalDetailPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly groupLabels = GROUP_LABELS;
   protected readonly formatDate = formatDate;
   protected readonly formatDateTime = formatDateTime;
   protected readonly assuming = signal(false);

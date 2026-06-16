@@ -13,10 +13,6 @@ export interface ForwardProposalRequest {
   readonly note: string;
 }
 
-export interface AddProposalWatcherRequest {
-  readonly permissionId: string;
-}
-
 export interface ProposalNoteRequest {
   readonly note: string;
 }
@@ -93,7 +89,5 @@ export interface ProposalCancellationResult {
     readonly assignedTo: PermissionPrincipal | null;
     readonly lastEvent: ProposalEvent;
   };
-  readonly collectionUseProject:
-    | (ProposalProjectSummary & { readonly status: UseStatus })
-    | null;
+  readonly collectionUseProject: (ProposalProjectSummary & { readonly status: UseStatus }) | null;
 }

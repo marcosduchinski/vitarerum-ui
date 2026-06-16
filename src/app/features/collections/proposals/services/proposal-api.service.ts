@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, InjectionToken } from '@angular/core';
-import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 import { buildHttpParams } from '@core/http/http-params.util';
@@ -8,7 +7,6 @@ import { Page, PageQuery } from '@shared/models/page.model';
 import { map, Observable } from 'rxjs';
 
 import {
-  AddProposalWatcherRequest,
   AddRequestedObjectsRequest,
   ApproveProposalRequest,
   AssignProposalRequest,
@@ -174,20 +172,6 @@ export class ProposalApiService {
       this.url(`/proposals/${proposalId}/direction-clarification`),
       request,
     );
-  }
-
-  addWatcher(
-    proposalId: string,
-    request: AddProposalWatcherRequest,
-  ): Observable<PermissionPrincipal> {
-    return this.http.post<PermissionPrincipal>(
-      this.url(`/proposals/${proposalId}/watchers`),
-      request,
-    );
-  }
-
-  removeWatcher(proposalId: string, permissionId: string): Observable<void> {
-    return this.http.delete<void>(this.url(`/proposals/${proposalId}/watchers/${permissionId}`));
   }
 
   approveProposal(

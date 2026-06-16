@@ -456,52 +456,6 @@ describe('ProposalApiServiceMock', () => {
     });
   });
 
-  it('adds a watcher to proposal detail', async () => {
-    const watcher = await firstValueFrom(
-      service.addWatcher('prop-1', { permissionId: 'perm-carol' }),
-    );
-
-    expect(watcher).toMatchObject({
-      permissionId: 'perm-carol',
-      group: 'CURATORIAL',
-    });
-
-    const updated = await firstValueFrom(service.getProposal('prop-1'));
-
-    expect(updated.watchers).toHaveLength(1);
-    expect(updated.watchers[0].permissionId).toBe('perm-carol');
-  });
-
-  it('adds watchers idempotently', async () => {
-    await firstValueFrom(service.addWatcher('prop-1', { permissionId: 'perm-carol' }));
-    await firstValueFrom(service.addWatcher('prop-1', { permissionId: 'perm-carol' }));
-
-    const updated = await firstValueFrom(service.getProposal('prop-1'));
-
-    expect(updated.watchers.map((w) => w.permissionId)).toEqual(['perm-carol']);
-  });
-
-  it('removes a watcher from proposal detail', async () => {
-    await firstValueFrom(service.addWatcher('prop-1', { permissionId: 'perm-carol' }));
-    await firstValueFrom(service.removeWatcher('prop-1', 'perm-carol'));
-
-    const updated = await firstValueFrom(service.getProposal('prop-1'));
-
-    expect(updated.watchers).toEqual([]);
-  });
-
-  it('returns not found when adding an unknown watcher permission', async () => {
-    await expect(
-      firstValueFrom(service.addWatcher('prop-1', { permissionId: 'missing-permission' })),
-    ).rejects.toMatchObject({ status: 404, error: 'PERMISSION_NOT_FOUND' });
-  });
-
-  it('returns not found when removing a permission that is not watching', async () => {
-    await expect(
-      firstValueFrom(service.removeWatcher('prop-1', 'perm-carol')),
-    ).rejects.toMatchObject({ status: 404, error: 'WATCHER_NOT_FOUND' });
-  });
-
   it('syncs PENDING proposal status to the associated project on assume', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
 

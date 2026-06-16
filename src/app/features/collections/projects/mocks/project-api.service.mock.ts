@@ -794,7 +794,6 @@ export class ProjectApiServiceMock {
         submittedAt: proposal?.submittedAt ?? p.beginDate,
         submittedBy: proposal?.requestedBy ?? p.requestedBy,
         assignedTo: proposal?.assignedTo ?? p.proposalAssignedTo ?? null,
-        watchers: proposal?.watchers ?? [],
       },
       requestedObjects:
         proposal?.requestedObjects.map((item) => ({

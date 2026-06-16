@@ -36,7 +36,6 @@ const PROPOSAL: ProposalDetail = {
     status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
-  watchers: [],
   conversationId: 'conversation-1',
   documents: [],
   requestedObjects: [],

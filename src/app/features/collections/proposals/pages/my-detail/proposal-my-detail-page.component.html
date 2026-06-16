@@ -66,9 +66,7 @@
               {{ forwarding() ? 'Forwarding...' : 'Forward' }}
             </button>
           } @else {
-            <p class="proposal-actions__status-note">
-              No actions available for this status.
-            </p>
+            <p class="proposal-actions__status-note">No actions available for this status.</p>
           }
         </div>
       </aside>
@@ -178,18 +176,6 @@
       </button>
       <button
         type="button"
-        id="watchers-tab"
-        class="proposal-detail__tab"
-        [class.proposal-detail__tab--active]="activePanel() === 'watchers'"
-        role="tab"
-        aria-controls="watchers-panel"
-        [attr.aria-selected]="activePanel() === 'watchers'"
-        (click)="selectPanel('watchers')"
-      >
-        Watchers
-      </button>
-      <button
-        type="button"
         id="conversation-tab"
         class="proposal-detail__tab"
         [class.proposal-detail__tab--active]="activePanel() === 'conversation'"
@@ -211,29 +197,7 @@
           aria-labelledby="overview-tab"
         >
           <app-proposal-overview-section [proposal]="proposal()!" />
-          <app-proposal-events-section
-            [events]="events()"
-            [loading]="eventsResource.isLoading()"
-          />
-        </section>
-      }
-      @case ('watchers') {
-        <section
-          id="watchers-panel"
-          class="proposal-detail__panel"
-          role="tabpanel"
-          aria-labelledby="watchers-tab"
-        >
-          <app-proposal-watchers-section
-            [watchers]="watchers()"
-            [watcherOptions]="watcherOptions()"
-            [staffLoading]="staffUsersResource.isLoading()"
-            [addingWatcher]="addingWatcher()"
-            [removingWatcherId]="removingWatcherId()"
-            [resetVersion]="watcherResetVersion()"
-            (watcherAdded)="addWatcher($event)"
-            (watcherRemoved)="removeWatcher($event)"
-          />
+          <app-proposal-events-section [events]="events()" [loading]="eventsResource.isLoading()" />
         </section>
       }
       @case ('conversation') {

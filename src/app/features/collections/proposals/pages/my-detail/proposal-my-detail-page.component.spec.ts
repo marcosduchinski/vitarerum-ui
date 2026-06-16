@@ -44,13 +44,6 @@ const PROPOSAL: ProposalDetail = {
     status: 'CREATED',
   },
   submittedAt: '2026-05-01T10:00:00',
-  watchers: [
-    {
-      permissionId: 'permission-curatorial',
-      user: { id: 'staff-2', name: 'Carolina Silva', email: 'carol@example.test' },
-      group: 'CURATORIAL',
-    },
-  ],
   conversationId: 'conversation-1',
   documents: [],
   requestedObjects: [],
@@ -154,14 +147,6 @@ class ProposalApiServiceStub {
     readonly proposalId: string;
     readonly payload: SendMessageRequest;
   }[] = [];
-  readonly addWatcherCalls: {
-    readonly proposalId: string;
-    readonly payload: { readonly permissionId: string };
-  }[] = [];
-  readonly removeWatcherCalls: {
-    readonly proposalId: string;
-    readonly permissionId: string;
-  }[] = [];
   private nextDocumentId = 1;
 
   getProposal() {
@@ -237,20 +222,6 @@ class ProposalApiServiceStub {
       },
     });
   }
-
-  addWatcher(proposalId: string, payload: { readonly permissionId: string }) {
-    this.addWatcherCalls.push({ proposalId, payload });
-    return of({
-      permissionId: payload.permissionId,
-      user: { id: 'staff-3', name: 'Dan Oliveira', email: 'dan@example.test' },
-      group: 'DIRECTION' as const,
-    });
-  }
-
-  removeWatcher(proposalId: string, permissionId: string) {
-    this.removeWatcherCalls.push({ proposalId, permissionId });
-    return of(undefined);
-  }
 }
 
 class UserManagementServiceStub {
@@ -261,7 +232,7 @@ class UserManagementServiceStub {
 
 async function selectPanel(
   fixture: ComponentFixture<ProposalMyDetailPageComponent>,
-  name: 'Overview' | 'Watchers' | 'Conversation',
+  name: 'Overview' | 'Conversation',
 ): Promise<void> {
   const compiled = fixture.nativeElement as HTMLElement;
   const tab = Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
@@ -313,7 +284,6 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('Assigned to');
     expect(compiled.textContent).toContain('Bob Santos');
     expect(compiled.textContent).toContain('Conversation');
-    expect(compiled.textContent).toContain('Watchers');
     expect(compiled.textContent).toContain('Event log');
     expect(compiled.textContent).toContain('SUBMITTED');
     expect(compiled.textContent).toContain('Accept');
@@ -322,13 +292,11 @@ describe('ProposalMyDetailPageComponent', () => {
       'Overview',
     );
     expect(compiled.querySelector('#overview-panel')).not.toBeNull();
-    expect(compiled.querySelector('#watchers-panel')).toBeNull();
     expect(compiled.querySelector('#conversation-panel')).toBeNull();
     expect(compiled.textContent).not.toContain('Initial request');
-    expect(compiled.textContent).not.toContain('Carolina Silva');
   });
 
-  it('switches between overview, watchers, and conversation panels', async () => {
+  it('switches between overview and conversation panels', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
 
@@ -337,78 +305,15 @@ describe('ProposalMyDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    await selectPanel(fixture, 'Watchers');
-
-    let compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
-      'Watchers',
-    );
-    expect(compiled.querySelector('#watchers-panel')).not.toBeNull();
-    expect(compiled.textContent).toContain('Carolina Silva');
-
     await selectPanel(fixture, 'Conversation');
 
-    compiled = fixture.nativeElement as HTMLElement;
+    const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
       'Conversation',
     );
     expect(compiled.querySelector('#conversation-panel')).not.toBeNull();
     expect(compiled.textContent).toContain('Initial request');
     expect(compiled.textContent).toContain('signed-response.docx');
-  });
-
-  it('adds and removes watchers from the assignment detail page', async () => {
-    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
-    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
-
-    componentRef.setInput('id', 'proposal-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    await selectPanel(fixture, 'Watchers');
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const select = compiled.querySelector<HTMLSelectElement>('#watcher-permission');
-    const addButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.trim() === 'Add',
-    );
-    const removeButton = compiled.querySelector<HTMLButtonElement>(
-      '[aria-label="Remove watcher Carolina Silva"]',
-    );
-
-    expect(select).not.toBeNull();
-    expect(addButton).not.toBeNull();
-    expect(removeButton).not.toBeNull();
-    expect(select!.textContent).not.toContain('Carolina Silva');
-    expect(select!.textContent).toContain('Dan Oliveira');
-
-    select!.value = 'permission-direction';
-    select!.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-
-    expect(addButton!.disabled).toBe(false);
-
-    addButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(proposalService.addWatcherCalls).toEqual([
-      {
-        proposalId: 'proposal-1',
-        payload: { permissionId: 'permission-direction' },
-      },
-    ]);
-
-    removeButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(proposalService.removeWatcherCalls).toEqual([
-      {
-        proposalId: 'proposal-1',
-        permissionId: 'permission-curatorial',
-      },
-    ]);
   });
 
   it('marks requester and staff messages with distinct roles and icons', async () => {

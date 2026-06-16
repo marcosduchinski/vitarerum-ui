@@ -172,7 +172,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CREATED',
     },
     submittedAt: '2026-06-01T09:00:00Z',
-    watchers: [],
     conversationId: 'conv-1',
     documents: [
       {
@@ -212,7 +211,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CREATED',
     },
     submittedAt: '2026-06-01T09:30:00Z',
-    watchers: [],
     conversationId: 'conv-2',
     documents: [],
     requestedObjects: [],
@@ -235,7 +233,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CREATED',
     },
     submittedAt: '2026-06-01T10:00:00Z',
-    watchers: [P['eve']],
     conversationId: 'conv-3',
     documents: [],
     requestedObjects: [],
@@ -258,7 +255,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CREATED',
     },
     submittedAt: '2026-06-01T10:30:00Z',
-    watchers: [],
     conversationId: 'conv-4',
     documents: [
       {
@@ -298,7 +294,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CANCELLED',
     },
     submittedAt: '2026-06-01T11:00:00Z',
-    watchers: [],
     conversationId: 'conv-5',
     documents: [],
     requestedObjects: [],
@@ -321,7 +316,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CANCELLED',
     },
     submittedAt: '2026-06-01T11:30:00Z',
-    watchers: [],
     conversationId: 'conv-6',
     documents: [],
     requestedObjects: [],
@@ -344,7 +338,6 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
       status: 'CREATED',
     },
     submittedAt: '2026-06-01T12:00:00Z',
-    watchers: [],
     conversationId: 'conv-7',
     documents: [],
     requestedObjects: [],

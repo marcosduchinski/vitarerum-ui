@@ -1,5 +1,12 @@
 import { GroupName } from '@core/auth/models/group-name.enum';
 
+// A selectable staff member (label + permission id), used by the proposal
+// assignment/forward controls.
+export interface StaffOption {
+  readonly label: string;
+  readonly permissionId: string;
+}
+
 export const PROPOSAL_DETAIL_GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External',
   COLLECTIONS_MANAGEMENT: 'Collections management',

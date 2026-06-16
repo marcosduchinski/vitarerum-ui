@@ -71,7 +71,6 @@ export interface Document {
 }
 
 export interface ProposalDetail extends ProposalSummary {
-  readonly watchers: readonly PermissionPrincipal[];
   readonly conversationId: string;
   readonly documents: readonly Document[];
   // Optional during migration; populated by mocks/contract and made required in the contract step.
