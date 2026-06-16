@@ -50,7 +50,8 @@
 }
 
 .proposal-agent__status,
-.agent-panel__header span {
+.agent-panel__header span,
+.proposal-agent-suggestions__chip {
   display: inline-flex;
   align-items: center;
   min-height: 1.5rem;
@@ -243,40 +244,47 @@
   color: var(--color-text);
 }
 
-.proposal-agent-options {
+.proposal-agent-chat {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.proposal-agent-typing {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.proposal-agent-typing__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--color-muted);
+  opacity: 0.3;
+  animation: proposal-agent-typing 1s infinite ease-in-out;
+}
+
+.proposal-agent-typing__dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+@keyframes proposal-agent-typing {
+  40% {
+    opacity: 1;
+  }
+}
+
+.proposal-agent-suggestions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.75rem;
 }
 
-.proposal-agent-options__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2rem;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-line));
-  border-radius: 999px;
-  background: var(--color-panel);
-  color: var(--color-accent);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 700;
+// Shares the pill look above; just add interactivity.
+.proposal-agent-suggestions__chip {
   cursor: pointer;
 }
 
-.proposal-agent-options__item:hover {
-  border-color: var(--color-accent);
-  background: var(--color-accent-soft);
-}
-
-.proposal-agent-options__item--selected {
-  border-color: var(--color-accent);
-  background: var(--color-accent-soft);
-}
-
-.proposal-agent-options__item:focus-visible {
+.proposal-agent-suggestions__chip:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }

@@ -443,6 +443,7 @@ package "Collection Use" <<Bounded Context>> {
       - id: AssistanceTurnId
       - role: AssistanceTurnRole
       - content: String
+      - result: AssistanceTurnResult?
       - createdAt: DateTime
     }
 
@@ -450,6 +451,21 @@ package "Collection Use" <<Bounded Context>> {
       STAFF
       AGENT
       SYSTEM
+    }
+
+    ' A capability result revealed on-demand with the AGENT turn that answers a
+    ' staff question (conclusions stay hidden until asked).
+    class AssistanceTurnResult <<Value Object>> #d5e8d4 {
+      - kind: AssistanceTurnResultKind
+      - triage: EmailTriageResult?
+      - documentSearch: DocumentSearchResult?
+      - objectSearch: ObjectSearchResult?
+    }
+
+    enum AssistanceTurnResultKind #d5e8d4 {
+      TRIAGE
+      DOCUMENT_SEARCH
+      OBJECT_SEARCH
     }
 
     class ProposalAgentRun <<Entity>> #dae8fc {
@@ -526,6 +542,10 @@ package "Collection Use" <<Bounded Context>> {
     AssistanceSession *-- "1..1" AssistanceTarget
     AssistanceSession *-- "0..*" AssistanceTurn
     AssistanceSession *-- "0..*" ProposalAgentRun
+    AssistanceTurn *-- "0..1" AssistanceTurnResult
+    AssistanceTurnResult ..> EmailTriageResult
+    AssistanceTurnResult ..> DocumentSearchResult
+    AssistanceTurnResult ..> ObjectSearchResult
     AssistanceSession ..> Permission : createdBy
     AssistanceSession ..> Message : selectedMessage
     AssistanceSession ..> Proposal : proposalSnapshot

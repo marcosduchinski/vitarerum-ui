@@ -7,7 +7,11 @@ import { GroupName } from '@core/auth/models/group-name.enum';
 import { IdentitySession } from '@core/auth/models/identity-session.model';
 import { LoginRequest } from '@core/auth/models/login.model';
 import { ProjectApiServiceMock } from '@features/collections/projects/mocks/project-api.service.mock';
-import { MOCK_SEED, MockProjectState, TEST_SEED } from '@features/collections/proposals/mocks/mock-data';
+import {
+  MOCK_SEED,
+  MockProjectState,
+  TEST_SEED,
+} from '@features/collections/proposals/mocks/mock-data';
 import { ProposalApiServiceMock } from '@features/collections/proposals/mocks/proposal-api.service.mock';
 import { PROPOSAL_API_SERVICE } from '@features/collections/proposals/services/proposal-api.service';
 
@@ -112,10 +116,7 @@ describe('AiStaffAssistanceServiceMock', () => {
       confidence: 'HIGH',
     });
     expect(run.documentSearch?.matches.map((match) => match.fileName)).toEqual(
-      expect.arrayContaining([
-        'zoology-research-outline.pdf',
-        'in-situ-access-guidelines.pdf',
-      ]),
+      expect.arrayContaining(['zoology-research-outline.pdf', 'in-situ-access-guidelines.pdf']),
     );
   });
 
@@ -214,6 +215,71 @@ describe('AiStaffAssistanceServiceMock', () => {
       expect.arrayContaining(['INV-HIST-LAB-004', 'INV-HIST-LAB-009']),
     );
     expect(updated.turns.at(-1)?.content).toContain('Found 2 objects');
+  });
+
+  it('opens with a greeting that withholds the triage conclusion', async () => {
+    const session = await firstValueFrom(
+      service.startProposalAgentSession({
+        proposalId: 'prop-4',
+        messageId: 'msg-prop-4-initial',
+      }),
+    );
+
+    const greeting = session.turns[0];
+    expect(greeting.role).toBe('AGENT');
+    expect(greeting.result ?? null).toBeNull();
+    expect(greeting.content).toContain('Where would you like to start?');
+    expect(greeting.content.toLowerCase()).not.toContain('confidence');
+  });
+
+  it('reveals the triage result only when the staff asks for it', async () => {
+    const session = await firstValueFrom(
+      service.startProposalAgentSession({
+        proposalId: 'prop-4',
+        messageId: 'msg-prop-4-initial',
+      }),
+    );
+
+    const updated = await firstValueFrom(
+      service.addTurn(session.id, { content: 'Could you do the email triage?' }),
+    );
+
+    const agentTurn = updated.turns.at(-1);
+    expect(agentTurn?.role).toBe('AGENT');
+    expect(agentTurn?.result?.kind).toBe('TRIAGE');
+    expect(agentTurn?.result?.triage?.probableUseType).toBe('EXHIBITION');
+  });
+
+  it('reveals the document search result when the staff asks about documents', async () => {
+    const session = await firstValueFrom(
+      service.startProposalAgentSession({
+        proposalId: 'prop-4',
+        messageId: 'msg-prop-4-initial',
+      }),
+    );
+
+    const updated = await firstValueFrom(
+      service.addTurn(session.id, { content: 'Which documents are relevant?' }),
+    );
+
+    const agentTurn = updated.turns.at(-1);
+    expect(agentTurn?.result?.kind).toBe('DOCUMENT_SEARCH');
+    expect(agentTurn?.result?.documentSearch?.basedOnUseType).toBe('EXHIBITION');
+  });
+
+  it('falls back gracefully when the staff message matches no capability', async () => {
+    const session = await firstValueFrom(
+      service.startProposalAgentSession({
+        proposalId: 'prop-4',
+        messageId: 'msg-prop-4-initial',
+      }),
+    );
+
+    const updated = await firstValueFrom(service.addTurn(session.id, { content: 'Good morning!' }));
+
+    const agentTurn = updated.turns.at(-1);
+    expect(agentTurn?.result ?? null).toBeNull();
+    expect(agentTurn?.content).toContain('email triage');
   });
 
   it('records no-match object searches without inventing results', async () => {

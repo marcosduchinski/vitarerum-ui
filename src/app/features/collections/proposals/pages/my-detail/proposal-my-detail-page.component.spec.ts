@@ -257,7 +257,7 @@ function makeAssistanceSession(messageId: string): AssistanceSession {
       {
         id: 'turn-1',
         role: 'AGENT',
-        content: 'I triaged this message as in situ visit with high confidence.',
+        content: "I've reviewed the requester's message. Where would you like to start?",
         createdAt: '2026-05-01T11:05:00',
       },
     ],
@@ -485,7 +485,8 @@ describe('ProposalMyDetailPageComponent', () => {
     ]);
     expect(compiled.textContent).toContain('ProposalAgent');
     expect(compiled.textContent).toContain('Initial request');
-    expect(compiled.textContent).toContain('in-situ-access-guidelines.pdf');
+    // Conclusions are withheld until asked; the opening turn invites a question.
+    expect(compiled.textContent).toContain('Where would you like to start?');
   });
 
   it('uploads selected files and attaches them to a staff response message', async () => {

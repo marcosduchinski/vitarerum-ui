@@ -2,7 +2,11 @@ import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { UseType } from '@shared/models/collection-use-status.model';
 import { ObjectReference } from '@shared/models/object-reference.model';
 
-import { Document, Message, ProposalDetail } from '../../collections/proposals/models/proposal.model';
+import {
+  Document,
+  Message,
+  ProposalDetail,
+} from '../../collections/proposals/models/proposal.model';
 
 export type StaffAgentType = 'PROPOSAL_AGENT';
 
@@ -27,11 +31,25 @@ export interface AssistanceTarget {
   readonly messageId?: string;
 }
 
+export type AssistanceTurnResultKind = 'TRIAGE' | 'DOCUMENT_SEARCH' | 'OBJECT_SEARCH';
+
+// Structured result optionally revealed alongside an AGENT turn. The agent
+// computes these at session start (context gathering) but only attaches the
+// relevant one to the turn that answers a staff question — keeping conclusions
+// "behind the veil" until asked.
+export interface AssistanceTurnResult {
+  readonly kind: AssistanceTurnResultKind;
+  readonly triage?: EmailTriageResult;
+  readonly documentSearch?: DocumentSearchResult;
+  readonly objectSearch?: ObjectSearchResult;
+}
+
 export interface AssistanceTurn {
   readonly id: string;
   readonly role: AssistanceTurnRole;
   readonly content: string;
   readonly createdAt: string;
+  readonly result?: AssistanceTurnResult | null;
 }
 
 export interface EmailTriageResult {

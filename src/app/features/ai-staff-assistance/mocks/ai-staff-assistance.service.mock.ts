@@ -9,6 +9,7 @@ import {
   AddAssistanceTurnRequest,
   AssistanceSession,
   AssistanceTurn,
+  AssistanceTurnResult,
   DocumentSearchMatch,
   EmailTriageResult,
   ObjectSearchResult,
@@ -22,7 +23,11 @@ import {
   toCatalogDocumentMatch,
 } from './proposal-agent.mock-data';
 import { PROPOSAL_API_SERVICE } from '../../collections/proposals/services/proposal-api.service';
-import { Document, Message, ProposalDetail } from '../../collections/proposals/models/proposal.model';
+import {
+  Document,
+  Message,
+  ProposalDetail,
+} from '../../collections/proposals/models/proposal.model';
 
 interface WeightedUseType {
   readonly useType: UseType;
@@ -55,10 +60,12 @@ export class AiStaffAssistanceServiceMock {
       content: request.content.trim(),
       createdAt: now,
     };
+    const answer = this.routeStaffIntent(session, request.content);
     const agentTurn: AssistanceTurn = {
       id: this.nextEntityId('turn'),
       role: 'AGENT',
-      content: this.answerStaffTurn(session, request.content),
+      content: answer.content,
+      result: answer.result ?? null,
       createdAt: now,
     };
     const updated: AssistanceSession = {
@@ -81,8 +88,10 @@ export class AiStaffAssistanceServiceMock {
       ...latestRun,
       status: objectSearch.status === 'NEEDS_MORE_INFORMATION' ? 'NEEDS_STAFF_INPUT' : 'COMPLETED',
       objectSearch,
-      completedAt: objectSearch.status === 'NEEDS_MORE_INFORMATION' ? null : new Date().toISOString(),
+      completedAt:
+        objectSearch.status === 'NEEDS_MORE_INFORMATION' ? null : new Date().toISOString(),
     };
+    const now = new Date().toISOString();
     const updated: AssistanceSession = {
       ...session,
       proposalAgentRuns: [...session.proposalAgentRuns.slice(0, -1), updatedRun],
@@ -90,9 +99,16 @@ export class AiStaffAssistanceServiceMock {
         ...session.turns,
         {
           id: this.nextEntityId('turn'),
+          role: 'STAFF',
+          content: `Search the collection for "${request.query.trim()}".`,
+          createdAt: now,
+        },
+        {
+          id: this.nextEntityId('turn'),
           role: 'AGENT',
           content: objectSearch.summary,
-          createdAt: new Date().toISOString(),
+          result: { kind: 'OBJECT_SEARCH', objectSearch },
+          createdAt: now,
         },
       ],
     };
@@ -115,13 +131,16 @@ export class AiStaffAssistanceServiceMock {
     if (existing) return existing;
 
     const proposal = await firstValueFrom(this.proposalService.getProposal(request.proposalId));
-    const conversation = await firstValueFrom(this.proposalService.getConversation(request.proposalId));
+    const conversation = await firstValueFrom(
+      this.proposalService.getConversation(request.proposalId),
+    );
     const message = conversation.messages.find((item) => item.id === request.messageId);
     if (!message) throw { status: 404, error: 'MESSAGE_NOT_FOUND' };
 
     const triage = this.triageEmail(proposal, message);
     const documentSearch = this.searchDocuments(proposal, message, triage.probableUseType);
     const objectSearch = this.createMissingObjectSearchResult();
+    const accessibleDocuments = this.documentsForMessage(proposal, message);
     const run: ProposalAgentRun = {
       id: this.nextEntityId('run'),
       status: 'NEEDS_STAFF_INPUT',
@@ -146,12 +165,12 @@ export class AiStaffAssistanceServiceMock {
       status: 'ACTIVE',
       selectedMessage: message,
       proposalSnapshot: proposal,
-      accessibleDocuments: this.documentsForMessage(proposal, message),
+      accessibleDocuments,
       turns: [
         {
           id: this.nextEntityId('turn'),
           role: 'AGENT',
-          content: this.initialAgentMessage(triage, documentSearch.matches.length),
+          content: this.initialAgentMessage(accessibleDocuments.length),
           createdAt: new Date().toISOString(),
         },
       ],
@@ -177,7 +196,8 @@ export class AiStaffAssistanceServiceMock {
   private currentPrincipal(): PermissionPrincipal {
     const session = this.identity.session();
     const permissionId = this.identity.getPermissionId();
-    if (!session || !permissionId || !session.group) throw { status: 401, error: 'UNAUTHENTICATED' };
+    if (!session || !permissionId || !session.group)
+      throw { status: 401, error: 'UNAUTHENTICATED' };
     return {
       permissionId,
       user: {
@@ -199,7 +219,13 @@ export class AiStaffAssistanceServiceMock {
       .join(' ')
       .toLowerCase();
     const scores: readonly WeightedUseType[] = [
-      this.scoreUseType(text, 'EXHIBITION', ['exhibition', 'display', 'public', 'education', 'loan']),
+      this.scoreUseType(text, 'EXHIBITION', [
+        'exhibition',
+        'display',
+        'public',
+        'education',
+        'loan',
+      ]),
       this.scoreUseType(text, 'IN_SITU_VISIT', [
         'access',
         'visit',
@@ -245,7 +271,9 @@ export class AiStaffAssistanceServiceMock {
     message: Message,
     useType: UseType,
   ): NonNullable<ProposalAgentRun['documentSearch']> {
-    const attachmentIds = new Set((message.attachments ?? []).map((attachment) => attachment.documentId));
+    const attachmentIds = new Set(
+      (message.attachments ?? []).map((attachment) => attachment.documentId),
+    );
     const attachmentMatches: DocumentSearchMatch[] = proposal.documents
       .filter((document) => attachmentIds.has(document.id))
       .map((document) => ({
@@ -270,7 +298,9 @@ export class AiStaffAssistanceServiceMock {
   }
 
   private documentsForMessage(proposal: ProposalDetail, message: Message): Document[] {
-    const attachmentIds = new Set((message.attachments ?? []).map((attachment) => attachment.documentId));
+    const attachmentIds = new Set(
+      (message.attachments ?? []).map((attachment) => attachment.documentId),
+    );
     return proposal.documents.filter((document) => attachmentIds.has(document.id));
   }
 
@@ -295,7 +325,13 @@ export class AiStaffAssistanceServiceMock {
     if (!normalized) return this.createMissingObjectSearchResult();
 
     const matches: ObjectReference[] = ASSISTANCE_OBJECT_INDEX.filter((item) =>
-      [item.inventoryNumber, item.displayTitle, item.objectName, item.briefDescriptionSnapshot, ...item.keywords]
+      [
+        item.inventoryNumber,
+        item.displayTitle,
+        item.objectName,
+        item.briefDescriptionSnapshot,
+        ...item.keywords,
+      ]
         .filter((value): value is string => Boolean(value))
         .some((value) => value.toLowerCase().includes(normalized)),
     ).map(({ keywords: _keywords, ...reference }) => reference);
@@ -317,21 +353,95 @@ export class AiStaffAssistanceServiceMock {
     };
   }
 
-  private answerStaffTurn(session: AssistanceSession, content: string): string {
-    const latestRun = session.proposalAgentRuns.at(-1);
-    const triage = latestRun?.triage;
+  // Maps a free-text staff message to one capability and answers conversationally,
+  // attaching that capability's result so it is revealed only when asked. The
+  // pre-computed conclusions stay "behind the veil" until this routes to them.
+  private routeStaffIntent(
+    session: AssistanceSession,
+    content: string,
+  ): { content: string; result?: AssistanceTurnResult } {
+    const run = session.proposalAgentRuns.at(-1);
     const lower = content.toLowerCase();
-    if (lower.includes('object') || lower.includes('inventory') || lower.includes('search')) {
-      return 'Use the object search field with an inventory number, object name, collection area, or short description so I can search the mock object index.';
+
+    if (
+      this.matches(lower, ['triage', 'classif', 'categor', 'use type', 'what kind', 'what type'])
+    ) {
+      const triage = run?.triage;
+      if (triage) {
+        return {
+          content: `I read this as a ${triage.probableUseType.replace('_', ' ').toLowerCase()} request — ${triage.confidence.toLowerCase()} confidence. ${triage.rationale}`,
+          result: { kind: 'TRIAGE', triage },
+        };
+      }
     }
-    if (triage) {
-      return `Current triage is ${triage.probableUseType.replace('_', ' ').toLowerCase()} with ${triage.confidence.toLowerCase()} confidence.`;
+
+    if (
+      this.matches(lower, [
+        'document',
+        'file',
+        'form',
+        'template',
+        'paperwork',
+        'attachment',
+        'guide',
+      ])
+    ) {
+      const documentSearch = run?.documentSearch;
+      if (documentSearch) {
+        return {
+          content: `${documentSearch.summary} Here is what I would pull together.`,
+          result: { kind: 'DOCUMENT_SEARCH', documentSearch },
+        };
+      }
     }
-    return 'I can help triage the email, find relevant documents, and prepare object-search questions.';
+
+    if (
+      this.matches(lower, [
+        'object',
+        'inventory',
+        'item',
+        'artwork',
+        'artefact',
+        'artifact',
+        'specimen',
+        'search',
+      ])
+    ) {
+      const objectSearch = run?.objectSearch;
+      if (objectSearch) {
+        return {
+          content:
+            objectSearch.status === 'NEEDS_MORE_INFORMATION'
+              ? 'I can search the collection — give me an inventory number, object name, collection area, or a short description and I will look it up.'
+              : objectSearch.summary,
+          result: { kind: 'OBJECT_SEARCH', objectSearch },
+        };
+      }
+    }
+
+    if (this.matches(lower, ['help', 'what can you', 'capab', 'how can you', 'options'])) {
+      return {
+        content:
+          'I can triage this request, find relevant documents, or search the collection for objects. Which would you like to start with?',
+      };
+    }
+
+    return {
+      content:
+        'I can help with three things here: email triage, document search, and object search. Ask me for any of them to begin.',
+    };
   }
 
-  private initialAgentMessage(triage: EmailTriageResult, documentCount: number): string {
-    return `I triaged this message as ${triage.probableUseType.replace('_', ' ').toLowerCase()} with ${triage.confidence.toLowerCase()} confidence and found ${documentCount} relevant document${documentCount === 1 ? '' : 's'}. I need more object information before running object search.`;
+  private matches(text: string, needles: readonly string[]): boolean {
+    return needles.some((needle) => text.includes(needle));
+  }
+
+  private initialAgentMessage(attachmentCount: number): string {
+    const attachments =
+      attachmentCount > 0
+        ? ` and pulled in ${attachmentCount} attachment${attachmentCount === 1 ? '' : 's'}`
+        : '';
+    return `I've reviewed the requester's message${attachments}. I can triage the request, find relevant documents, or search the collection for objects. Where would you like to start?`;
   }
 
   private nextEntityId(prefix: string): string {

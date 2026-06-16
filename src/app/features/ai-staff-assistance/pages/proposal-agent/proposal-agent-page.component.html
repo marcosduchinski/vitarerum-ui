@@ -9,7 +9,7 @@
   }
 
   @if (sessionResource.isLoading()) {
-    <app-loading-state label="Starting ProposalAgent..." />
+    <app-loading-state label="Reviewing the message and its attachments…" />
   } @else if (error()) {
     <app-error-message [apiError]="error()!" (retry)="sessionResource.reload()" />
   } @else if (session(); as currentSession) {
@@ -32,7 +32,7 @@
       <section class="proposal-agent__dialog" aria-labelledby="dialog-heading">
         <h2 id="dialog-heading">AI Assistance chat</h2>
 
-        <ol class="proposal-agent-chat" aria-label="ProposalAgent conversation">
+        <ol #chatLog class="proposal-agent-chat" aria-label="ProposalAgent conversation">
           @if (currentSession.selectedMessage; as msg) {
             <li class="proposal-agent-chat__item proposal-agent-chat__item--context">
               <span>Selected message</span>
@@ -46,55 +46,19 @@
             </li>
           }
 
-          <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
-            <span>ProposalAgent</span>
-            <p>I can help with this message. Choose an assistance to continue.</p>
-            @if (run(); as activeRun) {
-              <div class="proposal-agent-options" aria-label="Available assistance options">
-                @for (capability of activeRun.capabilities; track capability) {
-                  <button
-                    type="button"
-                    class="proposal-agent-options__item"
-                    [class.proposal-agent-options__item--selected]="
-                      selectedCapability() === capability
-                    "
-                    [attr.aria-pressed]="selectedCapability() === capability"
-                    (click)="selectCapability(capability)"
-                  >
-                    @switch (capability) {
-                      @case ('EMAIL_TRIAGE') {
-                        <span class="pi pi-inbox" aria-hidden="true"></span>
-                        Email triage
-                      }
-                      @case ('DOCUMENT_SEARCH') {
-                        <span class="pi pi-file-search" aria-hidden="true"></span>
-                        Document search
-                      }
-                      @case ('OBJECT_SEARCH') {
-                        <span class="pi pi-search" aria-hidden="true"></span>
-                        Object search
-                      }
-                    }
-                  </button>
-                }
-              </div>
-            }
-          </li>
+          @for (turn of currentSession.turns; track turn.id) {
+            <li
+              class="proposal-agent-chat__item"
+              [class.proposal-agent-chat__item--staff]="turn.role === 'STAFF'"
+              [class.proposal-agent-chat__item--agent]="turn.role === 'AGENT'"
+            >
+              <span>{{ turn.role === 'STAFF' ? 'Staff member' : 'ProposalAgent' }}</span>
+              <p class="proposal-agent-bubble">{{ turn.content }}</p>
 
-          @if (selectedCapability(); as capability) {
-            <li class="proposal-agent-chat__item proposal-agent-chat__item--staff">
-              <span>Staff member</span>
-              <p>Run {{ capabilityLabel(capability) }}.</p>
-            </li>
-          }
-
-          @if (run(); as activeRun) {
-            @if (selectedCapability() === 'EMAIL_TRIAGE' && activeRun.triage; as triage) {
-              <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
-                <span>ProposalAgent</span>
-                <section class="agent-panel" aria-labelledby="triage-heading">
+              @if (turn.result?.triage; as triage) {
+                <section class="agent-panel" aria-label="Email triage result">
                   <div class="agent-panel__header">
-                    <h3 id="triage-heading">Email triage</h3>
+                    <h3>Email triage</h3>
                     <span>{{ triage.confidence.toLowerCase() }} confidence</span>
                   </div>
                   <p class="agent-panel__result">{{ formatUseType(triage.probableUseType) }}</p>
@@ -107,18 +71,12 @@
                     </ul>
                   }
                 </section>
-              </li>
-            }
+              }
 
-            @if (
-              selectedCapability() === 'DOCUMENT_SEARCH' && activeRun.documentSearch;
-              as documentSearch
-            ) {
-              <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
-                <span>ProposalAgent</span>
-                <section class="agent-panel" aria-labelledby="documents-heading">
+              @if (turn.result?.documentSearch; as documentSearch) {
+                <section class="agent-panel" aria-label="Document search result">
                   <div class="agent-panel__header">
-                    <h3 id="documents-heading">Document search</h3>
+                    <h3>Document search</h3>
                     <span>{{ formatUseType(documentSearch.basedOnUseType) }}</span>
                   </div>
                   <p>{{ documentSearch.summary }}</p>
@@ -134,18 +92,14 @@
                     }
                   </ul>
                 </section>
-              </li>
-            }
+              }
 
-            @if (selectedCapability() === 'OBJECT_SEARCH' && activeRun.objectSearch; as objectSearch) {
-              <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
-                <span>ProposalAgent</span>
-                <section class="agent-panel" aria-labelledby="objects-heading">
+              @if (turn.result?.objectSearch; as objectSearch) {
+                <section class="agent-panel" aria-label="Object search result">
                   <div class="agent-panel__header">
-                    <h3 id="objects-heading">Object search</h3>
+                    <h3>Object search</h3>
                     <span>{{ objectSearch.status.replaceAll('_', ' ').toLowerCase() }}</span>
                   </div>
-                  <p>{{ objectSearch.summary }}</p>
                   @if (objectSearch.missingInformation.length) {
                     <ul class="proposal-agent-list">
                       @for (item of objectSearch.missingInformation; track item) {
@@ -163,46 +117,78 @@
                       }
                     </ul>
                   }
-                  <form
-                    class="proposal-agent-form"
-                    aria-label="Search collection objects"
-                    (submit)="$event.preventDefault(); searchObjects()"
-                  >
-                    <label for="object-query">Object information</label>
-                    <div class="proposal-agent-form__row">
-                      <input
-                        id="object-query"
-                        type="text"
-                        [value]="objectQuery()"
-                        (input)="onObjectQueryInput($event)"
-                        placeholder="Inventory number, object name, collection, or description"
-                      />
-                      <button
-                        type="submit"
-                        class="action-btn action-btn--primary"
-                        [disabled]="!objectQuery().trim() || searchingObjects()"
-                      >
-                        <span class="pi pi-search" aria-hidden="true"></span>
-                        {{ searchingObjects() ? 'Searching...' : 'Search' }}
-                      </button>
-                    </div>
-                  </form>
+                  @if (objectSearch.status !== 'SEARCHED' && $last) {
+                    <form
+                      class="proposal-agent-form"
+                      aria-label="Search collection objects"
+                      (submit)="$event.preventDefault(); searchObjects()"
+                    >
+                      <label for="object-query">Object information</label>
+                      <div class="proposal-agent-form__row">
+                        <input
+                          id="object-query"
+                          type="text"
+                          [value]="objectQuery()"
+                          (input)="onObjectQueryInput($event)"
+                          [disabled]="interacting()"
+                          placeholder="Inventory number, object name, collection, or description"
+                        />
+                        <button
+                          type="submit"
+                          class="action-btn action-btn--primary"
+                          [disabled]="!objectQuery().trim() || interacting()"
+                        >
+                          <span class="pi pi-search" aria-hidden="true"></span>
+                          Search
+                        </button>
+                      </div>
+                    </form>
+                  }
                 </section>
-              </li>
-            }
+              }
+            </li>
           }
 
-          @for (turn of currentSession.turns; track turn.id) {
-            <li
-              class="proposal-agent-chat__item"
-              [class.proposal-agent-chat__item--staff]="turn.role === 'STAFF'"
-              [class.proposal-agent-chat__item--agent]="turn.role === 'AGENT'"
-            >
-              <span>{{ turn.role === 'STAFF' ? 'Staff member' : 'ProposalAgent' }}</span>
-              <p>{{ turn.content }}</p>
+          @if (pendingStaffMessage(); as pending) {
+            <li class="proposal-agent-chat__item proposal-agent-chat__item--staff">
+              <span>Staff member</span>
+              <p class="proposal-agent-bubble">{{ pending }}</p>
+            </li>
+          }
+
+          @if (thinking()) {
+            <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
+              <span>ProposalAgent</span>
+              <p
+                class="proposal-agent-bubble proposal-agent-typing"
+                aria-label="ProposalAgent is typing"
+              >
+                <span class="proposal-agent-typing__dot"></span>
+                <span class="proposal-agent-typing__dot"></span>
+                <span class="proposal-agent-typing__dot"></span>
+              </p>
+            </li>
+          } @else if (streamingText(); as streaming) {
+            <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
+              <span>ProposalAgent</span>
+              <p class="proposal-agent-bubble">{{ streaming }}</p>
             </li>
           }
         </ol>
+
+        @if (suggestedPrompts().length && !interacting()) {
+          <div class="proposal-agent-suggestions" aria-label="Suggested questions">
+            @for (suggestion of suggestedPrompts(); track suggestion.label) {
+              <button
+                type="button"
+                class="proposal-agent-suggestions__chip"
+                (click)="sendChatMessage(suggestion.prompt)"
+              >
+                {{ suggestion.label }}
+              </button>
+            }
+          </div>
+        }
 
         <form
           class="proposal-agent-form proposal-agent-form--composer"
@@ -216,15 +202,16 @@
             rows="3"
             [value]="chatMessage()"
             (input)="onChatMessageInput($event)"
-            placeholder="Ask about triage, documents, or object search..."
+            [disabled]="interacting()"
+            placeholder="Ask about triage, documents, or object search…"
           ></textarea>
           <button
             type="submit"
             class="action-btn action-btn--primary"
-            [disabled]="!chatMessage().trim() || sendingChat()"
+            [disabled]="!chatMessage().trim() || interacting()"
           >
             <span class="pi pi-send" aria-hidden="true"></span>
-            {{ sendingChat() ? 'Sending...' : 'Send' }}
+            {{ interacting() ? 'Working…' : 'Send' }}
           </button>
         </form>
       </section>

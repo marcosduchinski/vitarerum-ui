@@ -12,6 +12,13 @@ import {
 import { AI_STAFF_ASSISTANCE_SERVICE } from '../../services/ai-staff-assistance.service';
 import { ProposalAgentPageComponent } from './proposal-agent-page.component';
 
+const TRIAGE = {
+  probableUseType: 'EXHIBITION' as const,
+  confidence: 'HIGH' as const,
+  rationale: 'The message and proposal description match exhibition use.',
+  evidence: ['Matched "exhibition".'],
+};
+
 const SESSION: AssistanceSession = {
   id: 'session-1',
   agent: 'PROPOSAL_AGENT',
@@ -58,19 +65,7 @@ const SESSION: AssistanceSession = {
     },
     submittedAt: '2026-06-01T10:30:00Z',
     conversationId: 'conv-4',
-    documents: [
-      {
-        id: 'doc-prop-4-exhibition-brief',
-        type: 'REQUESTER_ATTACHMENT',
-        fileName: 'laboratory-instruments-exhibition-brief.pdf',
-        submittedAt: '2026-06-01T10:30:00Z',
-        submittedBy: {
-          permissionId: 'perm-alice',
-          user: { id: 'u-alice', name: 'Alice Ferreira', email: 'alice@example.test' },
-          group: 'EXTERNAL',
-        },
-      },
-    ],
+    documents: [],
     requestedObjects: [],
   },
   accessibleDocuments: [
@@ -86,12 +81,13 @@ const SESSION: AssistanceSession = {
       },
     },
   ],
+  // The opening turn invites a question and withholds the triage conclusion.
   turns: [
     {
       id: 'turn-1',
       role: 'AGENT',
       content:
-        'I triaged this message as exhibition with high confidence and found 3 relevant documents.',
+        "I've reviewed the requester's message and pulled in 1 attachment. Where would you like to start?",
       createdAt: '2026-06-01T10:31:00Z',
     },
   ],
@@ -100,32 +96,12 @@ const SESSION: AssistanceSession = {
       id: 'run-1',
       status: 'NEEDS_STAFF_INPUT',
       capabilities: ['EMAIL_TRIAGE', 'DOCUMENT_SEARCH', 'OBJECT_SEARCH'],
-      triage: {
-        probableUseType: 'EXHIBITION',
-        confidence: 'HIGH',
-        rationale: 'The message and proposal description match exhibition use.',
-        evidence: ['Matched "exhibition".'],
-      },
+      triage: TRIAGE,
       documentSearch: {
         query: 'EXHIBITION proposal assistance documents',
         basedOnUseType: 'EXHIBITION',
-        summary: 'Found 3 documents relevant to exhibition.',
-        matches: [
-          {
-            documentId: 'doc-prop-4-exhibition-brief',
-            fileName: 'laboratory-instruments-exhibition-brief.pdf',
-            type: 'REQUESTER_ATTACHMENT',
-            source: 'PROPOSAL_ATTACHMENT',
-            reason: 'Attached to the selected requester message.',
-          },
-          {
-            documentId: 'catalog-doc-exhibition-loan-conditions',
-            fileName: 'exhibition-loan-conditions.pdf',
-            type: 'ASSISTANCE_GUIDE',
-            source: 'ASSISTANCE_CATALOG',
-            reason: 'Exhibition requests usually need display conditions.',
-          },
-        ],
+        summary: 'Found 1 document relevant to exhibition.',
+        matches: [],
       },
       objectSearch: {
         status: 'NEEDS_MORE_INFORMATION',
@@ -160,17 +136,38 @@ class AiStaffAssistanceServiceStub {
 
   addTurn(sessionId: string, request: AddAssistanceTurnRequest) {
     this.turnCalls.push({ sessionId, request });
+    const wantsObjects = /object|collection|inventory/i.test(request.content);
+    const agentTurn = wantsObjects
+      ? {
+          id: 'turn-agent',
+          role: 'AGENT' as const,
+          content:
+            'Give me an inventory number, object name, or description and I will look it up.',
+          result: {
+            kind: 'OBJECT_SEARCH' as const,
+            objectSearch: {
+              status: 'NEEDS_MORE_INFORMATION' as const,
+              query: null,
+              matches: [],
+              missingInformation: ['inventory number', 'object name'],
+              summary: 'Object search needs more information.',
+            },
+          },
+          createdAt: 'now',
+        }
+      : {
+          id: 'turn-agent',
+          role: 'AGENT' as const,
+          content: 'I read this as an exhibition request — high confidence.',
+          result: { kind: 'TRIAGE' as const, triage: TRIAGE },
+          createdAt: 'now',
+        };
     this.session = {
       ...this.session,
       turns: [
         ...this.session.turns,
         { id: 'turn-staff', role: 'STAFF', content: request.content, createdAt: 'now' },
-        {
-          id: 'turn-agent',
-          role: 'AGENT',
-          content: 'Current triage is exhibition with high confidence.',
-          createdAt: 'now',
-        },
+        agentTurn,
       ],
     };
     return of(this.session);
@@ -178,35 +175,35 @@ class AiStaffAssistanceServiceStub {
 
   searchObjects(sessionId: string, request: SearchObjectsRequest) {
     this.objectSearchCalls.push({ sessionId, request });
-    const run = this.session.proposalAgentRuns[0];
-    this.session = {
-      ...this.session,
-      proposalAgentRuns: [
+    const objectSearch = {
+      status: 'SEARCHED' as const,
+      query: request.query,
+      missingInformation: [],
+      summary: 'Found 1 object matching laboratory.',
+      matches: [
         {
-          ...run,
-          status: 'COMPLETED',
-          objectSearch: {
-            status: 'SEARCHED',
-            query: request.query,
-            missingInformation: [],
-            summary: 'Found 1 object matching laboratory.',
-            matches: [
-              {
-                inventoryNumber: 'INV-HIST-LAB-004',
-                displayTitle: 'Early laboratory microscope',
-                objectName: 'Microscope',
-                briefDescriptionSnapshot: 'Laboratory instrument.',
-              },
-            ],
-          },
+          inventoryNumber: 'INV-HIST-LAB-004',
+          displayTitle: 'Early laboratory microscope',
+          objectName: 'Microscope',
+          briefDescriptionSnapshot: 'Laboratory instrument.',
         },
       ],
+    };
+    this.session = {
+      ...this.session,
       turns: [
         ...this.session.turns,
         {
-          id: 'turn-object',
+          id: 'turn-object-staff',
+          role: 'STAFF',
+          content: `Search the collection for "${request.query}".`,
+          createdAt: 'now',
+        },
+        {
+          id: 'turn-object-agent',
           role: 'AGENT',
           content: 'Found 1 object matching laboratory.',
+          result: { kind: 'OBJECT_SEARCH', objectSearch },
           createdAt: 'now',
         },
       ],
@@ -214,6 +211,8 @@ class AiStaffAssistanceServiceStub {
     return of(this.session);
   }
 }
+
+const flushMicrotasks = (): Promise<void> => new Promise((resolve) => setTimeout(resolve));
 
 async function setup(): Promise<{
   readonly fixture: ComponentFixture<ProposalAgentPageComponent>;
@@ -223,16 +222,16 @@ async function setup(): Promise<{
   const service = new AiStaffAssistanceServiceStub();
   await TestBed.configureTestingModule({
     imports: [ProposalAgentPageComponent],
-    providers: [
-      provideRouter([]),
-      { provide: AI_STAFF_ASSISTANCE_SERVICE, useValue: service },
-    ],
+    providers: [provideRouter([]), { provide: AI_STAFF_ASSISTANCE_SERVICE, useValue: service }],
   }).compileComponents();
 
   const fixture = TestBed.createComponent(ProposalAgentPageComponent);
   const componentRef = fixture.componentRef;
   componentRef.setInput('id', 'prop-4');
   componentRef.setInput('messageId', 'msg-prop-4-initial');
+  // Disable animation timers so interactions resolve synchronously in tests.
+  componentRef.setInput('thinkingDelayMs', 0);
+  componentRef.setInput('streamWordDelayMs', 0);
   fixture.detectChanges();
   await fixture.whenStable();
   fixture.detectChanges();
@@ -241,40 +240,28 @@ async function setup(): Promise<{
 }
 
 describe('ProposalAgentPageComponent', () => {
-  it('renders selected message and ProposalAgent options before a capability is selected', async () => {
+  it('opens with a withheld greeting, suggested prompts, and no revealed conclusions', async () => {
     const { fixture, service } = await setup();
-
     const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(service.startCalls).toEqual([
-      { proposalId: 'prop-4', messageId: 'msg-prop-4-initial' },
-    ]);
-    expect(compiled.textContent).toContain('ProposalAgent');
-    expect(compiled.textContent).toContain('VRP-20260601-0004');
-    expect(compiled.textContent).toContain('AI Assistance chat');
-    expect(compiled.textContent).toContain('Choose an assistance to continue');
-    expect(compiled.textContent).toContain('Email triage');
-    expect(compiled.textContent).toContain('Document search');
-    expect(compiled.textContent).toContain('Object search');
+    expect(service.startCalls).toEqual([{ proposalId: 'prop-4', messageId: 'msg-prop-4-initial' }]);
+    expect(compiled.textContent).toContain('Where would you like to start?');
     expect(compiled.textContent).toContain('Collection use request: VR-2026-004');
-    expect(compiled.textContent).not.toContain('exhibition-loan-conditions.pdf');
-    expect(compiled.textContent).not.toContain('Object search needs more information');
-  });
 
-  it('shows the selected staff action and matching assistant result', async () => {
-    const { fixture } = await setup();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const emailTriageButton = Array.from(
-      compiled.querySelectorAll<HTMLButtonElement>('.proposal-agent-options__item'),
-    ).find((button) => button.textContent?.includes('Email triage'));
+    const chips = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.proposal-agent-suggestions__chip'),
+    ).map((chip) => chip.textContent?.trim());
+    expect(chips).toEqual(
+      expect.arrayContaining([
+        'Do the email triage',
+        'Find relevant documents',
+        'Search for an object',
+      ]),
+    );
 
-    emailTriageButton!.click();
-    fixture.detectChanges();
-
-    expect(compiled.textContent).toContain('Run Email triage.');
-    expect(compiled.textContent).toContain('high confidence');
-    expect(compiled.textContent).toContain('The message and proposal description match exhibition use.');
-    expect(compiled.textContent).not.toContain('exhibition-loan-conditions.pdf');
+    // Conclusions stay behind the veil until asked.
+    expect(compiled.textContent).not.toContain('Email triage');
+    expect(compiled.textContent).not.toContain('high confidence');
   });
 
   it('hides route navigation chrome when embedded', async () => {
@@ -288,7 +275,35 @@ describe('ProposalAgentPageComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Back to assignment');
   });
 
-  it('sends chat turns through the assistance service', async () => {
+  it('reveals the triage card when a suggested prompt is used', async () => {
+    const { fixture, service } = await setup();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const triageChip = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.proposal-agent-suggestions__chip'),
+    ).find((chip) => chip.textContent?.includes('Do the email triage'));
+
+    triageChip!.click();
+    await flushMicrotasks();
+    fixture.detectChanges();
+
+    expect(service.turnCalls).toEqual([
+      { sessionId: 'session-1', request: { content: 'Could you do the email triage?' } },
+    ]);
+    expect(compiled.textContent).toContain('Email triage');
+    expect(compiled.textContent).toContain('high confidence');
+    expect(compiled.textContent).toContain(
+      'The message and proposal description match exhibition use.',
+    );
+    // The triage chip is consumed once the capability is revealed.
+    expect(
+      Array.from(
+        compiled.querySelectorAll<HTMLButtonElement>('.proposal-agent-suggestions__chip'),
+      ).map((chip) => chip.textContent?.trim()),
+    ).not.toContain('Do the email triage');
+  });
+
+  it('sends free-text chat turns through the assistance service', async () => {
     const { fixture, service } = await setup();
     const compiled = fixture.nativeElement as HTMLElement;
     const textarea = compiled.querySelector<HTMLTextAreaElement>('#chat-message');
@@ -301,39 +316,43 @@ describe('ProposalAgentPageComponent', () => {
     fixture.detectChanges();
 
     sendButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await flushMicrotasks();
     fixture.detectChanges();
 
     expect(service.turnCalls).toEqual([
       { sessionId: 'session-1', request: { content: 'Explain the triage.' } },
     ]);
-    expect(compiled.textContent).toContain('Current triage is exhibition with high confidence.');
+    expect(compiled.textContent).toContain('Explain the triage.');
+    expect(compiled.textContent).toContain(
+      'I read this as an exhibition request — high confidence.',
+    );
   });
 
-  it('runs object search through the assistance service', async () => {
+  it('runs object search and reveals matches inline', async () => {
     const { fixture, service } = await setup();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const objectSearchButton = Array.from(
-      compiled.querySelectorAll<HTMLButtonElement>('.proposal-agent-options__item'),
-    ).find((button) => button.textContent?.includes('Object search'));
+    let compiled = fixture.nativeElement as HTMLElement;
 
-    objectSearchButton!.click();
+    // Ask about objects to reveal the object-search card (with its query form).
+    const objectChip = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.proposal-agent-suggestions__chip'),
+    ).find((chip) => chip.textContent?.includes('Search for an object'));
+    objectChip!.click();
+    await flushMicrotasks();
     fixture.detectChanges();
 
+    compiled = fixture.nativeElement as HTMLElement;
     const input = compiled.querySelector<HTMLInputElement>('#object-query');
-    const searchForm = compiled.querySelector<HTMLFormElement>(
-      'form[aria-label="Search collection objects"]',
-    );
-    const searchButton = searchForm!.querySelector<HTMLButtonElement>('button[type="submit"]');
+    expect(input).not.toBeNull();
 
     input!.value = 'laboratory';
     input!.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    searchButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    const searchForm = compiled.querySelector<HTMLFormElement>(
+      'form[aria-label="Search collection objects"]',
+    );
+    searchForm!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushMicrotasks();
     fixture.detectChanges();
 
     expect(service.objectSearchCalls).toEqual([
