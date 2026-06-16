@@ -466,6 +466,33 @@ note      : String    (optional)
 
 ---
 
+### `POST /collection-use-projects/{projectId}/publication-entries` · `PATCH …/{entryId}` · `…/{entryId}/attachments`
+
+**Description** — Staff add, edit, and attach files to **publication log entries** (a `note` recording a publication/output derived from the project, plus optional attachments). Request/response shapes are defined in the researcher group (file 04). The publication log carries an informational `curator` (the staff member related to the project) and is **not concluded**.
+
+**Phase/role gate differs from the other journals.** A publication entry may be written only by:
+
+- the **external requester** while the project is `IN_PROGRESS`; or
+- **`CURATORIAL`, `COLLECTIONS_MANAGEMENT` or `DIRECTION`** staff once the project is `COMPLETED`.
+
+So unlike object access/occurrence logs (where staff may write at any status), staff are **rejected with `403` while the project is still `IN_PROGRESS`**, and the external requester is rejected with `403` once it is `COMPLETED`. Any other project status (`CREATED`, `CANCELLED`) rejects all callers with `409`. `SYS_ADMIN` receives the staff read views but is not among the publication writers.
+
+**Response `403 Forbidden`**
+```json
+{
+  "error": "ACCESS_DENIED",
+  "message": "Once the project is COMPLETED only curatorial, collections-management or direction staff can add publication entries"
+}
+```
+
+---
+
+### `GET /collection-use-projects/{projectId}/publication-entries` · `…/publication-log`
+
+**Description** — List a project's publication entries (paginated, with `addedBy` filter and the `publicationLog` header) and get the publication log header (`id`, `referenceNumber`, `projectId`, `curator`), as defined in file 04. `404` (`PUBLICATION_LOG_NOT_FOUND`) while the project has no entries yet. Staff see all projects' publication logs.
+
+---
+
 ### `GET /collection-use-projects/{projectId}/events`
 
 **Description** — Get the immutable audit trail of the project lifecycle ordered chronologically. Staff see the complete event history including transitions triggered by the researcher, and can filter by `type`.

@@ -48,6 +48,9 @@ export interface Attachment {
   readonly fileName: string;
   readonly mediaType: MediaType;
   readonly uploadedAt: string;
+  // Optional caption. Only the publication-entry attachment endpoints accept and
+  // return it; object access/occurrence attachments leave it undefined.
+  readonly note?: string | null;
 }
 
 export interface ObjectAccessLog {
@@ -64,6 +67,25 @@ export interface ObjectOccurrenceLog {
   readonly projectId: string;
   readonly dateConclusion: string | null;
   readonly curator: PermissionPrincipal | null;
+}
+
+// The publication log records publications/outputs derived from a project. Unlike
+// the object access/occurrence logs it has no conclusion — only an informational
+// `curator` (the staff member related to the project, snapshotted from the
+// proposal's assignee).
+export interface PublicationLog {
+  readonly id: string;
+  readonly referenceNumber: string;
+  readonly projectId: string;
+  readonly curator: PermissionPrincipal | null;
+}
+
+export interface PublicationLogEntry {
+  readonly id: string;
+  readonly addedAt: string;
+  readonly addedBy: PermissionPrincipal;
+  readonly note: string;
+  readonly attachments: readonly Attachment[];
 }
 
 export interface ObjectLogEntry {
@@ -206,6 +228,10 @@ export interface ObjectOccurrenceEntriesQuery extends PageQuery {
   readonly reportedBy?: string;
 }
 
+export interface PublicationEntriesQuery extends PageQuery {
+  readonly addedBy?: string;
+}
+
 export interface ProjectEventsQuery extends PageQuery {
   readonly type?: UseEventType;
 }
@@ -218,6 +244,11 @@ export interface ObjectLogEntriesPage extends Page<ObjectLogEntry> {
 export interface ObjectOccurrenceEntriesPage extends Page<ObjectOccurrenceEntry> {
   readonly projectId: string;
   readonly occurrenceLog: ObjectOccurrenceLog | null;
+}
+
+export interface PublicationEntriesPage extends Page<PublicationLogEntry> {
+  readonly projectId: string;
+  readonly publicationLog: PublicationLog | null;
 }
 
 export interface ProjectEventsPage extends Page<UseEvent> {

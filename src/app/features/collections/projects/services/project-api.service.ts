@@ -24,6 +24,10 @@ import {
   ProjectEventsPage,
   ProjectEventsQuery,
   ProjectListQuery,
+  PublicationEntriesPage,
+  PublicationEntriesQuery,
+  PublicationLog,
+  PublicationLogEntry,
   ReasonRequest,
   UpdateObjectLogEntryRequest,
   UpdateObjectOccurrenceEntryRequest,
@@ -244,6 +248,75 @@ export class ProjectApiService {
     return this.http.get(
       this.url(
         `/collection-use-projects/${projectId}/occurrence-entries/${entryId}/attachments/${encodeURIComponent(
+          fileReference,
+        )}`,
+      ),
+      { responseType: 'blob' },
+    );
+  }
+
+  createPublicationEntry(projectId: string, request: NoteRequest): Observable<PublicationLogEntry> {
+    return this.http.post<PublicationLogEntry>(
+      this.url(`/collection-use-projects/${projectId}/publication-entries`),
+      request,
+    );
+  }
+
+  listPublicationEntries(
+    projectId: string,
+    query: PublicationEntriesQuery = {},
+  ): Observable<PublicationEntriesPage> {
+    return this.http.get<PublicationEntriesPage>(
+      this.url(`/collection-use-projects/${projectId}/publication-entries`),
+      { params: buildHttpParams(query) },
+    );
+  }
+
+  updatePublicationEntry(
+    projectId: string,
+    entryId: string,
+    request: NoteRequest,
+  ): Observable<PublicationLogEntry> {
+    return this.http.patch<PublicationLogEntry>(
+      this.url(`/collection-use-projects/${projectId}/publication-entries/${entryId}`),
+      request,
+    );
+  }
+
+  getPublicationLog(projectId: string): Observable<PublicationLog> {
+    return this.http.get<PublicationLog>(
+      this.url(`/collection-use-projects/${projectId}/publication-log`),
+    );
+  }
+
+  uploadPublicationEntryAttachment(
+    projectId: string,
+    entryId: string,
+    file: File,
+    mediaType: MediaType,
+    note?: string,
+  ): Observable<Attachment> {
+    const body = new FormData();
+    body.append('file', file);
+    body.append('mediaType', mediaType);
+    if (note) body.append('note', note);
+
+    return this.http.post<Attachment>(
+      this.url(`/collection-use-projects/${projectId}/publication-entries/${entryId}/attachments`),
+      body,
+    );
+  }
+
+  // Downloads a publication-entry attachment's binary content. Same streaming
+  // contract as the log-entry attachment download.
+  downloadPublicationEntryAttachment(
+    projectId: string,
+    entryId: string,
+    fileReference: string,
+  ): Observable<Blob> {
+    return this.http.get(
+      this.url(
+        `/collection-use-projects/${projectId}/publication-entries/${entryId}/attachments/${encodeURIComponent(
           fileReference,
         )}`,
       ),

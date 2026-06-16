@@ -123,6 +123,12 @@ export class ProjectStaffDetailPageComponent {
     );
   });
   protected readonly canOpenLogTasks = computed(() => this.project()?.status === 'IN_PROGRESS');
+  // Staff write publication entries once COMPLETED; the log stays readable in
+  // both phases, so surface the task for IN_PROGRESS and COMPLETED projects.
+  protected readonly canOpenPublication = computed(() => {
+    const status = this.project()?.status;
+    return status === 'IN_PROGRESS' || status === 'COMPLETED';
+  });
   protected readonly logRouteSegment = computed(() => {
     const type = this.project()?.type;
     return type ? LOG_ROUTE_SEGMENTS[type] : 'research';

@@ -440,4 +440,118 @@ describe('ProjectApiService', () => {
     request.flush(blob);
     expect(received).toBe(blob);
   });
+
+  it('creates and lists publication entries with the publication log header', () => {
+    service.createPublicationEntry('project-1', { note: 'Published an article.' }).subscribe();
+    const createRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/publication-entries',
+    );
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.body).toEqual({ note: 'Published an article.' });
+    createRequest.flush({
+      id: 'pub-entry-1',
+      addedAt: '2026-06-10T14:00:00',
+      addedBy: {
+        permissionId: 'perm-1',
+        user: { id: 'u1', name: 'Ana', email: 'ana@example.test' },
+        group: 'EXTERNAL',
+      },
+      note: 'Published an article.',
+      attachments: [],
+    });
+
+    service.listPublicationEntries('project-1', { addedBy: 'perm-1' }).subscribe();
+    const listRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/publication-entries?addedBy=perm-1',
+    );
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({
+      projectId: 'project-1',
+      publicationLog: {
+        id: 'pub-1',
+        referenceNumber: 'PUB-1A2B3C4D',
+        projectId: 'project-1',
+        curator: null,
+      },
+      content: [],
+      page: 0,
+      size: 20,
+      totalElements: 0,
+      totalPages: 0,
+    });
+  });
+
+  it('updates a publication entry note and gets the publication log', () => {
+    service.updatePublicationEntry('project-1', 'pub-entry-1', { note: 'fixed' }).subscribe();
+    const patchRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/publication-entries/pub-entry-1',
+    );
+    expect(patchRequest.request.method).toBe('PATCH');
+    expect(patchRequest.request.body).toEqual({ note: 'fixed' });
+    patchRequest.flush({
+      id: 'pub-entry-1',
+      addedAt: '2026-06-10T14:00:00',
+      addedBy: {
+        permissionId: 'perm-1',
+        user: { id: 'u1', name: 'Ana', email: 'ana@example.test' },
+        group: 'EXTERNAL',
+      },
+      note: 'fixed',
+      attachments: [],
+    });
+
+    service.getPublicationLog('project-1').subscribe();
+    const logRequest = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/publication-log',
+    );
+    expect(logRequest.request.method).toBe('GET');
+    logRequest.flush({
+      id: 'pub-1',
+      referenceNumber: 'PUB-1A2B3C4D',
+      projectId: 'project-1',
+      curator: null,
+    });
+  });
+
+  it('uploads a publication entry attachment with an optional note', () => {
+    const file = new File(['pdf'], 'paper.pdf', { type: 'application/pdf' });
+
+    service
+      .uploadPublicationEntryAttachment('project-1', 'pub-entry-1', file, 'DOCUMENT', 'The paper')
+      .subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/publication-entries/pub-entry-1/attachments',
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body instanceof FormData).toBe(true);
+    expect((request.request.body as FormData).get('file')).toBe(file);
+    expect((request.request.body as FormData).get('mediaType')).toBe('DOCUMENT');
+    expect((request.request.body as FormData).get('note')).toBe('The paper');
+    request.flush({
+      fileReference: 'files/paper',
+      fileName: 'paper.pdf',
+      mediaType: 'DOCUMENT',
+      uploadedAt: '2026-06-10T14:05:00',
+      note: 'The paper',
+    });
+  });
+
+  it('downloads a publication entry attachment as a blob with an encoded file reference', () => {
+    let received: Blob | undefined;
+
+    service
+      .downloadPublicationEntryAttachment('project-1', 'pub-entry-1', 'paper 2024.pdf')
+      .subscribe((blob) => (received = blob));
+
+    const request = http.expectOne(
+      'https://api.example.test/collection-use-projects/project-1/publication-entries/pub-entry-1/attachments/paper%202024.pdf',
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+
+    const blob = new Blob(['file-bytes']);
+    request.flush(blob);
+    expect(received).toBe(blob);
+  });
 });

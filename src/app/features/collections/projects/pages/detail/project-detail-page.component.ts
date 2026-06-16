@@ -129,6 +129,12 @@ export class ProjectDetailPageComponent {
     () => this.project()?.status === 'CREATED' || this.project()?.status === 'IN_PROGRESS',
   );
   protected readonly canLog = computed(() => this.project()?.status === 'IN_PROGRESS');
+  // The publication log stays reachable while in progress (researcher writes) and
+  // once completed (researcher reads staff entries).
+  protected readonly canOpenPublication = computed(() => {
+    const status = this.project()?.status;
+    return status === 'IN_PROGRESS' || status === 'COMPLETED';
+  });
 
   protected readonly activePanel = signal<ExternalProjectPanel>('overview');
   protected readonly acting = signal(false);

@@ -606,6 +606,86 @@ describe('ProjectApiServiceMock', () => {
     expect(pending.content.every((e) => e.type === 'REQUESTED')).toBe(true);
     expect(pending.content.some((e) => e.type === 'STARTED')).toBe(false);
   });
+
+  it('lets the external requester add publication entries while IN_PROGRESS', async () => {
+    await firstValueFrom(service.startProject('proj-4', { note: 'Starting.' }));
+    const entry = await firstValueFrom(
+      service.createPublicationEntry('proj-4', { note: 'Published a dataset.' }),
+    );
+    expect(entry.note).toBe('Published a dataset.');
+    expect(entry.addedBy.permissionId).toBe('perm-alice');
+
+    const page = await firstValueFrom(service.listPublicationEntries('proj-4'));
+    expect(page.content.some((e) => e.id === entry.id)).toBe(true);
+    expect(page.publicationLog?.referenceNumber).toMatch(/^PUB-/);
+  });
+
+  it('rejects staff publication entries while the project is IN_PROGRESS', async () => {
+    const project = state.projects.get('proj-4')!;
+    state.projects.set('proj-4', { ...project, status: 'IN_PROGRESS' });
+    session.set(curatorialSession());
+    await expect(
+      firstValueFrom(service.createPublicationEntry('proj-4', { note: 'Staff note.' })),
+    ).rejects.toMatchObject({ status: 403, error: 'ACCESS_DENIED' });
+  });
+
+  it('lets publication staff add entries once the project is COMPLETED', async () => {
+    const project = state.projects.get('proj-4')!;
+    state.projects.set('proj-4', { ...project, status: 'COMPLETED' });
+    session.set(curatorialSession());
+
+    const entry = await firstValueFrom(
+      service.createPublicationEntry('proj-4', { note: 'Catalogued the publication.' }),
+    );
+    expect(entry.addedBy.permissionId).toBe('perm-carol');
+  });
+
+  it('rejects the external requester once the project is COMPLETED', async () => {
+    const project = state.projects.get('proj-4')!;
+    state.projects.set('proj-4', { ...project, status: 'COMPLETED' });
+
+    await expect(
+      firstValueFrom(service.createPublicationEntry('proj-4', { note: 'Late note.' })),
+    ).rejects.toMatchObject({ status: 403, error: 'ACCESS_DENIED' });
+  });
+
+  it('rejects publication entries for non-active, non-completed projects', async () => {
+    const project = state.projects.get('proj-4')!;
+    state.projects.set('proj-4', { ...project, status: 'CANCELLED' });
+
+    await expect(
+      firstValueFrom(service.createPublicationEntry('proj-4', { note: 'Note.' })),
+    ).rejects.toMatchObject({ status: 409, error: 'INVALID_TRANSITION' });
+  });
+
+  it('edits a publication entry note and uploads attachments', async () => {
+    await firstValueFrom(service.startProject('proj-4', { note: 'Starting.' }));
+    const entry = await firstValueFrom(
+      service.createPublicationEntry('proj-4', { note: 'Original note.' }),
+    );
+
+    const updated = await firstValueFrom(
+      service.updatePublicationEntry('proj-4', entry.id, { note: 'Corrected note.' }),
+    );
+    expect(updated.note).toBe('Corrected note.');
+
+    const file = new File(['pub'], 'publication.pdf', { type: 'application/pdf' });
+    const attachment = await firstValueFrom(
+      service.uploadPublicationEntryAttachment('proj-4', entry.id, file, 'DOCUMENT', 'The PDF'),
+    );
+    expect(attachment.note).toBe('The PDF');
+
+    const page = await firstValueFrom(service.listPublicationEntries('proj-4'));
+    const stored = page.content.find((e) => e.id === entry.id);
+    expect(stored?.attachments.some((a) => a.fileName === 'publication.pdf')).toBe(true);
+  });
+
+  it('rejects publication log lookup before the first entry', async () => {
+    await expect(firstValueFrom(service.getPublicationLog('proj-4'))).rejects.toMatchObject({
+      status: 404,
+      error: 'PUBLICATION_LOG_NOT_FOUND',
+    });
+  });
 });
 
 function externalSession(): IdentitySession {

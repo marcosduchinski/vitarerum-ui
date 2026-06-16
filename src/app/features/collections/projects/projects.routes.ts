@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { projectLogAccessGuard } from './guards/project-log-access.guard';
+import { projectPublicationAccessGuard } from './guards/project-publication-access.guard';
 
 export const PROJECTS_ROUTES: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/p/dashboard' },
@@ -94,6 +95,15 @@ export const PROJECTS_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/log/project-other-occurrence-log-page.component').then(
         (m) => m.ProjectOtherOccurrenceLogPageComponent,
+      ),
+  },
+  {
+    path: ':id/publications',
+    title: 'Publication Log',
+    canActivate: [projectPublicationAccessGuard],
+    loadComponent: () =>
+      import('./pages/log/project-publication-log-page.component').then(
+        (m) => m.ProjectPublicationLogPageComponent,
       ),
   },
   {

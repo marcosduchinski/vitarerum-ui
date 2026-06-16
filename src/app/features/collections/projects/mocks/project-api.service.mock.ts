@@ -25,6 +25,10 @@ import {
   ProjectEventsQuery,
   ProjectListQuery,
   ProjectStaffContext,
+  PublicationEntriesPage,
+  PublicationEntriesQuery,
+  PublicationLog,
+  PublicationLogEntry,
   ReasonRequest,
   UpdateObjectLogEntryRequest,
   UpdateObjectOccurrenceEntryRequest,
@@ -525,6 +529,177 @@ export class ProjectApiServiceMock {
 
   private mockAttachmentBlob(fileName: string): Blob {
     return new Blob([`Mock attachment content for ${fileName}\n`], { type: 'text/plain' });
+  }
+
+  createPublicationEntry(projectId: string, request: NoteRequest): Observable<PublicationLogEntry> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const gate = this.publicationWriteError(p.status);
+    if (gate) return throwError(() => gate);
+    if (!request.note?.trim()) {
+      return throwError(() => ({ status: 422, error: 'VALIDATION_ERROR' }));
+    }
+    this.ensurePublicationLog(projectId);
+    const entry: PublicationLogEntry = {
+      id: this.state.nextEntryId(),
+      addedAt: new Date().toISOString(),
+      addedBy: this.currentPrincipal(),
+      note: request.note,
+      attachments: [],
+    };
+    const current = this.state.publicationEntries.get(projectId) ?? [];
+    current.push(entry);
+    this.state.publicationEntries.set(projectId, current);
+    return of(entry);
+  }
+
+  updatePublicationEntry(
+    projectId: string,
+    entryId: string,
+    request: NoteRequest,
+  ): Observable<PublicationLogEntry> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const gate = this.publicationWriteError(p.status);
+    if (gate) return throwError(() => gate);
+    if (!request.note?.trim()) {
+      return throwError(() => ({ status: 422, error: 'VALIDATION_ERROR' }));
+    }
+    const allEntries = this.state.publicationEntries.get(projectId) ?? [];
+    const idx = allEntries.findIndex((e) => e.id === entryId);
+    if (idx < 0) {
+      return throwError(() => ({
+        status: 404,
+        error: 'ENTRY_NOT_FOUND',
+        message: `No entry found with id ${entryId}`,
+      }));
+    }
+    const updated: PublicationLogEntry = { ...allEntries[idx], note: request.note };
+    allEntries[idx] = updated;
+    this.state.publicationEntries.set(projectId, allEntries);
+    return of(updated);
+  }
+
+  listPublicationEntries(
+    projectId: string,
+    query: PublicationEntriesQuery = {},
+  ): Observable<PublicationEntriesPage> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    let items = this.state.publicationEntries.get(projectId) ?? [];
+    if (query.addedBy) items = items.filter((e) => e.addedBy.permissionId === query.addedBy);
+    return of({
+      ...makePageFrom(items, query),
+      projectId,
+      publicationLog: this.state.publicationLogs.get(projectId) ?? null,
+    });
+  }
+
+  getPublicationLog(projectId: string): Observable<PublicationLog> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const publicationLog = this.state.publicationLogs.get(projectId);
+    if (!publicationLog) {
+      return throwError(() => ({
+        status: 404,
+        error: 'PUBLICATION_LOG_NOT_FOUND',
+        message: 'No publication_log found with id uuid',
+      }));
+    }
+    return of(publicationLog);
+  }
+
+  uploadPublicationEntryAttachment(
+    projectId: string,
+    entryId: string,
+    file: File,
+    mediaType: MediaType,
+    note?: string,
+  ): Observable<Attachment> {
+    const p = this.state.projects.get(projectId);
+    if (!p) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    const gate = this.publicationWriteError(p.status);
+    if (gate) return throwError(() => gate);
+    const allEntries = this.state.publicationEntries.get(projectId) ?? [];
+    const entry = allEntries.find((e) => e.id === entryId);
+    if (!entry) return throwError(() => ({ status: 404, error: 'ENTRY_NOT_FOUND' }));
+    const attachment: Attachment = {
+      fileReference: this.state.nextFileReference(),
+      fileName: file.name,
+      mediaType,
+      uploadedAt: new Date().toISOString(),
+      note: note ?? null,
+    };
+    const idx = allEntries.findIndex((e) => e.id === entryId);
+    allEntries[idx] = { ...entry, attachments: [...entry.attachments, attachment] };
+    this.state.publicationEntries.set(projectId, allEntries);
+    return of(attachment);
+  }
+
+  // See downloadLogEntryAttachment — streams a synthetic file in mock mode.
+  downloadPublicationEntryAttachment(
+    projectId: string,
+    entryId: string,
+    fileReference: string,
+  ): Observable<Blob> {
+    const entry = (this.state.publicationEntries.get(projectId) ?? []).find(
+      (e) => e.id === entryId,
+    );
+    if (!entry) return throwError(() => ({ status: 404, error: 'ENTRY_NOT_FOUND' }));
+    const attachment = entry.attachments.find((a) => a.fileReference === fileReference);
+    if (!attachment) return throwError(() => ({ status: 404, error: 'ATTACHMENT_NOT_FOUND' }));
+    return of(this.mockAttachmentBlob(attachment.fileName));
+  }
+
+  // Publication entries flip the usual log gate: the external requester writes
+  // while IN_PROGRESS; curatorial/collections/direction staff write once
+  // COMPLETED. Any other status rejects everyone with 409. Returns the error to
+  // throw, or null when the current caller may write.
+  private publicationWriteError(
+    status: UseStatus,
+  ): { status: number; error: string; message: string } | null {
+    const group = this.currentPrincipal().group;
+    if (status === 'IN_PROGRESS') {
+      return group === 'EXTERNAL'
+        ? null
+        : {
+            status: 403,
+            error: 'ACCESS_DENIED',
+            message:
+              'While the project is IN_PROGRESS only the external requester can add publication entries',
+          };
+    }
+    if (status === 'COMPLETED') {
+      return group === 'CURATORIAL' || group === 'COLLECTIONS_MANAGEMENT' || group === 'DIRECTION'
+        ? null
+        : {
+            status: 403,
+            error: 'ACCESS_DENIED',
+            message:
+              'Once the project is COMPLETED only curatorial, collections-management or direction staff can add publication entries',
+          };
+    }
+    return {
+      status: 409,
+      error: 'INVALID_TRANSITION',
+      message:
+        'Publication entries can only be added while the project is IN_PROGRESS or COMPLETED',
+    };
+  }
+
+  private ensurePublicationLog(projectId: string): PublicationLog {
+    const current = this.state.publicationLogs.get(projectId);
+    if (current) return current;
+    const project = this.state.projects.get(projectId);
+    const publicationLog: PublicationLog = {
+      id: this.state.nextPublicationLogId(),
+      referenceNumber: this.state.nextPublicationLogReference(),
+      projectId,
+      // Informational only — snapshot the proposal's assignee when known.
+      curator: project?.proposalAssignedTo ?? null,
+    };
+    this.state.publicationLogs.set(projectId, publicationLog);
+    return publicationLog;
   }
 
   listEvents(projectId: string, query: ProjectEventsQuery = {}): Observable<ProjectEventsPage> {

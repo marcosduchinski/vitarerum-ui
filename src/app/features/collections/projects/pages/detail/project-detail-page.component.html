@@ -282,6 +282,32 @@
             </a>
           </section>
 
+          <section class="detail-card task-card" aria-labelledby="publication-log-task-heading">
+            <div class="task-card__content">
+              <p class="task-card__eyebrow">Project task</p>
+              <h2 id="publication-log-task-heading" class="detail-card__title">Publication log</h2>
+              <p class="task-card__description">
+                Record publications and outputs derived from this project.
+              </p>
+              @if (!canOpenPublication()) {
+                <p class="task-card__status">
+                  This task is available once the project is in progress.
+                </p>
+              }
+            </div>
+            <a
+              class="action-btn action-btn--primary"
+              [class.action-btn--disabled]="!canOpenPublication()"
+              [attr.aria-disabled]="!canOpenPublication()"
+              [routerLink]="
+                canOpenPublication() ? ['/p/collections/projects', id(), 'publications'] : null
+              "
+            >
+              <span class="pi pi-book" aria-hidden="true"></span>
+              Open publication log
+            </a>
+          </section>
+
           <section class="detail-card task-card" aria-labelledby="cancel-project-task-heading">
             <div class="task-card__content">
               <p class="task-card__eyebrow">Project task</p>

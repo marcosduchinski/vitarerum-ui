@@ -11,6 +11,8 @@ import {
   ObjectLogEntry,
   ObjectOccurrenceEntry,
   ObjectOccurrenceLog,
+  PublicationLog,
+  PublicationLogEntry,
   UseEvent,
 } from '@features/collections/projects/models/project.model';
 import {
@@ -747,6 +749,27 @@ export const SEED_PROJECT_OCCURRENCE_ENTRIES: Record<string, ObjectOccurrenceEnt
   'proj-7': [],
 };
 
+export const SEED_PROJECT_PUBLICATION_LOGS: Record<string, PublicationLog> = {
+  'proj-3': {
+    id: 'pub-proj-3',
+    referenceNumber: 'PUB-PROJ3',
+    projectId: 'proj-3',
+    curator: null,
+  },
+};
+
+export const SEED_PROJECT_PUBLICATION_ENTRIES: Record<string, PublicationLogEntry[]> = {
+  'proj-3': [
+    {
+      id: 'pub-entry-101',
+      addedAt: '2026-06-10T14:00:00Z',
+      addedBy: P['carol'],
+      note: 'Published an article in the museum journal.',
+      attachments: [],
+    },
+  ],
+};
+
 export const SEED_PROJECT_OBJECTS: Record<string, never[]> = {
   'proj-1': [],
   'proj-2': [],
@@ -767,6 +790,8 @@ export interface MockSeed {
   readonly objectOccurrenceLogs?: Record<string, ObjectOccurrenceLog>;
   readonly logEntries?: Record<string, ObjectLogEntry[]>;
   readonly occurrenceEntries?: Record<string, ObjectOccurrenceEntry[]>;
+  readonly publicationLogs?: Record<string, PublicationLog>;
+  readonly publicationEntries?: Record<string, PublicationLogEntry[]>;
 }
 
 export const MOCK_SEED = new InjectionToken<MockSeed>('MOCK_SEED');
@@ -781,6 +806,8 @@ export const TEST_SEED: MockSeed = {
   objectOccurrenceLogs: SEED_PROJECT_OBJECT_OCCURRENCE_LOGS,
   logEntries: SEED_PROJECT_LOG_ENTRIES,
   occurrenceEntries: SEED_PROJECT_OCCURRENCE_ENTRIES,
+  publicationLogs: SEED_PROJECT_PUBLICATION_LOGS,
+  publicationEntries: SEED_PROJECT_PUBLICATION_ENTRIES,
 };
 
 @Injectable()
@@ -810,6 +837,12 @@ export class MockProjectState {
   );
   readonly occurrenceEntries = new Map<string, ObjectOccurrenceEntry[]>(
     Object.entries(this.seed?.occurrenceEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
+  );
+  readonly publicationLogs = new Map<string, PublicationLog>(
+    Object.entries(this.seed?.publicationLogs ?? {}).map(([k, v]) => [k, structuredClone(v)]),
+  );
+  readonly publicationEntries = new Map<string, PublicationLogEntry[]>(
+    Object.entries(this.seed?.publicationEntries ?? {}).map(([k, v]) => [k, structuredClone(v)]),
   );
   readonly events = new Map<string, UseEvent[]>(
     Object.entries(this.seed?.projectEvents ?? {}).map(([k, v]) => [k, structuredClone(v)]),
@@ -851,6 +884,8 @@ export class MockProjectState {
       this.objectAccessLogs.delete(project.id);
       this.occurrenceEntries.set(project.id, []);
       this.objectOccurrenceLogs.delete(project.id);
+      this.publicationEntries.set(project.id, []);
+      this.publicationLogs.delete(project.id);
       this.events.set(project.id, [
         {
           occurredAt,
@@ -913,6 +948,14 @@ export class MockProjectState {
 
   nextObjectOccurrenceLogReference(): string {
     return `OOL-${String(this.nextId++).padStart(8, '0')}`;
+  }
+
+  nextPublicationLogId(): string {
+    return `pub-${this.nextId++}`;
+  }
+
+  nextPublicationLogReference(): string {
+    return `PUB-${String(this.nextId++).padStart(8, '0')}`;
   }
 
   nextFileReference(): string {

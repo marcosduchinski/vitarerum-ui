@@ -689,6 +689,170 @@ size       : Integer  (default 20)
 
 ---
 
+### `POST /collection-use-projects/{projectId}/publication-entries`
+
+**Description** — Researcher records a **publication log entry** — a note about a publication or output derived from the project (article, photo set, dataset…), with optional file attachments. The publication log (one per project, with its own `PUB-XXXXXXXX` reference number) is created automatically on the first entry. **Writes are phase-gated**: while the project is `IN_PROGRESS` only the external requester (the project owner) may add entries; once `COMPLETED` only staff may (see file 05); any other status rejects with `409`. The caller's `permissionId` is recorded as `addedBy`.
+
+**Path parameters**
+```
+projectId : UUID (required)
+```
+
+**Request body**
+```json
+{
+  "note": "Published an article in the museum journal"
+}
+```
+
+`note` is required and non-empty.
+
+**Response `201 Created`**
+```json
+{
+  "id": "uuid",
+  "addedAt": "2025-06-10T14:00:00",
+  "addedBy": {
+    "permissionId": "uuid",
+    "user": { "id": "uuid", "name": "string", "email": "string" },
+    "group": "EXTERNAL"
+  },
+  "note": "Published an article in the museum journal",
+  "attachments": []
+}
+```
+
+**Response `403 Forbidden`** — when staff attempt to write while the project is still `IN_PROGRESS` (`ACCESS_DENIED`).
+
+**Response `409 Conflict`**
+```json
+{
+  "error": "INVALID_TRANSITION",
+  "message": "Publication entries can only be added while the project is IN_PROGRESS or COMPLETED"
+}
+```
+
+---
+
+### `PATCH /collection-use-projects/{projectId}/publication-entries/{entryId}`
+
+**Description** — Edit a publication log entry's `note` (the only editable field; `addedBy` and `addedAt` are immutable). Subject to the same phase/role gate as adding entries.
+
+**Path parameters**
+```
+projectId : UUID (required)
+entryId   : UUID (required)
+```
+
+**Request body**
+```json
+{
+  "note": "corrected text"
+}
+```
+
+**Response `200 OK`** — the updated `PublicationLogEntry`, same shape as the `POST` response.
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "ENTRY_NOT_FOUND",
+  "message": "No entry found with id uuid"
+}
+```
+
+---
+
+### `GET /collection-use-projects/{projectId}/publication-entries`
+
+**Description** — List all publication log entries for a project, ordered chronologically. Includes the `publicationLog` header (`null` if no entry has been added yet) and `attachments` per entry.
+
+**Query parameters**
+```
+addedBy : UUID     (optional) filter by permissionId
+page    : Integer  (default 0)
+size    : Integer  (default 20)
+```
+
+**Response `200 OK`**
+```json
+{
+  "projectId": "uuid",
+  "publicationLog": {
+    "id": "uuid",
+    "referenceNumber": "PUB-1A2B3C4D",
+    "projectId": "uuid",
+    "curator": null
+  },
+  "content": [
+    {
+      "id": "uuid",
+      "addedAt": "2025-06-10T14:00:00",
+      "addedBy": {
+        "permissionId": "uuid",
+        "user": { "id": "uuid", "name": "string", "email": "string" },
+        "group": "EXTERNAL"
+      },
+      "note": "Published an article in the museum journal",
+      "attachments": []
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+The `publicationLog.curator` is informational — the staff member related to the project (snapshotted from the proposal's assignee when the log is created); it is `null` until one is known. There is no conclusion on a publication log.
+
+---
+
+### `GET /collection-use-projects/{projectId}/publication-log`
+
+**Description** — Get the project's publication log header: `id`, `referenceNumber`, `projectId`, and the informational `curator`. `404` if no entry has been added to the project yet.
+
+**Response `200 OK`**
+```json
+{
+  "id": "uuid",
+  "referenceNumber": "PUB-1A2B3C4D",
+  "projectId": "uuid",
+  "curator": null
+}
+```
+
+**Response `404 Not Found`**
+```json
+{
+  "error": "PUBLICATION_LOG_NOT_FOUND",
+  "message": "No publication_log found with id uuid"
+}
+```
+
+---
+
+### `POST /collection-use-projects/{projectId}/publication-entries/{entryId}/attachments`
+
+**Description** — Uploads a file to an existing publication log entry (e.g. the publication PDF itself). Same `multipart/form-data` body and responses as the log-entry attachment endpoint; subject to the same phase/role gate as adding entries. `mediaType` is one of `DOCUMENT`, `IMAGE`, `VIDEO`, `OTHER`; `note` is optional.
+
+**Request body** — `multipart/form-data`
+```
+file      : File      (required)
+mediaType : MediaType (required) DOCUMENT | IMAGE | VIDEO | OTHER
+note      : String    (optional)
+```
+
+**Response `201 Created`** — an `Attachment` (`fileReference`, `fileName`, `mediaType`, `uploadedAt`, `note`).
+
+---
+
+### `GET /collection-use-projects/{projectId}/publication-entries/{entryId}/attachments/{fileReference}`
+
+**Description** — Downloads the raw bytes of an attachment on a publication entry, keyed by the entry's `attachments[].fileReference`. Binary body with `Content-Disposition: attachment`; `404` when the entry doesn't belong to this project (`ENTRY_NOT_FOUND`) or no attachment with that `fileReference` exists (`ATTACHMENT_NOT_FOUND`).
+
+---
+
 ### `GET /collection-use-projects/{projectId}/events`
 
 **Description** — Get the immutable audit trail of the project lifecycle, ordered chronologically. Reflects every `UseEvent` recorded on the `CollectionUseProject` aggregate.

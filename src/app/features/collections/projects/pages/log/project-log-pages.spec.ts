@@ -19,6 +19,8 @@ import { ProjectOccurrenceLogPanelComponent } from './project-occurrence-log-pan
 import { ProjectOtherLogPageComponent } from './project-other-log-page.component';
 import { ProjectOtherOccurrenceLogPageComponent } from './project-other-occurrence-log-page.component';
 import { ProjectObjectLogPanelComponent } from './project-object-log-panel.component';
+import { ProjectPublicationLogPageComponent } from './project-publication-log-page.component';
+import { ProjectPublicationLogPanelComponent } from './project-publication-log-panel.component';
 import { ProjectResearchLogPageComponent } from './project-research-log-page.component';
 import { ProjectResearchOccurrenceLogPageComponent } from './project-research-occurrence-log-page.component';
 
@@ -74,6 +76,8 @@ describe('project log pages', () => {
         ProjectExhibitionOccurrenceLogPageComponent,
         ProjectOtherLogPageComponent,
         ProjectOtherOccurrenceLogPageComponent,
+        ProjectPublicationLogPageComponent,
+        ProjectPublicationLogPanelComponent,
       ],
       providers: [
         provideRouter([]),
@@ -680,6 +684,101 @@ describe('project log pages', () => {
     fixture.detectChanges();
 
     expect(state.objectOccurrenceLogs.get('proj-3')?.dateConclusion).toBeTruthy();
+  });
+
+  it('renders the publication log page with a back link to the project', () => {
+    const fixture = TestBed.createComponent(ProjectPublicationLogPageComponent);
+    fixture.componentRef.setInput('id', 'proj-3');
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const backLink = root.querySelector<HTMLAnchorElement>('.back-link');
+    expect(backLink?.getAttribute('href')).toBe('/p/collections/projects/curatorial/proj-3');
+    expect(root.textContent).toContain('Publication log');
+  });
+
+  it('lets the external requester add a publication entry while in progress', async () => {
+    identitySession.set(researcherSession());
+    const state = TestBed.inject(MockProjectState);
+    const project = state.projects.get('proj-3')!;
+    // Make hugo (the researcher session) the requester so the gate lets them write.
+    state.projects.set('proj-3', {
+      ...project,
+      status: 'IN_PROGRESS',
+      requestedBy: { ...project.requestedBy, permissionId: 'perm-hugo' },
+    });
+
+    const fixture = TestBed.createComponent(ProjectPublicationLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const note = root.querySelector<HTMLTextAreaElement>('#publication-note')!;
+    expect(note).toBeTruthy();
+    note.value = 'Published a conference paper.';
+    note.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    root
+      .querySelector<HTMLFormElement>('form[aria-label="Add publication entry"]')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(
+      state.publicationEntries
+        .get('proj-3')
+        ?.some((entry) => entry.note === 'Published a conference paper.'),
+    ).toBe(true);
+  });
+
+  it('locks publication entry controls for staff while the project is in progress', async () => {
+    const state = TestBed.inject(MockProjectState);
+    const project = state.projects.get('proj-3')!;
+    state.projects.set('proj-3', { ...project, status: 'IN_PROGRESS' });
+
+    const fixture = TestBed.createComponent(ProjectPublicationLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain(
+      'Staff publication entries are only available once the project is completed.',
+    );
+    expect(root.querySelector('#publication-note')).toBeNull();
+  });
+
+  it('lets publication staff add an entry once the project is completed', async () => {
+    const state = TestBed.inject(MockProjectState);
+    const project = state.projects.get('proj-3')!;
+    state.projects.set('proj-3', { ...project, status: 'COMPLETED' });
+
+    const fixture = TestBed.createComponent(ProjectPublicationLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const note = root.querySelector<HTMLTextAreaElement>('#publication-note')!;
+    expect(note).toBeTruthy();
+    note.value = 'Catalogued the output.';
+    note.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    root
+      .querySelector<HTMLFormElement>('form[aria-label="Add publication entry"]')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(
+      state.publicationEntries.get('proj-3')?.some((e) => e.note === 'Catalogued the output.'),
+    ).toBe(true);
   });
 });
 

@@ -224,6 +224,27 @@
               </a>
             </section>
           }
+
+          @if (canOpenPublication()) {
+            <section class="detail-card task-card" aria-labelledby="publication-log-task-heading">
+              <div class="task-card__content">
+                <p class="task-card__eyebrow">{{ taskEyebrow() }}</p>
+                <h2 id="publication-log-task-heading" class="detail-card__title">
+                  Publication log
+                </h2>
+                <p class="task-card__description">
+                  Record or inspect publications and outputs derived from this project.
+                </p>
+              </div>
+              <a
+                class="action-btn action-btn--primary"
+                [routerLink]="['/p/collections/projects', id(), 'publications']"
+              >
+                <span class="pi pi-book" aria-hidden="true"></span>
+                Open publication log
+              </a>
+            </section>
+          }
         </section>
       }
     }
