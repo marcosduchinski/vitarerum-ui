@@ -307,8 +307,8 @@ describe('ProposalAgentPageComponent', () => {
     const { fixture, service } = await setup();
     const compiled = fixture.nativeElement as HTMLElement;
     const textarea = compiled.querySelector<HTMLTextAreaElement>('#chat-message');
-    const sendButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Send'),
+    const sendButton = compiled.querySelector<HTMLButtonElement>(
+      'button[aria-label="Send message"]',
     );
 
     textarea!.value = 'Explain the triage.';

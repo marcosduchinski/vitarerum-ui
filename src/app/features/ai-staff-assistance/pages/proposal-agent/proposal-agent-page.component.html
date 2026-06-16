@@ -4,7 +4,7 @@
       class="proposal-agent__back"
       [routerLink]="['/p/collections/proposals/my-assignments', id()]"
     >
-      Back to assignment
+      <span class="pi pi-arrow-left" aria-hidden="true"></span> Back to assignment
     </a>
   }
 
@@ -14,13 +14,16 @@
     <app-error-message [apiError]="error()!" (retry)="sessionResource.reload()" />
   } @else if (session(); as currentSession) {
     <header class="proposal-agent__header">
-      <div>
-        <p class="proposal-agent__eyebrow">ProposalAgent</p>
-        <h1>{{ currentSession.proposalSnapshot.referenceNumber }}</h1>
-        <p>{{ currentSession.proposalSnapshot.title }}</p>
-      </div>
-      <div class="proposal-agent__status">
-        {{ currentSession.status.toLowerCase() }}
+      <span class="agent-avatar agent-avatar--lg" aria-hidden="true">✦</span>
+      <div class="proposal-agent__id">
+        <p class="proposal-agent__eyebrow">
+          ProposalAgent · {{ currentSession.proposalSnapshot.referenceNumber }}
+        </p>
+        <h1>{{ currentSession.proposalSnapshot.title }}</h1>
+        <p class="proposal-agent__status" [class.is-busy]="interacting()">
+          <span class="proposal-agent__status-dot" aria-hidden="true"></span>
+          {{ interacting() ? 'Thinking…' : 'Active' }}
+        </p>
       </div>
     </header>
 
@@ -30,12 +33,14 @@
 
     <div class="proposal-agent__layout">
       <section class="proposal-agent__dialog" aria-labelledby="dialog-heading">
-        <h2 id="dialog-heading">AI Assistance chat</h2>
+        <h2 id="dialog-heading" class="sr-only">AI Assistance chat</h2>
 
         <ol #chatLog class="proposal-agent-chat" aria-label="ProposalAgent conversation">
           @if (currentSession.selectedMessage; as msg) {
             <li class="proposal-agent-chat__item proposal-agent-chat__item--context">
-              <span>Selected message</span>
+              <p class="proposal-agent-chat__eyebrow">
+                <span class="pi pi-envelope" aria-hidden="true"></span> Selected message
+              </p>
               <article class="proposal-agent-message">
                 <div class="proposal-agent-message__meta">
                   <strong>{{ msg.subject }}</strong>
@@ -48,172 +53,207 @@
 
           @for (turn of currentSession.turns; track turn.id) {
             <li
-              class="proposal-agent-chat__item"
-              [class.proposal-agent-chat__item--staff]="turn.role === 'STAFF'"
-              [class.proposal-agent-chat__item--agent]="turn.role === 'AGENT'"
+              class="proposal-agent-chat__item proposal-agent-msg"
+              [class.proposal-agent-msg--staff]="turn.role === 'STAFF'"
+              [class.proposal-agent-msg--agent]="turn.role === 'AGENT'"
             >
-              <span>{{ turn.role === 'STAFF' ? 'Staff member' : 'ProposalAgent' }}</span>
-              <p class="proposal-agent-bubble">{{ turn.content }}</p>
-
-              @if (turn.result?.triage; as triage) {
-                <section class="agent-panel" aria-label="Email triage result">
-                  <div class="agent-panel__header">
-                    <h3>Email triage</h3>
-                    <span>{{ triage.confidence.toLowerCase() }} confidence</span>
-                  </div>
-                  <p class="agent-panel__result">{{ formatUseType(triage.probableUseType) }}</p>
-                  <p>{{ triage.rationale }}</p>
-                  @if (triage.evidence.length) {
-                    <ul class="proposal-agent-list">
-                      @for (item of triage.evidence; track item) {
-                        <li>{{ item }}</li>
-                      }
-                    </ul>
-                  }
-                </section>
+              @if (turn.role === 'AGENT') {
+                <span class="agent-avatar" aria-hidden="true">✦</span>
               }
+              <div class="proposal-agent-msg__body">
+                <span class="proposal-agent-msg__author">
+                  {{ turn.role === 'STAFF' ? 'You' : 'ProposalAgent' }}
+                </span>
+                <p class="proposal-agent-bubble">{{ turn.content }}</p>
 
-              @if (turn.result?.documentSearch; as documentSearch) {
-                <section class="agent-panel" aria-label="Document search result">
-                  <div class="agent-panel__header">
-                    <h3>Document search</h3>
-                    <span>{{ formatUseType(documentSearch.basedOnUseType) }}</span>
-                  </div>
-                  <p>{{ documentSearch.summary }}</p>
-                  <ul class="proposal-agent-list proposal-agent-list--documents">
-                    @for (match of documentSearch.matches; track match.documentId) {
-                      <li>
-                        <span class="pi pi-file" aria-hidden="true"></span>
-                        <span>
-                          <strong>{{ match.fileName }}</strong>
-                          <small>{{ documentSourceLabel(match) }} - {{ match.reason }}</small>
-                        </span>
-                      </li>
+                @if (turn.result?.triage; as triage) {
+                  <section class="agent-finding" aria-label="Email triage result">
+                    <p class="agent-finding__eyebrow">
+                      <span class="pi pi-inbox" aria-hidden="true"></span> Email triage
+                    </p>
+                    <p class="agent-finding__verdict">
+                      {{ formatUseType(triage.probableUseType) }}
+                    </p>
+                    <div class="triage-meter" [attr.data-level]="triage.confidence">
+                      <span class="triage-meter__track">
+                        <span class="triage-meter__fill"></span>
+                      </span>
+                      <span class="triage-meter__label">
+                        {{ triage.confidence.toLowerCase() }} confidence
+                      </span>
+                    </div>
+                    <p class="agent-finding__note">{{ triage.rationale }}</p>
+                    @if (triage.evidence.length) {
+                      <ul class="agent-tags" aria-label="Triage evidence">
+                        @for (item of triage.evidence; track item) {
+                          <li>{{ item }}</li>
+                        }
+                      </ul>
                     }
-                  </ul>
-                </section>
-              }
+                  </section>
+                }
 
-              @if (turn.result?.objectSearch; as objectSearch) {
-                <section class="agent-panel" aria-label="Object search result">
-                  <div class="agent-panel__header">
-                    <h3>Object search</h3>
-                    <span>{{ objectSearch.status.replaceAll('_', ' ').toLowerCase() }}</span>
-                  </div>
-                  @if (objectSearch.missingInformation.length) {
-                    <ul class="proposal-agent-list">
-                      @for (item of objectSearch.missingInformation; track item) {
-                        <li>{{ item }}</li>
-                      }
-                    </ul>
-                  }
-                  @if (objectSearch.matches.length) {
-                    <ul class="proposal-agent-list proposal-agent-list--objects">
-                      @for (match of objectSearch.matches; track match.inventoryNumber) {
+                @if (turn.result?.documentSearch; as documentSearch) {
+                  <section class="agent-finding" aria-label="Document search result">
+                    <p class="agent-finding__eyebrow">
+                      <span class="pi pi-folder-open" aria-hidden="true"></span> Document search
+                      <span class="agent-finding__count">{{ documentSearch.matches.length }}</span>
+                    </p>
+                    <p class="agent-finding__note">{{ documentSearch.summary }}</p>
+                    <ul class="agent-doc-list">
+                      @for (match of documentSearch.matches; track match.documentId) {
                         <li>
-                          <strong>{{ match.inventoryNumber }}</strong>
-                          <span>{{ match.displayTitle ?? match.objectName }}</span>
+                          <span class="pi pi-file" aria-hidden="true"></span>
+                          <span class="agent-doc-list__text">
+                            <strong>{{ match.fileName }}</strong>
+                            <small>{{ match.reason }}</small>
+                          </span>
+                          <span class="agent-doc-list__source">
+                            {{ documentSourceLabel(match) }}
+                          </span>
                         </li>
                       }
                     </ul>
-                  }
-                  @if (objectSearch.status !== 'SEARCHED' && $last) {
-                    <form
-                      class="proposal-agent-form"
-                      aria-label="Search collection objects"
-                      (submit)="$event.preventDefault(); searchObjects()"
-                    >
-                      <label for="object-query">Object information</label>
-                      <div class="proposal-agent-form__row">
+                  </section>
+                }
+
+                @if (turn.result?.objectSearch; as objectSearch) {
+                  <section class="agent-finding" aria-label="Object search result">
+                    <p class="agent-finding__eyebrow">
+                      <span class="pi pi-search" aria-hidden="true"></span> Object search
+                      <span class="agent-finding__count agent-finding__count--soft">
+                        {{ objectSearch.status.replaceAll('_', ' ').toLowerCase() }}
+                      </span>
+                    </p>
+                    @if (objectSearch.missingInformation.length) {
+                      <ul class="agent-tags agent-tags--need" aria-label="Information needed">
+                        @for (item of objectSearch.missingInformation; track item) {
+                          <li>{{ item }}</li>
+                        }
+                      </ul>
+                    }
+                    @if (objectSearch.matches.length) {
+                      <ul class="agent-object-list">
+                        @for (match of objectSearch.matches; track match.inventoryNumber) {
+                          <li>
+                            <strong>{{ match.inventoryNumber }}</strong>
+                            <span>{{ match.displayTitle ?? match.objectName }}</span>
+                          </li>
+                        }
+                      </ul>
+                    }
+                    @if (objectSearch.status !== 'SEARCHED' && $last) {
+                      <form
+                        class="agent-object-form"
+                        aria-label="Search collection objects"
+                        (submit)="$event.preventDefault(); searchObjects()"
+                      >
                         <input
                           id="object-query"
                           type="text"
                           [value]="objectQuery()"
                           (input)="onObjectQueryInput($event)"
                           [disabled]="interacting()"
-                          placeholder="Inventory number, object name, collection, or description"
+                          placeholder="Inventory number, name, collection, or description"
                         />
                         <button
                           type="submit"
                           class="action-btn action-btn--primary"
                           [disabled]="!objectQuery().trim() || interacting()"
                         >
-                          <span class="pi pi-search" aria-hidden="true"></span>
-                          Search
+                          <span class="pi pi-search" aria-hidden="true"></span> Search
                         </button>
-                      </div>
-                    </form>
-                  }
-                </section>
-              }
+                      </form>
+                    }
+                  </section>
+                }
+              </div>
             </li>
           }
 
           @if (pendingStaffMessage(); as pending) {
-            <li class="proposal-agent-chat__item proposal-agent-chat__item--staff">
-              <span>Staff member</span>
-              <p class="proposal-agent-bubble">{{ pending }}</p>
+            <li class="proposal-agent-chat__item proposal-agent-msg proposal-agent-msg--staff">
+              <div class="proposal-agent-msg__body">
+                <span class="proposal-agent-msg__author">You</span>
+                <p class="proposal-agent-bubble">{{ pending }}</p>
+              </div>
             </li>
           }
 
           @if (thinking()) {
-            <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
-              <span>ProposalAgent</span>
-              <p
-                class="proposal-agent-bubble proposal-agent-typing"
-                aria-label="ProposalAgent is typing"
-              >
-                <span class="proposal-agent-typing__dot"></span>
-                <span class="proposal-agent-typing__dot"></span>
-                <span class="proposal-agent-typing__dot"></span>
-              </p>
+            <li class="proposal-agent-chat__item proposal-agent-msg proposal-agent-msg--agent">
+              <span class="agent-avatar" aria-hidden="true">✦</span>
+              <div class="proposal-agent-msg__body">
+                <span class="proposal-agent-msg__author">ProposalAgent</span>
+                <p
+                  class="proposal-agent-bubble proposal-agent-typing"
+                  aria-label="ProposalAgent is typing"
+                >
+                  <span class="proposal-agent-typing__dot"></span>
+                  <span class="proposal-agent-typing__dot"></span>
+                  <span class="proposal-agent-typing__dot"></span>
+                </p>
+              </div>
             </li>
           } @else if (streamingText(); as streaming) {
-            <li class="proposal-agent-chat__item proposal-agent-chat__item--agent">
-              <span>ProposalAgent</span>
-              <p class="proposal-agent-bubble">{{ streaming }}</p>
+            <li class="proposal-agent-chat__item proposal-agent-msg proposal-agent-msg--agent">
+              <span class="agent-avatar" aria-hidden="true">✦</span>
+              <div class="proposal-agent-msg__body">
+                <span class="proposal-agent-msg__author">ProposalAgent</span>
+                <p class="proposal-agent-bubble">
+                  {{ streaming }}<span class="proposal-agent-caret" aria-hidden="true"></span>
+                </p>
+              </div>
             </li>
           }
         </ol>
 
-        @if (suggestedPrompts().length && !interacting()) {
-          <div class="proposal-agent-suggestions" aria-label="Suggested questions">
-            @for (suggestion of suggestedPrompts(); track suggestion.label) {
-              <button
-                type="button"
-                class="proposal-agent-suggestions__chip"
-                (click)="sendChatMessage(suggestion.prompt)"
-              >
-                {{ suggestion.label }}
-              </button>
-            }
-          </div>
-        }
+        <div class="proposal-agent-composer">
+          @if (suggestedPrompts().length && !interacting()) {
+            <div class="proposal-agent-suggestions" aria-label="Suggested questions">
+              @for (suggestion of suggestedPrompts(); track suggestion.label) {
+                <button
+                  type="button"
+                  class="proposal-agent-suggestions__chip"
+                  (click)="sendChatMessage(suggestion.prompt)"
+                >
+                  <span class="pi pi-sparkles" aria-hidden="true"></span> {{ suggestion.label }}
+                </button>
+              }
+            </div>
+          }
 
-        <form
-          class="proposal-agent-form proposal-agent-form--composer"
-          aria-label="Chat with ProposalAgent"
-          (submit)="$event.preventDefault(); sendChatMessage()"
-        >
-          <label for="chat-message">Message</label>
-          <textarea
-            #chatInput
-            id="chat-message"
-            rows="3"
-            [value]="chatMessage()"
-            (input)="onChatMessageInput($event)"
-            [disabled]="interacting()"
-            placeholder="Ask about triage, documents, or object search…"
-          ></textarea>
-          <button
-            type="submit"
-            class="action-btn action-btn--primary"
-            [disabled]="!chatMessage().trim() || interacting()"
+          <form
+            class="proposal-agent-form proposal-agent-form--composer"
+            aria-label="Chat with ProposalAgent"
+            (submit)="$event.preventDefault(); sendChatMessage()"
           >
-            <span class="pi pi-send" aria-hidden="true"></span>
-            {{ interacting() ? 'Working…' : 'Send' }}
-          </button>
-        </form>
+            <label for="chat-message" class="sr-only">Message</label>
+            <textarea
+              #chatInput
+              id="chat-message"
+              rows="1"
+              [value]="chatMessage()"
+              (input)="onChatMessageInput($event)"
+              [disabled]="interacting()"
+              placeholder="Ask about triage, documents, or objects…"
+            ></textarea>
+            <button
+              type="submit"
+              class="proposal-agent-send"
+              [disabled]="!chatMessage().trim() || interacting()"
+              [attr.aria-label]="interacting() ? 'Working' : 'Send message'"
+            >
+              <span
+                class="pi"
+                [class.pi-send]="!interacting()"
+                [class.pi-spin]="interacting()"
+                [class.pi-spinner]="interacting()"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </form>
+        </div>
       </section>
 
       <aside class="proposal-agent__context" aria-labelledby="context-heading">
@@ -248,11 +288,6 @@
           </ul>
         } @else {
           <p class="proposal-agent__empty">No attachments on this message.</p>
-        }
-
-        @if (currentSession.selectedMessage; as msg) {
-          <h3>Selected message</h3>
-          <p class="proposal-agent__empty">{{ msg.subject }}</p>
         }
       </aside>
     </div>
