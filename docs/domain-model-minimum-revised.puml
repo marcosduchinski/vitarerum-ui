@@ -6,9 +6,10 @@ skinparam shadowing false
 skinparam classAttributeIconSize 0
 
 ' ============================================================
-' Implemented domain model
+' Implemented domain model + proposed prototype assistance context
 ' Source: app/use_of_collections/domain/models.py and enums.py
-' Note: this file keeps its historical name, but mirrors the implemented model.
+' Note: this file keeps its historical name. Core collection-use packages mirror
+' the implemented model; AI Staff Assistance is marked as proposed/prototype.
 ' ============================================================
 
 ' ============================================================
@@ -386,5 +387,162 @@ package "Collection Use" <<Bounded Context>> {
         ObjectOccurrenceEntry ..> Permission : reportedBy
         ObjectOccurrenceEntry ..> RequestedObject : requestedObjectId
 }
+
+' ============================================================
+' AI Staff Assistance
+' ============================================================
+' Proposed/prototype supporting context. It reads User Request data for staff
+' decision support, but generated assistance does not mutate official Proposal,
+' Conversation, Message, Document, or CollectionUseProject state.
+
+  package "AI Staff Assistance" <<Bounded Context, Proposed Prototype>> {
+
+    class AssistanceSession <<Aggregate Root>> #d5e8d4 {
+      - id: AssistanceSessionId
+      - agent: StaffAgentType
+      - title: String
+      - createdBy: PermissionId
+      - target: AssistanceTarget
+      - status: AssistanceSessionStatus
+      - selectedMessage: Message?
+      - proposalSnapshot: Proposal
+      - accessibleDocuments: List<Document>
+      - turns: List<AssistanceTurn>
+      - proposalAgentRuns: List<ProposalAgentRun>
+      - createdAt: DateTime
+      - archivedAt: DateTime?
+      + start(...)
+      + addTurn(...)
+      + startProposalAgentRun(...)
+      + recordProposalAgentResult(...)
+      + archive(...)
+    }
+
+    enum StaffAgentType #d5e8d4 {
+      PROPOSAL_AGENT
+    }
+
+    class AssistanceTarget <<Value Object>> #d5e8d4 {
+      - type: AssistanceTargetType
+      - proposalId: ProposalId
+      - conversationId: ConversationId?
+      - messageId: MessageId?
+    }
+
+    enum AssistanceTargetType #d5e8d4 {
+      PROPOSAL_MESSAGE
+      PROPOSAL
+    }
+
+    enum AssistanceSessionStatus #d5e8d4 {
+      ACTIVE
+      ARCHIVED
+    }
+
+    class AssistanceTurn <<Entity>> #d5e8d4 {
+      - id: AssistanceTurnId
+      - role: AssistanceTurnRole
+      - content: String
+      - createdAt: DateTime
+    }
+
+    enum AssistanceTurnRole #d5e8d4 {
+      STAFF
+      AGENT
+      SYSTEM
+    }
+
+    class ProposalAgentRun <<Entity>> #dae8fc {
+      - id: ProposalAgentRunId
+      - status: AgentRunStatus
+      - capabilities: List<ProposalAgentCapability>
+      - triage: EmailTriageResult?
+      - documentSearch: DocumentSearchResult?
+      - objectSearch: ObjectSearchResult?
+      - createdAt: DateTime
+      - completedAt: DateTime?
+    }
+
+    enum AgentRunStatus #dae8fc {
+      RUNNING
+      NEEDS_STAFF_INPUT
+      COMPLETED
+      FAILED
+    }
+
+    enum ProposalAgentCapability #dae8fc {
+      EMAIL_TRIAGE
+      DOCUMENT_SEARCH
+      OBJECT_SEARCH
+    }
+
+    class EmailTriageResult <<Value Object>> #dae8fc {
+      - probableUseType: UseType
+      - confidence: ConfidenceLevel
+      - rationale: String
+      - evidence: List<String>
+    }
+
+    enum ConfidenceLevel #dae8fc {
+      LOW
+      MEDIUM
+      HIGH
+    }
+
+    class DocumentSearchResult <<Value Object>> #dae8fc {
+      - query: String
+      - basedOnUseType: UseType
+      - matches: List<DocumentSearchMatch>
+      - summary: String
+    }
+
+    class DocumentSearchMatch <<Value Object>> #dae8fc {
+      - documentId: DocumentId
+      - fileName: String
+      - type: String
+      - source: DocumentSearchSource
+      - reason: String
+    }
+
+    enum DocumentSearchSource #dae8fc {
+      PROPOSAL_ATTACHMENT
+      ASSISTANCE_CATALOG
+    }
+
+    class ObjectSearchResult <<Value Object>> #dae8fc {
+      - status: ObjectSearchStatus
+      - query: String?
+      - matches: List<ObjectReference>
+      - missingInformation: List<String>
+      - summary: String
+    }
+
+    enum ObjectSearchStatus #dae8fc {
+      NEEDS_MORE_INFORMATION
+      SEARCHED
+      NO_MATCHES
+    }
+
+    AssistanceSession *-- "1..1" AssistanceTarget
+    AssistanceSession *-- "0..*" AssistanceTurn
+    AssistanceSession *-- "0..*" ProposalAgentRun
+    AssistanceSession ..> Permission : createdBy
+    AssistanceSession ..> Message : selectedMessage
+    AssistanceSession ..> Proposal : proposalSnapshot
+    AssistanceSession ..> Document : accessibleDocuments
+
+    ProposalAgentRun *-- "0..1" EmailTriageResult
+    ProposalAgentRun *-- "0..1" DocumentSearchResult
+    ProposalAgentRun *-- "0..1" ObjectSearchResult
+
+    AssistanceTarget ..> Proposal : proposalId
+    AssistanceTarget ..> Conversation : conversationId
+    AssistanceTarget ..> Message : messageId
+    EmailTriageResult ..> UseType : probableUseType
+    DocumentSearchResult *-- "0..*" DocumentSearchMatch
+    DocumentSearchMatch ..> Document : documentId
+    ObjectSearchResult ..> ObjectReference : matches
+  }
+
 
 @enduml

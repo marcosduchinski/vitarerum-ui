@@ -37,6 +37,15 @@ export const PROPOSALS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'my-assignments/:id/assistant/:messageId',
+    title: 'ProposalAgent',
+    canMatch: [staffGuard],
+    loadComponent: () =>
+      import('../../ai-staff-assistance/pages/proposal-agent/proposal-agent-page.component').then(
+        (m) => m.ProposalAgentPageComponent,
+      ),
+  },
+  {
     path: 'my-assignments/:id',
     title: 'My Assignment',
     canMatch: [staffGuard],

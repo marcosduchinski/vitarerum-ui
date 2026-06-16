@@ -1,10 +1,19 @@
 import { IdentityServiceMock } from './identity.service.mock';
+import { clearSession } from './session-storage.util';
 
 function signIn(service: IdentityServiceMock, email: string): Promise<void> {
   return service.signIn({ email, password: 'pw' });
 }
 
 describe('IdentityServiceMock', () => {
+  beforeEach(() => {
+    clearSession();
+  });
+
+  afterEach(() => {
+    clearSession();
+  });
+
   it('updates authentication signals when signing in and out', async () => {
     const service = new IdentityServiceMock();
 
@@ -53,7 +62,22 @@ describe('IdentityServiceMock', () => {
     expect(service.getPermissionId()).toBeNull();
 
     await signIn(service, 'alice@ext.example.com');
-    expect(service.getPermissionId()).toBe('perm-u-alice-EXTERNAL');
+    expect(service.getPermissionId()).toBe('perm-alice');
+
+    await signIn(service, 'greg@collections.example.com');
+    expect(service.getPermissionId()).toBe('perm-greg');
+  });
+
+  it('rehydrates the mock session for new tabs and page reloads', async () => {
+    const service = new IdentityServiceMock();
+
+    await signIn(service, 'greg@collections.example.com');
+
+    const rehydrated = new IdentityServiceMock();
+
+    expect(rehydrated.isAuthenticated()).toBe(true);
+    expect(rehydrated.session()?.user.email).toBe('greg@collections.example.com');
+    expect(rehydrated.getPermissionId()).toBe('perm-greg');
   });
 
   it('setGroup succeeds when the group is in availableGroups', async () => {
@@ -80,14 +104,15 @@ describe('IdentityServiceMock', () => {
       'DIRECTION',
     ]);
     expect(service.session()?.group).toBe('COLLECTIONS_MANAGEMENT'); // first group on sign-in
-    expect(service.getPermissionId()).toBe('perm-u-fran-COLLECTIONS_MANAGEMENT');
+    expect(service.getPermissionId()).toBe('perm-fran-collections');
 
     service.setGroup('CURATORIAL');
     expect(service.session()?.group).toBe('CURATORIAL');
-    expect(service.getPermissionId()).toBe('perm-u-fran-CURATORIAL');
+    expect(service.getPermissionId()).toBe('perm-fran-curatorial');
 
     service.setGroup('DIRECTION');
     expect(service.session()?.group).toBe('DIRECTION');
+    expect(service.getPermissionId()).toBe('perm-fran-direction');
 
     // Cannot switch to a group outside their list.
     service.setGroup('SYS_ADMIN');

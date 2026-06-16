@@ -54,7 +54,9 @@ export class ProposalConversationSectionComponent {
   readonly replyHeading = input('Reply to requester');
   readonly recipientEmail = input<string | null>(null);
   readonly canReply = input(true);
+  readonly showProposalAgentAction = input(false);
   readonly replySubmitted = output<ReplyComposerPayload>();
+  readonly proposalAgentRequested = output<Message>();
 
   protected readonly resolvedRecipientEmail = computed(
     () => this.recipientEmail() ?? this.proposal().requestedBy.user.email,
@@ -102,6 +104,10 @@ export class ProposalConversationSectionComponent {
     } finally {
       this.downloadingDocumentId.set(null);
     }
+  }
+
+  protected requestProposalAgent(message: Message): void {
+    this.proposalAgentRequested.emit(message);
   }
 
   private saveBlob(blob: Blob, fileName: string): void {

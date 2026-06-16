@@ -173,6 +173,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T09:00:00Z',
     conversationId: 'conv-1',
+    intendedUse: {
+      useType: 'IN_SITU_VISIT',
+      description: 'Research visit to consult specimen catalogues and field records on site.',
+    },
     documents: [
       {
         id: 'doc-prop-1-research-outline',
@@ -212,6 +216,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T09:30:00Z',
     conversationId: 'conv-2',
+    intendedUse: {
+      useType: 'EXHIBITION',
+      description: 'Public exhibition using botanical illustration materials.',
+    },
     documents: [],
     requestedObjects: [],
   },
@@ -234,6 +242,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T10:00:00Z',
     conversationId: 'conv-3',
+    intendedUse: {
+      useType: 'IN_SITU_VISIT',
+      description: 'Comparative research visit to consult notebooks, sketches, and specimen lists.',
+    },
     documents: [],
     requestedObjects: [],
   },
@@ -256,6 +268,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T10:30:00Z',
     conversationId: 'conv-4',
+    intendedUse: {
+      useType: 'EXHIBITION',
+      description: 'Public science history exhibition with selected early laboratory instruments.',
+    },
     documents: [
       {
         id: 'doc-prop-4-exhibition-brief',
@@ -295,6 +311,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T11:00:00Z',
     conversationId: 'conv-5',
+    intendedUse: {
+      useType: 'EXHIBITION',
+      description: 'Public exhibition using expedition photography materials.',
+    },
     documents: [],
     requestedObjects: [],
   },
@@ -317,6 +337,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T11:30:00Z',
     conversationId: 'conv-6',
+    intendedUse: {
+      useType: 'IN_SITU_VISIT',
+      description: 'Research visit to consult botanical herbarium records.',
+    },
     documents: [],
     requestedObjects: [],
   },
@@ -339,6 +363,10 @@ export const SEED_PROPOSALS: ProposalDetail[] = [
     },
     submittedAt: '2026-06-01T12:00:00Z',
     conversationId: 'conv-7',
+    intendedUse: {
+      useType: 'IN_SITU_VISIT',
+      description: 'Research access to photographic records for historical study.',
+    },
     documents: [],
     requestedObjects: [],
   },

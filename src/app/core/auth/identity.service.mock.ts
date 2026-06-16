@@ -4,6 +4,7 @@ import { IdentityService } from './identity.service';
 import { GroupName } from './models/group-name.enum';
 import { IdentitySession, SessionPermission } from './models/identity-session.model';
 import { LoginRequest } from './models/login.model';
+import { clearSession, readSession, writeSession } from './session-storage.util';
 
 interface MockAccount {
   readonly id: string;
@@ -11,8 +12,26 @@ interface MockAccount {
   readonly groups: readonly GroupName[];
 }
 
+const MOCK_PERMISSION_IDS_BY_USER_ID: Record<string, Partial<Record<GroupName, string>>> = {
+  'u-alice': { EXTERNAL: 'perm-alice' },
+  'u-bob': { COLLECTIONS_MANAGEMENT: 'perm-bob' },
+  'u-carol': { CURATORIAL: 'perm-carol' },
+  'u-dan': { DIRECTION: 'perm-dan' },
+  'u-eve': { SYS_ADMIN: 'perm-eve' },
+  'u-fran': {
+    COLLECTIONS_MANAGEMENT: 'perm-fran-collections',
+    CURATORIAL: 'perm-fran-curatorial',
+    DIRECTION: 'perm-fran-direction',
+  },
+  'u-greg': { COLLECTIONS_MANAGEMENT: 'perm-greg' },
+  'u-hugo': { EXTERNAL: 'perm-hugo' },
+};
+
 function mockPermissions(accountId: string, groups: readonly GroupName[]): SessionPermission[] {
-  return groups.map((group) => ({ permissionId: `perm-${accountId}-${group}`, group }));
+  return groups.map((group) => ({
+    permissionId: MOCK_PERMISSION_IDS_BY_USER_ID[accountId]?.[group] ?? `perm-${accountId}-${group}`,
+    group,
+  }));
 }
 
 const MOCK_ACCOUNTS: Record<string, MockAccount> = {
@@ -48,7 +67,7 @@ const UNKNOWN_ACCOUNT: MockAccount = { id: 'mock-user', name: '', groups: ['EXTE
 
 @Injectable()
 export class IdentityServiceMock implements IdentityService {
-  private readonly sessionState = signal<IdentitySession | null>(null);
+  private readonly sessionState = signal<IdentitySession | null>(readSession());
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => this.session() !== null);
@@ -62,7 +81,7 @@ export class IdentityServiceMock implements IdentityService {
     const { email } = credentials;
     const account = MOCK_ACCOUNTS[email] ?? UNKNOWN_ACCOUNT;
     const availableGroups = account.groups;
-    this.sessionState.set({
+    this.setSession({
       accessToken: 'mock-access-token',
       user: {
         id: account.id,
@@ -76,7 +95,7 @@ export class IdentityServiceMock implements IdentityService {
   }
 
   signOut(): void {
-    this.sessionState.set(null);
+    this.setSession(null);
   }
 
   getAccessToken(): string | null {
@@ -95,7 +114,7 @@ export class IdentityServiceMock implements IdentityService {
   setGroup(group: GroupName): void {
     const session = this.session();
     if (session && session.availableGroups.includes(group)) {
-      this.sessionState.set({ ...session, group });
+      this.setSession({ ...session, group });
     }
   }
 
@@ -104,11 +123,20 @@ export class IdentityServiceMock implements IdentityService {
     if (!session) return;
     // Keep current group if still in the new list, otherwise switch to first available
     const group = groups.includes(session.group as GroupName) ? session.group : (groups[0] ?? null);
-    this.sessionState.set({
+    this.setSession({
       ...session,
       group,
       availableGroups: groups,
       permissions: mockPermissions(session.user.id, groups),
     });
+  }
+
+  private setSession(session: IdentitySession | null): void {
+    this.sessionState.set(session);
+    if (session === null) {
+      clearSession();
+    } else {
+      writeSession(session);
+    }
   }
 }

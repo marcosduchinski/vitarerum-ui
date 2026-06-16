@@ -16,6 +16,7 @@ import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-managemen
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
+import { ProposalAgentPageComponent } from '@features/ai-staff-assistance/pages/proposal-agent/proposal-agent-page.component';
 import {
   StatusChipComponent,
   WorkflowStatus,
@@ -30,8 +31,9 @@ import {
 import { ProposalEventsSectionComponent } from '../../components/proposal-events-section/proposal-events-section.component';
 import { ProposalOverviewSectionComponent } from '../../components/proposal-overview-section/proposal-overview-section.component';
 import { PROPOSAL_DETAIL_GROUP_LABELS, StaffOption } from '../../proposal-detail.presentation';
+import { Message } from '../../models/proposal.model';
 
-type MyDetailPanel = 'overview' | 'conversation';
+type MyDetailPanel = 'overview' | 'conversation' | 'ai-assistance';
 
 @Component({
   selector: 'app-proposal-my-detail-page',
@@ -47,6 +49,7 @@ type MyDetailPanel = 'overview' | 'conversation';
     ProposalOverviewSectionComponent,
     ProposalConversationSectionComponent,
     ProposalEventsSectionComponent,
+    ProposalAgentPageComponent,
   ],
   templateUrl: './proposal-my-detail-page.component.html',
   styleUrl: './proposal-my-detail-page.component.scss',
@@ -113,6 +116,7 @@ export class ProposalMyDetailPageComponent {
   protected readonly sendingMessage = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly messageError = signal<ApiError | null>(null);
+  protected readonly selectedAssistanceMessageId = signal<string | null>(null);
 
   protected readonly canDecide = computed(() => this.proposal()?.status === 'PENDING');
   protected readonly forwardTargetLabel = computed(
@@ -127,6 +131,11 @@ export class ProposalMyDetailPageComponent {
 
   protected selectPanel(panel: MyDetailPanel): void {
     this.activePanel.set(panel);
+  }
+
+  protected openProposalAgent(message: Message): void {
+    this.selectedAssistanceMessageId.set(message.id);
+    this.activePanel.set('ai-assistance');
   }
 
   protected openRejectModal(): void {

@@ -46,6 +46,19 @@
                 <app-error-message [apiError]="downloadError()!" />
               }
             }
+            @if (showProposalAgentAction()) {
+              <div class="message__assistant-actions">
+                <button
+                  type="button"
+                  class="message__assistant-action"
+                  [attr.aria-label]="'Ask ProposalAgent about ' + msg.subject"
+                  title="Ask ProposalAgent"
+                  (click)="requestProposalAgent(msg)"
+                >
+                  <span class="pi pi-sparkles" aria-hidden="true"></span>
+                </button>
+              </div>
+            }
           </div>
         </li>
       }

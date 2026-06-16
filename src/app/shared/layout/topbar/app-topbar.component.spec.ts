@@ -59,7 +59,7 @@ describe('AppTopbarComponent role switcher', () => {
     fixture.detectChanges();
 
     expect(identity.session()!.group).toBe('CURATORIAL');
-    expect(identity.getPermissionId()).toBe('perm-u-fran-CURATORIAL');
+    expect(identity.getPermissionId()).toBe('perm-fran-curatorial');
     expect(select!.value).toBe('CURATORIAL');
   });
 });

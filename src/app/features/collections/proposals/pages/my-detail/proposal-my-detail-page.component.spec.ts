@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { UserDetail } from '@core/auth/models/user.model';
+import { AI_STAFF_ASSISTANCE_SERVICE } from '@features/ai-staff-assistance/services/ai-staff-assistance.service';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
 
@@ -18,6 +19,12 @@ import {
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import { ApproveProposalRequest } from '../../models/proposal-actions.model';
 import { ProposalMyDetailPageComponent } from './proposal-my-detail-page.component';
+import {
+  AddAssistanceTurnRequest,
+  AssistanceSession,
+  SearchObjectsRequest,
+  StartProposalAgentSessionRequest,
+} from '@features/ai-staff-assistance/models/assistance.model';
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
@@ -230,9 +237,91 @@ class UserManagementServiceStub {
   }
 }
 
+function makeAssistanceSession(messageId: string): AssistanceSession {
+  return {
+    id: `session-${messageId}`,
+    agent: 'PROPOSAL_AGENT',
+    title: 'ProposalAgent - VR-2026-001',
+    createdBy: PROPOSAL.assignedTo!,
+    target: {
+      type: 'PROPOSAL_MESSAGE',
+      proposalId: PROPOSAL.id,
+      conversationId: PROPOSAL.conversationId,
+      messageId,
+    },
+    status: 'ACTIVE',
+    selectedMessage: CONVERSATION.messages.find((message) => message.id === messageId) ?? null,
+    proposalSnapshot: PROPOSAL,
+    accessibleDocuments: [],
+    turns: [
+      {
+        id: 'turn-1',
+        role: 'AGENT',
+        content: 'I triaged this message as in situ visit with high confidence.',
+        createdAt: '2026-05-01T11:05:00',
+      },
+    ],
+    proposalAgentRuns: [
+      {
+        id: 'run-1',
+        status: 'NEEDS_STAFF_INPUT',
+        capabilities: ['EMAIL_TRIAGE', 'DOCUMENT_SEARCH', 'OBJECT_SEARCH'],
+        triage: {
+          probableUseType: 'IN_SITU_VISIT',
+          confidence: 'HIGH',
+          rationale: 'The selected message mentions research access.',
+          evidence: ['Matched "research".'],
+        },
+        documentSearch: {
+          query: 'IN_SITU_VISIT proposal assistance documents',
+          basedOnUseType: 'IN_SITU_VISIT',
+          summary: 'Found 1 document relevant to in situ visit.',
+          matches: [
+            {
+              documentId: 'catalog-doc-in-situ-access-guidelines',
+              fileName: 'in-situ-access-guidelines.pdf',
+              type: 'ASSISTANCE_GUIDE',
+              source: 'ASSISTANCE_CATALOG',
+              reason: 'In-situ visits usually need access guidance.',
+            },
+          ],
+        },
+        objectSearch: {
+          status: 'NEEDS_MORE_INFORMATION',
+          query: null,
+          matches: [],
+          missingInformation: ['inventory number'],
+          summary: 'Object search needs more information.',
+        },
+        createdAt: '2026-05-01T11:05:00',
+        completedAt: null,
+      },
+    ],
+    createdAt: '2026-05-01T11:05:00',
+    archivedAt: null,
+  };
+}
+
+class AiStaffAssistanceServiceStub {
+  readonly startCalls: StartProposalAgentSessionRequest[] = [];
+
+  startProposalAgentSession(request: StartProposalAgentSessionRequest) {
+    this.startCalls.push(request);
+    return of(makeAssistanceSession(request.messageId));
+  }
+
+  addTurn(_sessionId: string, _request: AddAssistanceTurnRequest) {
+    return of(makeAssistanceSession('message-1'));
+  }
+
+  searchObjects(_sessionId: string, _request: SearchObjectsRequest) {
+    return of(makeAssistanceSession('message-1'));
+  }
+}
+
 async function selectPanel(
   fixture: ComponentFixture<ProposalMyDetailPageComponent>,
-  name: 'Overview' | 'Conversation',
+  name: 'Overview' | 'Conversation' | 'AI Assistance',
 ): Promise<void> {
   const compiled = fixture.nativeElement as HTMLElement;
   const tab = Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
@@ -249,9 +338,11 @@ async function selectPanel(
 
 describe('ProposalMyDetailPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
+  let assistanceService: AiStaffAssistanceServiceStub;
 
   beforeEach(async () => {
     proposalService = new ProposalApiServiceStub();
+    assistanceService = new AiStaffAssistanceServiceStub();
 
     await TestBed.configureTestingModule({
       imports: [ProposalMyDetailPageComponent],
@@ -259,6 +350,7 @@ describe('ProposalMyDetailPageComponent', () => {
         provideRouter([]),
         { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
         { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
+        { provide: AI_STAFF_ASSISTANCE_SERVICE, useValue: assistanceService },
       ],
     }).compileComponents();
   });
@@ -284,6 +376,7 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('Assigned to');
     expect(compiled.textContent).toContain('Bob Santos');
     expect(compiled.textContent).toContain('Conversation');
+    expect(compiled.textContent).toContain('AI Assistance');
     expect(compiled.textContent).toContain('Event log');
     expect(compiled.textContent).toContain('SUBMITTED');
     expect(compiled.textContent).toContain('Accept');
@@ -293,6 +386,7 @@ describe('ProposalMyDetailPageComponent', () => {
     );
     expect(compiled.querySelector('#overview-panel')).not.toBeNull();
     expect(compiled.querySelector('#conversation-panel')).toBeNull();
+    expect(compiled.querySelector('#ai-assistance-panel')).toBeNull();
     expect(compiled.textContent).not.toContain('Initial request');
   });
 
@@ -316,6 +410,29 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('signed-response.docx');
   });
 
+  it('shows an empty AI Assistance panel until a message is selected', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    await selectPanel(fixture, 'AI Assistance');
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
+      'AI Assistance',
+    );
+    expect(compiled.querySelector('#ai-assistance-panel')).not.toBeNull();
+    expect(compiled.textContent).toContain(
+      'Select a message from the Conversation tab to start ProposalAgent assistance.',
+    );
+    expect(assistanceService.startCalls).toEqual([]);
+  });
+
   it('marks requester and staff messages with distinct roles and icons', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
@@ -335,6 +452,40 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(messages[1].textContent).toContain('COLLECTIONS MANAGEMENT');
     expect(messages[1].querySelector('.pi-briefcase')).not.toBeNull();
     expect(messages[1].textContent).toContain('signed-response.docx');
+  });
+
+  it('opens ProposalAgent for the selected conversation message', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await selectPanel(fixture, 'Conversation');
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const buttons = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('[aria-label^="Ask ProposalAgent"]'),
+    );
+
+    expect(buttons).toHaveLength(2);
+
+    buttons[0].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
+      'AI Assistance',
+    );
+    expect(compiled.querySelector('#ai-assistance-panel')).not.toBeNull();
+    expect(assistanceService.startCalls).toEqual([
+      { proposalId: 'proposal-1', messageId: 'message-1' },
+    ]);
+    expect(compiled.textContent).toContain('ProposalAgent');
+    expect(compiled.textContent).toContain('Initial request');
+    expect(compiled.textContent).toContain('in-situ-access-guidelines.pdf');
   });
 
   it('uploads selected files and attaches them to a staff response message', async () => {

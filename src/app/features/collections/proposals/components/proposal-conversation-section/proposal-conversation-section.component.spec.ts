@@ -206,4 +206,50 @@ describe('ProposalConversationSectionComponent', () => {
     expect(createObjectURL).toHaveBeenCalled();
     expect(clickSpy).toHaveBeenCalled();
   });
+
+  it('hides ProposalAgent message actions by default', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
+
+    setRequiredInputs(componentRef);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('[aria-label^="Ask ProposalAgent"]')).toBeNull();
+  });
+
+  it('emits the selected message from ProposalAgent actions when enabled', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
+    const requested: Message[] = [];
+
+    setRequiredInputs(componentRef);
+    componentRef.setInput('showProposalAgentAction', true);
+    fixture.componentInstance.proposalAgentRequested.subscribe((message) => requested.push(message));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const buttons = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('[aria-label^="Ask ProposalAgent"]'),
+    );
+
+    expect(buttons).toHaveLength(2);
+
+    buttons[1].click();
+
+    expect(requested).toEqual([MESSAGES[1]]);
+  });
 });
