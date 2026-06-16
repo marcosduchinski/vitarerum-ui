@@ -233,7 +233,7 @@ describe('ProposalsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    menuItemByText('View details').click();
+    menuItemByText('Details').click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -261,7 +261,7 @@ describe('ProposalsMyPageComponent', () => {
     await fixture.whenStable();
 
     expect(document.body.textContent).not.toContain('Forward');
-    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Details');
   });
 
   it('offers Cancel proposal for a cancellable proposal and submits the reason', async () => {
@@ -367,7 +367,7 @@ describe('ProposalsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Details');
     expect(document.body.textContent).not.toContain('Cancel proposal');
   });
 });

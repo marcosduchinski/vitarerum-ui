@@ -161,7 +161,7 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    selectTab(fixture.nativeElement, 'Tasks');
+    selectTab(fixture.nativeElement, 'Actions');
     fixture.detectChanges();
 
     const buttons = Array.from(
@@ -179,7 +179,7 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    selectTab(fixture.nativeElement, 'Tasks');
+    selectTab(fixture.nativeElement, 'Actions');
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -208,7 +208,7 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    selectTab(fixture.nativeElement, 'Tasks');
+    selectTab(fixture.nativeElement, 'Actions');
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -234,7 +234,7 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    selectTab(fixture.nativeElement, 'Tasks');
+    selectTab(fixture.nativeElement, 'Actions');
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -256,7 +256,7 @@ describe('ProjectDetailPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    selectTab(fixture.nativeElement, 'Tasks');
+    selectTab(fixture.nativeElement, 'Actions');
     fixture.detectChanges();
 
     const accessLogLink = linkByText(fixture.nativeElement, 'Open access log');
@@ -271,7 +271,7 @@ describe('ProjectDetailPageComponent', () => {
   });
 });
 
-function selectTab(root: HTMLElement, label: 'Overview' | 'Tasks'): void {
+function selectTab(root: HTMLElement, label: 'Overview' | 'Actions'): void {
   const tab = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((button) =>
     button.textContent?.includes(label),
   );

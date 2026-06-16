@@ -101,7 +101,7 @@ export class ProposalsApprovedPageComponent {
 
     const items: MenuItem[] = [
       {
-        label: 'View details',
+        label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
           void this.router.navigate(['/p/collections/proposals/approved', context.proposalId]);

@@ -128,11 +128,11 @@ describe('ProjectCuratorialDetailPageComponent', () => {
   it('switches to the tasks tab and shows the cancel task', async () => {
     const compiled = await render();
 
-    tabByName(compiled, 'Tasks').click();
+    tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
 
     expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
-      'Tasks',
+      'Actions',
     );
     expect(compiled.querySelector('#tasks-panel')).not.toBeNull();
     expect(compiled.textContent).toContain('Cancel project');
@@ -147,7 +147,7 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     };
 
     const compiled = await render();
-    tabByName(compiled, 'Tasks').click();
+    tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
 
     expect(compiled.textContent).toContain('This task is unavailable for the current status.');
@@ -160,7 +160,7 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     projectService.project = projectWithoutActions as unknown as CollectionUseProjectDetail;
 
     const compiled = await render();
-    tabByName(compiled, 'Tasks').click();
+    tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
 
     expect(buttonByText(compiled, 'Cancel project').disabled).toBe(false);
@@ -174,7 +174,7 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     };
 
     const compiled = await render();
-    tabByName(compiled, 'Tasks').click();
+    tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
 
     const accessLogLink = linkByText(compiled, 'Open access log');
@@ -194,7 +194,7 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const compiled = await render();
 
-    tabByName(compiled, 'Tasks').click();
+    tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
     buttonByText(compiled, 'Cancel project').click();
     componentRef.changeDetectorRef.detectChanges();
@@ -212,7 +212,7 @@ describe('ProjectCuratorialDetailPageComponent', () => {
   });
 });
 
-function tabByName(root: HTMLElement, name: 'Overview' | 'Tasks'): HTMLButtonElement {
+function tabByName(root: HTMLElement, name: 'Overview' | 'Actions'): HTMLButtonElement {
   const tab = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) =>
     item.textContent?.includes(name),
   );

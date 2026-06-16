@@ -136,7 +136,7 @@ export class ProposalsMyPageComponent {
 
     const items: MenuItem[] = [
       {
-        label: 'View details',
+        label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
           void this.router.navigate(['/p/collections/proposals', proposal.id], {

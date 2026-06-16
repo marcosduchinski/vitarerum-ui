@@ -250,7 +250,7 @@ describe('ProposalsMyAssignmentsPageComponent', () => {
     await fixture.whenStable();
 
     expect(document.body.textContent).toContain('Forward');
-    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Details');
   });
 
   it('navigates to my-assignments detail on view details', async () => {
@@ -270,7 +270,7 @@ describe('ProposalsMyAssignmentsPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    menuItemByText('View details').click();
+    menuItemByText('Details').click();
     fixture.detectChanges();
     await fixture.whenStable();
 

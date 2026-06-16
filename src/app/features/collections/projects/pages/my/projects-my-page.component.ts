@@ -135,9 +135,9 @@ export class ProjectsMyPageComponent {
     if (!projectId) return [];
 
     if (this.isExternalRequester()) {
-      return [
+      const items: MenuItem[] = [
         {
-          label: 'View',
+          label: 'Details',
           icon: 'pi pi-eye',
           command: () => {
             void this.router.navigate(['/p/collections/projects', projectId], {
@@ -149,11 +149,23 @@ export class ProjectsMyPageComponent {
           },
         },
       ];
+
+      // Requesters may cancel their own project while it is still cancellable
+      // (CREATED or IN_PROGRESS); the backend rejects other statuses with 409.
+      if (this.isCancellable(projectId)) {
+        items.push({
+          label: 'Cancel',
+          icon: 'pi pi-times',
+          command: () => this.requestCancelConfirmation(projectId),
+        });
+      }
+
+      return items;
     }
 
     return [
       {
-        label: 'View',
+        label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
           void this.router.navigate(this.detailRoute(projectId), {
@@ -180,6 +192,11 @@ export class ProjectsMyPageComponent {
 
   protected requesterLabel(project: CollectionUseProjectSummary): string {
     return project.requestedBy?.user.name ?? 'Unknown requester';
+  }
+
+  private isCancellable(projectId: string): boolean {
+    const project = this.projects().find((p) => p.id === projectId);
+    return project?.status === 'CREATED' || project?.status === 'IN_PROGRESS';
   }
 
   private detailRoute(projectId: string): readonly string[] {

@@ -259,7 +259,7 @@ describe('ProposalsOthersPageComponent', () => {
     await fixture.whenStable();
 
     expect(document.body.textContent).toContain('Take over');
-    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Details');
   });
 
   it('confirms taking over another staff assignment from the row action menu', async () => {

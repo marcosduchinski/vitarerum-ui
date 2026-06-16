@@ -94,7 +94,7 @@ describe('ProposalsRejectedPageComponent', () => {
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('Rejected research request');
     expect(compiled.textContent).toContain('Rejected');
-    expect(compiled.textContent).toContain('View details');
+    expect(compiled.textContent).toContain('Details');
     expect(
       compiled.querySelector('a[href^="/p/collections/proposals/rejected/proposal-rejected"]'),
     ).not.toBeNull();

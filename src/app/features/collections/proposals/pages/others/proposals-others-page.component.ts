@@ -122,7 +122,7 @@ export class ProposalsOthersPageComponent {
         command: () => this.requestAssumeConfirmation(proposalId),
       },
       {
-        label: 'View details',
+        label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
           void this.router.navigate(['/p/collections/proposals/others', proposalId]);

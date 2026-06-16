@@ -337,12 +337,12 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('View');
+    expect(document.body.textContent).toContain('Details');
     expect(document.body.textContent).toContain('Conclude');
     expect(document.body.textContent).toContain('Cancel');
   });
 
-  it('only shows view action for external requester projects', async () => {
+  it('shows view and cancel (but not conclude) for cancellable external projects', async () => {
     activeSession = EXTERNAL_SESSION;
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
@@ -355,11 +355,11 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('View');
+    expect(document.body.textContent).toContain('Details');
+    expect(document.body.textContent).toContain('Cancel');
     expect(document.body.textContent).not.toContain('Conclude');
-    expect(document.body.textContent).not.toContain('Cancel');
 
-    menuItemByText('View').click();
+    menuItemByText('Details').click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -369,6 +369,61 @@ describe('ProjectsMyPageComponent', () => {
         returnLabel: 'my projects',
       },
     });
+  });
+
+  it('hides cancel for external projects that are no longer cancellable', async () => {
+    activeSession = EXTERNAL_SESSION;
+    vi.spyOn(projectService, 'listProjects').mockReturnValue(
+      of<Page<CollectionUseProjectSummary>>({
+        content: [{ ...PROJECTS[0], status: 'COMPLETED' }],
+        page: 0,
+        size: 3,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    const fixture = TestBed.createComponent(ProjectsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    openActionsMenu(fixture.nativeElement, PROJECTS[0].referenceNumber);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('Details');
+    expect(document.body.textContent).not.toContain('Cancel');
+  });
+
+  it('confirms cancelling an external requester project from the popup menu', async () => {
+    activeSession = EXTERNAL_SESSION;
+    const fixture = TestBed.createComponent(ProjectsMyPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    openActionsMenu(fixture.nativeElement, PROJECTS[0].referenceNumber);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    menuItemByText('Cancel').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cancel project?');
+
+    buttonByText(fixture.nativeElement, 'Cancel project').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    expect(projectService.cancelled).toEqual([
+      { projectId: PROJECTS[0].id, reason: 'Cancelled from my projects.' },
+    ]);
+    expect(projectService.queries).toHaveLength(2);
   });
 
   it('navigates to project detail from the popup menu', async () => {
@@ -382,7 +437,7 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    menuItemByText('View').click();
+    menuItemByText('Details').click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -413,7 +468,7 @@ describe('ProjectsMyPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    menuItemByText('View').click();
+    menuItemByText('Details').click();
     fixture.detectChanges();
     await fixture.whenStable();
 

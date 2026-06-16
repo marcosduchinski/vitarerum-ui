@@ -125,7 +125,7 @@ describe('ProposalsApprovedPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Details');
     expect(document.body.textContent).toContain('Go to project');
   });
 
@@ -149,7 +149,7 @@ describe('ProposalsApprovedPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(document.body.textContent).toContain('View details');
+    expect(document.body.textContent).toContain('Details');
     expect(document.body.textContent).not.toContain('Go to project');
   });
 });

@@ -153,7 +153,7 @@ export class ProposalsMyAssignmentsPageComponent {
         command: () => this.openForwardModal(proposalId),
       },
       {
-        label: 'View details',
+        label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
           void this.router.navigate(['/p/collections/proposals/my-assignments', proposalId]);
