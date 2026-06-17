@@ -1,10 +1,10 @@
 import { staffGuard } from '@core/guards/staff.guard';
 
-import { ProposalAgentPageComponent } from '../../ai-staff-assistance/pages/proposal-agent/proposal-agent-page.component';
+import { ProposalChatPanelComponent } from '../../proposal-chat/components/proposal-chat-panel/proposal-chat-panel.component';
 import { PROPOSALS_ROUTES } from './proposals.routes';
 
 describe('PROPOSALS_ROUTES', () => {
-  it('keeps the ProposalAgent route before the generic my-assignment detail route', () => {
+  it('keeps the ProposalChat route before the generic my-assignment detail route', () => {
     const paths = PROPOSALS_ROUTES.map((route) => route.path);
 
     expect(paths.indexOf('my-assignments/:id/assistant/:messageId')).toBeLessThan(
@@ -12,14 +12,15 @@ describe('PROPOSALS_ROUTES', () => {
     );
   });
 
-  it('guards and lazy-loads the ProposalAgent page for staff users', async () => {
+  it('guards, resolves context, and lazy-loads the ProposalChat page for staff users', async () => {
     const route = PROPOSALS_ROUTES.find(
       (candidate) => candidate.path === 'my-assignments/:id/assistant/:messageId',
     );
     const component = await route?.loadComponent?.();
 
-    expect(route?.title).toBe('ProposalAgent');
+    expect(route?.title).toBe('ProposalChat');
     expect(route?.canMatch).toContain(staffGuard);
-    expect(component).toBe(ProposalAgentPageComponent);
+    expect(route?.resolve).toHaveProperty('conversationId');
+    expect(component).toBe(ProposalChatPanelComponent);
   });
 });

@@ -226,8 +226,8 @@
             [messageError]="messageError()"
             [sendingMessage]="sendingMessage()"
             [replyResetVersion]="replyResetVersion()"
-            [showProposalAgentAction]="true"
-            (proposalAgentRequested)="openProposalAgent($event)"
+            [showTriageAction]="true"
+            (triageRequested)="openTriage($event)"
             (replySubmitted)="sendReply($event)"
           />
         </section>
@@ -239,13 +239,18 @@
           role="tabpanel"
           aria-labelledby="ai-assistance-tab"
         >
-          @if (selectedAssistanceMessageId(); as messageId) {
-            <app-proposal-agent-page [id]="id()" [messageId]="messageId" [embedded]="true" />
+          @if (selectedTriageMessageId(); as messageId) {
+            <app-proposal-chat-panel
+              [conversationId]="proposal()!.conversationId"
+              [messageId]="messageId"
+              [embedded]="true"
+              (applied)="onTriageApplied()"
+            />
           } @else {
             <section class="detail-card" aria-labelledby="ai-assistance-empty-heading">
               <h2 id="ai-assistance-empty-heading" class="detail-card__title">AI Assistance</h2>
               <p class="detail-card__empty">
-                Select a message from the Conversation tab to start ProposalAgent assistance.
+                Select a message from the Conversation tab to run intended-use triage.
               </p>
             </section>
           }

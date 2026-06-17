@@ -54,9 +54,9 @@ export class ProposalConversationSectionComponent {
   readonly replyHeading = input('Reply to requester');
   readonly recipientEmail = input<string | null>(null);
   readonly canReply = input(true);
-  readonly showProposalAgentAction = input(false);
+  readonly showTriageAction = input(false);
   readonly replySubmitted = output<ReplyComposerPayload>();
-  readonly proposalAgentRequested = output<Message>();
+  readonly triageRequested = output<Message>();
 
   protected readonly resolvedRecipientEmail = computed(
     () => this.recipientEmail() ?? this.proposal().requestedBy.user.email,
@@ -106,8 +106,8 @@ export class ProposalConversationSectionComponent {
     }
   }
 
-  protected requestProposalAgent(message: Message): void {
-    this.proposalAgentRequested.emit(message);
+  protected requestTriage(message: Message): void {
+    this.triageRequested.emit(message);
   }
 
   private saveBlob(blob: Blob, fileName: string): void {

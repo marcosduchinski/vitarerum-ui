@@ -207,7 +207,7 @@ describe('ProposalConversationSectionComponent', () => {
     expect(clickSpy).toHaveBeenCalled();
   });
 
-  it('hides ProposalAgent message actions by default', async () => {
+  it('hides triage message actions by default', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
@@ -222,10 +222,10 @@ describe('ProposalConversationSectionComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.querySelector('[aria-label^="Ask ProposalAgent"]')).toBeNull();
+    expect(compiled.querySelector('[aria-label^="Run intended-use triage"]')).toBeNull();
   });
 
-  it('emits the selected message from ProposalAgent actions when enabled', async () => {
+  it('emits the selected message from triage actions when enabled', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
@@ -236,14 +236,14 @@ describe('ProposalConversationSectionComponent', () => {
     const requested: Message[] = [];
 
     setRequiredInputs(componentRef);
-    componentRef.setInput('showProposalAgentAction', true);
-    fixture.componentInstance.proposalAgentRequested.subscribe((message) => requested.push(message));
+    componentRef.setInput('showTriageAction', true);
+    fixture.componentInstance.triageRequested.subscribe((message) => requested.push(message));
     fixture.detectChanges();
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
     const buttons = Array.from(
-      compiled.querySelectorAll<HTMLButtonElement>('[aria-label^="Ask ProposalAgent"]'),
+      compiled.querySelectorAll<HTMLButtonElement>('[aria-label^="Run intended-use triage"]'),
     );
 
     expect(buttons).toHaveLength(2);

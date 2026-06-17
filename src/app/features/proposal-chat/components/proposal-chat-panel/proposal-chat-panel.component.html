@@ -1,0 +1,153 @@
+<div class="proposal-chat">
+  @if (!embedded()) {
+    <a class="proposal-chat__back" routerLink="/p/collections/proposals/my-assignments">
+      <span class="pi pi-arrow-left" aria-hidden="true"></span> Back to assignments
+    </a>
+  }
+
+  @if (contextResource.isLoading()) {
+    <app-loading-state label="Loading triage context..." />
+  } @else if (contextError()) {
+    <app-error-message [apiError]="contextError()!" (retry)="retryContext()" />
+  } @else if (context(); as currentContext) {
+    <header class="proposal-chat__header">
+      <span class="proposal-chat__mark" aria-hidden="true">
+        <span class="pi pi-sparkles"></span>
+      </span>
+      <div>
+        <p class="proposal-chat__eyebrow">
+          ProposalChat · {{ currentContext.proposal.referenceNumber }}
+        </p>
+        <h1>{{ currentContext.proposal.title }}</h1>
+        <p class="proposal-chat__status" [class.is-busy]="suggesting()">
+          <span class="proposal-chat__status-dot" aria-hidden="true"></span>
+          {{ suggesting() ? 'Analysing message' : 'Ready for triage' }}
+        </p>
+      </div>
+    </header>
+
+    <div class="proposal-chat__layout">
+      <section class="proposal-chat__main" aria-labelledby="proposal-chat-heading">
+        <div class="proposal-chat-message">
+          <p class="proposal-chat-message__eyebrow">
+            <span class="pi pi-envelope" aria-hidden="true"></span>
+            Focus message
+          </p>
+          <div class="proposal-chat-message__meta">
+            <h2 id="proposal-chat-heading">{{ currentContext.focusMessage.subject }}</h2>
+            <span>{{ currentContext.focusMessage.sender }}</span>
+            <time [attr.datetime]="currentContext.focusMessage.sentAt">
+              {{ currentContext.focusMessage.sentAt }}
+            </time>
+          </div>
+          <p class="proposal-chat-message__body">{{ currentContext.focusMessage.body }}</p>
+        </div>
+
+        <div class="proposal-chat-comparison" aria-label="Current and suggested intended use">
+          <article class="proposal-chat-use proposal-chat-use--current">
+            <p class="proposal-chat-use__eyebrow">Current intended use</p>
+            <h3>{{ formatUseType(currentContext.proposal.intendedUse.useType) }}</h3>
+            <p>
+              {{ currentContext.proposal.intendedUse.description || 'No description provided.' }}
+            </p>
+          </article>
+
+          <article class="proposal-chat-use proposal-chat-use--suggested">
+            <p class="proposal-chat-use__eyebrow">Suggested intended use</p>
+            @if (suggestion(); as result) {
+              <h3>{{ formatUseType(result.intendedUse.useType) }}</h3>
+              <p>{{ result.intendedUse.description || 'No description provided.' }}</p>
+              <div class="proposal-chat-meter">
+                <span class="proposal-chat-meter__track">
+                  <span
+                    class="proposal-chat-meter__fill"
+                    [style.width.%]="confidencePercent(result.confidence)"
+                  ></span>
+                </span>
+                <span class="proposal-chat-meter__label">
+                  {{ confidencePercent(result.confidence) }}%
+                </span>
+              </div>
+              <p class="proposal-chat-use__rationale">{{ result.rationale }}</p>
+              <p class="proposal-chat-use__source">Source: {{ sourceLabel(result.source) }}</p>
+              @if (suggestionMatchesCurrent()) {
+                <p class="proposal-chat-use__match">
+                  The suggestion matches the proposal's current intended use.
+                </p>
+              }
+            } @else if (thinking()) {
+              <div class="proposal-chat-thinking" aria-label="ProposalChat is analysing">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            } @else {
+              <p class="proposal-chat-use__placeholder">
+                Run triage to ask ProposalChat for an intended-use suggestion.
+              </p>
+            }
+          </article>
+        </div>
+
+        @if (suggestionError()) {
+          <app-error-message [apiError]="suggestionError()!" />
+        }
+
+        @if (applyError()) {
+          <app-error-message [apiError]="applyError()!" />
+        }
+
+        <div class="proposal-chat-actions">
+          <button
+            type="button"
+            class="proposal-chat-action proposal-chat-action--primary"
+            [disabled]="suggesting()"
+            (click)="runTriage()"
+          >
+            <span
+              class="pi"
+              [class.pi-sparkles]="!suggesting()"
+              [class.pi-spinner]="suggesting()"
+              [class.pi-spin]="suggesting()"
+              aria-hidden="true"
+            ></span>
+            {{ suggestion() ? 'Run triage again' : 'Run triage' }}
+          </button>
+          <button
+            type="button"
+            class="proposal-chat-action"
+            [disabled]="!suggestion() || suggesting() || applying() || suggestionMatchesCurrent()"
+            (click)="applySuggestion()"
+          >
+            <span
+              class="pi"
+              [class.pi-check]="!applying()"
+              [class.pi-spinner]="applying()"
+              [class.pi-spin]="applying()"
+              aria-hidden="true"
+            ></span>
+            {{ applying() ? 'Applying...' : 'Apply to proposal' }}
+          </button>
+        </div>
+      </section>
+
+      <aside class="proposal-chat__context" aria-labelledby="proposal-context-heading">
+        <h2 id="proposal-context-heading">Context</h2>
+        <dl class="proposal-chat-context-list">
+          <div>
+            <dt>Conversation</dt>
+            <dd>{{ currentContext.conversationId }}</dd>
+          </div>
+          <div>
+            <dt>Message</dt>
+            <dd>{{ currentContext.focusMessage.messageId }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{{ currentContext.proposal.status.replaceAll('_', ' ').toLowerCase() }}</dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+  }
+</div>

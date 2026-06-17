@@ -14,7 +14,7 @@ import { API_BASE_URL, USE_MOCK_API, USE_MOCK_AUTH } from '@core/config/app-conf
 import { AppConfigService } from '@core/config/app-config.service';
 import { authInterceptor } from '@core/auth/auth.interceptor';
 import { sessionExpiredInterceptor } from '@core/auth/session-expired.interceptor';
-import { provideAiStaffAssistance } from '@core/providers/provide-ai-staff-assistance';
+import { provideProposalChat } from '@core/providers/provide-proposal-chat';
 import { provideCollectionUse } from '@core/providers/provide-collection-use';
 import { provideIdentity } from '@core/providers/provide-identity';
 import { provideUserManagement } from '@core/providers/provide-user-management';
@@ -85,7 +85,7 @@ export const appConfig: ApplicationConfig = {
     },
     provideIdentity(),
     provideCollectionUse(),
-    provideAiStaffAssistance(),
+    provideProposalChat(),
     provideUserManagement(),
   ],
 };

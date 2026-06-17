@@ -1,6 +1,6 @@
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
 
-import { ProposalStatus, UseStatus } from '@shared/models/collection-use-status.model';
+import { IntendedUse, ProposalStatus, UseStatus } from '@shared/models/collection-use-status.model';
 import { ProposalEvent, ProposalProjectSummary } from './proposal.model';
 
 export interface AssignProposalRequest {
@@ -16,6 +16,8 @@ export interface ForwardProposalRequest {
 export interface ProposalNoteRequest {
   readonly note: string;
 }
+
+export type UpdateIntendedUseRequest = IntendedUse;
 
 export interface ProposalReasonRequest {
   readonly reason: string;

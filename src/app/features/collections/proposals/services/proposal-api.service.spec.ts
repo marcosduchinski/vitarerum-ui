@@ -167,6 +167,31 @@ describe('ProposalApiService', () => {
     expect(received).toBe(blob);
   });
 
+  it('updates proposal intended use through the staff action endpoint', () => {
+    const body = {
+      useType: 'EXHIBITION' as const,
+      description: 'Public exhibition with selected objects.',
+    };
+    let updatedType: string | undefined;
+
+    service
+      .updateIntendedUse('proposal-1', body)
+      .subscribe((proposal) => (updatedType = proposal.type));
+
+    const request = http.expectOne('https://api.example.test/proposals/proposal-1/intended-use');
+
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual(body);
+    request.flush({
+      id: 'proposal-1',
+      referenceNumber: 'VRP-20260101-0001',
+      title: 'Proposal',
+      status: 'PENDING',
+      intendedUse: body,
+    });
+    expect(updatedType).toBe('EXHIBITION');
+  });
+
   it('posts proposal decision actions to documented endpoints', () => {
     const approveBody = {
       title: 'Specimen study',

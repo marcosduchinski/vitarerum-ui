@@ -4,9 +4,15 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { UserDetail } from '@core/auth/models/user.model';
-import { AI_STAFF_ASSISTANCE_SERVICE } from '@features/ai-staff-assistance/services/ai-staff-assistance.service';
+import { PROPOSAL_CHAT_SERVICE } from '@features/proposal-chat/services/proposal-chat.service';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
+import {
+  IntendedUseSuggestion,
+  ProposalChatContext,
+  ProposalChatContextQuery,
+  SuggestIntendedUseRequest,
+} from '@features/proposal-chat/models/proposal-chat.model';
 
 import {
   Conversation,
@@ -19,12 +25,8 @@ import {
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import { ApproveProposalRequest } from '../../models/proposal-actions.model';
 import { ProposalMyDetailPageComponent } from './proposal-my-detail-page.component';
-import {
-  AddAssistanceTurnRequest,
-  AssistanceSession,
-  SearchObjectsRequest,
-  StartProposalAgentSessionRequest,
-} from '@features/ai-staff-assistance/models/assistance.model';
+
+const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const PROPOSAL: ProposalDetail = {
   id: 'proposal-1',
@@ -32,6 +34,10 @@ const PROPOSAL: ProposalDetail = {
   title: 'Photographic history of Rio de Janeiro port, 1890-1930',
   status: 'PENDING',
   type: 'IN_SITU_VISIT',
+  intendedUse: {
+    useType: 'IN_SITU_VISIT',
+    description: 'Research visit to consult photographic records on site.',
+  },
   beginDate: '2026-07-01',
   endDate: '2026-12-31',
   requestedBy: {
@@ -137,6 +143,12 @@ const STAFF_USERS: Page<UserDetail> = {
 };
 
 class ProposalApiServiceStub {
+  readonly getProposalCalls: string[] = [];
+  readonly listEventsCalls: string[] = [];
+  readonly updateIntendedUseCalls: {
+    readonly proposalId: string;
+    readonly intendedUse: ProposalDetail['intendedUse'];
+  }[] = [];
   readonly approveCalls: {
     readonly proposalId: string;
     readonly payload: ApproveProposalRequest;
@@ -155,17 +167,30 @@ class ProposalApiServiceStub {
     readonly payload: SendMessageRequest;
   }[] = [];
   private nextDocumentId = 1;
+  private proposal = PROPOSAL;
 
-  getProposal() {
-    return of(PROPOSAL);
+  getProposal(proposalId: string) {
+    this.getProposalCalls.push(proposalId);
+    return of(this.proposal);
   }
 
   getConversation() {
     return of(CONVERSATION);
   }
 
-  listEvents() {
+  listEvents(proposalId: string) {
+    this.listEventsCalls.push(proposalId);
     return of(EVENTS);
+  }
+
+  updateIntendedUse(proposalId: string, intendedUse: ProposalDetail['intendedUse']) {
+    this.updateIntendedUseCalls.push({ proposalId, intendedUse });
+    this.proposal = {
+      ...this.proposal,
+      type: intendedUse!.useType,
+      intendedUse,
+    };
+    return of(this.proposal);
   }
 
   uploadDocument(proposalId: string, file: File, documentType: string) {
@@ -237,85 +262,49 @@ class UserManagementServiceStub {
   }
 }
 
-function makeAssistanceSession(messageId: string): AssistanceSession {
+function makeProposalChatContext(messageId: string): ProposalChatContext {
+  const message =
+    CONVERSATION.messages.find((item) => item.id === messageId) ?? CONVERSATION.messages[0];
   return {
-    id: `session-${messageId}`,
-    agent: 'PROPOSAL_AGENT',
-    title: 'ProposalAgent - VR-2026-001',
-    createdBy: PROPOSAL.assignedTo!,
-    target: {
-      type: 'PROPOSAL_MESSAGE',
-      proposalId: PROPOSAL.id,
-      conversationId: PROPOSAL.conversationId,
-      messageId,
+    conversationId: PROPOSAL.conversationId,
+    focusMessage: {
+      messageId: message.id,
+      sentAt: message.sentAt,
+      sender: message.sender,
+      subject: message.subject,
+      body: message.body,
     },
-    status: 'ACTIVE',
-    selectedMessage: CONVERSATION.messages.find((message) => message.id === messageId) ?? null,
-    proposalSnapshot: PROPOSAL,
-    accessibleDocuments: [],
-    turns: [
-      {
-        id: 'turn-1',
-        role: 'AGENT',
-        content: "I've reviewed the requester's message. Where would you like to start?",
-        createdAt: '2026-05-01T11:05:00',
-      },
-    ],
-    proposalAgentRuns: [
-      {
-        id: 'run-1',
-        status: 'NEEDS_STAFF_INPUT',
-        capabilities: ['EMAIL_TRIAGE', 'DOCUMENT_SEARCH', 'OBJECT_SEARCH'],
-        triage: {
-          probableUseType: 'IN_SITU_VISIT',
-          confidence: 'HIGH',
-          rationale: 'The selected message mentions research access.',
-          evidence: ['Matched "research".'],
-        },
-        documentSearch: {
-          query: 'IN_SITU_VISIT proposal assistance documents',
-          basedOnUseType: 'IN_SITU_VISIT',
-          summary: 'Found 1 document relevant to in situ visit.',
-          matches: [
-            {
-              documentId: 'catalog-doc-in-situ-access-guidelines',
-              fileName: 'in-situ-access-guidelines.pdf',
-              type: 'ASSISTANCE_GUIDE',
-              source: 'ASSISTANCE_CATALOG',
-              reason: 'In-situ visits usually need access guidance.',
-            },
-          ],
-        },
-        objectSearch: {
-          status: 'NEEDS_MORE_INFORMATION',
-          query: null,
-          matches: [],
-          missingInformation: ['inventory number'],
-          summary: 'Object search needs more information.',
-        },
-        createdAt: '2026-05-01T11:05:00',
-        completedAt: null,
-      },
-    ],
-    createdAt: '2026-05-01T11:05:00',
-    archivedAt: null,
+    proposal: {
+      proposalId: PROPOSAL.id,
+      referenceNumber: PROPOSAL.referenceNumber,
+      title: PROPOSAL.title,
+      status: PROPOSAL.status,
+      intendedUse: PROPOSAL.intendedUse!,
+    },
   };
 }
 
-class AiStaffAssistanceServiceStub {
-  readonly startCalls: StartProposalAgentSessionRequest[] = [];
+class ProposalChatServiceStub {
+  readonly contextCalls: ProposalChatContextQuery[] = [];
+  readonly suggestionCalls: SuggestIntendedUseRequest[] = [];
 
-  startProposalAgentSession(request: StartProposalAgentSessionRequest) {
-    this.startCalls.push(request);
-    return of(makeAssistanceSession(request.messageId));
+  getContext(query: ProposalChatContextQuery) {
+    this.contextCalls.push(query);
+    return of(makeProposalChatContext(query.messageId));
   }
 
-  addTurn(_sessionId: string, _request: AddAssistanceTurnRequest) {
-    return of(makeAssistanceSession('message-1'));
-  }
-
-  searchObjects(_sessionId: string, _request: SearchObjectsRequest) {
-    return of(makeAssistanceSession('message-1'));
+  suggestIntendedUse(request: SuggestIntendedUseRequest) {
+    this.suggestionCalls.push(request);
+    const suggestion: IntendedUseSuggestion = {
+      intendedUse: {
+        useType: 'IN_SITU_VISIT',
+        description: 'Research access to photographic records.',
+      },
+      confidence: 0.82,
+      rationale: 'The selected message mentions a research request.',
+      source: request,
+    };
+    return of(suggestion);
   }
 }
 
@@ -338,11 +327,11 @@ async function selectPanel(
 
 describe('ProposalMyDetailPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
-  let assistanceService: AiStaffAssistanceServiceStub;
+  let proposalChatService: ProposalChatServiceStub;
 
   beforeEach(async () => {
     proposalService = new ProposalApiServiceStub();
-    assistanceService = new AiStaffAssistanceServiceStub();
+    proposalChatService = new ProposalChatServiceStub();
 
     await TestBed.configureTestingModule({
       imports: [ProposalMyDetailPageComponent],
@@ -350,7 +339,7 @@ describe('ProposalMyDetailPageComponent', () => {
         provideRouter([]),
         { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
         { provide: USER_MANAGEMENT_SERVICE, useClass: UserManagementServiceStub },
-        { provide: AI_STAFF_ASSISTANCE_SERVICE, useValue: assistanceService },
+        { provide: PROPOSAL_CHAT_SERVICE, useValue: proposalChatService },
       ],
     }).compileComponents();
   });
@@ -428,9 +417,9 @@ describe('ProposalMyDetailPageComponent', () => {
     );
     expect(compiled.querySelector('#ai-assistance-panel')).not.toBeNull();
     expect(compiled.textContent).toContain(
-      'Select a message from the Conversation tab to start ProposalAgent assistance.',
+      'Select a message from the Conversation tab to run intended-use triage.',
     );
-    expect(assistanceService.startCalls).toEqual([]);
+    expect(proposalChatService.contextCalls).toEqual([]);
   });
 
   it('marks requester and staff messages with distinct roles and icons', async () => {
@@ -454,7 +443,7 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(messages[1].textContent).toContain('signed-response.docx');
   });
 
-  it('opens ProposalAgent for the selected conversation message', async () => {
+  it('opens ProposalChat triage for the selected conversation message', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
 
@@ -466,7 +455,7 @@ describe('ProposalMyDetailPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const buttons = Array.from(
-      compiled.querySelectorAll<HTMLButtonElement>('[aria-label^="Ask ProposalAgent"]'),
+      compiled.querySelectorAll<HTMLButtonElement>('[aria-label^="Run intended-use triage"]'),
     );
 
     expect(buttons).toHaveLength(2);
@@ -480,13 +469,67 @@ describe('ProposalMyDetailPageComponent', () => {
       'AI Assistance',
     );
     expect(compiled.querySelector('#ai-assistance-panel')).not.toBeNull();
-    expect(assistanceService.startCalls).toEqual([
-      { proposalId: 'proposal-1', messageId: 'message-1' },
+    expect(proposalChatService.contextCalls).toEqual([
+      { conversationId: 'conversation-1', messageId: 'message-1' },
     ]);
-    expect(compiled.textContent).toContain('ProposalAgent');
+    expect(compiled.textContent).toContain('ProposalChat');
     expect(compiled.textContent).toContain('Initial request');
-    // Conclusions are withheld until asked; the opening turn invites a question.
-    expect(compiled.textContent).toContain('Where would you like to start?');
+    expect(compiled.textContent).toContain('Current intended use');
+    expect(compiled.textContent).toContain('Run triage');
+    expect(proposalChatService.suggestionCalls).toEqual([]);
+  });
+
+  it('applies triage suggestions and returns to the overview panel', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
+
+    componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await selectPanel(fixture, 'Conversation');
+
+    let compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('[aria-label^="Run intended-use triage"]')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    compiled = fixture.nativeElement as HTMLElement;
+    const actions = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.proposal-chat-action'),
+    );
+    actions[0].click();
+    await wait(700);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        '.proposal-chat-action',
+      ),
+    )[1].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await wait(20);
+    fixture.detectChanges();
+
+    expect(proposalService.updateIntendedUseCalls).toEqual([
+      {
+        proposalId: 'proposal-1',
+        intendedUse: {
+          useType: 'IN_SITU_VISIT',
+          description: 'Research access to photographic records.',
+        },
+      },
+    ]);
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[role="tab"][aria-selected="true"]')
+        ?.textContent,
+    ).toContain('Overview');
+    expect(proposalService.getProposalCalls.length).toBeGreaterThan(1);
+    expect(proposalService.listEventsCalls.length).toBeGreaterThan(1);
   });
 
   it('uploads selected files and attaches them to a staff response message', async () => {

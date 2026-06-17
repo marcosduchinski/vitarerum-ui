@@ -14,6 +14,7 @@ export type ProposalEventType =
   | 'SUBMITTED'
   | 'ASSIGNED'
   | 'FORWARDED'
+  | 'INTENDED_USE_UPDATED'
   | 'DOCUMENTS_REQUESTED'
   | 'DOCUMENTS_SUBMITTED'
   | 'REVIEW_STARTED'

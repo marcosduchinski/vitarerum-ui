@@ -46,14 +46,14 @@
                 <app-error-message [apiError]="downloadError()!" />
               }
             }
-            @if (showProposalAgentAction()) {
+            @if (showTriageAction()) {
               <div class="message__assistant-actions">
                 <button
                   type="button"
                   class="message__assistant-action"
-                  [attr.aria-label]="'Ask ProposalAgent about ' + msg.subject"
-                  title="Ask ProposalAgent"
-                  (click)="requestProposalAgent(msg)"
+                  [attr.aria-label]="'Run intended-use triage for ' + msg.subject"
+                  title="Run intended-use triage"
+                  (click)="requestTriage(msg)"
                 >
                   <span class="pi pi-sparkles" aria-hidden="true"></span>
                 </button>
@@ -70,101 +70,101 @@
   }
 
   @if (canReply()) {
-  <form
-    class="reply-composer"
-    aria-label="Reply to requester"
-    (submit)="$event.preventDefault(); sendReply()"
-  >
-    <div class="reply-composer__header">
-      <div>
-        <p class="reply-composer__eyebrow">{{ replyEyebrow() }}</p>
-        <h3>{{ replyHeading() }}</h3>
+    <form
+      class="reply-composer"
+      aria-label="Reply to requester"
+      (submit)="$event.preventDefault(); sendReply()"
+    >
+      <div class="reply-composer__header">
+        <div>
+          <p class="reply-composer__eyebrow">{{ replyEyebrow() }}</p>
+          <h3>{{ replyHeading() }}</h3>
+        </div>
+        <span class="reply-composer__recipient"> To {{ resolvedRecipientEmail() }} </span>
       </div>
-      <span class="reply-composer__recipient"> To {{ resolvedRecipientEmail() }} </span>
-    </div>
 
-    <div class="reply-toolbar" aria-label="Rich text formatting">
-      <button
-        type="button"
-        class="editor-btn"
-        (click)="applyEditorCommand('bold')"
-        aria-label="Bold"
-        title="Bold"
-      >
-        <strong>B</strong>
-      </button>
-      <button
-        type="button"
-        class="editor-btn"
-        (click)="applyEditorCommand('italic')"
-        aria-label="Italic"
-        title="Italic"
-      >
-        <em>I</em>
-      </button>
-      <button
-        type="button"
-        class="editor-btn"
-        (click)="applyEditorCommand('insertUnorderedList')"
-        aria-label="Bulleted list"
-        title="Bulleted list"
-      >
-        <span class="pi pi-list" aria-hidden="true"></span>
-      </button>
-      <button
-        type="button"
-        class="editor-btn"
-        (click)="clearReplyFormatting()"
-        aria-label="Clear formatting"
-        title="Clear formatting"
-      >
-        <span class="pi pi-eraser" aria-hidden="true"></span>
-      </button>
-    </div>
+      <div class="reply-toolbar" aria-label="Rich text formatting">
+        <button
+          type="button"
+          class="editor-btn"
+          (click)="applyEditorCommand('bold')"
+          aria-label="Bold"
+          title="Bold"
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          type="button"
+          class="editor-btn"
+          (click)="applyEditorCommand('italic')"
+          aria-label="Italic"
+          title="Italic"
+        >
+          <em>I</em>
+        </button>
+        <button
+          type="button"
+          class="editor-btn"
+          (click)="applyEditorCommand('insertUnorderedList')"
+          aria-label="Bulleted list"
+          title="Bulleted list"
+        >
+          <span class="pi pi-list" aria-hidden="true"></span>
+        </button>
+        <button
+          type="button"
+          class="editor-btn"
+          (click)="clearReplyFormatting()"
+          aria-label="Clear formatting"
+          title="Clear formatting"
+        >
+          <span class="pi pi-eraser" aria-hidden="true"></span>
+        </button>
+      </div>
 
-    <div
-      #replyEditor
-      class="reply-editor"
-      contenteditable="true"
-      role="textbox"
-      aria-multiline="true"
-      aria-label="Response message"
-      data-placeholder="Write the response to the requester..."
-      (input)="onReplyInput($event)"
-    ></div>
+      <div
+        #replyEditor
+        class="reply-editor"
+        contenteditable="true"
+        role="textbox"
+        aria-multiline="true"
+        aria-label="Response message"
+        data-placeholder="Write the response to the requester..."
+        (input)="onReplyInput($event)"
+      ></div>
 
-    <div class="reply-files">
-      <label class="file-picker" for="staff-response-files">
-        <span class="pi pi-paperclip" aria-hidden="true"></span>
-        Attach files
-      </label>
-      <input id="staff-response-files" type="file" multiple (change)="onFilesSelected($event)" />
-      @if (selectedFiles().length) {
-        <ul class="selected-files" aria-label="Selected files">
-          @for (file of selectedFiles(); track file.name + file.size + $index) {
-            <li>
-              <span class="pi pi-file" aria-hidden="true"></span>
-              {{ file.name }}
-              <button
-                type="button"
-                class="selected-files__remove"
-                (click)="removeSelectedFile($index)"
-                aria-label="Remove {{ file.name }}"
-              >
-                <span class="pi pi-times" aria-hidden="true"></span>
-              </button>
-            </li>
-          }
-        </ul>
-      }
-    </div>
+      <div class="reply-files">
+        <label class="file-picker" for="staff-response-files">
+          <span class="pi pi-paperclip" aria-hidden="true"></span>
+          Attach files
+        </label>
+        <input id="staff-response-files" type="file" multiple (change)="onFilesSelected($event)" />
+        @if (selectedFiles().length) {
+          <ul class="selected-files" aria-label="Selected files">
+            @for (file of selectedFiles(); track file.name + file.size + $index) {
+              <li>
+                <span class="pi pi-file" aria-hidden="true"></span>
+                {{ file.name }}
+                <button
+                  type="button"
+                  class="selected-files__remove"
+                  (click)="removeSelectedFile($index)"
+                  aria-label="Remove {{ file.name }}"
+                >
+                  <span class="pi pi-times" aria-hidden="true"></span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
 
-    <div class="reply-composer__footer">
-      <button type="submit" class="action-btn action-btn--primary" [disabled]="!canSendReply()">
-        <span class="pi pi-send" aria-hidden="true"></span>
-        {{ sendingMessage() ? 'Sending...' : 'Send response' }}
-      </button>
-    </div>
-  </form>
+      <div class="reply-composer__footer">
+        <button type="submit" class="action-btn action-btn--primary" [disabled]="!canSendReply()">
+          <span class="pi pi-send" aria-hidden="true"></span>
+          {{ sendingMessage() ? 'Sending...' : 'Send response' }}
+        </button>
+      </div>
+    </form>
   }
 </section>

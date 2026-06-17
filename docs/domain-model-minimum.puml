@@ -1,3 +1,4 @@
+
 @startuml MUHNAC-CollectionUse-Implemented
 
 skinparam linetype ortho
@@ -6,10 +7,9 @@ skinparam shadowing false
 skinparam classAttributeIconSize 0
 
 ' ============================================================
-' Implemented domain model + proposed prototype assistance context
+' Implemented domain model
 ' Source: app/use_of_collections/domain/models.py and enums.py
-' Note: this file keeps its historical name. Core collection-use packages mirror
-' the implemented model; AI Staff Assistance is marked as proposed/prototype.
+' Note: this file keeps its historical name, but mirrors the implemented model.
 ' ============================================================
 
 ' ============================================================
@@ -41,6 +41,20 @@ package "Shared Kernel" <<Shared Kernel>> {
         - documentId: DocumentId
         - fileName: String
         }
+
+        ' --- promoted from User Request so ProposalChat can share the taxonomy ---
+        class IntendedUse <<Value Object>> #e0afea {
+        - useType: UseType
+        - description: String
+        }
+
+        enum UseType #e0afea {
+        EXHIBITION
+        IN_SITU_VISIT
+        OTHER
+        }
+
+        IntendedUse ..> UseType : useType
 }
 
 
@@ -118,17 +132,6 @@ package "User Request" <<Bounded Context>> {
         + reject(...)
         }
 
-        class IntendedUse <<Value Object>> #ffeead {
-        - useType: UseType
-        - description: String
-        }
-
-        enum UseType #ffeead {
-        EXHIBITION
-        IN_SITU_VISIT
-        OTHER
-        }
-
         enum ProposalStatus #ffeead {
         SUBMITTED
         PENDING
@@ -148,6 +151,7 @@ package "User Request" <<Bounded Context>> {
         SUBMITTED
         ASSIGNED
         FORWARDED
+        INTENDED_USE_UPDATED
         DOCUMENTS_REQUESTED
         DOCUMENTS_SUBMITTED
         REVIEW_STARTED
@@ -208,7 +212,6 @@ package "User Request" <<Bounded Context>> {
         Proposal *-- "0..*" RequestedDocument
         Proposal *-- "0..*" RequestedObject
         Proposal *-- "0..*" Document
-        IntendedUse ..> UseType : useType
 
         RequestedDocument *-- DocumentType
         RequestedObject *-- ObjectReference
@@ -357,6 +360,28 @@ package "Collection Use" <<Bounded Context>> {
         }
 
 
+        class PublicationLog <<Aggregate Root>> #ffb7b2 {
+        - id: PublicationLogId
+        - referenceNumber : ReferenceNumber
+        - collectionUseProjectId: CollectionUseProjectId
+        - curator: PermissionId?
+        - entries: List<PublicationLogEntry>
+        + addEntry(...)
+        }
+
+
+        class PublicationLogEntry <<Entity>> #ffb7b2 {
+        - id: PublicationLogEntryId
+        - publicationLogId: PublicationLogId
+        - addedAt: DateTime
+        - addedBy: PermissionId
+        - note: String
+        - attachments: List<Attachment>
+        + addAttachment(...)
+        + edit(...)
+        }
+
+
 
         CollectionUseProject *-- ReferenceNumber
         CollectionUseProject *-- "1..1" IntendedUse
@@ -386,181 +411,131 @@ package "Collection Use" <<Bounded Context>> {
         ObjectOccurrenceEntry *-- "1..1" ObjectReference
         ObjectOccurrenceEntry ..> Permission : reportedBy
         ObjectOccurrenceEntry ..> RequestedObject : requestedObjectId
+
+        PublicationLog "1..1" -- CollectionUseProject : collectionUseProjectId
+        PublicationLog *-- "0..*" PublicationLogEntry
+        PublicationLog *-- ReferenceNumber
+        PublicationLog ..> Permission : curator
+
+        PublicationLogEntry *-- "0..*" Attachment
+        PublicationLogEntry ..> Permission : addedBy
 }
 
+
 ' ============================================================
-' AI Staff Assistance
+' ProposalChat  (separate bounded context, hexagonal)
+'   - reads Conversation/Message/Proposal from User Request via an ACL over the
+'     published OHS (use_of_collections.public)
+'   - uses IntendedUse / UseType from Shared Kernel directly
+'   - IntendedUseSuggestion is ephemeral (no repository, no ProposalEvent)
 ' ============================================================
-' Proposed/prototype supporting context. It reads User Request data for staff
-' decision support, but generated assistance does not mutate official Proposal,
-' Conversation, Message, Document, or CollectionUseProject state.
 
-  package "AI Staff Assistance" <<Bounded Context, Proposed Prototype>> {
+package "ProposalChat" <<Bounded Context>> {
 
-    class AssistanceSession <<Aggregate Root>> #d5e8d4 {
-      - id: AssistanceSessionId
-      - agent: StaffAgentType
-      - title: String
-      - createdBy: PermissionId
-      - target: AssistanceTarget
-      - status: AssistanceSessionStatus
-      - selectedMessage: Message?
-      - proposalSnapshot: Proposal
-      - accessibleDocuments: List<Document>
-      - turns: List<AssistanceTurn>
-      - proposalAgentRuns: List<ProposalAgentRun>
-      - createdAt: DateTime
-      - archivedAt: DateTime?
-      + start(...)
-      + addTurn(...)
-      + searchObjects(...)
+    package "domain" {
+
+        class ConversationContext <<Value Object>> #a0c4ff {
+        + focus: FocusMessage
+        + proposal: ProposalSummary
+        }
+
+        class FocusMessage <<Value Object>> #a0c4ff {
+        + subject: String
+        + body: String
+        + sender: String
+        + sentAt: DateTime
+        }
+
+        class ProposalSummary <<Value Object>> #a0c4ff {
+        + proposalId: String
+        + referenceNumber: String
+        + title: String
+        + status: String
+        + intendedUse: IntendedUse
+        }
+
+        class IntendedUseSuggestion <<Value Object>> #a0c4ff {
+        + useType: UseType
+        + description: String
+        + confidence: Confidence
+        + rationale: String
+        + sourceConversationId: String
+        + sourceMessageId: String
+        + toIntendedUse(): IntendedUse
+        }
+
+        class Confidence <<Value Object>> #a0c4ff {
+        + value: Float
+        }
+
+        interface ProposalContextPort <<driven port>> #a0c4ff {
+        + load(conversationId, messageId): ConversationContext
+        }
+
+        interface IntendedUseSuggestionPort <<driven port>> #a0c4ff {
+        + suggest(context): IntendedUseSuggestion
+        }
     }
 
-    enum StaffAgentType #d5e8d4 {
-      PROPOSAL_AGENT
+    package "application" {
+
+        class SuggestIntendedUseService <<application service>> #c4d7ff {
+        - context: ProposalContextPort
+        - model: IntendedUseSuggestionPort
+        + handle(cmd): IntendedUseSuggestion
+        }
+
+        class GetTriageContext <<application service>> #c4d7ff {
+        - context: ProposalContextPort
+        + execute(conversationId, messageId): ConversationContext
+        }
+
+        class SuggestIntendedUseCommand <<command>> #c4d7ff {
+        + conversationId: String
+        + messageId: String
+        }
     }
 
-    class AssistanceTarget <<Value Object>> #d5e8d4 {
-      - type: AssistanceTargetType
-      - proposalId: ProposalId
-      - conversationId: ConversationId?
-      - messageId: MessageId?
+    package "infrastructure" {
+        class UserRequestContextAdapter <<ACL adapter>> #e4c1f9
+        class LangGraphIntendedUseAdapter <<adapter>> #e4c1f9
     }
 
-    enum AssistanceTargetType #d5e8d4 {
-      PROPOSAL_MESSAGE
-      PROPOSAL
+    package "presentation" {
+        class ProposalChatController <<driving adapter>> #caffbf
     }
 
-    enum AssistanceSessionStatus #d5e8d4 {
-      ACTIVE
-      ARCHIVED
-    }
+    ConversationContext *-- FocusMessage
+    ConversationContext *-- ProposalSummary
+    ProposalSummary *-- IntendedUse
+    IntendedUseSuggestion *-- Confidence
 
-    class AssistanceTurn <<Entity>> #d5e8d4 {
-      - id: AssistanceTurnId
-      - role: AssistanceTurnRole
-      - content: String
-      - result: AssistanceTurnResult?
-      - createdAt: DateTime
-    }
+    SuggestIntendedUseService ..> ProposalContextPort
+    SuggestIntendedUseService ..> IntendedUseSuggestionPort
+    SuggestIntendedUseService ..> IntendedUseSuggestion
+    SuggestIntendedUseService ..> SuggestIntendedUseCommand
+    GetTriageContext ..> ProposalContextPort
 
-    enum AssistanceTurnRole #d5e8d4 {
-      STAFF
-      AGENT
-      SYSTEM
-    }
+    UserRequestContextAdapter ..|> ProposalContextPort
+    LangGraphIntendedUseAdapter ..|> IntendedUseSuggestionPort
+    ProposalChatController ..> SuggestIntendedUseService
+    ProposalChatController ..> GetTriageContext
+}
 
-    ' A capability result revealed on-demand with the AGENT turn that answers a
-    ' staff question (conclusions stay hidden until asked).
-    class AssistanceTurnResult <<Value Object>> #d5e8d4 {
-      - kind: AssistanceTurnResultKind
-      - triage: EmailTriageResult?
-      - documentSearch: DocumentSearchResult?
-      - objectSearch: ObjectSearchResult?
-    }
+' --- cross-context integration ---
+IntendedUseSuggestion ..> UseType : useType (Shared Kernel)
+IntendedUseSuggestion ..> IntendedUse : toIntendedUse() (Shared Kernel)
+UserRequestContextAdapter ..> Conversation : <<ACL>> reads + translates
 
-    enum AssistanceTurnResultKind #d5e8d4 {
-      TRIAGE
-      DOCUMENT_SEARCH
-      OBJECT_SEARCH
-    }
-
-    class ProposalAgentRun <<Entity>> #dae8fc {
-      - id: ProposalAgentRunId
-      - status: AgentRunStatus
-      - capabilities: List<ProposalAgentCapability>
-      - triage: EmailTriageResult?
-      - documentSearch: DocumentSearchResult?
-      - objectSearch: ObjectSearchResult?
-      - createdAt: DateTime
-      - completedAt: DateTime?
-    }
-
-    enum AgentRunStatus #dae8fc {
-      RUNNING
-      NEEDS_STAFF_INPUT
-      COMPLETED
-      FAILED
-    }
-
-    enum ProposalAgentCapability #dae8fc {
-      EMAIL_TRIAGE
-      DOCUMENT_SEARCH
-      OBJECT_SEARCH
-    }
-
-    class EmailTriageResult <<Value Object>> #dae8fc {
-      - probableUseType: UseType
-      - confidence: ConfidenceLevel
-      - rationale: String
-      - evidence: List<String>
-    }
-
-    enum ConfidenceLevel #dae8fc {
-      LOW
-      MEDIUM
-      HIGH
-    }
-
-    class DocumentSearchResult <<Value Object>> #dae8fc {
-      - query: String
-      - basedOnUseType: UseType
-      - matches: List<DocumentSearchMatch>
-      - summary: String
-    }
-
-    class DocumentSearchMatch <<Value Object>> #dae8fc {
-      - documentId: DocumentId
-      - fileName: String
-      - type: String
-      - source: DocumentSearchSource
-      - reason: String
-    }
-
-    enum DocumentSearchSource #dae8fc {
-      PROPOSAL_ATTACHMENT
-      ASSISTANCE_CATALOG
-    }
-
-    class ObjectSearchResult <<Value Object>> #dae8fc {
-      - status: ObjectSearchStatus
-      - query: String?
-      - matches: List<ObjectReference>
-      - missingInformation: List<String>
-      - summary: String
-    }
-
-    enum ObjectSearchStatus #dae8fc {
-      NEEDS_MORE_INFORMATION
-      SEARCHED
-      NO_MATCHES
-    }
-
-    AssistanceSession *-- "1..1" AssistanceTarget
-    AssistanceSession *-- "0..*" AssistanceTurn
-    AssistanceSession *-- "0..*" ProposalAgentRun
-    AssistanceTurn *-- "0..1" AssistanceTurnResult
-    AssistanceTurnResult ..> EmailTriageResult
-    AssistanceTurnResult ..> DocumentSearchResult
-    AssistanceTurnResult ..> ObjectSearchResult
-    AssistanceSession ..> Permission : createdBy
-    AssistanceSession ..> Message : selectedMessage
-    AssistanceSession ..> Proposal : proposalSnapshot
-    AssistanceSession ..> Document : accessibleDocuments
-
-    ProposalAgentRun *-- "0..1" EmailTriageResult
-    ProposalAgentRun *-- "0..1" DocumentSearchResult
-    ProposalAgentRun *-- "0..1" ObjectSearchResult
-
-    AssistanceTarget ..> Proposal : proposalId
-    AssistanceTarget ..> Conversation : conversationId
-    AssistanceTarget ..> Message : messageId
-    EmailTriageResult ..> UseType : probableUseType
-    DocumentSearchResult *-- "0..*" DocumentSearchMatch
-    DocumentSearchMatch ..> Document : documentId
-    ObjectSearchResult ..> ObjectReference : matches
-  }
-
+note as N_ProposalChat
+  ProposalChat reads Conversation/Message/Proposal from User Request only
+  through the published OHS (use_of_collections.public), translating to
+  ConversationContext via an ACL. IntendedUse / UseType come from the Shared
+  Kernel without translation. IntendedUseSuggestion is ephemeral: no repository,
+  no ProposalEvent. Applying a suggestion is a User Request action and records
+  INTENDED_USE_UPDATED there, not in ProposalChat. ProposalSummary is structured
+  (not a String) to back the contract's proposal{...} payload.
+end note
+N_ProposalChat .. UserRequestContextAdapter
 
 @enduml

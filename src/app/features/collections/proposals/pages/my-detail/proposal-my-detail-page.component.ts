@@ -16,7 +16,7 @@ import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-managemen
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
-import { ProposalAgentPageComponent } from '@features/ai-staff-assistance/pages/proposal-agent/proposal-agent-page.component';
+import { ProposalChatPanelComponent } from '@features/proposal-chat/components/proposal-chat-panel/proposal-chat-panel.component';
 import {
   StatusChipComponent,
   WorkflowStatus,
@@ -49,7 +49,7 @@ type MyDetailPanel = 'overview' | 'conversation' | 'ai-assistance';
     ProposalOverviewSectionComponent,
     ProposalConversationSectionComponent,
     ProposalEventsSectionComponent,
-    ProposalAgentPageComponent,
+    ProposalChatPanelComponent,
   ],
   templateUrl: './proposal-my-detail-page.component.html',
   styleUrl: './proposal-my-detail-page.component.scss',
@@ -116,7 +116,7 @@ export class ProposalMyDetailPageComponent {
   protected readonly sendingMessage = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly messageError = signal<ApiError | null>(null);
-  protected readonly selectedAssistanceMessageId = signal<string | null>(null);
+  protected readonly selectedTriageMessageId = signal<string | null>(null);
 
   protected readonly canDecide = computed(() => this.proposal()?.status === 'PENDING');
   protected readonly forwardTargetLabel = computed(
@@ -133,9 +133,15 @@ export class ProposalMyDetailPageComponent {
     this.activePanel.set(panel);
   }
 
-  protected openProposalAgent(message: Message): void {
-    this.selectedAssistanceMessageId.set(message.id);
+  protected openTriage(message: Message): void {
+    this.selectedTriageMessageId.set(message.id);
     this.activePanel.set('ai-assistance');
+  }
+
+  protected onTriageApplied(): void {
+    this.proposalResource.reload();
+    this.eventsResource.reload();
+    this.activePanel.set('overview');
   }
 
   protected openRejectModal(): void {

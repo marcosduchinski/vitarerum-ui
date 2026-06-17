@@ -7,6 +7,7 @@
 **Description** — List proposals. Staff (any of `CURATORIAL`, `COLLECTIONS_MANAGEMENT`, `DIRECTION`, `SYS_ADMIN`) see all proposals; non-staff callers are automatically scoped to the proposals they requested. Same endpoint as the researcher list — visibility is decided from the caller's group.
 
 **Query parameters**
+
 ```
 status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECTED | CANCELLED
 type        : UseType          (optional) EXHIBITION | IN_SITU_VISIT | OTHER — filters intendedUse.useType
@@ -20,6 +21,7 @@ size        : Integer          (default 20)
 ```
 
 **Response `200 OK`**
+
 ```json
 {
   "content": [
@@ -71,11 +73,13 @@ List items carry the proposal summary only, including the proposal `referenceNum
 **Description** — A staff member assumes responsibility for the request, becoming its attendant and moving it into review. If no `targetPermissionId` is provided the caller assigns themselves. Updates `assignedTo`, transitions the proposal from `SUBMITTED` to `PENDING`, and records an `ASSIGNED` `ProposalEvent`. Allowed from any non-terminal status. The caller must belong to a staff group, and any explicit `targetPermissionId` must also belong to a staff group.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "targetPermissionId": "uuid",
@@ -86,6 +90,7 @@ proposalId : UUID (required)
 Both fields are optional. When `targetPermissionId` is omitted the caller is assigned.
 
 **Response `200 OK`**
+
 ```json
 {
   "id": "uuid",
@@ -121,6 +126,7 @@ Both fields are optional. When `targetPermissionId` is omitted the caller is ass
 ```
 
 **Response `409 Conflict`**
+
 ```json
 {
   "error": "INVALID_TRANSITION",
@@ -135,11 +141,13 @@ Both fields are optional. When `targetPermissionId` is omitted the caller is ass
 **Description** — Staff formally request supplementary documents from the researcher. Records a `DOCUMENTS_REQUESTED` `ProposalEvent` and appends the requested document types. The proposal must be in `PENDING` status; the status is unchanged. Each requested document carries a `type` and a `description`.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "requiredDocuments": [
@@ -153,6 +161,7 @@ proposalId : UUID (required)
 ```
 
 **Response `200 OK`**
+
 ```json
 {
   "id": "uuid",
@@ -179,6 +188,7 @@ proposalId : UUID (required)
 ```
 
 **Response `409 Conflict`**
+
 ```json
 {
   "error": "INVALID_TRANSITION",
@@ -193,11 +203,13 @@ proposalId : UUID (required)
 **Description** — Staff forward the request to another staff member with a question or solicitation. Updates `assignedTo` and records a `FORWARDED` `ProposalEvent`. Does not change the proposal status. The caller and target permission must both belong to staff groups.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "targetPermissionId": "uuid",
@@ -208,6 +220,7 @@ proposalId : UUID (required)
 `targetPermissionId` is required; `note` is optional.
 
 **Response `200 OK`**
+
 ```json
 {
   "id": "uuid",
@@ -244,16 +257,61 @@ proposalId : UUID (required)
 
 ---
 
-### `POST /proposals/{proposalId}/refer-to-direction`
+### `PUT /proposals/{proposalId}/intended-use`
 
-**Description** — Curator escalates the proposal to direction for clarification before making a final decision. Records a `REFERRED_TO_DIRECTION` `ProposalEvent`. The proposal must be in `PENDING` status; the status is unchanged. Only available to `CURATORIAL` group members.
+**Description** — Staff update the proposal's recorded intended use after human review. This is the durable write-back used when a staff member accepts an advisory ProposalChat suggestion. It updates `Proposal.intendedUse`, keeps the proposal status unchanged, and records an `INTENDED_USE_UPDATED` `ProposalEvent`. ProposalChat does not call this internally and does not persist suggestions.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
+```json
+{
+  "useType": "EXHIBITION | IN_SITU_VISIT | OTHER",
+  "description": "string"
+}
+```
+
+Both fields are required. `useType` uses the shared `UseType` taxonomy.
+
+**Response `200 OK`** — the updated `ProposalDetail` (same shape as `GET /proposals/{proposalId}`), with `intendedUse` and the compatibility `type` field reflecting the accepted value.
+
+**Response `403 Forbidden`**
+
+```json
+{
+  "error": "ACCESS_DENIED",
+  "message": "Only staff members can update proposal intended use"
+}
+```
+
+**Response `409 Conflict`**
+
+```json
+{
+  "error": "INVALID_TRANSITION",
+  "message": "Cannot update intended use for a decided or cancelled proposal"
+}
+```
+
+---
+
+### `POST /proposals/{proposalId}/refer-to-direction`
+
+**Description** — Curator escalates the proposal to direction for clarification before making a final decision. Records a `REFERRED_TO_DIRECTION` `ProposalEvent`. The proposal must be in `PENDING` status; the status is unchanged. Only available to `CURATORIAL` group members.
+
+**Path parameters**
+
+```
+proposalId : UUID (required)
+```
+
+**Request body**
+
 ```json
 {
   "question": "string",
@@ -264,6 +322,7 @@ proposalId : UUID (required)
 `question` is required; `note` is optional. The note recorded on the event is `note` when present, otherwise `question`.
 
 **Response `200 OK`**
+
 ```json
 {
   "id": "uuid",
@@ -290,6 +349,7 @@ proposalId : UUID (required)
 ```
 
 **Response `403 Forbidden`**
+
 ```json
 {
   "error": "INSUFFICIENT_GROUP",
@@ -298,6 +358,7 @@ proposalId : UUID (required)
 ```
 
 **Response `409 Conflict`**
+
 ```json
 {
   "error": "INVALID_TRANSITION",
@@ -312,11 +373,13 @@ proposalId : UUID (required)
 **Description** — A direction member provides the requested clarification. Records a `DIRECTION_CLARIFIED` `ProposalEvent`. The proposal must be in `PENDING` status; the status is unchanged. Only available to `DIRECTION` group members.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "clarification": "string",
@@ -327,6 +390,7 @@ proposalId : UUID (required)
 `clarification` is required; `note` is optional. The note recorded on the event is `clarification` when present, otherwise `note`.
 
 **Response `200 OK`**
+
 ```json
 {
   "id": "uuid",
@@ -353,6 +417,7 @@ proposalId : UUID (required)
 ```
 
 **Response `403 Forbidden`**
+
 ```json
 {
   "error": "INSUFFICIENT_GROUP",
@@ -361,6 +426,7 @@ proposalId : UUID (required)
 ```
 
 **Response `409 Conflict`**
+
 ```json
 {
   "error": "INVALID_TRANSITION",
@@ -375,11 +441,13 @@ proposalId : UUID (required)
 **Description** — Curator approves the proposal and materialises the project. Transitions the proposal from `PENDING` to `APPROVED` and **creates** the linked `CollectionUseProject` in `CREATED` status. Records an `APPROVED` `ProposalEvent` and a `REQUESTED` `UseEvent` on the new project. The project's `title`, `purpose`, `beginDate`, and `endDate` are taken from this request body (the curator confirms/adjusts the project parameters at approval time), and `requestedBy` is copied from the approved proposal. Only available to `CURATORIAL` group members.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "title": "string",
@@ -393,6 +461,7 @@ proposalId : UUID (required)
 `title`, `purpose`, `beginDate`, `endDate` are required; `note` is optional.
 
 **Response `200 OK`**
+
 ```json
 {
   "proposal": {
@@ -439,6 +508,7 @@ proposalId : UUID (required)
 The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collectionUseProject.referenceNumber` follows the `CUP-XXXXXXXX` pattern (8 hex chars), and `collectionUseProject.requestedBy` is copied from the approved proposal.
 
 **Response `403 Forbidden`**
+
 ```json
 {
   "error": "INSUFFICIENT_GROUP",
@@ -447,6 +517,7 @@ The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collect
 ```
 
 **Response `422 Unprocessable Entity`** — when `endDate` precedes `beginDate`.
+
 ```json
 {
   "error": "INVALID_DATE_RANGE",
@@ -455,6 +526,7 @@ The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collect
 ```
 
 **Response `409 Conflict`**
+
 ```json
 {
   "error": "INVALID_TRANSITION",
@@ -469,11 +541,13 @@ The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collect
 **Description** — Curator rejects the proposal. Transitions the proposal from `PENDING` to `REJECTED`, records a `REJECTED` `ProposalEvent`, and appends a conversation message from the caller's permission user to the requester using `reason` as the message body. No project is created or affected (the project only exists after approval). A `reason` is mandatory. Only available to `CURATORIAL` group members.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "reason": "string"
@@ -481,6 +555,7 @@ proposalId : UUID (required)
 ```
 
 **Response `200 OK`**
+
 ```json
 {
   "id": "uuid",
@@ -510,6 +585,7 @@ proposalId : UUID (required)
 **Response `422 Unprocessable Entity`** — when `reason` is missing from the body (schema-enforced).
 
 **Response `403 Forbidden`**
+
 ```json
 {
   "error": "INSUFFICIENT_GROUP",
@@ -518,6 +594,7 @@ proposalId : UUID (required)
 ```
 
 **Response `409 Conflict`**
+
 ```json
 {
   "error": "INVALID_TRANSITION",
@@ -532,11 +609,13 @@ proposalId : UUID (required)
 **Description** — Add a staff member as a watcher on a proposal. Watchers receive visibility into the proposal without being the assigned attendant. Idempotent — adding a permission that is already watching has no effect and still returns `201`.
 
 **Path parameters**
+
 ```
 proposalId : UUID (required)
 ```
 
 **Request body**
+
 ```json
 {
   "permissionId": "uuid"
@@ -544,6 +623,7 @@ proposalId : UUID (required)
 ```
 
 **Response `201 Created`**
+
 ```json
 {
   "permissionId": "uuid",
@@ -557,6 +637,7 @@ proposalId : UUID (required)
 ```
 
 **Response `404 Not Found`**
+
 ```json
 {
   "error": "PROPOSAL_NOT_FOUND",
@@ -571,6 +652,7 @@ proposalId : UUID (required)
 **Description** — Remove a watcher from a proposal.
 
 **Path parameters**
+
 ```
 proposalId   : UUID (required)
 permissionId : UUID (required)
@@ -579,6 +661,7 @@ permissionId : UUID (required)
 **Response `204 No Content`**
 
 **Response `404 Not Found`**
+
 ```json
 {
   "error": "WATCHER_NOT_FOUND",
