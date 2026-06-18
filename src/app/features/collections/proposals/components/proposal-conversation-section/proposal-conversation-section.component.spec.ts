@@ -146,6 +146,73 @@ describe('ProposalConversationSectionComponent', () => {
     expect(compiled.querySelector('.selected-files')).toBeNull();
   });
 
+  it('strips unsafe markup from submitted reply bodies', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
+    const submitted: ReplyComposerPayload[] = [];
+
+    setRequiredInputs(componentRef);
+    fixture.componentInstance.replySubmitted.subscribe((payload) => submitted.push(payload));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editor = compiled.querySelector<HTMLElement>('.reply-editor');
+    const sendButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Send response'),
+    );
+
+    editor!.innerHTML =
+      '<p onclick="alert(1)">Safe <strong data-id="1">bold</strong><script>alert(1)</script></p><img src=x onerror=alert(1)><a href="javascript:alert(1)">link</a>';
+    editor!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    sendButton!.click();
+
+    expect(submitted).toEqual([
+      {
+        body: '<p>Safe <strong>bold</strong></p>link',
+        files: [],
+      },
+    ]);
+  });
+
+  it('strips unsafe markup from rendered message bodies', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
+    const unsafeMessages: readonly Message[] = [
+      {
+        id: 'unsafe-message',
+        sentAt: '2026-05-01T11:00:00',
+        sender: 'alice@example.test',
+        recipient: 'Collections management',
+        subject: 'Unsafe body',
+        body: '<p style="color: red">Visible <em onclick="alert(1)">text</em><iframe src="https://example.test"></iframe></p><a href="javascript:alert(1)">link</a>',
+      },
+    ];
+
+    setRequiredInputs(componentRef);
+    componentRef.setInput('messages', unsafeMessages);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const body = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.message__body');
+
+    expect(body?.innerHTML).toBe('<p>Visible <em>text</em></p>link');
+    expect(body?.querySelector('iframe')).toBeNull();
+    expect(body?.querySelector('[style], [onclick], [href]')).toBeNull();
+  });
+
   it('runs browser editor commands from formatting controls', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalConversationSectionComponent],

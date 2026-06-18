@@ -10,8 +10,12 @@ import { AppTopbarComponent } from './app-topbar.component';
 
 class LayoutServiceStub {
   readonly isDarkTheme = signal(false);
-  onMenuToggle(): void {}
-  toggleDarkMode(): void {}
+  onMenuToggle(): void {
+    void this.isDarkTheme();
+  }
+  toggleDarkMode(): void {
+    this.isDarkTheme.update((value) => !value);
+  }
 }
 
 describe('AppTopbarComponent role switcher', () => {

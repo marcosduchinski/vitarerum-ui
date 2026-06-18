@@ -21,7 +21,7 @@
               <span class="message__date">{{ formatDateTime(msg.sentAt) }}</span>
             </div>
             <p class="message__subject">{{ msg.subject }}</p>
-            <div class="message__body" [innerHTML]="msg.body"></div>
+            <div class="message__body" [innerHTML]="sanitizeMessageBody(msg.body)"></div>
             @if (msg.attachments?.length) {
               <ul class="message-attachments" aria-label="Message attachments">
                 @for (attachment of msg.attachments; track attachment.documentId) {

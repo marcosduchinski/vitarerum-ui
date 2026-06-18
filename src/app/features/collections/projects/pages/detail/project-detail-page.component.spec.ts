@@ -69,33 +69,33 @@ const EVENTS_PAGE: ProjectEventsPage = {
 };
 
 class ProjectApiServiceStub {
-  getProject(_id: string) {
+  getProject() {
     return of(currentProject);
   }
-  listEvents(_id: string) {
+  listEvents() {
     return of(EVENTS_PAGE);
   }
-  startProject(_id: string, _r: unknown) {
+  startProject(id: string) {
     return of({
-      id: _id,
+      id,
       referenceNumber: 'VR-2026-012',
       status: 'IN_PROGRESS' as const,
       result: null,
       lastEvent: EVENTS_PAGE.content[0],
     });
   }
-  completeProject(_id: string, _r: unknown) {
+  completeProject(id: string) {
     return of({
-      id: _id,
+      id,
       referenceNumber: 'VR-2026-012',
       status: 'COMPLETED' as const,
       result: 'COMPLETED' as const,
       lastEvent: EVENTS_PAGE.content[0],
     });
   }
-  cancelProject(_id: string, _r: unknown) {
+  cancelProject(id: string) {
     return of({
-      id: _id,
+      id,
       referenceNumber: 'VR-2026-012',
       status: 'CANCELLED' as const,
       result: 'CANCELLED' as const,

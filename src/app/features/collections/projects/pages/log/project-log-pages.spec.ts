@@ -29,11 +29,11 @@ const identitySession = signal<IdentitySession>(curatorialSession());
 const identityStub = {
   session: identitySession.asReadonly(),
   isAuthenticated: signal(true).asReadonly(),
-  signIn: () => {},
-  signOut: () => {},
+  signIn: () => Promise.resolve(),
+  signOut: () => void identitySession(),
   getAccessToken: () => 'mock-token',
-  setGroup: () => {},
-  updateAvailableGroups: () => {},
+  setGroup: (group: IdentitySession['group']) => void group,
+  updateAvailableGroups: (groups: IdentitySession['availableGroups']) => void groups.length,
 };
 
 function curatorialSession(): IdentitySession {

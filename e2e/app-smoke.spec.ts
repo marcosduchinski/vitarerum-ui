@@ -4,7 +4,10 @@ test('signs in, shows dashboard, and handles unknown routes', async ({ page }) =
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
-  // Button is enabled but submitting empty form shows validation errors
+  await page.getByLabel('Email address').clear();
+  await page.getByLabel('Password').clear();
+
+  // Button is enabled, and submitting an empty form shows validation errors.
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByText('Email is required')).toBeVisible();
   await expect(page.getByText('Password is required')).toBeVisible();

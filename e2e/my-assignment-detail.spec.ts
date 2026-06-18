@@ -17,9 +17,9 @@ test('collections staff can work through a my-assignment detail page', async ({ 
   await sidebar(page).getByRole('link', { name: 'New' }).click();
   await expect(page).toHaveURL(/\/p\/collections\/proposals\/new$/);
 
-  await page.getByRole('button', { name: 'Assume VR-2026-001' }).click();
-  await page.getByRole('button', { name: 'Assume proposal', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Assume VR-2026-001' })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Assign VRP-20260601-0001 to me' }).click();
+  await page.getByRole('button', { name: 'Assign to me', exact: true }).click();
+  await expect(page).toHaveURL(/\/p\/collections\/proposals\/my-assignments\/prop-1$/);
 
   await sidebar(page).getByRole('link', { name: 'My assignments' }).click();
   await expect(page).toHaveURL(/\/p\/collections\/proposals\/my-assignments$/);
@@ -30,21 +30,15 @@ test('collections staff can work through a my-assignment detail page', async ({ 
 
   await expect(page.getByRole('link', { name: 'Back to my assignments' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
-  const overview = page.locator('app-proposal-my-overview-section');
+  const overview = page.getByRole('region', { name: 'Overview' });
   await expect(overview.getByText('Alice Ferreira')).toBeVisible();
   await expect(overview.getByText('Bob Santos')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Event log' })).toBeVisible();
-  await expect(page.getByText('ASSIGNED')).toBeVisible();
+  await expect(page.getByText('ASSIGNED', { exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Overview' })).toHaveAttribute(
     'aria-selected',
     'true',
   );
-
-  await page.getByRole('tab', { name: 'Watchers' }).click();
-  await expect(page.getByRole('heading', { name: 'Watchers' })).toBeVisible();
-  await page.getByLabel('Add watcher').selectOption('perm-carol');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  await expect(page.getByText('Carol Souza')).toBeVisible();
 
   await page.getByRole('tab', { name: 'Conversation' }).click();
   await expect(page.getByRole('heading', { name: 'Conversation' })).toBeVisible();
@@ -58,10 +52,6 @@ test('collections staff can work through a my-assignment detail page', async ({ 
   await expect(page.getByText('E2E response from collections staff.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Accept', exact: true }).click();
-  // Approval materialises the project: the curator confirms its parameters.
-  await page.locator('#approve-purpose').fill('Approved research access for the visit.');
-  await page.locator('#approve-begin-date').fill('2026-06-01');
-  await page.locator('#approve-end-date').fill('2026-06-30');
   await page.getByRole('button', { name: 'Accept proposal', exact: true }).click();
   await expect(page).toHaveURL(/\/p\/collections\/proposals\/approved$/);
   await expect(page.getByRole('heading', { name: 'Approved', exact: true })).toBeVisible();

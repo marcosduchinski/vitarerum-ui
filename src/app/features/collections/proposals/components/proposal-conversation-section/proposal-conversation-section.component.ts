@@ -30,6 +30,11 @@ export interface ReplyComposerPayload {
 
 type ReplyEditorCommand = 'bold' | 'italic' | 'insertUnorderedList' | 'removeFormat';
 
+const ELEMENT_NODE = 1;
+const TEXT_NODE = 3;
+const ALLOWED_RICH_TEXT_TAGS = new Set(['B', 'BR', 'EM', 'I', 'LI', 'OL', 'P', 'STRONG', 'UL']);
+const BLOCKED_RICH_TEXT_TAGS = new Set(['EMBED', 'IFRAME', 'LINK', 'META', 'OBJECT', 'SCRIPT', 'STYLE']);
+
 @Component({
   selector: 'app-proposal-conversation-section',
   standalone: true,
@@ -69,12 +74,9 @@ export class ProposalConversationSectionComponent {
   // documentId currently downloading, plus the last download error (per section).
   protected readonly downloadingDocumentId = signal<string | null>(null);
   protected readonly downloadError = signal<ApiError | null>(null);
-
-  constructor() {
-    effect(() => {
-      if (this.replyResetVersion() > 0) this.clearReply();
-    });
-  }
+  private readonly resetReplyOnVersionChange = effect(() => {
+    if (this.replyResetVersion() > 0) this.clearReply();
+  });
 
   protected messageIcon(message: Message): string {
     return this.isRequesterMessage(message) ? 'pi pi-user' : 'pi pi-briefcase';
@@ -110,6 +112,10 @@ export class ProposalConversationSectionComponent {
     this.triageRequested.emit(message);
   }
 
+  protected sanitizeMessageBody(body: string): string {
+    return this.sanitizeRichTextHtml(body);
+  }
+
   private saveBlob(blob: Blob, fileName: string): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
@@ -122,7 +128,7 @@ export class ProposalConversationSectionComponent {
   }
 
   protected onReplyInput(event: Event): void {
-    this.replyBody.set((event.target as HTMLElement).innerHTML.trim());
+    this.replyBody.set(this.sanitizeRichTextHtml((event.target as HTMLElement).innerHTML));
   }
 
   protected applyEditorCommand(command: 'bold' | 'italic' | 'insertUnorderedList'): void {
@@ -151,14 +157,16 @@ export class ProposalConversationSectionComponent {
   protected sendReply(): void {
     if (!this.canSendReply()) return;
 
+    const body = this.currentSanitizedReplyBody();
+    this.replyBody.set(body);
     this.replySubmitted.emit({
-      body: this.replyBody(),
+      body,
       files: this.selectedFiles(),
     });
   }
 
   private syncReplyBody(): void {
-    this.replyBody.set(this.replyEditor()?.nativeElement.innerHTML.trim() ?? '');
+    this.replyBody.set(this.currentSanitizedReplyBody());
   }
 
   private executeEditorCommand(command: ReplyEditorCommand): void {
@@ -182,5 +190,46 @@ export class ProposalConversationSectionComponent {
   private hasReplyContent(): boolean {
     const text = this.replyEditor()?.nativeElement.textContent?.trim() ?? '';
     return text.length > 0 || this.selectedFiles().length > 0;
+  }
+
+  private currentSanitizedReplyBody(): string {
+    return this.sanitizeRichTextHtml(this.replyEditor()?.nativeElement.innerHTML ?? this.replyBody());
+  }
+
+  private sanitizeRichTextHtml(html: string): string {
+    const template = this.document.createElement('template');
+    template.innerHTML = html;
+    this.sanitizeRichTextChildren(template.content);
+    return template.innerHTML.trim();
+  }
+
+  private sanitizeRichTextChildren(parent: ParentNode): void {
+    for (const node of Array.from(parent.childNodes)) {
+      if (node.nodeType === TEXT_NODE) continue;
+
+      if (node.nodeType !== ELEMENT_NODE) {
+        node.remove();
+        continue;
+      }
+
+      const element = node as HTMLElement;
+      const tagName = element.tagName.toUpperCase();
+
+      if (BLOCKED_RICH_TEXT_TAGS.has(tagName)) {
+        element.remove();
+        continue;
+      }
+
+      this.sanitizeRichTextChildren(element);
+
+      if (!ALLOWED_RICH_TEXT_TAGS.has(tagName)) {
+        element.replaceWith(...Array.from(element.childNodes));
+        continue;
+      }
+
+      for (const attribute of Array.from(element.attributes)) {
+        element.removeAttribute(attribute.name);
+      }
+    }
   }
 }

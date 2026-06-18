@@ -40,24 +40,43 @@
   font-size: 1.25rem;
 }
 
-.access-sheet__action {
+.access-sheet__action,
+.occurrence-entry-form__submit,
+.occurrence-register__action,
+.occurrence-modal__secondary {
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
-  margin-top: 0.75rem;
   padding: 0.3rem 0.8rem;
-  border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
-  background: var(--color-panel);
-  color: var(--color-text);
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 800;
   cursor: pointer;
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: 0.5;
   }
+}
+
+.access-sheet__action,
+.occurrence-register__action--secondary,
+.occurrence-modal__secondary {
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-panel);
+  color: var(--color-text);
+}
+
+.access-sheet__action {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.occurrence-entry-form__submit,
+.occurrence-register__action {
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
 }
 
 .access-summary {
@@ -140,19 +159,10 @@
   text-transform: none;
 }
 
-.access-sheet__body,
-.occurrence-entry-form {
+.access-sheet__body {
   display: grid;
   gap: 1rem;
-}
-
-.access-sheet__body {
   padding: 1rem;
-}
-
-.occurrence-entry-form {
-  padding: 0 0 1rem;
-  border-bottom: 1px solid var(--color-line);
 }
 
 .occurrence-entry-form__locked {
@@ -234,20 +244,6 @@
 
 .occurrence-entry-form__submit {
   justify-self: end;
-  min-height: 2rem;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-sm);
-  background: var(--color-accent);
-  color: #fff;
-  font-size: 0.84rem;
-  font-weight: 800;
-  cursor: pointer;
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
 }
 
 .occurrence-register {
@@ -261,9 +257,9 @@
   }
 }
 
-.occurrence-register__table {
+.occurrence-register__table,
+.occurrence-details__table {
   width: 100%;
-  min-width: 64rem;
   border-collapse: collapse;
   table-layout: fixed;
 
@@ -292,6 +288,10 @@
   tr:last-child td {
     border-bottom: 0;
   }
+}
+
+.occurrence-register__table {
+  min-width: 64rem;
 
   th:nth-child(1),
   td:nth-child(1) {
@@ -384,18 +384,7 @@
 .occurrence-register__action {
   min-height: 1.9rem;
   padding: 0.25rem 0.65rem;
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-sm);
-  background: var(--color-accent);
-  color: #fff;
   font-size: 0.78rem;
-  font-weight: 800;
-  cursor: pointer;
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
 
   &:focus {
     outline: none;
@@ -405,13 +394,12 @@
 
 .occurrence-register__action--secondary {
   border-color: var(--color-line-strong);
-  background: var(--color-panel);
-  color: var(--color-text);
 }
 
 // Level-1 drawer: an inset panel that reads as a tray opening beneath the row —
 // left accent rail, recessed surface, soft inset top shadow, and indentation.
-.occurrence-details {
+.occurrence-details,
+.entry-files {
   display: grid;
   gap: 0.75rem;
   padding: 0.95rem 1rem 1.1rem 1.4rem;
@@ -431,35 +419,19 @@
 }
 
 .occurrence-details__table {
-  width: 100%;
   min-width: 58rem;
-  border-collapse: collapse;
-  table-layout: fixed;
 
   th,
   td {
     padding: 0.6rem 0.65rem;
-    border-bottom: 1px solid var(--color-line);
-    text-align: left;
-    vertical-align: top;
   }
 
   th {
-    background: var(--color-panel-muted);
-    color: var(--color-muted);
     font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
   }
 
   td {
-    color: var(--color-text);
     font-size: 0.8rem;
-  }
-
-  tr:last-child td {
-    border-bottom: 0;
   }
 
   th:nth-child(1),
@@ -494,15 +466,6 @@
 .occurrence-register__details-row td {
   padding: 0;
   background: var(--color-panel-muted);
-}
-
-.entry-files {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0.95rem 1rem 1.1rem 1.4rem;
-  border-left: 3px solid var(--color-accent);
-  background: var(--color-panel-muted);
-  box-shadow: inset 0 7px 9px -8px rgba(15, 23, 42, 0.3);
 }
 
 // Level-2 drawer (attachments nested under an occurrence row): a step deeper —
@@ -834,18 +797,7 @@
 }
 
 .occurrence-modal__secondary {
-  min-height: 2rem;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-panel);
-  color: var(--color-text);
-  font-size: 0.84rem;
-  font-weight: 800;
-  cursor: pointer;
-
   &:disabled {
-    cursor: not-allowed;
     opacity: 0.55;
   }
 }

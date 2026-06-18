@@ -13,7 +13,7 @@ function createIdentity(session: IdentitySession | null): IdentityService {
     session: state.asReadonly(),
     isAuthenticated: signal(session !== null).asReadonly(),
     isStaff: signal(session !== null && session.group !== 'EXTERNAL').asReadonly(),
-    signIn: async () => {},
+    signIn: () => Promise.resolve(),
     signOut: () => state.set(null),
     getAccessToken: () => state()?.accessToken ?? null,
     getPermissionId: () => {
@@ -21,8 +21,8 @@ function createIdentity(session: IdentitySession | null): IdentityService {
       if (s === null) return null;
       return s.permissions?.find((p) => p.group === s.group)?.permissionId ?? null;
     },
-    setGroup: () => {},
-    updateAvailableGroups: () => {},
+    setGroup: (group) => void group,
+    updateAvailableGroups: (groups) => void groups.length,
   };
 }
 

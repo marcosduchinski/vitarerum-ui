@@ -21,10 +21,8 @@ test('EXTERNAL role shows proposals/projects sections, hides staff items', async
   await expect(sidebar(page).getByRole('link', { name: 'New' })).not.toBeVisible();
   await sidebar(page).getByRole('button', { name: 'Projects' }).click();
   await expect(sidebar(page).getByRole('link', { name: 'My projects' })).toBeVisible();
-  // Switcher shows but has only one option (Alice belongs to EXTERNAL only)
-  const options = await page.locator('#role-switcher option').allTextContents();
-  expect(options).toHaveLength(1);
-  expect(options[0]).toBe('External researcher');
+  // Alice belongs to one group only, so the role switcher is intentionally hidden.
+  await expect(page.locator('#role-switcher')).not.toBeVisible();
 });
 
 test('COLLECTIONS_MANAGEMENT user sees expandable collection-use section', async ({ page }) => {
@@ -142,5 +140,5 @@ test('approved proposal action menu can navigate to the related project', async 
   await page.getByRole('menuitem', { name: 'Go to project', exact: true }).click();
 
   await expect(page).toHaveURL(/\/p\/collections\/projects\/.+returnTo=%2Fp%2Fcollections%2Fproposals%2Fapproved/);
-  await expect(page.getByRole('link', { name: 'Back to approved proposals', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Back to approved proposals/ })).toBeVisible();
 });

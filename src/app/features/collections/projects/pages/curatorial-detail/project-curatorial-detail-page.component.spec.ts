@@ -64,11 +64,11 @@ class ProjectApiServiceStub {
   project: CollectionUseProjectDetail = PROJECT;
   readonly cancelled: { projectId: string; reason: string }[] = [];
 
-  getProject(_id: string) {
+  getProject() {
     return of(this.project);
   }
 
-  listEvents(_id: string) {
+  listEvents() {
     return of(EVENTS_PAGE);
   }
 

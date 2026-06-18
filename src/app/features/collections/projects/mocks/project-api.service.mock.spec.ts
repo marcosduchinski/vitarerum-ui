@@ -29,15 +29,16 @@ describe('ProjectApiServiceMock', () => {
               const group = session()?.group;
               return group != null && group !== 'EXTERNAL';
             }),
-            signIn: () => {},
-            signOut: () => {},
+            signIn: () => Promise.resolve(),
+            signOut: () => void session(),
             getAccessToken: () => 'mock-token',
             getPermissionId: () => {
               const id = session()?.user.id;
               return id ? `perm-${id.replace(/^u-/, '')}` : null;
             },
-            setGroup: () => {},
-            updateAvailableGroups: () => {},
+            setGroup: (group: IdentitySession['group']) => void group,
+            updateAvailableGroups: (groups: IdentitySession['availableGroups']) =>
+              void groups.length,
           },
         },
       ],
