@@ -84,6 +84,18 @@ const COLLECTION_PROJECTS_STAFF: MenuNode = {
   ],
 };
 
+const COLLECTION_REPORTS_STAFF: MenuNode = {
+  label: 'Reports',
+  icon: 'pi pi-chart-bar',
+  items: [
+    {
+      label: 'Visits in situ',
+      icon: 'pi pi-list-check',
+      routerLink: '/p/collections/reports/visits-in-situ',
+    },
+  ],
+};
+
 const USE_OF_COLLECTIONS_EXTERNAL: MenuNode = {
   label: 'Use of Collections',
   items: [COLLECTION_PROPOSALS_EXTERNAL, COLLECTION_PROJECTS_EXTERNAL],
@@ -91,7 +103,7 @@ const USE_OF_COLLECTIONS_EXTERNAL: MenuNode = {
 
 const USE_OF_COLLECTIONS_STAFF: MenuNode = {
   label: 'Use of Collections',
-  items: [COLLECTION_PROPOSALS_STAFF, COLLECTION_PROJECTS_STAFF],
+  items: [COLLECTION_PROPOSALS_STAFF, COLLECTION_PROJECTS_STAFF, COLLECTION_REPORTS_STAFF],
 };
 
 const SYS_ADMIN_MENU: MenuNode = {

@@ -39,6 +39,11 @@ export const routes: Routes = [
             loadChildren: () =>
               import('./features/collections/projects/projects.routes').then(m => m.PROJECTS_ROUTES),
           },
+          {
+            path: 'reports',
+            loadChildren: () =>
+              import('./features/collections/reports/reports.routes').then(m => m.REPORTS_ROUTES),
+          },
         ],
       },
       // Backward-compat shims so old bookmarks and menus still resolve

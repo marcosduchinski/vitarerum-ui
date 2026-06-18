@@ -1,0 +1,109 @@
+@use '../../../projects/pages/completed/projects-completed-page.component.scss';
+
+.visits-report {
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.report-list-panel {
+  @extend .projects-list-panel;
+}
+
+.report-toolbar {
+  @extend .projects-toolbar;
+}
+
+.report-search {
+  @extend .projects-search;
+}
+
+.report-search__clear {
+  @extend .projects-search__clear;
+}
+
+.report-table-shell {
+  @extend .projects-table-shell;
+}
+
+.report-table {
+  @extend .projects-table;
+}
+
+.report-table__col-ref {
+  width: 7.5rem;
+}
+
+.report-table__col-title {
+  width: 14rem;
+}
+
+.report-table__col-status {
+  width: 7rem;
+}
+
+.report-table__col-requester,
+.report-table__col-assignee {
+  width: 12rem;
+}
+
+.report-table__col-dates,
+.report-table__col-closed {
+  width: 10rem;
+}
+
+.report-table__col-actions {
+  width: 7rem;
+}
+
+.report-table__actions-header {
+  text-align: right;
+}
+
+.report-table__ref {
+  @extend .projects-table__ref;
+}
+
+.report-table__title {
+  @extend .projects-table__title;
+}
+
+.report-table__person {
+  @extend .projects-table__person;
+}
+
+.report-table__person-email {
+  @extend .projects-table__person-email;
+}
+
+.report-table__dates {
+  @extend .projects-table__dates;
+}
+
+.report-table__actions {
+  @extend .projects-table__actions;
+}
+
+.report-pagination {
+  @extend .projects-pagination;
+}
+
+.report-pagination__meta {
+  @extend .projects-pagination__meta;
+}
+
+.report-pagination__info {
+  @extend .projects-pagination__info;
+}
+
+.report-pagination__size {
+  @extend .projects-pagination__size;
+}
+
+.report-pagination__controls {
+  @extend .projects-pagination__controls;
+}
+
+.report-pagination__page {
+  @extend .projects-pagination__page;
+}

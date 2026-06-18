@@ -3,6 +3,7 @@ import { USE_MOCK_API } from '@core/config/app-config.model';
 import { ProposalApiServiceMock } from '@features/collections/proposals/mocks/proposal-api.service.mock';
 import { MOCK_SEED, MockProjectState, TEST_SEED } from '@features/collections/proposals/mocks/mock-data';
 import { ProjectApiServiceMock } from '@features/collections/projects/mocks/project-api.service.mock';
+import { ReportsApiServiceMock } from '@features/collections/reports/mocks/reports-api.service.mock';
 import {
   PROJECT_API_SERVICE,
   ProjectApiService,
@@ -11,6 +12,10 @@ import {
   PROPOSAL_API_SERVICE,
   ProposalApiService,
 } from '@features/collections/proposals/services/proposal-api.service';
+import {
+  REPORTS_API_SERVICE,
+  ReportsApiService,
+} from '@features/collections/reports/services/reports-api.service';
 
 export function provideCollectionUse(): Provider[] {
   return [
@@ -33,6 +38,13 @@ export function provideCollectionUse(): Provider[] {
       provide: PROJECT_API_SERVICE,
       useFactory: () =>
         inject(USE_MOCK_API) ? inject(ProjectApiServiceMock) : inject(ProjectApiService),
+    },
+    ReportsApiService,
+    ReportsApiServiceMock,
+    {
+      provide: REPORTS_API_SERVICE,
+      useFactory: () =>
+        inject(USE_MOCK_API) ? inject(ReportsApiServiceMock) : inject(ReportsApiService),
     },
   ];
 }
