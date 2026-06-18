@@ -13,8 +13,8 @@ const TYPE_PRESENTATION = {
   OTHER: { label: 'Other', tone: 'other' },
 } as const satisfies Record<UseType, TypePresentation>;
 
-export function getUseTypePresentation(type: UseType): TypePresentation {
-  return TYPE_PRESENTATION[type];
+export function getUseTypePresentation(type: UseType | null | undefined): TypePresentation {
+  return type ? TYPE_PRESENTATION[type] : TYPE_PRESENTATION.OTHER;
 }
 
 @Component({
@@ -25,7 +25,7 @@ export function getUseTypePresentation(type: UseType): TypePresentation {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TypeChipComponent {
-  readonly type = input.required<UseType>();
+  readonly type = input.required<UseType | null | undefined>();
   readonly context = input<'Proposal' | 'Project'>('Proposal');
 
   protected readonly presentation = computed(() => getUseTypePresentation(this.type()));

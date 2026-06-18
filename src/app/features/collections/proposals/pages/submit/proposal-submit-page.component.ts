@@ -5,15 +5,8 @@ import { firstValueFrom } from 'rxjs';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
-import { UseType } from '@shared/models/collection-use-status.model';
 
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
-
-const USE_TYPES: { value: UseType; label: string }[] = [
-  { value: 'IN_SITU_VISIT', label: 'In-situ visit' },
-  { value: 'EXHIBITION', label: 'Exhibition' },
-  { value: 'OTHER', label: 'Other' },
-];
 
 @Component({
   selector: 'app-proposal-submit-page',
@@ -27,17 +20,6 @@ export class ProposalSubmitPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly router = inject(Router);
 
-  protected readonly useTypes = USE_TYPES;
-
-  protected readonly title = signal(
-    'Palaeontology specimen records from late Cretaceous excavations',
-  );
-  protected readonly type = signal<UseType | ''>('IN_SITU_VISIT');
-  protected readonly purpose = signal(
-    'Comparative research on palaeontology specimen records and excavation documentation from late Cretaceous periods across South American sites.',
-  );
-  protected readonly beginDate = signal('2026-07-01');
-  protected readonly endDate = signal('2026-12-31');
   protected readonly recipient = signal('collections@vitarerum.example.com');
   protected readonly subject = signal('Collection use request: palaeontology specimen records');
   protected readonly body = signal(
@@ -48,15 +30,6 @@ export class ProposalSubmitPageComponent {
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<ApiError | null>(null);
 
-  protected readonly titleError = computed(() => this.submitted() && !this.title().trim());
-  protected readonly typeError = computed(() => this.submitted() && !this.type());
-  protected readonly purposeError = computed(() => this.submitted() && !this.purpose().trim());
-  protected readonly beginDateError = computed(() => this.submitted() && !this.beginDate());
-  protected readonly endDateError = computed(
-    () =>
-      this.submitted() &&
-      (!this.endDate() || (!!this.beginDate() && this.endDate() <= this.beginDate())),
-  );
   protected readonly recipientError = computed(
     () => this.submitted() && (!this.recipient().trim() || !this.recipient().includes('@')),
   );
@@ -65,12 +38,7 @@ export class ProposalSubmitPageComponent {
 
   private readonly isValid = computed(
     () =>
-      !!this.title().trim() &&
-      !!this.type() &&
-      !!this.purpose().trim() &&
-      !!this.beginDate() &&
-      !!this.endDate() &&
-      this.endDate() > this.beginDate() &&
+      !!this.recipient().trim() &&
       this.recipient().includes('@') &&
       !!this.subject().trim() &&
       !!this.body().trim(),
@@ -80,21 +48,6 @@ export class ProposalSubmitPageComponent {
     const value = (event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)
       .value;
     switch (field) {
-      case 'title':
-        this.title.set(value);
-        break;
-      case 'type':
-        this.type.set(value as UseType);
-        break;
-      case 'purpose':
-        this.purpose.set(value);
-        break;
-      case 'beginDate':
-        this.beginDate.set(value);
-        break;
-      case 'endDate':
-        this.endDate.set(value);
-        break;
       case 'recipient':
         this.recipient.set(value);
         break;
@@ -122,14 +75,6 @@ export class ProposalSubmitPageComponent {
       // call (which would create a duplicate alongside the auto-seeded message).
       const response = await firstValueFrom(
         this.proposalService.createProposal({
-          title: this.title().trim(),
-          intendedUse: {
-            useType: this.type() as UseType,
-            description: this.purpose().trim(),
-          },
-          purpose: this.purpose().trim(),
-          beginDate: this.beginDate(),
-          endDate: this.endDate(),
           initialMessageRecipient: this.recipient().trim(),
           initialMessageSubject: this.subject().trim(),
           initialMessageBody: this.body().trim(),

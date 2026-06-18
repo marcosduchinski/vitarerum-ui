@@ -9,14 +9,6 @@
 **Request body**
 ```json
 {
-  "title": "string",
-  "intendedUse": {
-    "useType": "EXHIBITION | IN_SITU_VISIT | OTHER",
-    "description": "string"
-  },
-  "purpose": "string",
-  "beginDate": "2025-06-01",
-  "endDate": "2025-06-30",
   "initialMessageRecipient": "collections@museum.pt",
   "initialMessageSubject": "string",
   "initialMessageBody": "string",
@@ -30,7 +22,7 @@
 }
 ```
 
-`intendedUse` describes how the collection will be used: a categorised `useType` (`EXHIBITION` · `IN_SITU_VISIT` · `OTHER`) and a free-text `description` (optional, defaults to an empty string). `initialMessageRecipient` defaults to `collections@museum.pt` when omitted or blank. `initialMessageSubject` falls back to `title` and `initialMessageBody` falls back to `purpose` when omitted. The sender of the seeded message is resolved from the authenticated caller. `requestedObjects` is optional — each item names a collection object (by inventory number) the researcher wishes to use; the server resolves it to an `ObjectReference` snapshot. More objects can be added later via `POST /proposals/{proposalId}/requested-objects`.
+The create request only needs the opening message. `initialMessageRecipient` defaults to `collections@museum.pt` when omitted or blank. `initialMessageSubject` and `initialMessageBody` are required for the initial conversation message. The removed proposal-detail fields (`title`, `intendedUse`, `purpose`, `beginDate`, `endDate`) are optional compatibility fields; when omitted or `null`, the server must not validate them. The sender of the seeded message is resolved from the authenticated caller. `requestedObjects` is optional — each item names a collection object (by inventory number) the researcher wishes to use; the server resolves it to an `ObjectReference` snapshot. More objects can be added later via `POST /proposals/{proposalId}/requested-objects`.
 
 **Response `201 Created`**
 ```json
@@ -41,11 +33,9 @@
     "title": "string",
     "status": "SUBMITTED",
     "intendedUse": {
-      "useType": "IN_SITU_VISIT",
+      "useType": "OTHER",
       "description": "string"
     },
-    "beginDate": "2025-06-01",
-    "endDate": "2025-06-30",
     "requestedBy": {
       "permissionId": "uuid",
       "user": {
@@ -62,15 +52,7 @@
 }
 ```
 
-The submit response carries only the `proposal` summary and the `conversationId`; there is no project yet. `beginDate` and `endDate` are stored on the proposal as the requested use period. The proposal reference follows `VRP-YYYYMMDD-XXXX`, where `XXXX` is sequential per submission date. The project (with its `CUP-XXXXXXXX` reference number) appears once the proposal is approved.
-
-**Response `422 Unprocessable Entity`**
-```json
-{
-  "error": "INVALID_DATE_RANGE",
-  "message": "endDate must be after beginDate"
-}
-```
+The submit response carries only the `proposal` summary and the `conversationId`; there is no project yet. The proposal reference follows `VRP-YYYYMMDD-XXXX`, where `XXXX` is sequential per submission date. Requested project details are confirmed later during staff review and approval. The project (with its `CUP-XXXXXXXX` reference number) appears once the proposal is approved.
 
 ---
 

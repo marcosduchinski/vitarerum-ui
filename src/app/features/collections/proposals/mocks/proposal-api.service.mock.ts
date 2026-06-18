@@ -60,16 +60,19 @@ export class ProposalApiServiceMock {
     const seq = this.proposals.size + 1;
     const proposalRef = `VRP-${now.slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(4, '0')}`;
     const convId = `conv-${id}`;
+    const title = request.title?.trim() || request.initialMessageSubject?.trim() || proposalRef;
+    const purpose = request.purpose?.trim() || request.initialMessageBody?.trim() || '';
+    const intendedUse = request.intendedUse ?? { useType: 'OTHER', description: purpose };
 
     const proposal: ProposalDetail = {
       id,
       referenceNumber: proposalRef,
-      title: request.title,
+      title,
       status: 'SUBMITTED',
-      type: request.intendedUse.useType,
-      intendedUse: request.intendedUse,
-      beginDate: request.beginDate,
-      endDate: request.endDate,
+      type: intendedUse.useType,
+      intendedUse,
+      beginDate: request.beginDate ?? undefined,
+      endDate: request.endDate ?? undefined,
       requestedBy: this.currentPrincipal(),
       assignedTo: null,
       submittedAt: now,
@@ -91,8 +94,8 @@ export class ProposalApiServiceMock {
         sentAt: now,
         sender: this.currentPrincipal().user.email,
         recipient: request.initialMessageRecipient ?? 'collections@vitarerum.example.com',
-        subject: request.initialMessageSubject ?? request.title,
-        body: request.initialMessageBody ?? request.purpose,
+        subject: request.initialMessageSubject ?? title,
+        body: request.initialMessageBody ?? purpose,
       },
     ]);
 

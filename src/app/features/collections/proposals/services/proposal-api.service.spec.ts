@@ -69,6 +69,38 @@ describe('ProposalApiService', () => {
     });
   });
 
+  it('creates a proposal with only opening message fields', () => {
+    const body = {
+      initialMessageRecipient: 'collections@example.test',
+      initialMessageSubject: 'Archive access request',
+      initialMessageBody: 'I would like to discuss access to archive materials.',
+    };
+
+    service.createProposal(body).subscribe();
+
+    const request = http.expectOne('https://api.example.test/proposals');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(body);
+    request.flush({
+      proposal: {
+        id: 'proposal-1',
+        referenceNumber: 'VRP-20260618-0001',
+        title: 'Archive access request',
+        status: 'SUBMITTED',
+        type: 'OTHER',
+        requestedBy: {
+          permissionId: 'permission-1',
+          user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
+          group: 'EXTERNAL',
+        },
+        assignedTo: null,
+        submittedAt: '2026-06-18T10:00:00',
+      },
+      conversationId: 'conversation-1',
+    });
+  });
+
   it('lists proposals with filters', () => {
     service
       .listProposals({
@@ -127,6 +159,29 @@ describe('ProposalApiService', () => {
       intendedUse: { useType: 'EXHIBITION', description: 'Show' },
     });
     expect(detailType).toBe('EXHIBITION');
+  });
+
+  it('defaults missing proposal type data to other', () => {
+    let listType: string | undefined;
+    service.listProposals().subscribe((page) => (listType = page.content[0]?.type));
+    http
+      .expectOne((r) => r.url === 'https://api.example.test/proposals')
+      .flush({
+        content: [
+          {
+            id: 'pr1',
+            referenceNumber: 'VRP-20260101-0001',
+            title: 'Proposal',
+            status: 'SUBMITTED',
+          },
+        ],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+      });
+
+    expect(listType).toBe('OTHER');
   });
 
   it('uploads proposal documents as multipart form data', () => {

@@ -40,7 +40,7 @@ import {
 function normalizeProposalType<T extends ProposalSummary>(p: T): T {
   if (p.type) return p;
   const useType = p.intendedUse?.useType;
-  return useType ? { ...p, type: useType } : p;
+  return { ...p, type: useType ?? 'OTHER' };
 }
 
 export const PROPOSAL_API_SERVICE = new InjectionToken<ProposalApiService>('PROPOSAL_API_SERVICE');

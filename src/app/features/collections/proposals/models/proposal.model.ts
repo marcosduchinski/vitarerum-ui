@@ -117,14 +117,14 @@ export interface CreateProposalRequestObject {
 }
 
 export interface CreateProposalRequest {
-  readonly title: string;
-  readonly intendedUse: IntendedUse;
-  readonly purpose: string;
-  readonly beginDate: string;
-  readonly endDate: string;
+  readonly title?: string | null;
+  readonly intendedUse?: IntendedUse | null;
+  readonly purpose?: string | null;
+  readonly beginDate?: string | null;
+  readonly endDate?: string | null;
   // Conversation seed (Business Rule 01 — every proposal opens with an email).
-  // All optional: recipient defaults to collections@…, subject falls back to title,
-  // body falls back to purpose.
+  // Proposal detail fields are optional during submission; the opening message
+  // carries the researcher's first-contact request.
   readonly initialMessageRecipient?: string;
   readonly initialMessageSubject?: string;
   readonly initialMessageBody?: string;

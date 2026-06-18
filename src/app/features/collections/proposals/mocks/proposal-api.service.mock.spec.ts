@@ -348,6 +348,36 @@ describe('ProposalApiServiceMock', () => {
     });
   });
 
+  it('creates proposals from opening message fields without proposal details', async () => {
+    const created = await firstValueFrom(
+      service.createProposal({
+        initialMessageRecipient: 'collections@vitarerum.example.com',
+        initialMessageSubject: 'Archive access request',
+        initialMessageBody: 'I would like to discuss access to archive materials.',
+      }),
+    );
+
+    const detail = await firstValueFrom(service.getProposal(created.proposal.id));
+    const conversation = await firstValueFrom(service.getConversation(created.proposal.id));
+
+    expect(detail).toMatchObject({
+      title: 'Archive access request',
+      type: 'OTHER',
+      intendedUse: {
+        useType: 'OTHER',
+        description: 'I would like to discuss access to archive materials.',
+      },
+    });
+    expect(detail.beginDate).toBeUndefined();
+    expect(detail.endDate).toBeUndefined();
+    expect(conversation.messages).toHaveLength(1);
+    expect(conversation.messages[0]).toMatchObject({
+      recipient: 'collections@vitarerum.example.com',
+      subject: 'Archive access request',
+      body: 'I would like to discuss access to archive materials.',
+    });
+  });
+
   it('falls back to title/purpose when initialMessage fields are omitted', async () => {
     const created = await firstValueFrom(
       service.createProposal({
