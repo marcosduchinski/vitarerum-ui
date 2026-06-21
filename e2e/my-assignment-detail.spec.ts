@@ -3,7 +3,7 @@ import { expect, Page, test } from '@playwright/test';
 async function loginAs(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(email);
-  await page.getByLabel('Password').fill('any');
+  await page.getByLabel('Password').fill('vita2026');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL('**/p/dashboard');
 }

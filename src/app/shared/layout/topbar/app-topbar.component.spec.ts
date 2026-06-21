@@ -35,7 +35,7 @@ describe('AppTopbarComponent role switcher', () => {
   });
 
   it('shows the switcher only for multi-group accounts', async () => {
-    await identity.signIn({ email: 'bob@collections.example.com', password: 'x' });
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'vita2026' });
     const fixture = TestBed.createComponent(AppTopbarComponent);
     fixture.detectChanges();
 
@@ -45,7 +45,7 @@ describe('AppTopbarComponent role switcher', () => {
   });
 
   it('switches the active group and permission when a new option is selected', async () => {
-    await identity.signIn({ email: 'fran@staff.example.com', password: 'x' });
+    await identity.signIn({ email: 'fran@staff.example.com', password: 'vita2026' });
 
     const fixture = TestBed.createComponent(AppTopbarComponent);
     fixture.detectChanges();

@@ -2,7 +2,7 @@ import { IdentityServiceMock } from './identity.service.mock';
 import { clearSession } from './session-storage.util';
 
 function signIn(service: IdentityServiceMock, email: string): Promise<void> {
-  return service.signIn({ email, password: 'pw' });
+  return service.signIn({ email, password: 'vita2026' });
 }
 
 describe('IdentityServiceMock', () => {
@@ -31,6 +31,23 @@ describe('IdentityServiceMock', () => {
 
     expect(service.isAuthenticated()).toBe(false);
     expect(service.session()).toBeNull();
+  });
+
+  it('rejects an invalid password without changing the session', async () => {
+    const service = new IdentityServiceMock();
+
+    await expect(
+      service.signIn({ email: 'alice@ext.example.com', password: 'incorrect' }),
+    ).rejects.toThrow('Invalid mock credentials');
+    expect(service.session()).toBeNull();
+
+    await signIn(service, 'alice@ext.example.com');
+    const existingSession = service.session();
+
+    await expect(
+      service.signIn({ email: 'bob@collections.example.com', password: 'incorrect' }),
+    ).rejects.toThrow('Invalid mock credentials');
+    expect(service.session()).toEqual(existingSession);
   });
 
   it('sets the correct group and name for known mock accounts', async () => {

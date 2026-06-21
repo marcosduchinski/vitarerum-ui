@@ -23,13 +23,13 @@ describe('staffGuard', () => {
     TestBed.runInInjectionContext(() => staffGuard({} as Route, [] as UrlSegment[]));
 
   it('allows users whose active group is a staff group', async () => {
-    await identity.signIn({ email: 'bob@collections.example.com', password: 'pw' });
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'vita2026' });
 
     expect(runGuard()).toBe(true);
   });
 
   it('redirects external users to their proposals home', async () => {
-    await identity.signIn({ email: 'alice@ext.example.com', password: 'pw' });
+    await identity.signIn({ email: 'alice@ext.example.com', password: 'vita2026' });
 
     const result = runGuard();
 

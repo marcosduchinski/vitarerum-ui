@@ -35,7 +35,7 @@ describe('identity guards', () => {
   });
 
   it('allows authenticated users into protected routes', async () => {
-    await identity.signIn({ email: 'learner@example.com', password: 'pw' });
+    await identity.signIn({ email: 'learner@example.com', password: 'vita2026' });
 
     const result = TestBed.runInInjectionContext(() =>
       authGuard({} as ActivatedRouteSnapshot, { url: '/p/dashboard' } as RouterStateSnapshot),
@@ -45,7 +45,7 @@ describe('identity guards', () => {
   });
 
   it('redirects authenticated users away from login', async () => {
-    await identity.signIn({ email: 'learner@example.com', password: 'pw' });
+    await identity.signIn({ email: 'learner@example.com', password: 'vita2026' });
 
     const result = TestBed.runInInjectionContext(() =>
       unauthenticatedGuard({} as ActivatedRouteSnapshot, { url: '/login' } as RouterStateSnapshot),

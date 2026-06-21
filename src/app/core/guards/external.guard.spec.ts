@@ -23,13 +23,13 @@ describe('externalGuard', () => {
     TestBed.runInInjectionContext(() => externalGuard({} as Route, [] as UrlSegment[]));
 
   it('allows external researchers', async () => {
-    await identity.signIn({ email: 'alice@ext.example.com', password: 'pw' });
+    await identity.signIn({ email: 'alice@ext.example.com', password: 'vita2026' });
 
     expect(runGuard()).toBe(true);
   });
 
   it('redirects staff users to the staff proposals landing page', async () => {
-    await identity.signIn({ email: 'bob@collections.example.com', password: 'pw' });
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'vita2026' });
 
     const result = runGuard();
 

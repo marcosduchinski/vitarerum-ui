@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 async function loginAs(page: import('@playwright/test').Page, email: string) {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(email);
-  await page.getByLabel('Password').fill('any');
+  await page.getByLabel('Password').fill('vita2026');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL('**/p/dashboard');
 }
@@ -45,7 +45,9 @@ test('COLLECTIONS_MANAGEMENT user sees expandable collection-use section', async
   await expect(sidebar(page).getByRole('link', { name: 'Completed / closed' })).toBeVisible();
 });
 
-test('DIRECTION user sees proposal terminal queues without administration links', async ({ page }) => {
+test('DIRECTION user sees proposal terminal queues without administration links', async ({
+  page,
+}) => {
   await loginAs(page, 'dan@direction.example.com');
   await page.screenshot({ path: '/tmp/nav-direction.png', fullPage: true });
 
@@ -73,7 +75,10 @@ test('SYS_ADMIN user can reach users and groups from the sidebar', async ({ page
 
 test('Dashboard link carries aria-current=page', async ({ page }) => {
   await loginAs(page, 'alice@ext.example.com');
-  await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
 });
 
 test('mobile 375px: hamburger toggles sidebar overlay', async ({ page }) => {
@@ -99,7 +104,9 @@ test('keyboard: Tab from page body reaches focusable topbar elements', async ({ 
   await expect(focused).toBeVisible();
 });
 
-test('multi-group user sees only their 3 groups in the switcher and can switch between them', async ({ page }) => {
+test('multi-group user sees only their 3 groups in the switcher and can switch between them', async ({
+  page,
+}) => {
   await loginAs(page, 'fran@staff.example.com');
   await page.screenshot({ path: '/tmp/nav-fran-initial.png', fullPage: true });
 
@@ -136,9 +143,14 @@ test('approved proposal action menu can navigate to the related project', async 
   await expect(page).toHaveURL(/\/p\/collections\/proposals\/approved$/);
   await expect(page.getByRole('heading', { name: 'Approved', exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: /More actions for/ }).first().click();
+  await page
+    .getByRole('button', { name: /More actions for/ })
+    .first()
+    .click();
   await page.getByRole('menuitem', { name: 'Go to project', exact: true }).click();
 
-  await expect(page).toHaveURL(/\/p\/collections\/projects\/.+returnTo=%2Fp%2Fcollections%2Fproposals%2Fapproved/);
+  await expect(page).toHaveURL(
+    /\/p\/collections\/projects\/.+returnTo=%2Fp%2Fcollections%2Fproposals%2Fapproved/,
+  );
   await expect(page.getByRole('link', { name: /Back to approved proposals/ })).toBeVisible();
 });

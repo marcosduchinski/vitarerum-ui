@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 async function loginAsStaff(page: import('@playwright/test').Page) {
   await page.goto('/login');
   await page.getByLabel('Email address').fill('eve@admin.example.com');
-  await page.getByLabel('Password').fill('any');
+  await page.getByLabel('Password').fill('vita2026');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL('**/p/dashboard');
   await page.getByRole('link', { name: 'Users' }).click();
@@ -19,7 +19,9 @@ test('user list loads and displays users', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
   await expect(table(page).locator('tbody tr')).not.toHaveCount(0);
   await expect(table(page).getByText('Alice Ferreira')).toBeVisible();
-  await expect(table(page).locator('.group-badge', { hasText: 'External researcher' }).first()).toBeVisible();
+  await expect(
+    table(page).locator('.group-badge', { hasText: 'External researcher' }).first(),
+  ).toBeVisible();
 });
 
 test('user search filters results', async ({ page }) => {
@@ -65,11 +67,15 @@ test('revokes a group and it disappears from memberships', async ({ page }) => {
   await page.waitForURL('**/p/admin/users/u-bob');
 
   await page.getByRole('button', { name: 'Revoke Collections management' }).click();
-  await expect(page.getByRole('heading', { name: /Remove from Collections management/ })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /Remove from Collections management/ }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Remove' }).click();
   await page.screenshot({ path: '/tmp/admin-after-revoke.png', fullPage: true });
 
-  await expect(page.locator('.group-badge', { hasText: 'Collections management' })).not.toBeVisible();
+  await expect(
+    page.locator('.group-badge', { hasText: 'Collections management' }),
+  ).not.toBeVisible();
   await expect(page.getByText('This user has no group memberships.')).toBeVisible();
 });
 

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 async function loginAsStaff(page: import('@playwright/test').Page) {
   await page.goto('/login');
   await page.getByLabel('Email address').fill('eve@admin.example.com');
-  await page.getByLabel('Password').fill('any');
+  await page.getByLabel('Password').fill('vita2026');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL('**/p/dashboard');
   await page.getByRole('link', { name: 'Groups' }).click();
@@ -16,8 +16,12 @@ test('groups page shows all four institutional groups', async ({ page }) => {
 
   const grid = page.locator('.groups-grid');
   await expect(page.getByRole('heading', { name: 'Groups' })).toBeVisible();
-  await expect(grid.locator('.group-card__name', { hasText: 'External researchers' })).toBeVisible();
-  await expect(grid.locator('.group-card__name', { hasText: 'Collections management' })).toBeVisible();
+  await expect(
+    grid.locator('.group-card__name', { hasText: 'External researchers' }),
+  ).toBeVisible();
+  await expect(
+    grid.locator('.group-card__name', { hasText: 'Collections management' }),
+  ).toBeVisible();
   await expect(grid.locator('.group-card__name', { hasText: 'Curatorial' })).toBeVisible();
   await expect(grid.locator('.group-card__name', { hasText: 'Direction' })).toBeVisible();
 });

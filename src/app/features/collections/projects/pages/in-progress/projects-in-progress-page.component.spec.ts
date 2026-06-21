@@ -81,7 +81,7 @@ describe('ProjectsInProgressPageComponent', () => {
 
     await TestBed.inject(IDENTITY_SERVICE).signIn({
       email: 'bob@collections.example.com',
-      password: 'password',
+      password: 'vita2026',
     });
   });
 

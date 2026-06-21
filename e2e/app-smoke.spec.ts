@@ -13,7 +13,15 @@ test('signs in, shows dashboard, and handles unknown routes', async ({ page }) =
   await expect(page.getByText('Password is required')).toBeVisible();
 
   await page.getByLabel('Email address').fill('learner@example.com');
-  await page.getByLabel('Password').fill('any');
+  await page.getByLabel('Password').fill('incorrect');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(
+    page.getByText('Authentication failed. Please check your credentials.'),
+  ).toBeVisible();
+
+  await page.getByLabel('Password').fill('vita2026');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page).toHaveURL(/\/p\/dashboard$/);

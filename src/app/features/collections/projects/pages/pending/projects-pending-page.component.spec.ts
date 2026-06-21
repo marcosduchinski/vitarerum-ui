@@ -248,7 +248,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('starts a pending project and reloads the list', async () => {
-    await identity.signIn({ email: 'alice@ext.example.com', password: 'pw' });
+    await identity.signIn({ email: 'alice@ext.example.com', password: 'vita2026' });
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -267,7 +267,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('hides Start from staff users', async () => {
-    await identity.signIn({ email: 'bob@collections.example.com', password: 'pw' });
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'vita2026' });
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -293,7 +293,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('navigates collections staff to the collections project detail route', async () => {
-    await identity.signIn({ email: 'bob@collections.example.com', password: 'pw' });
+    await identity.signIn({ email: 'bob@collections.example.com', password: 'vita2026' });
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
@@ -317,7 +317,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('navigates curatorial staff to the curatorial project detail route', async () => {
-    await identity.signIn({ email: 'carol@curatorial.example.com', password: 'pw' });
+    await identity.signIn({ email: 'carol@curatorial.example.com', password: 'vita2026' });
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();
@@ -341,7 +341,7 @@ describe('ProjectsPendingPageComponent', () => {
   });
 
   it('navigates direction staff to the direction project detail route', async () => {
-    await identity.signIn({ email: 'dan@direction.example.com', password: 'pw' });
+    await identity.signIn({ email: 'dan@direction.example.com', password: 'vita2026' });
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ProjectsPendingPageComponent);
     fixture.detectChanges();

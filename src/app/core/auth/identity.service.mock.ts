@@ -4,7 +4,10 @@ import { IdentityService } from './identity.service';
 import { GroupName } from './models/group-name.enum';
 import { IdentitySession, SessionPermission } from './models/identity-session.model';
 import { LoginRequest } from './models/login.model';
+import { md5 } from './mock-password.util';
 import { clearSession, readSession, writeSession } from './session-storage.util';
+
+const MOCK_PASSWORD_DIGEST = '8b2c0b896b3a84c678d505cb1c6c5615';
 
 interface MockAccount {
   readonly id: string;
@@ -29,7 +32,8 @@ const MOCK_PERMISSION_IDS_BY_USER_ID: Record<string, Partial<Record<GroupName, s
 
 function mockPermissions(accountId: string, groups: readonly GroupName[]): SessionPermission[] {
   return groups.map((group) => ({
-    permissionId: MOCK_PERMISSION_IDS_BY_USER_ID[accountId]?.[group] ?? `perm-${accountId}-${group}`,
+    permissionId:
+      MOCK_PERMISSION_IDS_BY_USER_ID[accountId]?.[group] ?? `perm-${accountId}-${group}`,
     group,
   }));
 }
@@ -76,8 +80,11 @@ export class IdentityServiceMock implements IdentityService {
     return group != null && group !== 'EXTERNAL';
   });
 
-  // Password is ignored in the mock; identity is selected purely by email.
   async signIn(credentials: LoginRequest): Promise<void> {
+    if (md5(credentials.password) !== MOCK_PASSWORD_DIGEST) {
+      throw new Error('Invalid mock credentials');
+    }
+
     const { email } = credentials;
     const account = MOCK_ACCOUNTS[email] ?? UNKNOWN_ACCOUNT;
     const availableGroups = account.groups;
