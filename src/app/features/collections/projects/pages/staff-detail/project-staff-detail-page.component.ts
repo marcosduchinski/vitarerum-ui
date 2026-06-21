@@ -92,7 +92,6 @@ export class ProjectStaffDetailPageComponent {
 
   protected readonly backLink = computed(() => safeReturnTo(this.returnTo()));
   protected readonly backLabel = computed(() => `Back to ${safeReturnLabel(this.returnLabel())}`);
-  protected readonly taskEyebrow = computed(() => `${this.sectionLabel()} task`);
   protected readonly cancelReason = computed(
     () => `Cancelled from ${this.sectionLabel().toLowerCase()} project detail.`,
   );
@@ -132,6 +131,25 @@ export class ProjectStaffDetailPageComponent {
   protected readonly logRouteSegment = computed(() => {
     const type = this.project()?.type;
     return type ? LOG_ROUTE_SEGMENTS[type] : 'research';
+  });
+
+  protected readonly isCancelled = computed(() => this.project()?.status === 'CANCELLED');
+
+  // Drives the lifecycle rail at the top of the Actions panel. Cancelled is a
+  // terminal off-shoot, so it leaves every forward step un-reached.
+  protected readonly lifecycle = computed(() => {
+    const status = this.project()?.status ?? 'CREATED';
+    const steps = [
+      { key: 'CREATED', label: 'Created' },
+      { key: 'IN_PROGRESS', label: 'In progress' },
+      { key: 'COMPLETED', label: 'Completed' },
+    ] as const;
+    const currentIndex = this.isCancelled() ? -1 : steps.findIndex((s) => s.key === status);
+    return steps.map((step, index) => ({
+      label: step.label,
+      done: currentIndex > index,
+      current: currentIndex === index,
+    }));
   });
 
   protected readonly activePanel = signal<StaffProjectPanel>('overview');

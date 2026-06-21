@@ -43,37 +43,3 @@
   display: grid;
   gap: 1.5rem;
 }
-
-.task-card {
-  display: grid;
-  gap: 1rem;
-  align-items: center;
-
-  @media (min-width: 720px) {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-}
-
-.task-card__content {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.task-card__eyebrow {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0;
-}
-
-.task-card__description,
-.task-card__status {
-  margin: 0;
-  color: var(--color-subtle);
-}
-
-.task-card__status {
-  font-size: 0.9rem;
-}

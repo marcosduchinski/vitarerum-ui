@@ -174,161 +174,232 @@
       @case ('tasks') {
         <section
           id="tasks-panel"
-          class="project-detail__panel"
+          class="project-detail__panel actions-panel"
           role="tabpanel"
           aria-labelledby="tasks-tab"
         >
-          @if (canStart()) {
-            <section class="detail-card task-card" aria-labelledby="start-project-task-heading">
-              <div class="task-card__content">
-                <p class="task-card__eyebrow">Project task</p>
-                <h2 id="start-project-task-heading" class="detail-card__title">Start project</h2>
-                <p class="task-card__description">
-                  Move this project to in progress so log and completion tasks become available.
+          <ol
+            class="lifecycle"
+            [class.lifecycle--cancelled]="isCancelled()"
+            aria-label="Project lifecycle"
+          >
+            @for (step of lifecycle(); track step.label) {
+              <li
+                class="lifecycle__step"
+                [class.lifecycle__step--done]="step.done"
+                [class.lifecycle__step--current]="step.current"
+                [attr.aria-current]="step.current ? 'step' : null"
+              >
+                <span class="lifecycle__marker" aria-hidden="true">
+                  @if (step.done) {
+                    <span class="pi pi-check"></span>
+                  }
+                </span>
+                <span class="lifecycle__label">{{ step.label }}</span>
+              </li>
+            }
+            @if (isCancelled()) {
+              <li class="lifecycle__step lifecycle__step--cancelled" aria-current="step">
+                <span class="lifecycle__marker" aria-hidden="true">
+                  <span class="pi pi-times"></span>
+                </span>
+                <span class="lifecycle__label">Cancelled</span>
+              </li>
+            }
+          </ol>
+
+          <div class="action-group" aria-labelledby="lifecycle-group-title">
+            <p id="lifecycle-group-title" class="action-group__title">Lifecycle</p>
+
+            @if (canStart()) {
+              <div class="task-row" aria-labelledby="start-project-task-heading">
+                <span class="task-row__icon task-row__icon--accent" aria-hidden="true">
+                  <span class="pi pi-play"></span>
+                </span>
+                <div class="task-row__body">
+                  <h3 id="start-project-task-heading" class="task-row__title">Start project</h3>
+                  <p class="task-row__desc">
+                    Move this project to in progress so log and completion tasks become available.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="action-btn action-btn--primary task-row__control"
+                  [disabled]="acting()"
+                  (click)="openStartConfirm()"
+                >
+                  {{ acting() ? 'Starting...' : 'Start project' }}
+                </button>
+              </div>
+            }
+
+            <div
+              class="task-row"
+              [class.task-row--locked]="!canComplete()"
+              aria-labelledby="complete-project-task-heading"
+            >
+              <span class="task-row__icon task-row__icon--accent" aria-hidden="true">
+                <span class="pi pi-check-circle"></span>
+              </span>
+              <div class="task-row__body">
+                <h3 id="complete-project-task-heading" class="task-row__title">Complete project</h3>
+                <p class="task-row__desc">
+                  Finish this project and move it to completed projects.
                 </p>
+                @if (!canComplete()) {
+                  <p class="task-row__status">
+                    <span class="pi pi-lock" aria-hidden="true"></span>
+                    This task is available once the project is in progress.
+                  </p>
+                }
               </div>
               <button
                 type="button"
-                class="action-btn action-btn--primary"
-                [disabled]="acting()"
-                (click)="openStartConfirm()"
+                class="action-btn action-btn--primary task-row__control"
+                [disabled]="acting() || !canComplete()"
+                (click)="openCompleteConfirm()"
               >
-                <span class="pi pi-play" aria-hidden="true"></span>
-                {{ acting() ? 'Starting...' : 'Start project' }}
+                {{ acting() ? 'Completing...' : 'Complete project' }}
               </button>
-            </section>
-          }
+            </div>
+          </div>
 
-          <section class="detail-card task-card" aria-labelledby="complete-project-task-heading">
-            <div class="task-card__content">
-              <p class="task-card__eyebrow">Project task</p>
-              <h2 id="complete-project-task-heading" class="detail-card__title">
-                Complete project
-              </h2>
-              <p class="task-card__description">
-                Finish this project and move it to completed projects.
-              </p>
-              @if (!canComplete()) {
-                <p class="task-card__status">
-                  This task is available once the project is in progress.
+          <div class="action-group" aria-labelledby="logs-group-title">
+            <p id="logs-group-title" class="action-group__title">Logs &amp; records</p>
+
+            <div
+              class="task-row task-row--link"
+              [class.task-row--locked]="!canLog()"
+              aria-labelledby="object-access-log-task-heading"
+            >
+              <span class="task-row__icon" aria-hidden="true">
+                <span class="pi pi-file-edit"></span>
+              </span>
+              <div class="task-row__body">
+                <h3 id="object-access-log-task-heading" class="task-row__title">
+                  Object access log
+                </h3>
+                <p class="task-row__desc">Register the objects accessed during this project.</p>
+                @if (!canLog()) {
+                  <p class="task-row__status">
+                    <span class="pi pi-lock" aria-hidden="true"></span>
+                    This task is available once the project is in progress.
+                  </p>
+                }
+              </div>
+              <a
+                class="task-row__cta"
+                [class.task-row__cta--disabled]="!canLog()"
+                [attr.aria-disabled]="!canLog()"
+                [routerLink]="canLog() ? ['/p/collections/projects', id(), 'log', logRoute()] : null"
+              >
+                <span class="task-row__cta-text">Open access log</span>
+                <span class="pi pi-arrow-right" aria-hidden="true"></span>
+              </a>
+            </div>
+
+            <div
+              class="task-row task-row--link"
+              [class.task-row--locked]="!canLog()"
+              aria-labelledby="object-occurrence-log-task-heading"
+            >
+              <span class="task-row__icon" aria-hidden="true">
+                <span class="pi pi-clipboard"></span>
+              </span>
+              <div class="task-row__body">
+                <h3 id="object-occurrence-log-task-heading" class="task-row__title">
+                  Object occurrence log
+                </h3>
+                <p class="task-row__desc">
+                  Report occurrences connected to objects accessed during this project.
                 </p>
-              }
+                @if (!canLog()) {
+                  <p class="task-row__status">
+                    <span class="pi pi-lock" aria-hidden="true"></span>
+                    This task is available once the project is in progress.
+                  </p>
+                }
+              </div>
+              <a
+                class="task-row__cta"
+                [class.task-row__cta--disabled]="!canLog()"
+                [attr.aria-disabled]="!canLog()"
+                [routerLink]="
+                  canLog() ? ['/p/collections/projects', id(), 'occurrences', logRoute()] : null
+                "
+              >
+                <span class="task-row__cta-text">Open occurrence log</span>
+                <span class="pi pi-arrow-right" aria-hidden="true"></span>
+              </a>
             </div>
-            <button
-              type="button"
-              class="action-btn action-btn--primary"
-              [disabled]="acting() || !canComplete()"
-              (click)="openCompleteConfirm()"
-            >
-              <span class="pi pi-check-circle" aria-hidden="true"></span>
-              {{ acting() ? 'Completing...' : 'Complete project' }}
-            </button>
-          </section>
 
-          <section class="detail-card task-card" aria-labelledby="object-access-log-task-heading">
-            <div class="task-card__content">
-              <p class="task-card__eyebrow">Project task</p>
-              <h2 id="object-access-log-task-heading" class="detail-card__title">
-                Object access log
-              </h2>
-              <p class="task-card__description">
-                Register the objects accessed during this project.
-              </p>
-              @if (!canLog()) {
-                <p class="task-card__status">
-                  This task is available once the project is in progress.
+            <div
+              class="task-row task-row--link"
+              [class.task-row--locked]="!canOpenPublication()"
+              aria-labelledby="publication-log-task-heading"
+            >
+              <span class="task-row__icon" aria-hidden="true">
+                <span class="pi pi-book"></span>
+              </span>
+              <div class="task-row__body">
+                <h3 id="publication-log-task-heading" class="task-row__title">Publication log</h3>
+                <p class="task-row__desc">
+                  Record publications and outputs derived from this project.
                 </p>
-              }
+                @if (!canOpenPublication()) {
+                  <p class="task-row__status">
+                    <span class="pi pi-lock" aria-hidden="true"></span>
+                    This task is available once the project is in progress.
+                  </p>
+                }
+              </div>
+              <a
+                class="task-row__cta"
+                [class.task-row__cta--disabled]="!canOpenPublication()"
+                [attr.aria-disabled]="!canOpenPublication()"
+                [routerLink]="
+                  canOpenPublication() ? ['/p/collections/projects', id(), 'publications'] : null
+                "
+              >
+                <span class="task-row__cta-text">Open publication log</span>
+                <span class="pi pi-arrow-right" aria-hidden="true"></span>
+              </a>
             </div>
-            <a
-              class="action-btn action-btn--primary"
-              [class.action-btn--disabled]="!canLog()"
-              [attr.aria-disabled]="!canLog()"
-              [routerLink]="canLog() ? ['/p/collections/projects', id(), 'log', logRoute()] : null"
-            >
-              <span class="pi pi-file-edit" aria-hidden="true"></span>
-              Open access log
-            </a>
-          </section>
+          </div>
 
-          <section
-            class="detail-card task-card"
-            aria-labelledby="object-occurrence-log-task-heading"
-          >
-            <div class="task-card__content">
-              <p class="task-card__eyebrow">Project task</p>
-              <h2 id="object-occurrence-log-task-heading" class="detail-card__title">
-                Object occurrence log
-              </h2>
-              <p class="task-card__description">
-                Report occurrences connected to objects accessed during this project.
-              </p>
-              @if (!canLog()) {
-                <p class="task-card__status">
-                  This task is available once the project is in progress.
-                </p>
-              }
-            </div>
-            <a
-              class="action-btn action-btn--primary"
-              [class.action-btn--disabled]="!canLog()"
-              [attr.aria-disabled]="!canLog()"
-              [routerLink]="
-                canLog() ? ['/p/collections/projects', id(), 'occurrences', logRoute()] : null
-              "
-            >
-              <span class="pi pi-clipboard" aria-hidden="true"></span>
-              Open occurrence log
-            </a>
-          </section>
+          <div class="action-group action-group--danger" aria-labelledby="danger-group-title">
+            <p id="danger-group-title" class="action-group__title action-group__title--danger">
+              Danger zone
+            </p>
 
-          <section class="detail-card task-card" aria-labelledby="publication-log-task-heading">
-            <div class="task-card__content">
-              <p class="task-card__eyebrow">Project task</p>
-              <h2 id="publication-log-task-heading" class="detail-card__title">Publication log</h2>
-              <p class="task-card__description">
-                Record publications and outputs derived from this project.
-              </p>
-              @if (!canOpenPublication()) {
-                <p class="task-card__status">
-                  This task is available once the project is in progress.
-                </p>
-              }
-            </div>
-            <a
-              class="action-btn action-btn--primary"
-              [class.action-btn--disabled]="!canOpenPublication()"
-              [attr.aria-disabled]="!canOpenPublication()"
-              [routerLink]="
-                canOpenPublication() ? ['/p/collections/projects', id(), 'publications'] : null
-              "
+            <div
+              class="task-row task-row--danger"
+              [class.task-row--locked]="!canCancel()"
+              aria-labelledby="cancel-project-task-heading"
             >
-              <span class="pi pi-book" aria-hidden="true"></span>
-              Open publication log
-            </a>
-          </section>
-
-          <section class="detail-card task-card" aria-labelledby="cancel-project-task-heading">
-            <div class="task-card__content">
-              <p class="task-card__eyebrow">Project task</p>
-              <h2 id="cancel-project-task-heading" class="detail-card__title">Cancel project</h2>
-              <p class="task-card__description">
-                Stop this project and move it to cancelled projects.
-              </p>
-              @if (!canCancel()) {
-                <p class="task-card__status">This task is unavailable for the current status.</p>
-              }
+              <span class="task-row__icon task-row__icon--danger" aria-hidden="true">
+                <span class="pi pi-times-circle"></span>
+              </span>
+              <div class="task-row__body">
+                <h3 id="cancel-project-task-heading" class="task-row__title">Cancel project</h3>
+                <p class="task-row__desc">Stop this project and move it to cancelled projects.</p>
+                @if (!canCancel()) {
+                  <p class="task-row__status">
+                    <span class="pi pi-lock" aria-hidden="true"></span>
+                    This task is unavailable for the current status.
+                  </p>
+                }
+              </div>
+              <button
+                type="button"
+                class="action-btn action-btn--danger task-row__control"
+                [disabled]="acting() || !canCancel()"
+                (click)="openCancelConfirm()"
+              >
+                {{ acting() ? 'Cancelling...' : 'Cancel project' }}
+              </button>
             </div>
-            <button
-              type="button"
-              class="action-btn action-btn--danger"
-              [disabled]="acting() || !canCancel()"
-              (click)="openCancelConfirm()"
-            >
-              <span class="pi pi-times-circle" aria-hidden="true"></span>
-              {{ acting() ? 'Cancelling...' : 'Cancel project' }}
-            </button>
-          </section>
+          </div>
         </section>
       }
     }
