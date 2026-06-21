@@ -114,23 +114,12 @@
                   <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
                   <td>
                     <div class="proposals-table__actions">
-                      <button
-                        type="button"
-                        class="action-btn action-btn--icon"
-                        [class.action-btn--active]="
-                          actionsMenuContext()?.proposalId === proposal.id
+                      <app-row-actions
+                        [items]="
+                          actionItemsFor(proposal.id, proposal.collectionUseProject?.id ?? null)
                         "
-                        aria-haspopup="menu"
-                        (click)="
-                          toggleActionsMenu(proposal.id, proposal.collectionUseProject?.id ?? null);
-                          rowActionsMenu.toggle($event)
-                        "
-                        aria-label="More actions for {{
-                          proposal.referenceNumber
-                        }}"
-                      >
-                        <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
-                      </button>
+                        ariaLabel="More actions for {{ proposal.referenceNumber }}"
+                      />
                     </div>
                   </td>
                 </tr>
@@ -206,12 +195,5 @@
         }
       }
     </section>
-    <p-menu
-      #rowActionsMenu
-      [model]="rowActionItems()"
-      [popup]="true"
-      [appendTo]="'body'"
-      (onHide)="closeActionsMenu()"
-    />
   }
 </div>

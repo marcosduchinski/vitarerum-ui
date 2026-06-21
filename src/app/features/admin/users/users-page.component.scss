@@ -84,15 +84,8 @@ h2 {
   color: var(--color-subtle);
 }
 
-.users-table__view-link {
-  color: var(--color-accent);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.users-table__view-link:hover {
-  text-decoration: underline;
+.users-table__actions {
+  text-align: right;
 }
 
 .group-badge {

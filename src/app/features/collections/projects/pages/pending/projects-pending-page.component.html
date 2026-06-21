@@ -117,29 +117,15 @@
                   {{ actionProjectId() === project.id ? 'Starting...' : 'Start' }}
                 </button>
               }
-              <button
-                type="button"
-                class="action-btn action-btn--icon"
-                [class.action-btn--active]="actionsMenuId() === project.id"
+              <app-row-actions
+                [items]="actionItemsFor(project)"
                 [disabled]="actionProjectId() === project.id"
-                aria-haspopup="menu"
-                (click)="toggleActionsMenu(project.id); cardActionsMenu.toggle($event)"
-                aria-label="More actions for {{ project.referenceNumber }}"
-              >
-                <span class="pi pi-ellipsis-v" aria-hidden="true"></span>
-              </button>
+                ariaLabel="More actions for {{ project.referenceNumber }}"
+              />
             </footer>
           </article>
         }
       </section>
-
-      <p-menu
-        #cardActionsMenu
-        [model]="cardActionItems()"
-        [popup]="true"
-        [appendTo]="'body'"
-        (onHide)="closeActionsMenu()"
-      />
 
       @for (project of projects(); track project.id) {
         <app-confirm-modal

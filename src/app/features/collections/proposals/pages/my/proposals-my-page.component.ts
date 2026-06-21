@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -19,6 +18,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 import { ProposalStatus } from '@shared/models/collection-use-status.model';
@@ -42,7 +42,7 @@ function emptyProposalPage(page: number, size: number): Page<ProposalSummary> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    Menu,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -124,16 +124,7 @@ export class ProposalsMyPageComponent {
 
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
-  protected readonly actionsMenuId = signal<string | null>(null);
-  protected readonly actionsMenuProposal = computed<ProposalSummary | null>(() => {
-    const proposalId = this.actionsMenuId();
-    if (!proposalId) return null;
-    return this.proposals().find((proposal) => proposal.id === proposalId) ?? null;
-  });
-  protected readonly rowActionItems = computed<MenuItem[]>(() => {
-    const proposal = this.actionsMenuProposal();
-    if (!proposal) return [];
-
+  protected actionItemsFor(proposal: ProposalSummary): MenuItem[] {
     const items: MenuItem[] = [
       {
         label: 'Details',
@@ -159,7 +150,7 @@ export class ProposalsMyPageComponent {
     }
 
     return items;
-  });
+  }
 
   protected readonly cancelModalOpen = signal(false);
   protected readonly cancelTarget = signal<ProposalSummary | null>(null);
@@ -201,14 +192,6 @@ export class ProposalsMyPageComponent {
     this.searchDraft.set('');
     this.appliedSearch.set('');
     this.currentPage.set(0);
-  }
-
-  protected toggleActionsMenu(proposalId: string): void {
-    this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
-  }
-
-  protected closeActionsMenu(): void {
-    this.actionsMenuId.set(null);
   }
 
   protected openCancelModal(proposal: ProposalSummary): void {

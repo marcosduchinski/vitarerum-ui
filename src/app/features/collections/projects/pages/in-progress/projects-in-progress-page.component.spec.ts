@@ -1,6 +1,6 @@
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { IdentityServiceMock } from '@core/auth/identity.service.mock';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
@@ -66,6 +66,7 @@ class ProjectApiServiceStub {
 
 describe('ProjectsInProgressPageComponent', () => {
   let projectService: ProjectApiServiceStub;
+  let router: Router;
 
   beforeEach(async () => {
     projectService = new ProjectApiServiceStub();
@@ -79,10 +80,16 @@ describe('ProjectsInProgressPageComponent', () => {
       ],
     }).compileComponents();
 
+    router = TestBed.inject(Router);
+
     await TestBed.inject(IDENTITY_SERVICE).signIn({
       email: 'bob@collections.example.com',
       password: 'vita2026',
     });
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
   it('loads in-progress projects only', async () => {
@@ -98,7 +105,7 @@ describe('ProjectsInProgressPageComponent', () => {
     });
   });
 
-  it('renders the in progress table with project information and view links', async () => {
+  it('renders the in progress table with project information', async () => {
     const fixture = TestBed.createComponent(ProjectsInProgressPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -106,9 +113,6 @@ describe('ProjectsInProgressPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const text = compiled.textContent ?? '';
-    const detailLink = compiled.querySelector<HTMLAnchorElement>(
-      'a[aria-label="Detail VR-2026-061"]',
-    );
 
     expect(text).toContain('Reference');
     expect(text).toContain('Assigned staff');
@@ -118,9 +122,35 @@ describe('ProjectsInProgressPageComponent', () => {
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('1-20 of 25 projects');
-    expect(detailLink?.getAttribute('href')).toBe(
-      '/p/collections/projects/collections/project-1?returnTo=%2Fp%2Fcollections%2Fprojects%2Fin-progress&returnLabel=in%20progress%20projects',
-    );
+    expect(
+      compiled.querySelector('[aria-label="More actions for VR-2026-061"]'),
+    ).not.toBeNull();
+  });
+
+  it('opens the row menu and navigates to the role-specific detail with return params', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProjectsInProgressPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-061"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const details = Array.from(
+      document.body.querySelectorAll<HTMLElement>('.p-menu a, .p-menu button'),
+    ).find((item) => item.textContent?.trim() === 'Details');
+    details!.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects/collections', 'project-1'], {
+      queryParams: {
+        returnTo: '/p/collections/projects/in-progress',
+        returnLabel: 'in progress projects',
+      },
+    });
   });
 
   it('applies and clears search from the first page', async () => {

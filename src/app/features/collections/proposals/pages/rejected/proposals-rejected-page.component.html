@@ -118,15 +118,10 @@
                   <td class="proposals-table__date">{{ proposal.submittedAt.slice(0, 10) }}</td>
                   <td>
                     <div class="proposals-table__actions">
-                      <a
-                        class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/proposals/rejected', proposal.id]"
-                        aria-label="View details for {{
-                          proposal.referenceNumber
-                        }}"
-                      >
-                        Details
-                      </a>
+                      <app-row-actions
+                        [items]="actionItemsFor(proposal)"
+                        ariaLabel="More actions for {{ proposal.referenceNumber }}"
+                      />
                     </div>
                   </td>
                 </tr>

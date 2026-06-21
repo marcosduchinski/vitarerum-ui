@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -18,6 +17,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
 import { ProposalSummary } from '../../models/proposal.model';
@@ -36,7 +36,7 @@ const ASSIGNMENTS_FETCH_SIZE = 100;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    Menu,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -109,11 +109,8 @@ export class ProposalsOthersPageComponent {
   protected readonly assumingId = signal<string | null>(null);
   protected readonly assumeConfirmProposalId = signal<string | null>(null);
   protected readonly assumeError = signal<ApiError | null>(null);
-  protected readonly actionsMenuId = signal<string | null>(null);
-  protected readonly rowActionItems = computed<MenuItem[]>(() => {
-    const proposalId = this.actionsMenuId();
-
-    if (!proposalId) return [];
+  protected actionItemsFor(proposal: ProposalSummary): MenuItem[] {
+    const proposalId = proposal.id;
 
     return [
       {
@@ -129,7 +126,7 @@ export class ProposalsOthersPageComponent {
         },
       },
     ];
-  });
+  }
 
   private readonly allOtherAssignments = computed(() => this.proposalsResource.value() ?? []);
 
@@ -169,18 +166,8 @@ export class ProposalsOthersPageComponent {
     this.currentPage.set(0);
   }
 
-  protected toggleActionsMenu(proposalId: string): void {
-    this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
-    this.assumeConfirmProposalId.set(null);
-  }
-
-  protected closeActionsMenu(): void {
-    this.actionsMenuId.set(null);
-  }
-
   protected requestAssumeConfirmation(proposalId: string): void {
     if (this.assumingId()) return;
-    this.actionsMenuId.set(null);
     this.assumeConfirmProposalId.set(proposalId);
   }
 
@@ -191,7 +178,6 @@ export class ProposalsOthersPageComponent {
   protected async assume(proposalId: string): Promise<void> {
     if (this.assumingId()) return;
 
-    this.actionsMenuId.set(null);
     this.assumingId.set(proposalId);
     this.assumeError.set(null);
 

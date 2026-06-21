@@ -6,8 +6,9 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { MenuItem } from 'primeng/api';
 import { InputText } from 'primeng/inputtext';
 import { ButtonDirective } from 'primeng/button';
 import { toApiError } from '@core/http/api-error.model';
@@ -18,6 +19,7 @@ import { Page } from '@shared/models/page.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 
 const GROUP_LABELS: Record<GroupName, string> = {
   EXTERNAL: 'External researcher',
@@ -32,13 +34,22 @@ const PAGE_SIZE = 20;
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [RouterLink, InputText, ButtonDirective, ErrorMessageComponent, LoadingStateComponent, EmptyStateComponent],
+  imports: [
+    RouterLink,
+    RowActionsComponent,
+    InputText,
+    ButtonDirective,
+    ErrorMessageComponent,
+    LoadingStateComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: './users-page.component.html',
   styleUrl: './users-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsersPageComponent {
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly searchQuery = signal('');
   protected readonly currentPage = signal(0);
@@ -69,6 +80,18 @@ export class UsersPageComponent {
   );
 
   protected readonly groupLabels = GROUP_LABELS;
+
+  protected actionItemsFor(user: UserDetail): MenuItem[] {
+    return [
+      {
+        label: 'Details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigate(['/p/admin/users', user.id]);
+        },
+      },
+    ];
+  }
 
   protected onSearch(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);

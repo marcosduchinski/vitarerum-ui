@@ -115,17 +115,10 @@
                   </td>
                   <td>
                     <div class="projects-table__actions">
-                      <a
-                        class="action-btn action-btn--primary"
-                        [routerLink]="detailRoute(project.id)"
-                        [queryParams]="{
-                          returnTo: '/p/collections/projects/in-progress',
-                          returnLabel: 'in progress projects',
-                        }"
-                        aria-label="Detail {{ project.referenceNumber }}"
-                      >
-                        Detail
-                      </a>
+                      <app-row-actions
+                        [items]="actionItemsFor(project)"
+                        ariaLabel="More actions for {{ project.referenceNumber }}"
+                      />
                     </div>
                   </td>
                 </tr>

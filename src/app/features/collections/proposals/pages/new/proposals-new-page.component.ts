@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
@@ -21,8 +20,10 @@ import { ErrorMessageComponent } from '@shared/components/error-message/error-me
 import { FeedbackMessageComponent } from '@shared/components/feedback-message/feedback-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
+import { ProposalSummary } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 
 interface ForwardStaffOption {
@@ -47,7 +48,7 @@ const GROUP_LABELS: Record<GroupName, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    Menu,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -118,11 +119,8 @@ export class ProposalsNewPageComponent {
   protected readonly assumingId = signal<string | null>(null);
   protected readonly assumeConfirmProposalId = signal<string | null>(null);
   protected readonly assumeError = signal<ApiError | null>(null);
-  protected readonly actionsMenuId = signal<string | null>(null);
-  protected readonly rowActionItems = computed<MenuItem[]>(() => {
-    const proposalId = this.actionsMenuId();
-
-    if (!proposalId) return [];
+  protected actionItemsFor(proposal: ProposalSummary): MenuItem[] {
+    const proposalId = proposal.id;
 
     return [
       {
@@ -143,7 +141,7 @@ export class ProposalsNewPageComponent {
         },
       },
     ];
-  });
+  }
 
   protected readonly forwardModalProposalId = signal<string | null>(null);
   protected readonly forwardModalProposal = computed(() => {
@@ -208,7 +206,6 @@ export class ProposalsNewPageComponent {
 
   protected async assume(proposalId: string): Promise<void> {
     if (this.assumingId()) return;
-    this.actionsMenuId.set(null);
     this.assumingId.set(proposalId);
     this.assumeError.set(null);
     try {
@@ -225,7 +222,6 @@ export class ProposalsNewPageComponent {
   }
 
   protected openForwardModal(proposalId: string): void {
-    this.actionsMenuId.set(null);
     this.forwardModalProposalId.set(proposalId);
     this.forwardTargetPermissionId.set('');
     this.forwardNote.set('');
@@ -234,15 +230,6 @@ export class ProposalsNewPageComponent {
 
   protected closeForwardModal(): void {
     this.forwardModalProposalId.set(null);
-  }
-
-  protected toggleActionsMenu(proposalId: string): void {
-    this.actionsMenuId.update((current) => (current === proposalId ? null : proposalId));
-    this.forwardModalProposalId.set(null);
-  }
-
-  protected closeActionsMenu(): void {
-    this.actionsMenuId.set(null);
   }
 
   protected onForwardTargetChange(event: Event): void {

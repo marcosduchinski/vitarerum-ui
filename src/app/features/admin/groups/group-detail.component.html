@@ -38,14 +38,11 @@
                   </a>
                 </td>
                 <td class="members-table__email">{{ member.user.email }}</td>
-                <td>
-                  <a
-                    class="members-table__view-link"
-                    [routerLink]="['/p/admin/users', member.user.id]"
-                    aria-label="View user {{ member.user.name }}"
-                  >
-                    Details
-                  </a>
+                <td class="members-table__actions">
+                  <app-row-actions
+                    [items]="actionItemsFor(member.user.id)"
+                    ariaLabel="More actions for {{ member.user.name }}"
+                  />
                 </td>
               </tr>
             }

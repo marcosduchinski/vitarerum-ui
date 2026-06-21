@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -17,6 +16,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
@@ -31,7 +31,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    Menu,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -90,28 +90,20 @@ export class ProposalsApprovedPageComponent {
   });
 
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  protected readonly actionsMenuContext = signal<{
-    readonly projectId: string | null;
-    readonly proposalId: string;
-  } | null>(null);
-  protected readonly rowActionItems = computed<MenuItem[]>(() => {
-    const context = this.actionsMenuContext();
 
-    if (!context) return [];
-
+  protected actionItemsFor(proposalId: string, projectId: string | null): MenuItem[] {
     const items: MenuItem[] = [
       {
         label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/proposals/approved', context.proposalId]);
+          void this.router.navigate(['/p/collections/proposals/approved', proposalId]);
         },
       },
     ];
 
     // The linked project is only present once the proposal is materialised.
-    if (context.projectId) {
-      const projectId = context.projectId;
+    if (projectId) {
       items.push({
         label: 'Go to project',
         icon: 'pi pi-folder-open',
@@ -127,7 +119,7 @@ export class ProposalsApprovedPageComponent {
     }
 
     return items;
-  });
+  }
 
   protected prevPage(): void {
     this.currentPage.update((page) => Math.max(0, page - 1));
@@ -165,13 +157,4 @@ export class ProposalsApprovedPageComponent {
     this.currentPage.set(0);
   }
 
-  protected toggleActionsMenu(proposalId: string, projectId: string | null): void {
-    this.actionsMenuContext.update((current) =>
-      current?.proposalId === proposalId ? null : { proposalId, projectId },
-    );
-  }
-
-  protected closeActionsMenu(): void {
-    this.actionsMenuContext.set(null);
-  }
 }

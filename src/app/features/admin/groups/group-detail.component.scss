@@ -113,15 +113,8 @@ h2 {
   color: var(--color-subtle);
 }
 
-.members-table__view-link {
-  color: var(--color-accent);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.members-table__view-link:hover {
-  text-decoration: underline;
+.members-table__actions {
+  text-align: right;
 }
 
 .members-pagination {

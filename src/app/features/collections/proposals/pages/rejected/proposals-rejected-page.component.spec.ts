@@ -1,7 +1,7 @@
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { IdentityServiceMock } from '@core/auth/identity.service.mock';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { Page } from '@shared/models/page.model';
@@ -55,6 +55,7 @@ class ProposalApiServiceStub {
 
 describe('ProposalsRejectedPageComponent', () => {
   let proposalService: ProposalApiServiceStub;
+  let router: Router;
 
   beforeEach(async () => {
     proposalService = new ProposalApiServiceStub();
@@ -68,6 +69,12 @@ describe('ProposalsRejectedPageComponent', () => {
         { provide: PROPOSAL_API_SERVICE, useValue: proposalService },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
   it('fetches rejected proposals', async () => {
@@ -83,7 +90,7 @@ describe('ProposalsRejectedPageComponent', () => {
     );
   });
 
-  it('renders rejected proposals with status chips and detail actions', async () => {
+  it('renders rejected proposals with status chips and a row menu', async () => {
     const fixture = TestBed.createComponent(ProposalsRejectedPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -94,9 +101,32 @@ describe('ProposalsRejectedPageComponent', () => {
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('Rejected research request');
     expect(compiled.textContent).toContain('Rejected');
-    expect(compiled.textContent).toContain('Details');
     expect(
-      compiled.querySelector('a[href^="/p/collections/proposals/rejected/proposal-rejected"]'),
+      compiled.querySelector('[aria-label="More actions for VR-2026-001"]'),
     ).not.toBeNull();
+  });
+
+  it('opens the row menu and navigates to the rejected proposal detail', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProposalsRejectedPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-001"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const details = Array.from(
+      document.body.querySelectorAll<HTMLElement>('.p-menu a, .p-menu button'),
+    ).find((item) => item.textContent?.trim() === 'Details');
+    details!.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/p/collections/proposals/rejected',
+      'proposal-rejected',
+    ]);
   });
 });

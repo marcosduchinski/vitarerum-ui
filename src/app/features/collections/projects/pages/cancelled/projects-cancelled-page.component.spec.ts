@@ -1,6 +1,6 @@
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { IdentityServiceMock } from '@core/auth/identity.service.mock';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
@@ -66,6 +66,7 @@ class ProjectApiServiceStub {
 
 describe('ProjectsCancelledPageComponent', () => {
   let projectService: ProjectApiServiceStub;
+  let router: Router;
 
   beforeEach(async () => {
     projectService = new ProjectApiServiceStub();
@@ -78,6 +79,12 @@ describe('ProjectsCancelledPageComponent', () => {
         { provide: PROJECT_API_SERVICE, useValue: projectService },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
   it('loads cancelled projects only', async () => {
@@ -93,7 +100,7 @@ describe('ProjectsCancelledPageComponent', () => {
     });
   });
 
-  it('renders the cancelled table with project information and view links', async () => {
+  it('renders the cancelled table with project information', async () => {
     const fixture = TestBed.createComponent(ProjectsCancelledPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -101,7 +108,6 @@ describe('ProjectsCancelledPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const text = compiled.textContent ?? '';
-    const viewLink = compiled.querySelector<HTMLAnchorElement>('a[aria-label="View VR-2026-051"]');
 
     expect(text).toContain('Reference');
     expect(text).toContain('Assigned staff');
@@ -110,6 +116,29 @@ describe('ProjectsCancelledPageComponent', () => {
     expect(text).toContain('In-situ visit');
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
-    expect(viewLink?.getAttribute('href')).toBe('/p/collections/projects/project-1');
+    expect(
+      compiled.querySelector('[aria-label="More actions for VR-2026-051"]'),
+    ).not.toBeNull();
+  });
+
+  it('opens the row menu and navigates to the project detail', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProjectsCancelledPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-051"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const details = Array.from(
+      document.body.querySelectorAll<HTMLElement>('.p-menu a, .p-menu button'),
+    ).find((item) => item.textContent?.trim() === 'Details');
+    details!.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects', 'project-1']);
   });
 });

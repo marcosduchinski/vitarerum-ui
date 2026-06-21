@@ -108,13 +108,10 @@
                   <td class="report-table__dates">{{ dateLabel(row.closedAt) }}</td>
                   <td>
                     <div class="report-table__actions">
-                      <a
-                        class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/projects', row.projectId]"
-                        aria-label="View {{ row.referenceNumber }}"
-                      >
-                        Details
-                      </a>
+                      <app-row-actions
+                        [items]="actionItemsFor(row)"
+                        ariaLabel="More actions for {{ row.referenceNumber }}"
+                      />
                     </div>
                   </td>
                 </tr>

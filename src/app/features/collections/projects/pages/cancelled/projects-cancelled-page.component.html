@@ -111,13 +111,10 @@
                   </td>
                   <td>
                     <div class="projects-table__actions">
-                      <a
-                        class="action-btn action-btn--primary"
-                        [routerLink]="['/p/collections/projects', project.id]"
-                        aria-label="View {{ project.referenceNumber }}"
-                      >
-                        Details
-                      </a>
+                      <app-row-actions
+                        [items]="actionItemsFor(project)"
+                        ariaLabel="More actions for {{ project.referenceNumber }}"
+                      />
                     </div>
                   </td>
                 </tr>

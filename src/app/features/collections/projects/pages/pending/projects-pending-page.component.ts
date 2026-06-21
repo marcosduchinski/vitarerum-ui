@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -19,6 +18,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
 import { CollectionUseProjectSummary } from '../../models/project.model';
@@ -45,7 +45,7 @@ const DETAIL_ROUTE_PREFIX: Partial<Record<GroupName, readonly string[]>> = {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Menu,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -107,12 +107,11 @@ export class ProjectsPendingPageComponent {
 
   protected readonly actionProjectId = signal<string | null>(null);
   protected readonly actionError = signal<ApiError | null>(null);
-  protected readonly actionsMenuId = signal<string | null>(null);
   protected readonly cancelConfirmProjectId = signal<string | null>(null);
-  protected readonly cardActionItems = computed<MenuItem[]>(() => {
-    const projectId = this.actionsMenuId();
+  protected readonly typeLabels = TYPE_LABELS;
 
-    if (!projectId) return [];
+  protected actionItemsFor(project: CollectionUseProjectSummary): MenuItem[] {
+    const projectId = project.id;
 
     return [
       {
@@ -133,8 +132,7 @@ export class ProjectsPendingPageComponent {
         command: () => this.requestCancelConfirmation(projectId),
       },
     ];
-  });
-  protected readonly typeLabels = TYPE_LABELS;
+  }
 
   protected requesterLabel(project: CollectionUseProjectSummary): string {
     return project.requestedBy?.user.name ?? 'Unknown requester';
@@ -193,18 +191,8 @@ export class ProjectsPendingPageComponent {
     this.currentPage.set(Math.max(0, this.totalPages() - 1));
   }
 
-  protected toggleActionsMenu(projectId: string): void {
-    this.actionsMenuId.update((current) => (current === projectId ? null : projectId));
-    this.cancelConfirmProjectId.set(null);
-  }
-
-  protected closeActionsMenu(): void {
-    this.actionsMenuId.set(null);
-  }
-
   protected requestCancelConfirmation(projectId: string): void {
     if (this.actionProjectId()) return;
-    this.actionsMenuId.set(null);
     this.cancelConfirmProjectId.set(projectId);
   }
 
@@ -214,7 +202,6 @@ export class ProjectsPendingPageComponent {
 
   protected async start(projectId: string): Promise<void> {
     if (this.actionProjectId()) return;
-    this.actionsMenuId.set(null);
     this.actionProjectId.set(projectId);
     this.actionError.set(null);
 
@@ -230,7 +217,6 @@ export class ProjectsPendingPageComponent {
 
   protected async cancel(projectId: string): Promise<void> {
     if (this.actionProjectId()) return;
-    this.actionsMenuId.set(null);
     this.actionProjectId.set(projectId);
     this.actionError.set(null);
 

@@ -6,7 +6,8 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -15,6 +16,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 
@@ -33,6 +35,7 @@ const TERMINAL_FETCH_SIZE = 100;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -46,6 +49,7 @@ const TERMINAL_FETCH_SIZE = 100;
 export class ProposalsRejectedPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -134,5 +138,17 @@ export class ProposalsRejectedPageComponent {
     this.searchDraft.set('');
     this.appliedSearch.set('');
     this.currentPage.set(0);
+  }
+
+  protected actionItemsFor(proposal: ProposalSummary): MenuItem[] {
+    return [
+      {
+        label: 'Details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigate(['/p/collections/proposals/rejected', proposal.id]);
+        },
+      },
+    ];
   }
 }

@@ -51,10 +51,11 @@
                 }
               </div>
             </td>
-            <td>
-              <a class="users-table__view-link" [routerLink]="user.id" aria-label="View {{ user.name }}">
-                Details
-              </a>
+            <td class="users-table__actions">
+              <app-row-actions
+                [items]="actionItemsFor(user)"
+                ariaLabel="More actions for {{ user.name }}"
+              />
             </td>
           </tr>
         }

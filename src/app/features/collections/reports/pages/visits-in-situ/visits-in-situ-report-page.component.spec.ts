@@ -1,4 +1,4 @@
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
@@ -63,6 +63,7 @@ class ReportsApiServiceStub {
 
 describe('VisitsInSituReportPageComponent', () => {
   let reportsService: ReportsApiServiceStub;
+  let router: Router;
 
   beforeEach(async () => {
     reportsService = new ReportsApiServiceStub();
@@ -74,6 +75,12 @@ describe('VisitsInSituReportPageComponent', () => {
         { provide: REPORTS_API_SERVICE, useValue: reportsService },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
   it('loads the visits in situ report', async () => {
@@ -84,7 +91,7 @@ describe('VisitsInSituReportPageComponent', () => {
     expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 20, search: '' });
   });
 
-  it('renders completed and cancelled visits with project links', async () => {
+  it('renders completed and cancelled visits with a row menu', async () => {
     const fixture = TestBed.createComponent(VisitsInSituReportPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -92,7 +99,6 @@ describe('VisitsInSituReportPageComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const text = compiled.textContent ?? '';
-    const viewLink = compiled.querySelector<HTMLAnchorElement>('a[aria-label="View VR-2026-081"]');
 
     expect(text).toContain('Visits in situ');
     expect(text).toContain('Reference');
@@ -103,7 +109,30 @@ describe('VisitsInSituReportPageComponent', () => {
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('1-20 of 25 visits');
-    expect(viewLink?.getAttribute('href')).toBe('/p/collections/projects/project-1');
+    expect(
+      compiled.querySelector('[aria-label="More actions for VR-2026-081"]'),
+    ).not.toBeNull();
+  });
+
+  it('opens the row menu and navigates to the linked project', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(VisitsInSituReportPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-081"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const details = Array.from(
+      document.body.querySelectorAll<HTMLElement>('.p-menu a, .p-menu button'),
+    ).find((item) => item.textContent?.trim() === 'Details');
+    details!.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects', 'project-1']);
   });
 
   it('applies and clears search from the first page', async () => {

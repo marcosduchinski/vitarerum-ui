@@ -6,7 +6,8 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiError, toApiError } from '@core/http/api-error.model';
@@ -14,6 +15,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 
 import { VisitsInSituReportRow } from '../../models/report.model';
@@ -27,6 +29,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
   standalone: true,
   imports: [
     RouterLink,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -39,6 +42,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 })
 export class VisitsInSituReportPageComponent {
   private readonly reportsService = inject(REPORTS_API_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -76,6 +80,18 @@ export class VisitsInSituReportPageComponent {
   });
 
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+
+  protected actionItemsFor(row: VisitsInSituReportRow): MenuItem[] {
+    return [
+      {
+        label: 'Details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigate(['/p/collections/projects', row.projectId]);
+        },
+      },
+    ];
+  }
 
   protected requesterLabel(row: VisitsInSituReportRow): string {
     return row.requestedBy.user.name;

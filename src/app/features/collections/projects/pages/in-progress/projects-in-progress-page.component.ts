@@ -6,7 +6,8 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
@@ -16,6 +17,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
 import { CollectionUseProjectSummary } from '../../models/project.model';
@@ -42,6 +44,7 @@ const DETAIL_ROUTE_PREFIX: Partial<Record<GroupName, readonly string[]>> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
@@ -53,6 +56,7 @@ const DETAIL_ROUTE_PREFIX: Partial<Record<GroupName, readonly string[]>> = {
 export class ProjectsInProgressPageComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
   private readonly identity = inject(IDENTITY_SERVICE);
+  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -107,6 +111,23 @@ export class ProjectsInProgressPageComponent {
     const group = this.identity.session()?.group;
     const prefix = group ? DETAIL_ROUTE_PREFIX[group] : undefined;
     return [...(prefix ?? ['/p/collections/projects']), projectId];
+  }
+
+  protected actionItemsFor(project: CollectionUseProjectSummary): MenuItem[] {
+    return [
+      {
+        label: 'Details',
+        icon: 'pi pi-eye',
+        command: () => {
+          void this.router.navigate([...this.detailRoute(project.id)], {
+            queryParams: {
+              returnTo: '/p/collections/projects/in-progress',
+              returnLabel: 'in progress projects',
+            },
+          });
+        },
+      },
+    ];
   }
 
   protected requesterEmail(project: CollectionUseProjectSummary): string {
