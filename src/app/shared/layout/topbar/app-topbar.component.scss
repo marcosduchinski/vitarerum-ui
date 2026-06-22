@@ -132,10 +132,31 @@
 
 @media (max-width: 560px) {
   .layout-topbar {
-    padding: 0 1rem;
+    padding: 0 0.5rem;
+  }
+
+  .layout-topbar-logo-container {
+    flex: 0 0 auto;
+  }
+
+  .layout-topbar-logo {
+    padding-inline: 0.25rem;
+
+    .layout-topbar-logo__text {
+      display: none;
+    }
+  }
+
+  .layout-topbar-actions {
+    min-width: 0;
+    gap: 0.375rem;
   }
 
   .layout-topbar-role-select {
-    display: none;
+    width: min(8.5rem, 36vw);
+    min-width: 0;
+    max-width: none;
+    padding-inline: 0.375rem;
+    text-overflow: ellipsis;
   }
 }

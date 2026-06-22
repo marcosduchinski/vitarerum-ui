@@ -95,6 +95,21 @@ test('mobile 375px: hamburger toggles sidebar overlay', async ({ page }) => {
   await expect(nav.getByRole('link', { name: 'Dashboard' })).toBeVisible();
 });
 
+test('mobile 375px: multi-group users can access the role switcher', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await loginAs(page, 'fran@staff.example.com');
+
+  const switcher = page.getByLabel('Switch active role');
+  await expect(switcher).toBeVisible();
+  await expect(switcher).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'User menu' })).toBeInViewport();
+  await page.screenshot({ path: '/tmp/nav-mobile-role-switcher.png', fullPage: true });
+
+  await switcher.selectOption('CURATORIAL');
+  await expect(page).toHaveURL(/\/p\/dashboard$/);
+  await expect(switcher).toHaveValue('CURATORIAL');
+});
+
 test('keyboard: Tab from page body reaches focusable topbar elements', async ({ page }) => {
   await loginAs(page, 'alice@ext.example.com');
   await page.keyboard.press('Tab');
@@ -121,16 +136,23 @@ test('multi-group user sees only their 3 groups in the switcher and can switch b
   // ADMIN is not one of Fran's groups
   expect(options).not.toContain('Administrator');
 
-  // Switch to Curatorial — nav remains collection-use scoped
-  await page.selectOption('#role-switcher', 'CURATORIAL');
-  await page.screenshot({ path: '/tmp/nav-fran-curatorial.png', fullPage: true });
+  // Leave the dashboard so the role transition's landing behavior is observable.
   const sb = page.locator('.layout-sidebar');
+  await sb.getByRole('button', { name: 'Proposals' }).click();
+  await sb.getByRole('link', { name: 'New' }).click();
+  await expect(page).toHaveURL(/\/p\/collections\/proposals\/new$/);
+
+  // Switch to Curatorial — every role change returns to a clean dashboard context.
+  await page.selectOption('#role-switcher', 'CURATORIAL');
+  await expect(page).toHaveURL(/\/p\/dashboard$/);
+  await page.screenshot({ path: '/tmp/nav-fran-curatorial.png', fullPage: true });
   await sb.getByRole('button', { name: 'Proposals' }).click();
   await expect(sb.getByRole('link', { name: 'My assignments' })).toBeVisible();
   await expect(sb.getByRole('link', { name: 'Approved' })).toBeVisible();
 
-  // Switch to Direction — admin routes remain hidden
+  // Switching again from the dashboard keeps the same deterministic landing.
   await page.selectOption('#role-switcher', 'DIRECTION');
+  await expect(page).toHaveURL(/\/p\/dashboard$/);
   await expect(sb.getByRole('link', { name: 'Rejected / cancelled' })).toBeVisible();
   await expect(sb.getByRole('link', { name: 'Users' })).not.toBeVisible();
 });

@@ -5,7 +5,6 @@ import { Menu } from 'primeng/menu';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { GroupName } from '@core/auth/models/group-name.enum';
-import { roleLandingUrl } from '@core/auth/role-landing.util';
 import { LayoutService } from '@layout/layout.service';
 import { LogoMarkComponent } from '@shared/components/logo-mark/logo-mark.component';
 
@@ -55,13 +54,7 @@ export class AppTopbarComponent {
   protected onGroupChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value as GroupName;
     this.identity.setGroup(value);
-    // Pages that exist for both roles refetch on their own (their resources are
-    // keyed on the permission id); pages the new role has no equivalent for are
-    // swapped for that role's section landing page.
-    const target = roleLandingUrl(value, this.router.url);
-    if (target !== null) {
-      void this.router.navigateByUrl(target);
-    }
+    void this.router.navigateByUrl('/p/dashboard');
   }
 
   private signOut(): void {

@@ -19,7 +19,10 @@ class IdentityServiceStub implements IdentityService {
     return group != null && group !== 'EXTERNAL';
   });
 
-  async signIn(_credentials: LoginRequest): Promise<void> {}
+  signIn(credentials: LoginRequest): Promise<void> {
+    void credentials;
+    return Promise.resolve();
+  }
 
   signOut(): void {
     activeSession.set(null);

@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { IdentityServiceMock } from '@core/auth/identity.service.mock';
@@ -44,8 +44,14 @@ describe('AppTopbarComponent role switcher', () => {
     ).toBeNull();
   });
 
-  it('switches the active group and permission when a new option is selected', async () => {
+  it('switches the active group and permission before navigating to the dashboard', async () => {
     await identity.signIn({ email: 'fran@staff.example.com', password: 'vita2026' });
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockImplementation(async () => {
+      expect(identity.session()!.group).toBe('CURATORIAL');
+      expect(identity.getPermissionId()).toBe('perm-fran-curatorial');
+      return true;
+    });
 
     const fixture = TestBed.createComponent(AppTopbarComponent);
     fixture.detectChanges();
@@ -65,5 +71,7 @@ describe('AppTopbarComponent role switcher', () => {
     expect(identity.session()!.group).toBe('CURATORIAL');
     expect(identity.getPermissionId()).toBe('perm-fran-curatorial');
     expect(select!.value).toBe('CURATORIAL');
+    expect(navigateSpy).toHaveBeenCalledOnce();
+    expect(navigateSpy).toHaveBeenCalledWith('/p/dashboard');
   });
 });
