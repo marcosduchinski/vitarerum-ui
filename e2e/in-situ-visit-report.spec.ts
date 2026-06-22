@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 
 const PROJECT_ID = 'proj-7';
+const REPORT_ID = 'report-1';
 
 const PROJECT = {
   id: PROJECT_ID,
@@ -88,22 +89,21 @@ test.describe('in-situ visit report creation', () => {
 
     let requestBody: unknown;
     let permissionHeader: string | undefined;
-    await page.route(`**/reports/${PROJECT_ID}/in_situ_visit`, async (route) => {
+    await page.route(`**/reports/collection-use/${PROJECT_ID}/in_situ_visit`, async (route) => {
       requestBody = route.request().postDataJSON();
       permissionHeader = route.request().headers()['x-permission-id'];
       await route.fulfill({
         status: 201,
-        headers: { Location: `/api/v1/reports/${PROJECT_ID}/in_situ_visit/report-1` },
+        headers: {
+          Location: `/api/v1/reports/collection-use/${PROJECT_ID}/in_situ_visit/${REPORT_ID}`,
+        },
         json: {
-          id: 'report-1',
+          id: REPORT_ID,
           createdAt: '2026-06-22T10:30:00Z',
           createdBy: 'perm-curatorial',
           projectId: PROJECT_ID,
           narrativeId: 'narrative-1',
           inSituVisitRecordId: 'record-1',
-          targetLanguage: 'en',
-          narrativeType: 'scientific',
-          creativityTemperature: 0.6,
         },
       });
     });
@@ -136,6 +136,126 @@ test.describe('in-situ visit report creation', () => {
       creativity_temperature: 0.6,
     });
     expect(permissionHeader).toBe('perm-curatorial');
+  });
+
+  test('staff opens an enriched list row and loads its report dossier', async ({ page }) => {
+    await authenticateAs(page, 'CURATORIAL', 'perm-curatorial');
+
+    await page.route('**/reports/collection-use/in_situ_visit?**', async (route) => {
+      await route.fulfill({
+        json: {
+          content: [
+            {
+              id: REPORT_ID,
+              createdAt: '2026-06-22T10:30:00Z',
+              createdBy: 'perm-curatorial',
+              projectId: PROJECT_ID,
+              narrativeId: 'narrative-1',
+              inSituVisitRecordId: 'record-1',
+              code: 'CUP-ABCD1234',
+              visitorName: 'Maria do Rosário',
+              placeName: 'MUHNAC',
+              visitBeginDate: '2026-06-01',
+              visitEndDate: '2026-06-03',
+            },
+          ],
+          page: 0,
+          size: 20,
+          totalElements: 1,
+          totalPages: 1,
+        },
+      });
+    });
+
+    let detailRequestCount = 0;
+    let detailPermissionHeader: string | undefined;
+    await page.route(
+      `**/reports/collection-use/${PROJECT_ID}/in_situ_visit/${REPORT_ID}/detail`,
+      async (route) => {
+        detailRequestCount += 1;
+        detailPermissionHeader = route.request().headers()['x-permission-id'];
+        await route.fulfill({
+          json: {
+            id: REPORT_ID,
+            createdAt: '2026-06-22T10:30:00Z',
+            createdBy: 'perm-curatorial',
+            projectId: PROJECT_ID,
+            narrativeId: 'narrative-1',
+            inSituVisitRecordId: 'record-1',
+            narrative: {
+              narrative_id: 'narrative-1',
+              record_id: 'record-1',
+              generated_at: '2026-06-22T10:30:00Z',
+              meta: {
+                resolved_narrative_type: 'scientific',
+                resolution_source: 'request',
+                target_language: 'en',
+                creativity_temperature: 0.6,
+                llm_model: 'llama3.1:8b',
+              },
+              data: { narrative: 'A scientific account of the documented collection visit.' },
+            },
+            record: {
+              id: 'record-1',
+              code: 'CUP-ABCD1234',
+              visitBeginDate: '2026-06-01',
+              visitEndDate: '2026-06-03',
+              visitorName: 'Maria do Rosário',
+              placeName: 'MUHNAC',
+              generatedAt: '2026-06-22T10:30:00Z',
+              requestedObjects: [
+                {
+                  id: 'object-1',
+                  sourceId: 'INV-1',
+                  description: 'Photographic archive object',
+                  position: 0,
+                  attachments: [
+                    {
+                      id: 'attachment-1',
+                      sourceId: 'ATT-1',
+                      description: 'Condition photograph',
+                      reference: 'https://files.example.test/photo.jpg',
+                      position: 0,
+                    },
+                  ],
+                },
+              ],
+              inSituOccurrences: [],
+              inSituLogs: [],
+              inSituPublications: [],
+            },
+          },
+        });
+      },
+    );
+
+    await page.goto('/p/collections/reports/visits-in-situ');
+    await expect(page.getByText('CUP-ABCD1234', { exact: true })).toBeVisible();
+    await expect(page.getByText('Maria do Rosário', { exact: true })).toBeVisible();
+    await expect(page.getByText('MUHNAC', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: `More actions for report ${REPORT_ID}` }).click();
+    await page.getByRole('menuitem', { name: 'Details', exact: true }).click();
+
+    await expect(page).toHaveURL(
+      new RegExp(`/p/collections/reports/visits-in-situ/${PROJECT_ID}/${REPORT_ID}$`),
+    );
+    await expect(page.getByRole('heading', { name: 'CUP-ABCD1234', exact: true })).toBeVisible();
+    await expect(
+      page.getByText('A scientific account of the documented collection visit.', {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('Maria do Rosário', { exact: true })).toBeVisible();
+    await expect(page.getByText('INV-1', { exact: true })).toBeVisible();
+
+    await page.getByText('INV-1', { exact: true }).click();
+    await expect(page.getByRole('link', { name: /Condition photograph/ })).toHaveAttribute(
+      'href',
+      'https://files.example.test/photo.jpg',
+    );
+    expect(detailRequestCount).toBe(1);
+    expect(detailPermissionHeader).toBe('perm-curatorial');
   });
 
   test('collections staff can open report creation for an in-situ visit', async ({ page }) => {

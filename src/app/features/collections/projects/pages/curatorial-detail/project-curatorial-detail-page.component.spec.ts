@@ -158,9 +158,6 @@ class ReportsApiServiceStub {
       projectId,
       narrativeId: 'narrative-1',
       inSituVisitRecordId: 'record-1',
-      targetLanguage: request.targetLanguage,
-      narrativeType: request.narrativeType,
-      creativityTemperature: request.creativityTemperature,
     });
   }
 }

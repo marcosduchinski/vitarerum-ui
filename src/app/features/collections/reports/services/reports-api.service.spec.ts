@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/config/app-config.model';
 
-import { InSituVisitReport } from '../models/report.model';
+import { InSituVisitReport, InSituVisitReportDetail } from '../models/report.model';
 import { ReportsApiService } from './reports-api.service';
 
 describe('ReportsApiService', () => {
@@ -28,31 +28,159 @@ describe('ReportsApiService', () => {
     http.verify();
   });
 
-  it('lists visits in situ report rows with repeatable status filters', () => {
+  it('lists in-situ visit reports with pagination', () => {
+    let receivedCode: string | null = null;
     service
-      .listVisitsInSitu({
-        status: ['COMPLETED', 'CANCELLED'],
-        dateFrom: '2026-01-01',
-        dateTo: '2026-12-31',
-        search: 'Rio',
-        page: 2,
-        size: 25,
-      })
-      .subscribe();
+      .listInSituVisitReports({ page: 2, size: 25 })
+      .subscribe((page) => (receivedCode = page.content[0]?.code ?? null));
 
     const request = http.expectOne(
       (candidate) =>
-        candidate.url === 'https://api.example.test/reports/collection-use/visits-in-situ',
+        candidate.url === 'https://api.example.test/reports/collection-use/in_situ_visit',
     );
 
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.getAll('status')).toEqual(['COMPLETED', 'CANCELLED']);
-    expect(request.request.params.get('dateFrom')).toBe('2026-01-01');
-    expect(request.request.params.get('dateTo')).toBe('2026-12-31');
-    expect(request.request.params.get('search')).toBe('Rio');
     expect(request.request.params.get('page')).toBe('2');
     expect(request.request.params.get('size')).toBe('25');
-    request.flush({ content: [], page: 2, size: 25, totalElements: 0, totalPages: 0 });
+    request.flush({
+      content: [
+        {
+          id: 'report-1',
+          createdAt: '2026-06-22T10:30:00Z',
+          createdBy: 'permission-1',
+          projectId: 'project-1',
+          narrativeId: 'narrative-1',
+          inSituVisitRecordId: 'record-1',
+          code: 'CUP-ABCD1234',
+          visitorName: 'Maria do Rosário',
+          placeName: 'Museum',
+          visitBeginDate: '2026-06-01',
+          visitEndDate: '2026-06-03',
+        },
+      ],
+      page: 2,
+      size: 25,
+      totalElements: 1,
+      totalPages: 3,
+    });
+    expect(receivedCode).toBe('CUP-ABCD1234');
+  });
+
+  it('loads and normalizes an in-situ visit report detail', () => {
+    let received: InSituVisitReportDetail | null = null;
+    service
+      .getInSituVisitReportDetail('project-1', 'report-1')
+      .subscribe((detail) => (received = detail));
+
+    const request = http.expectOne(
+      'https://api.example.test/reports/collection-use/project-1/in_situ_visit/report-1/detail',
+    );
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      id: 'report-1',
+      createdAt: '2026-06-22T10:30:00Z',
+      createdBy: 'permission-1',
+      projectId: 'project-1',
+      narrativeId: 'narrative-1',
+      inSituVisitRecordId: 'record-1',
+      narrative: {
+        narrative_id: 'narrative-1',
+        record_id: 'record-1',
+        generated_at: '2026-06-22T10:30:00Z',
+        meta: {
+          resolved_narrative_type: 'institutional',
+          resolution_source: 'default',
+          target_language: 'pt',
+          creativity_temperature: 0.3,
+          llm_model: 'llama3.1:8b',
+        },
+        data: { narrative: 'A museum narrative.' },
+      },
+      record: {
+        id: 'record-1',
+        code: 'CUP-ABCD1234',
+        visitBeginDate: '2026-06-01',
+        visitEndDate: '2026-06-03',
+        visitorName: 'Maria do Rosário',
+        placeName: 'Museum',
+        generatedAt: '2026-06-22T10:30:00Z',
+        requestedObjects: [
+          {
+            id: 'object-1',
+            sourceId: 'INV-1',
+            description: 'Requested specimen',
+            position: 0,
+          },
+        ],
+        inSituOccurrences: [
+          {
+            id: 'occurrence-1',
+            sourceId: 'OCC-1',
+            description: 'Observed condition',
+            position: 0,
+            attachments: [
+              {
+                id: 'attachment-1',
+                sourceId: 'ATT-1',
+                description: 'Photo',
+                reference: 'https://files.example.test/photo.jpg',
+                position: 0,
+              },
+            ],
+          },
+        ],
+        inSituLogs: [],
+        inSituPublications: [],
+      },
+    });
+
+    expect(received).toMatchObject({
+      id: 'report-1',
+      narrative: {
+        narrativeId: 'narrative-1',
+        recordId: 'record-1',
+        text: 'A museum narrative.',
+        meta: {
+          resolvedNarrativeType: 'institutional',
+          targetLanguage: 'pt',
+          creativityTemperature: 0.3,
+          llmModel: 'llama3.1:8b',
+        },
+      },
+      record: {
+        code: 'CUP-ABCD1234',
+        requestedObjects: [{ sourceId: 'INV-1', attachments: [] }],
+        inSituOccurrences: [
+          {
+            sourceId: 'OCC-1',
+            attachments: [{ reference: 'https://files.example.test/photo.jpg' }],
+          },
+        ],
+      },
+    });
+  });
+
+  it('preserves nullable detail artifacts', () => {
+    let received: InSituVisitReportDetail | null = null;
+    service
+      .getInSituVisitReportDetail('project-1', 'report-1')
+      .subscribe((detail) => (received = detail));
+
+    const request = http.expectOne(
+      'https://api.example.test/reports/collection-use/project-1/in_situ_visit/report-1/detail',
+    );
+    request.flush({
+      id: 'report-1',
+      createdAt: '2026-06-22T10:30:00Z',
+      createdBy: 'permission-1',
+      projectId: 'project-1',
+      narrativeId: 'narrative-1',
+      inSituVisitRecordId: 'record-1',
+      narrative: null,
+      record: null,
+    });
+
+    expect(received).toMatchObject({ narrative: null, record: null });
   });
 
   it('creates an in-situ visit report with the contract wire format', () => {
@@ -63,9 +191,6 @@ describe('ReportsApiService', () => {
       projectId: 'project-1',
       narrativeId: 'narrative-1',
       inSituVisitRecordId: 'record-1',
-      targetLanguage: 'pt' as const,
-      narrativeType: 'institutional' as const,
-      creativityTemperature: 0.3,
     };
     let received: InSituVisitReport | null = null;
 
@@ -77,7 +202,9 @@ describe('ReportsApiService', () => {
       })
       .subscribe((value) => (received = value));
 
-    const request = http.expectOne('https://api.example.test/reports/project-1/in_situ_visit');
+    const request = http.expectOne(
+      'https://api.example.test/reports/collection-use/project-1/in_situ_visit',
+    );
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
       target_language: 'pt',
@@ -88,7 +215,9 @@ describe('ReportsApiService', () => {
     request.flush(response, {
       status: 201,
       statusText: 'Created',
-      headers: { Location: '/api/v1/reports/project-1/in_situ_visit/report-1' },
+      headers: {
+        Location: '/api/v1/reports/collection-use/project-1/in_situ_visit/report-1',
+      },
     });
     expect(received).toEqual(response);
   });

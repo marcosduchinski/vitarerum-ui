@@ -1,24 +1,21 @@
 import { inject, Injectable } from '@angular/core';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
-import {
-  makePageFrom,
-  MockProjectState,
-  MutableProjectState,
-} from '@features/collections/proposals/mocks/mock-data';
+import { makePageFrom, MockProjectState } from '@features/collections/proposals/mocks/mock-data';
 import { Observable, of, throwError } from 'rxjs';
 
 import {
   CreateInSituVisitReportRequest,
+  InSituVisitRecord,
   InSituVisitReport,
+  InSituVisitReportDetail,
+  InSituVisitReportEvidenceItem,
+  InSituVisitReportListItem,
+  InSituVisitReportListPage,
+  InSituVisitReportsQuery,
   InSituVisitReportNarrativeType,
   InSituVisitReportTargetLanguage,
-  ReportProjectStatus,
-  VisitsInSituReportPage,
-  VisitsInSituReportQuery,
-  VisitsInSituReportRow,
 } from '../models/report.model';
 
-const DEFAULT_STATUSES: readonly ReportProjectStatus[] = ['COMPLETED', 'CANCELLED'];
 const TARGET_LANGUAGES: readonly InSituVisitReportTargetLanguage[] = ['pt', 'en'];
 const NARRATIVE_TYPES: readonly InSituVisitReportNarrativeType[] = [
   'institutional',
@@ -31,9 +28,12 @@ export class ReportsApiServiceMock {
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly state = inject(MockProjectState);
   private readonly generatedReports: InSituVisitReport[] = [];
+  private readonly generatedDetails = new Map<string, InSituVisitReportDetail>();
   private reportSequence = 0;
 
-  listVisitsInSitu(query: VisitsInSituReportQuery = {}): Observable<VisitsInSituReportPage> {
+  listInSituVisitReports(
+    query: InSituVisitReportsQuery = {},
+  ): Observable<InSituVisitReportListPage> {
     if (!this.identity.isStaff()) {
       return throwError(() => ({
         status: 403,
@@ -42,23 +42,15 @@ export class ReportsApiServiceMock {
       }));
     }
 
-    const statuses = query.status?.length ? query.status : DEFAULT_STATUSES;
-    const search = query.search?.trim().toLowerCase() ?? '';
-
-    let rows = [...this.state.projects.values()]
-      .filter((project) => project.type === 'IN_SITU_VISIT')
-      .filter((project) => statuses.includes(project.status as ReportProjectStatus))
-      .filter((project) => !query.dateFrom || project.beginDate >= query.dateFrom)
-      .filter((project) => !query.dateTo || project.endDate <= query.dateTo)
-      .map((project) => this.toVisitsInSituRow(project));
-
-    if (search) {
-      rows = rows.filter((row) => this.matchesSearch(row, search));
-    }
-
-    rows.sort((a, b) => (b.closedAt ?? b.endDate).localeCompare(a.closedAt ?? a.endDate));
-
-    return of(makePageFrom(rows, query));
+    const reports = [...this.generatedReports]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((report) => this.toListItem(report));
+    return of(
+      makePageFrom(
+        reports.map((report) => structuredClone(report)),
+        query,
+      ),
+    );
   }
 
   createInSituVisitReport(
@@ -108,44 +100,95 @@ export class ReportsApiServiceMock {
       projectId,
       narrativeId: `mock-narrative-${suffix}`,
       inSituVisitRecordId: `mock-in-situ-visit-record-${suffix}`,
-      targetLanguage: request.targetLanguage,
-      narrativeType: request.narrativeType,
-      creativityTemperature: request.creativityTemperature,
     };
     this.generatedReports.push(report);
+    this.generatedDetails.set(report.id, this.buildDetail(report, project, request, suffix));
     return of(structuredClone(report));
   }
 
-  private toVisitsInSituRow(project: MutableProjectState): VisitsInSituReportRow {
-    const proposal = this.state.proposals.get(project.proposalId);
-    const terminalEvent = [...(this.state.events.get(project.id) ?? [])]
-      .reverse()
-      .find((event) => event.type === 'COMPLETED' || event.type === 'CANCELLED');
+  getInSituVisitReportDetail(
+    projectId: string,
+    reportId: string,
+  ): Observable<InSituVisitReportDetail> {
+    if (!this.identity.isStaff()) {
+      return this.fail(403, 'ACCESS_DENIED', 'Reports are restricted to staff');
+    }
 
+    const detail = this.generatedDetails.get(reportId);
+    if (!detail || detail.projectId !== projectId) {
+      return this.fail(
+        404,
+        'REPORT_NOT_FOUND',
+        `No report found with id ${reportId} for project ${projectId}`,
+      );
+    }
+
+    return of(structuredClone(detail));
+  }
+
+  private toListItem(report: InSituVisitReport): InSituVisitReportListItem {
+    const record = this.generatedDetails.get(report.id)?.record ?? null;
     return {
-      projectId: project.id,
-      referenceNumber: project.referenceNumber,
-      title: project.title,
-      status: project.status as ReportProjectStatus,
-      result: project.result ?? null,
-      beginDate: project.beginDate,
-      endDate: project.endDate,
-      requestedBy: project.requestedBy,
-      assignedTo: project.proposalAssignedTo,
-      submittedAt: proposal?.submittedAt ?? null,
-      closedAt: terminalEvent?.occurredAt ?? null,
+      ...report,
+      code: record?.code ?? null,
+      visitorName: record?.visitorName ?? null,
+      placeName: record?.placeName ?? null,
+      visitBeginDate: record?.visitBeginDate ?? null,
+      visitEndDate: record?.visitEndDate ?? null,
     };
   }
 
-  private matchesSearch(row: VisitsInSituReportRow, search: string): boolean {
-    return [
-      row.referenceNumber,
-      row.title,
-      row.requestedBy.user.name,
-      row.requestedBy.user.email,
-      row.assignedTo?.user.name ?? '',
-      row.assignedTo?.user.email ?? '',
-    ].some((value) => value.toLowerCase().includes(search));
+  private buildDetail(
+    report: InSituVisitReport,
+    project: {
+      readonly referenceNumber: string;
+      readonly title: string;
+      readonly purpose: string;
+      readonly beginDate: string;
+      readonly endDate: string;
+      readonly requestedBy: { readonly user: { readonly name: string } };
+    },
+    request: CreateInSituVisitReportRequest,
+    suffix: string,
+  ): InSituVisitReportDetail {
+    const requestedObject: InSituVisitReportEvidenceItem = {
+      id: `mock-requested-object-${suffix}`,
+      sourceId: project.referenceNumber,
+      description: project.title,
+      position: 0,
+      attachments: [],
+    };
+    const record: InSituVisitRecord = {
+      id: report.inSituVisitRecordId,
+      code: `CUP-${suffix}`,
+      visitBeginDate: project.beginDate,
+      visitEndDate: project.endDate,
+      visitorName: project.requestedBy.user.name,
+      placeName: 'MUHNAC',
+      generatedAt: report.createdAt,
+      requestedObjects: [requestedObject],
+      inSituOccurrences: [],
+      inSituLogs: [],
+      inSituPublications: [],
+    };
+
+    return {
+      ...report,
+      narrative: {
+        narrativeId: report.narrativeId,
+        recordId: report.inSituVisitRecordId,
+        generatedAt: report.createdAt,
+        meta: {
+          resolvedNarrativeType: request.narrativeType,
+          resolutionSource: 'request',
+          targetLanguage: request.targetLanguage,
+          creativityTemperature: request.creativityTemperature,
+          llmModel: 'llama3.1:8b',
+        },
+        text: `Generated ${request.narrativeType} narrative for ${project.title}. ${project.purpose}`,
+      },
+      record,
+    };
   }
 
   private fail<T>(status: number, error: string, message: string): Observable<T> {

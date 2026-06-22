@@ -1,8 +1,4 @@
-import { PermissionPrincipal } from '@core/auth/models/permission.model';
 import { Page, PageQuery } from '@shared/models/page.model';
-import { UseResult, UseStatus } from '@shared/models/collection-use-status.model';
-
-export type ReportProjectStatus = Extract<UseStatus, 'COMPLETED' | 'CANCELLED'>;
 
 export type InSituVisitReportTargetLanguage = 'pt' | 'en';
 export type InSituVisitReportNarrativeType = 'institutional' | 'scientific' | 'social_media';
@@ -20,30 +16,68 @@ export interface InSituVisitReport {
   readonly projectId: string;
   readonly narrativeId: string;
   readonly inSituVisitRecordId: string;
-  readonly targetLanguage: InSituVisitReportTargetLanguage;
-  readonly narrativeType: InSituVisitReportNarrativeType;
+}
+
+export interface InSituVisitReportListItem extends InSituVisitReport {
+  readonly code: string | null;
+  readonly visitorName: string | null;
+  readonly placeName: string | null;
+  readonly visitBeginDate: string | null;
+  readonly visitEndDate: string | null;
+}
+
+export interface InSituVisitReportNarrativeMeta {
+  readonly resolvedNarrativeType: string;
+  readonly resolutionSource: string;
+  readonly targetLanguage: string;
   readonly creativityTemperature: number;
+  readonly llmModel: string;
 }
 
-export interface VisitsInSituReportQuery extends PageQuery {
-  readonly status?: readonly ReportProjectStatus[];
-  readonly dateFrom?: string;
-  readonly dateTo?: string;
-  readonly search?: string;
+export interface InSituVisitReportNarrative {
+  readonly narrativeId: string;
+  readonly recordId: string;
+  readonly generatedAt: string;
+  readonly meta: InSituVisitReportNarrativeMeta;
+  readonly text: string;
 }
 
-export interface VisitsInSituReportRow {
-  readonly projectId: string;
-  readonly referenceNumber: string;
-  readonly title: string;
-  readonly status: ReportProjectStatus;
-  readonly result: UseResult | null;
-  readonly beginDate: string;
-  readonly endDate: string;
-  readonly requestedBy: PermissionPrincipal;
-  readonly assignedTo: PermissionPrincipal | null;
-  readonly submittedAt: string | null;
-  readonly closedAt: string | null;
+export interface InSituVisitReportAttachment {
+  readonly id: string;
+  readonly sourceId: string;
+  readonly description: string;
+  readonly reference: string;
+  readonly position: number;
 }
 
-export type VisitsInSituReportPage = Page<VisitsInSituReportRow>;
+export interface InSituVisitReportEvidenceItem {
+  readonly id: string;
+  readonly sourceId: string;
+  readonly description: string;
+  readonly position: number;
+  readonly attachments: readonly InSituVisitReportAttachment[];
+}
+
+export interface InSituVisitRecord {
+  readonly id: string;
+  readonly code: string;
+  readonly visitBeginDate: string;
+  readonly visitEndDate: string;
+  readonly visitorName: string;
+  readonly placeName: string;
+  readonly generatedAt: string;
+  readonly requestedObjects: readonly InSituVisitReportEvidenceItem[];
+  readonly inSituOccurrences: readonly InSituVisitReportEvidenceItem[];
+  readonly inSituLogs: readonly InSituVisitReportEvidenceItem[];
+  readonly inSituPublications: readonly InSituVisitReportEvidenceItem[];
+}
+
+export interface InSituVisitReportDetail extends InSituVisitReport {
+  readonly narrative: InSituVisitReportNarrative | null;
+  readonly record: InSituVisitRecord | null;
+}
+
+export type InSituVisitReportsQuery = PageQuery;
+export type InSituVisitReportListPage = Page<InSituVisitReportListItem>;
+// Kept until the list presentation migrates to the enriched row in REP-DETAIL-03.
+export type InSituVisitReportsPage = Page<InSituVisitReport>;

@@ -6,7 +6,7 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 
@@ -16,25 +16,48 @@ import { ErrorMessageComponent } from '@shared/components/error-message/error-me
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { RowActionsComponent } from '@shared/components/row-actions/row-actions.component';
-import { StatusChipComponent } from '@shared/components/status-chip/status-chip.component';
 
-import { VisitsInSituReportRow } from '../../models/report.model';
+import { InSituVisitReportListItem } from '../../models/report.model';
 import { REPORTS_API_SERVICE } from '../../services/reports-api.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
+function formatDateTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function formatDate(iso: string): string {
+  try {
+    return new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
+}
+
 @Component({
   selector: 'app-visits-in-situ-report-page',
   standalone: true,
   imports: [
-    RouterLink,
     RowActionsComponent,
     PageHeaderComponent,
     LoadingStateComponent,
     ErrorMessageComponent,
     EmptyStateComponent,
-    StatusChipComponent,
   ],
   templateUrl: './visits-in-situ-report-page.component.html',
   styleUrl: './visits-in-situ-report-page.component.scss',
@@ -46,23 +69,10 @@ export class VisitsInSituReportPageComponent {
 
   protected readonly currentPage = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
-  protected readonly searchDraft = signal('');
-  protected readonly appliedSearch = signal('');
 
   protected readonly reportResource = resource({
-    params: () => ({
-      page: this.currentPage(),
-      size: this.pageSize(),
-      search: this.appliedSearch().trim(),
-    }),
-    loader: ({ params }) =>
-      firstValueFrom(
-        this.reportsService.listVisitsInSitu({
-          page: params.page,
-          size: params.size,
-          search: params.search,
-        }),
-      ),
+    params: () => ({ page: this.currentPage(), size: this.pageSize() }),
+    loader: ({ params }) => firstValueFrom(this.reportsService.listInSituVisitReports(params)),
   });
 
   protected readonly rows = computed(() => this.reportResource.value()?.content ?? []);
@@ -80,37 +90,35 @@ export class VisitsInSituReportPageComponent {
   });
 
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  protected readonly formatDateTime = formatDateTime;
 
-  protected actionItemsFor(row: VisitsInSituReportRow): MenuItem[] {
+  protected actionItemsFor(report: InSituVisitReportListItem): MenuItem[] {
     return [
       {
         label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/projects', row.projectId]);
+          void this.router.navigate([
+            '/p/collections/reports/visits-in-situ',
+            report.projectId,
+            report.id,
+          ]);
         },
       },
     ];
   }
 
-  protected requesterLabel(row: VisitsInSituReportRow): string {
-    return row.requestedBy.user.name;
+  protected valueOrUnavailable(value: string | null): string {
+    return value?.trim() || 'Unavailable';
   }
 
-  protected requesterEmail(row: VisitsInSituReportRow): string {
-    return row.requestedBy.user.email;
-  }
-
-  protected assigneeLabel(row: VisitsInSituReportRow): string {
-    return row.assignedTo?.user.name ?? 'Unassigned';
-  }
-
-  protected assigneeEmail(row: VisitsInSituReportRow): string {
-    return row.assignedTo?.user.email ?? '';
-  }
-
-  protected dateLabel(date: string | null): string {
-    return date ? date.slice(0, 10) : 'Not recorded';
+  protected visitPeriod(report: InSituVisitReportListItem): string {
+    const begin = report.visitBeginDate;
+    const end = report.visitEndDate;
+    if (!begin && !end) return 'Unavailable';
+    if (!begin) return `Until ${formatDate(end!)}`;
+    if (!end) return `From ${formatDate(begin)}`;
+    return `${formatDate(begin)} — ${formatDate(end)}`;
   }
 
   protected firstPage(): void {
@@ -131,21 +139,6 @@ export class VisitsInSituReportPageComponent {
 
   protected onPageSizeChange(event: Event): void {
     this.pageSize.set(Number((event.target as HTMLSelectElement).value));
-    this.currentPage.set(0);
-  }
-
-  protected onSearchInput(event: Event): void {
-    this.searchDraft.set((event.target as HTMLInputElement).value);
-  }
-
-  protected applySearch(): void {
-    this.appliedSearch.set(this.searchDraft().trim());
-    this.currentPage.set(0);
-  }
-
-  protected clearSearch(): void {
-    this.searchDraft.set('');
-    this.appliedSearch.set('');
     this.currentPage.set(0);
   }
 }

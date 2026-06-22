@@ -94,28 +94,43 @@ describe('ReportsApiServiceMock', () => {
     service = TestBed.inject(ReportsApiServiceMock);
   });
 
-  it('lists completed and cancelled visits in situ for staff', async () => {
-    const page = await firstValueFrom(service.listVisitsInSitu({ size: 20 }));
+  it('returns an empty report history before a report is generated', async () => {
+    const page = await firstValueFrom(service.listInSituVisitReports({ size: 20 }));
 
-    expect(page.content.map((row) => row.referenceNumber)).toEqual(['VR-2026-007', 'VR-2026-006']);
-    expect(
-      page.content.every((row) => row.status === 'COMPLETED' || row.status === 'CANCELLED'),
-    ).toBe(true);
-    expect(page.content[0].closedAt).toBe('2026-06-05T09:00:00Z');
-    expect(page.content[1].closedAt).toBe('2026-06-03T09:30:00Z');
+    expect(page).toMatchObject({
+      content: [],
+      page: 0,
+      size: 20,
+      totalElements: 0,
+      totalPages: 0,
+    });
   });
 
-  it('filters by terminal status and search text', async () => {
-    const page = await firstValueFrom(
-      service.listVisitsInSitu({ status: ['CANCELLED'], search: 'botanical', size: 20 }),
+  it('lists generated reports newest first with pagination', async () => {
+    const first = await firstValueFrom(service.createInSituVisitReport('proj-7', validRequest()));
+    const second = await firstValueFrom(
+      service.createInSituVisitReport('proj-7', {
+        ...validRequest(),
+        narrativeType: 'scientific',
+      }),
     );
+    const page = await firstValueFrom(service.listInSituVisitReports({ page: 0, size: 1 }));
 
-    expect(page.content).toHaveLength(1);
-    expect(page.content[0]).toMatchObject({
-      referenceNumber: 'VR-2026-006',
-      status: 'CANCELLED',
-      title: 'Botanical herbarium records of medicinal plant collections',
+    expect(page).toMatchObject({
+      content: [second],
+      page: 0,
+      size: 1,
+      totalElements: 2,
+      totalPages: 2,
     });
+    expect(page.content[0]).toMatchObject({
+      code: 'CUP-0002',
+      visitorName: 'Hugo Andrade',
+      placeName: 'MUHNAC',
+      visitBeginDate: '2026-06-01',
+      visitEndDate: '2026-06-05',
+    });
+    expect(second.createdAt > first.createdAt).toBe(true);
   });
 
   it('rejects non-staff access', async () => {
@@ -131,13 +146,13 @@ describe('ReportsApiServiceMock', () => {
     });
     service = TestBed.inject(ReportsApiServiceMock);
 
-    await expect(firstValueFrom(service.listVisitsInSitu())).rejects.toMatchObject({
+    await expect(firstValueFrom(service.listInSituVisitReports())).rejects.toMatchObject({
       status: 403,
       error: 'ACCESS_DENIED',
     });
   });
 
-  it('creates append-only in-situ visit reports with effective settings', async () => {
+  it('creates append-only in-situ visit reports', async () => {
     const first = await firstValueFrom(
       service.createInSituVisitReport('proj-7', {
         targetLanguage: 'pt',
@@ -156,20 +171,55 @@ describe('ReportsApiServiceMock', () => {
     expect(first).toMatchObject({
       createdBy: 'perm-bob',
       projectId: 'proj-7',
-      targetLanguage: 'pt',
-      narrativeType: 'institutional',
-      creativityTemperature: 0.3,
     });
     expect(second).toMatchObject({
       createdBy: 'perm-bob',
       projectId: 'proj-7',
-      targetLanguage: 'en',
-      narrativeType: 'scientific',
-      creativityTemperature: 0.7,
     });
     expect(second.id).not.toBe(first.id);
     expect(second.narrativeId).not.toBe(first.narrativeId);
     expect(second.inSituVisitRecordId).not.toBe(first.inSituVisitRecordId);
+  });
+
+  it('returns the generated report detail for its owning project', async () => {
+    const report = await firstValueFrom(
+      service.createInSituVisitReport('proj-7', {
+        targetLanguage: 'en',
+        narrativeType: 'scientific',
+        creativityTemperature: 0.6,
+      }),
+    );
+
+    const detail = await firstValueFrom(service.getInSituVisitReportDetail('proj-7', report.id));
+
+    expect(detail).toMatchObject({
+      id: report.id,
+      narrative: {
+        text: expect.stringContaining('Photographic history'),
+        meta: {
+          resolvedNarrativeType: 'scientific',
+          targetLanguage: 'en',
+          creativityTemperature: 0.6,
+        },
+      },
+      record: {
+        code: 'CUP-0001',
+        visitorName: 'Hugo Andrade',
+        placeName: 'MUHNAC',
+        requestedObjects: [{ sourceId: 'VR-2026-007' }],
+      },
+    });
+  });
+
+  it('rejects missing reports and project/report ownership mismatches', async () => {
+    const report = await firstValueFrom(service.createInSituVisitReport('proj-7', validRequest()));
+
+    await expect(
+      firstValueFrom(service.getInSituVisitReportDetail('proj-6', report.id)),
+    ).rejects.toMatchObject({ status: 404, error: 'REPORT_NOT_FOUND' });
+    await expect(
+      firstValueFrom(service.getInSituVisitReportDetail('proj-7', 'missing-report')),
+    ).rejects.toMatchObject({ status: 404, error: 'REPORT_NOT_FOUND' });
   });
 
   it.each([

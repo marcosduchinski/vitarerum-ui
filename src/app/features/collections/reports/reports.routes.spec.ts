@@ -11,4 +11,15 @@ describe('REPORTS_ROUTES', () => {
       ]),
     );
   });
+
+  it('defines the report detail route with both ownership identifiers', () => {
+    expect(REPORTS_ROUTES).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'visits-in-situ/:projectId/:reportId',
+          title: 'In-situ visit report details',
+        }),
+      ]),
+    );
+  });
 });

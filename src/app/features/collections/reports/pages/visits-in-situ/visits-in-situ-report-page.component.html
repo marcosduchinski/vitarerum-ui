@@ -1,8 +1,8 @@
 <div class="visits-report">
   <app-page-header
     eyebrow="Reports"
-    title="Visits in situ"
-    description="Completed and cancelled in-situ collection-use visits."
+    title="In-situ visit reports"
+    description="Generated narrative reports for collection-use in-situ visits."
   />
 
   @if (reportResource.isLoading()) {
@@ -10,107 +10,62 @@
   } @else if (listError()) {
     <app-error-message [apiError]="listError()!" (retry)="reportResource.reload()" />
   } @else {
-    <section class="report-list-panel" aria-label="Visits in situ report">
-      <div class="report-toolbar">
-        <label class="report-search" for="visits-in-situ-search">
-          <span class="pi pi-search" aria-hidden="true"></span>
-          <input
-            id="visits-in-situ-search"
-            type="search"
-            [value]="searchDraft()"
-            (input)="onSearchInput($event)"
-            (keydown.enter)="applySearch()"
-            placeholder="Search reference, title, requester, or staff"
-            aria-label="Search visits in situ report"
-          />
-          @if (searchDraft()) {
-            <button
-              type="button"
-              class="report-search__clear"
-              (click)="clearSearch()"
-              aria-label="Clear report search"
-            >
-              <span class="pi pi-times" aria-hidden="true"></span>
-            </button>
-          }
-        </label>
-        <button type="button" class="action-btn action-btn--primary" (click)="applySearch()">
-          Search
-        </button>
-      </div>
-
+    <section class="report-list-panel" aria-label="In-situ visit report history">
       @if (!rows().length) {
         <app-empty-state
-          [title]="appliedSearch() ? 'No visits found' : 'No visits in situ'"
-          [message]="
-            appliedSearch()
-              ? 'No in-situ visits match the current search.'
-              : 'There are no completed or cancelled in-situ visits.'
-          "
+          title="No reports generated"
+          message="Generated in-situ visit reports will appear here."
         />
       } @else {
         <div class="report-table-shell">
-          <table class="report-table" aria-label="Visits in situ">
+          <table class="report-table" aria-label="In-situ visit reports">
             <colgroup>
-              <col class="report-table__col-ref" />
-              <col class="report-table__col-title" />
-              <col class="report-table__col-status" />
-              <col class="report-table__col-requester" />
-              <col class="report-table__col-assignee" />
-              <col class="report-table__col-dates" />
-              <col class="report-table__col-closed" />
+              <col class="report-table__col-code" />
+              <col class="report-table__col-visitor" />
+              <col class="report-table__col-place" />
+              <col class="report-table__col-visit-dates" />
+              <col class="report-table__col-generated" />
               <col class="report-table__col-actions" />
             </colgroup>
             <thead>
               <tr>
-                <th scope="col">Reference</th>
-                <th scope="col">Title</th>
-                <th scope="col">Status</th>
-                <th scope="col">Requested by</th>
-                <th scope="col">Assigned staff</th>
+                <th scope="col">Visit code</th>
+                <th scope="col">Visitor</th>
+                <th scope="col">Place</th>
                 <th scope="col">Visit dates</th>
-                <th scope="col">Closed</th>
+                <th scope="col">Report generated</th>
                 <th scope="col" class="report-table__actions-header">Actions</th>
               </tr>
             </thead>
             <tbody>
-              @for (row of rows(); track row.projectId) {
+              @for (report of rows(); track report.id) {
                 <tr>
-                  <td class="report-table__ref">{{ row.referenceNumber }}</td>
-                  <td>
-                    <a
-                      class="report-table__title"
-                      [routerLink]="['/p/collections/projects', row.projectId]"
-                    >
-                      {{ row.title }}
-                    </a>
+                  <td class="report-table__code">
+                    <span [class.report-table__unavailable]="!report.code">
+                      {{ valueOrUnavailable(report.code) }}
+                    </span>
+                    <small [title]="report.id">Report {{ report.id }}</small>
                   </td>
-                  <td>
-                    <app-status-chip kind="project" [status]="row.status" />
+                  <td [class.report-table__unavailable]="!report.visitorName">
+                    {{ valueOrUnavailable(report.visitorName) }}
                   </td>
-                  <td>
-                    <div class="report-table__person">
-                      <span>{{ requesterLabel(row) }}</span>
-                      <span class="report-table__person-email">{{ requesterEmail(row) }}</span>
-                    </div>
+                  <td [class.report-table__unavailable]="!report.placeName">
+                    {{ valueOrUnavailable(report.placeName) }}
                   </td>
-                  <td>
-                    <div class="report-table__person">
-                      <span>{{ assigneeLabel(row) }}</span>
-                      @if (assigneeEmail(row)) {
-                        <span class="report-table__person-email">{{ assigneeEmail(row) }}</span>
-                      }
-                    </div>
+                  <td
+                    class="report-table__date"
+                    [class.report-table__unavailable]="
+                      !report.visitBeginDate && !report.visitEndDate
+                    "
+                  >
+                    {{ visitPeriod(report) }}
                   </td>
-                  <td class="report-table__dates">
-                    {{ dateLabel(row.beginDate) }} to {{ dateLabel(row.endDate) }}
-                  </td>
-                  <td class="report-table__dates">{{ dateLabel(row.closedAt) }}</td>
+                  <td class="report-table__date">{{ formatDateTime(report.createdAt) }}</td>
                   <td>
                     <div class="report-table__actions">
                       <app-row-actions
-                        [items]="actionItemsFor(row)"
-                        ariaLabel="More actions for {{ row.referenceNumber }}"
+                        [items]="actionItemsFor(report)"
+                        ariaLabel="More actions for report {{ report.id }}"
                       />
                     </div>
                   </td>
@@ -121,10 +76,10 @@
         </div>
 
         @if (totalRows() > 0) {
-          <div class="report-pagination" role="navigation" aria-label="Visits in situ pagination">
+          <div class="report-pagination" role="navigation" aria-label="Report pagination">
             <div class="report-pagination__meta">
               <span class="report-pagination__info">
-                {{ rangeStart() }}-{{ rangeEnd() }} of {{ totalRows() }} visits
+                {{ rangeStart() }}-{{ rangeEnd() }} of {{ totalRows() }} reports
               </span>
               <label class="report-pagination__size" for="visits-in-situ-page-size">
                 Rows

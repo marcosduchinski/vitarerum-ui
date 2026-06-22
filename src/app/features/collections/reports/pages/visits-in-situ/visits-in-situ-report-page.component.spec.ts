@@ -1,62 +1,44 @@
-import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
-import { Page } from '@shared/models/page.model';
-
 import {
-  VisitsInSituReportPage,
-  VisitsInSituReportQuery,
-  VisitsInSituReportRow,
+  InSituVisitReportListItem,
+  InSituVisitReportListPage,
+  InSituVisitReportsQuery,
 } from '../../models/report.model';
 import { REPORTS_API_SERVICE } from '../../services/reports-api.service';
 import { VisitsInSituReportPageComponent } from './visits-in-situ-report-page.component';
 
-const ROWS: readonly VisitsInSituReportRow[] = Array.from({ length: 25 }, (_, index) => ({
+const REPORTS: readonly InSituVisitReportListItem[] = Array.from({ length: 25 }, (_, index) => ({
+  id: `report-${index + 1}`,
+  createdAt: new Date(Date.UTC(2026, 5, 22, 10, index)).toISOString(),
+  createdBy: `permission-${index + 1}`,
   projectId: `project-${index + 1}`,
-  referenceNumber: `VR-2026-${String(index + 81).padStart(3, '0')}`,
-  title: index === 4 ? 'Botanical herbarium visit' : 'Photographic archive visit',
-  status: index % 2 === 0 ? 'COMPLETED' : 'CANCELLED',
-  result: index % 2 === 0 ? 'COMPLETED' : 'CANCELLED',
-  beginDate: '2026-06-10',
-  endDate: '2026-06-20',
-  requestedBy: {
-    permissionId: 'permission-external',
-    user: { id: 'user-1', name: 'Alice Ferreira', email: 'alice@example.test' },
-    group: 'EXTERNAL',
-  },
-  assignedTo: {
-    permissionId: 'permission-staff',
-    user: { id: 'staff-1', name: 'Bob Santos', email: 'bob@example.test' },
-    group: 'COLLECTIONS_MANAGEMENT',
-  },
-  submittedAt: '2026-05-01T10:00:00Z',
-  closedAt: index % 2 === 0 ? '2026-06-20T10:00:00Z' : '2026-06-18T10:00:00Z',
+  narrativeId: `narrative-${index + 1}`,
+  inSituVisitRecordId: `record-${index + 1}`,
+  code: index === 1 ? null : `CUP-${String(index + 1).padStart(4, '0')}`,
+  visitorName: index === 1 ? null : 'Maria do Rosário',
+  placeName: index === 1 ? null : 'Museum',
+  visitBeginDate: index === 1 ? null : '2026-06-01',
+  visitEndDate: index === 1 ? null : '2026-06-03',
 }));
 
 class ReportsApiServiceStub {
-  readonly queries: VisitsInSituReportQuery[] = [];
+  readonly queries: InSituVisitReportsQuery[] = [];
 
-  listVisitsInSitu(query: VisitsInSituReportQuery = {}) {
+  listInSituVisitReports(query: InSituVisitReportsQuery = {}) {
     this.queries.push(query);
     const page = query.page ?? 0;
     const size = query.size ?? 20;
     const start = page * size;
-    const search = query.search?.toLowerCase().trim() ?? '';
-    const items = search
-      ? ROWS.filter(
-          (row) =>
-            row.title.toLowerCase().includes(search) ||
-            row.referenceNumber.toLowerCase().includes(search),
-        )
-      : ROWS;
 
-    return of<Page<VisitsInSituReportRow> & VisitsInSituReportPage>({
-      content: items.slice(start, start + size),
+    return of<InSituVisitReportListPage>({
+      content: REPORTS.slice(start, start + size),
       page,
       size,
-      totalElements: items.length,
-      totalPages: Math.max(1, Math.ceil(items.length / size)),
+      totalElements: REPORTS.length,
+      totalPages: Math.ceil(REPORTS.length / size),
     });
   }
 }
@@ -70,10 +52,7 @@ describe('VisitsInSituReportPageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [VisitsInSituReportPageComponent],
-      providers: [
-        provideRouter([]),
-        { provide: REPORTS_API_SERVICE, useValue: reportsService },
-      ],
+      providers: [provideRouter([]), { provide: REPORTS_API_SERVICE, useValue: reportsService }],
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -83,15 +62,15 @@ describe('VisitsInSituReportPageComponent', () => {
     document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
-  it('loads the visits in situ report', async () => {
+  it('loads generated reports using only pagination parameters', async () => {
     const fixture = TestBed.createComponent(VisitsInSituReportPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 20, search: '' });
+    expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 20 });
   });
 
-  it('renders completed and cancelled visits with a row menu', async () => {
+  it('renders enriched visit information and unavailable fallbacks', async () => {
     const fixture = TestBed.createComponent(VisitsInSituReportPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -100,21 +79,24 @@ describe('VisitsInSituReportPageComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const text = compiled.textContent ?? '';
 
-    expect(text).toContain('Visits in situ');
-    expect(text).toContain('Reference');
-    expect(text).toContain('Status');
-    expect(text).toContain('Completed');
-    expect(text).toContain('Cancelled');
-    expect(text).toContain('Photographic archive visit');
-    expect(text).toContain('Alice Ferreira');
-    expect(text).toContain('Bob Santos');
-    expect(text).toContain('1-20 of 25 visits');
+    expect(text).toContain('In-situ visit reports');
+    expect(text).toContain('Visit code');
+    expect(text).toContain('Visitor');
+    expect(text).toContain('Place');
+    expect(text).toContain('Visit dates');
+    expect(text).toContain('Report generated');
+    expect(text).toContain('report-1');
+    expect(text).toContain('CUP-0001');
+    expect(text).toContain('Maria do Rosário');
+    expect(text).toContain('Museum');
+    expect(text).toContain('Unavailable');
+    expect(text).toContain('1-20 of 25 reports');
     expect(
-      compiled.querySelector('[aria-label="More actions for VR-2026-081"]'),
+      compiled.querySelector('[aria-label="More actions for report report-1"]'),
     ).not.toBeNull();
   });
 
-  it('opens the row menu and navigates to the linked project', async () => {
+  it('opens the row menu and navigates to report details', async () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(VisitsInSituReportPageComponent);
     fixture.detectChanges();
@@ -122,7 +104,7 @@ describe('VisitsInSituReportPageComponent', () => {
     fixture.detectChanges();
 
     (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-081"]')!
+      .querySelector<HTMLButtonElement>('[aria-label="More actions for report report-1"]')!
       .click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -132,43 +114,11 @@ describe('VisitsInSituReportPageComponent', () => {
     ).find((item) => item.textContent?.trim() === 'Details');
     details!.click();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects', 'project-1']);
-  });
-
-  it('applies and clears search from the first page', async () => {
-    const fixture = TestBed.createComponent(VisitsInSituReportPageComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    buttonByText(fixture.nativeElement, 'Next').click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const searchInput = compiled.querySelector<HTMLInputElement>('#visits-in-situ-search');
-    expect(searchInput).not.toBeNull();
-
-    searchInput!.value = 'botanical';
-    searchInput!.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
-    buttonByText(compiled, 'Search').click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 20, search: 'botanical' });
-    expect(compiled.textContent).toContain('1-1 of 1 visits');
-    expect(compiled.textContent).toContain('Botanical herbarium visit');
-
-    compiled.querySelector<HTMLButtonElement>('.report-search__clear')?.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 20, search: '' });
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/p/collections/reports/visits-in-situ',
+      'project-1',
+      'report-1',
+    ]);
   });
 
   it('changes page size and keeps pagination within bounds', async () => {
@@ -182,7 +132,7 @@ describe('VisitsInSituReportPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(reportsService.queries.at(-1)).toEqual({ page: 1, size: 20, search: '' });
+    expect(reportsService.queries.at(-1)).toEqual({ page: 1, size: 20 });
 
     const pageSize = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>(
       '#visits-in-situ-page-size',
@@ -195,20 +145,20 @@ describe('VisitsInSituReportPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 10, search: '' });
+    expect(reportsService.queries.at(-1)).toEqual({ page: 0, size: 10 });
 
     buttonByText(fixture.nativeElement, 'Last').click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(reportsService.queries.at(-1)).toEqual({ page: 2, size: 10, search: '' });
+    expect(reportsService.queries.at(-1)).toEqual({ page: 2, size: 10 });
 
     buttonByText(fixture.nativeElement, 'Next').click();
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(reportsService.queries.at(-1)).toEqual({ page: 2, size: 10, search: '' });
+    expect(reportsService.queries.at(-1)).toEqual({ page: 2, size: 10 });
   });
 });
 
