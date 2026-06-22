@@ -3,7 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
-import { InSituVisitReportDetail } from '../../models/report.model';
+import {
+  CidocCrmJsonObject,
+  InSituVisitReportDetail,
+  InSituVisitReportNarrative,
+  UpdateInSituVisitNarrativeRequest,
+} from '../../models/report.model';
 import { REPORTS_API_SERVICE } from '../../services/reports-api.service';
 import { InSituVisitReportDetailPageComponent } from './in-situ-visit-report-detail-page.component';
 
@@ -44,11 +49,37 @@ const DETAIL: InSituVisitReportDetail = {
 
 class ReportsApiServiceStub {
   readonly calls: { projectId: string; reportId: string }[] = [];
+  readonly cidocCalls: string[] = [];
+  readonly updateCalls: {
+    recordId: string;
+    narrativeId: string;
+    request: UpdateInSituVisitNarrativeRequest;
+  }[] = [];
   response: Observable<InSituVisitReportDetail> = of(DETAIL);
 
   getInSituVisitReportDetail(projectId: string, reportId: string) {
     this.calls.push({ projectId, reportId });
     return this.response;
+  }
+
+  getInSituVisitCidocCrm(recordId: string) {
+    this.cidocCalls.push(recordId);
+    return of<CidocCrmJsonObject>({
+      '@context': { crm: 'http://www.cidoc-crm.org/cidoc-crm/' },
+      '@graph': [{ '@id': `ex:visit/${recordId}`, '@type': 'crm:E7_Activity' }],
+    });
+  }
+
+  updateInSituVisitNarrative(
+    recordId: string,
+    narrativeId: string,
+    request: UpdateInSituVisitNarrativeRequest,
+  ) {
+    this.updateCalls.push({ recordId, narrativeId, request });
+    return of<InSituVisitReportNarrative>({
+      ...DETAIL.narrative!,
+      text: request.narrative,
+    });
   }
 }
 
@@ -101,5 +132,67 @@ describe('InSituVisitReportDetailPageComponent', () => {
 
     expect(compiled.textContent).toContain('Not found');
     expect(compiled.textContent).toContain('The requested resource no longer exists.');
+  });
+
+  it('opens the CIDOC-CRM viewer and loads the current record without navigation', async () => {
+    const fixture = TestBed.createComponent(InSituVisitReportDetailPageComponent);
+    fixture.componentRef.setInput('projectId', 'project-1');
+    fixture.componentRef.setInput('reportId', 'report-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="View CIDOC-CRM data"]')
+      ?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(reportsService.cidocCalls).toEqual(['record-1']);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Knowledge graph source');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('crm:E7_Activity');
+  });
+
+  it('edits the narrative in place while preserving the rest of the report', async () => {
+    const fixture = TestBed.createComponent(InSituVisitReportDetailPageComponent);
+    fixture.componentRef.setInput('projectId', 'project-1');
+    fixture.componentRef.setInput('reportId', 'report-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="Edit narrative"]')
+      ?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const textarea = (fixture.nativeElement as HTMLElement).querySelector<HTMLTextAreaElement>(
+      '#narrative-editor-text',
+    );
+    if (!textarea) throw new Error('Narrative editor did not open');
+    textarea.value = 'A carefully corrected museum narrative.';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('button[type="submit"]')
+      ?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(reportsService.updateCalls).toEqual([
+      {
+        recordId: 'record-1',
+        narrativeId: 'narrative-1',
+        request: { narrative: 'A carefully corrected museum narrative.' },
+      },
+    ]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'A carefully corrected museum narrative.',
+    );
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Maria do Rosário');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('CUP-ABCD1234');
   });
 });

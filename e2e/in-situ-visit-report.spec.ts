@@ -240,13 +240,13 @@ test.describe('in-situ visit report creation', () => {
     await expect(page).toHaveURL(
       new RegExp(`/p/collections/reports/visits-in-situ/${PROJECT_ID}/${REPORT_ID}$`),
     );
-    await expect(page.getByRole('heading', { name: 'CUP-ABCD1234', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Maria do Rosário', exact: true })).toBeVisible();
+    await expect(page.locator('.report-detail__code')).toHaveText('CUP-ABCD1234');
     await expect(
       page.getByText('A scientific account of the documented collection visit.', {
         exact: true,
       }),
     ).toBeVisible();
-    await expect(page.getByText('Maria do Rosário', { exact: true })).toBeVisible();
     await expect(page.getByText('INV-1', { exact: true })).toBeVisible();
 
     await page.getByText('INV-1', { exact: true }).click();
@@ -256,6 +256,134 @@ test.describe('in-situ visit report creation', () => {
     );
     expect(detailRequestCount).toBe(1);
     expect(detailPermissionHeader).toBe('perm-curatorial');
+  });
+
+  test('staff views CIDOC-CRM data and corrects the narrative in place', async ({ page }) => {
+    await authenticateAs(page, 'CURATORIAL', 'perm-curatorial');
+
+    let detailRequestCount = 0;
+    await page.route(
+      `**/reports/collection-use/${PROJECT_ID}/in_situ_visit/${REPORT_ID}/detail`,
+      async (route) => {
+        detailRequestCount += 1;
+        await route.fulfill({
+          json: {
+            id: REPORT_ID,
+            createdAt: '2026-06-22T10:30:00Z',
+            createdBy: 'perm-curatorial',
+            projectId: PROJECT_ID,
+            narrativeId: 'narrative-1',
+            inSituVisitRecordId: 'record-1',
+            narrative: {
+              narrative_id: 'narrative-1',
+              record_id: 'record-1',
+              generated_at: '2026-06-22T10:30:00Z',
+              meta: {
+                resolved_narrative_type: 'institutional',
+                resolution_source: 'request',
+                target_language: 'pt',
+                creativity_temperature: 0.3,
+                llm_model: 'llama3.1:8b',
+              },
+              data: { narrative: 'The original generated museum narrative.' },
+            },
+            record: {
+              id: 'record-1',
+              code: 'CUP-ABCD1234',
+              visitBeginDate: '2026-06-01',
+              visitEndDate: '2026-06-03',
+              visitorName: 'Maria do Rosário',
+              placeName: 'MUHNAC',
+              generatedAt: '2026-06-22T10:30:00Z',
+              requestedObjects: [],
+              inSituOccurrences: [],
+              inSituLogs: [],
+              inSituPublications: [],
+            },
+          },
+        });
+      },
+    );
+
+    let cidocRequestCount = 0;
+    let cidocPermissionHeader: string | undefined;
+    await page.route('**/cedoc-mapping/in-situ-visit/record-1/cidoc-crm', async (route) => {
+      cidocRequestCount += 1;
+      cidocPermissionHeader = route.request().headers()['x-permission-id'];
+      await route.fulfill({
+        json: {
+          '@context': { crm: 'http://www.cidoc-crm.org/cidoc-crm/' },
+          '@graph': [
+            {
+              '@id': 'ex:visit/record-1',
+              '@type': 'crm:E7_Activity',
+              'rdfs:label': 'In situ visit CUP-ABCD1234',
+            },
+          ],
+        },
+      });
+    });
+
+    let patchRequestBody: unknown;
+    let patchPermissionHeader: string | undefined;
+    await page.route(
+      '**/cedoc-mapping/in-situ-visit/record-1/narratives/narrative-1',
+      async (route) => {
+        patchRequestBody = route.request().postDataJSON();
+        patchPermissionHeader = route.request().headers()['x-permission-id'];
+        await route.fulfill({
+          json: {
+            narrative_id: 'narrative-1',
+            record_id: 'record-1',
+            generated_at: '2026-06-22T10:30:00Z',
+            meta: {
+              resolved_narrative_type: 'institutional',
+              resolution_source: 'request',
+              target_language: 'pt',
+              creativity_temperature: 0.3,
+              llm_model: 'llama3.1:8b',
+            },
+            data: { narrative: 'A carefully corrected museum narrative.' },
+          },
+        });
+      },
+    );
+
+    const detailUrl = `/p/collections/reports/visits-in-situ/${PROJECT_ID}/${REPORT_ID}`;
+    await page.goto(detailUrl);
+    await expect(
+      page.getByText('The original generated museum narrative.', { exact: true }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'View CIDOC-CRM data', exact: true }).click();
+    const cidocDialog = page.getByRole('dialog', { name: 'Knowledge graph source' });
+    await expect(cidocDialog).toBeVisible();
+    await expect(cidocDialog.getByText(/crm:E7_Activity/)).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${detailUrl}$`));
+    await cidocDialog.getByRole('button', { name: 'Close CIDOC-CRM viewer' }).click();
+    await expect(cidocDialog).not.toBeVisible();
+
+    await page.getByRole('button', { name: 'Edit narrative', exact: true }).click();
+    const editor = page.getByRole('dialog', { name: 'Edit narrative' });
+    await expect(editor).toBeVisible();
+    await expect(editor.getByLabel('Narrative text')).toHaveValue(
+      'The original generated museum narrative.',
+    );
+    await editor.getByLabel('Narrative text').fill('A carefully corrected museum narrative.');
+    await editor.getByRole('button', { name: 'Save correction', exact: true }).click();
+
+    await expect(editor).not.toBeVisible();
+    await expect(
+      page.getByText('A carefully corrected museum narrative.', { exact: true }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${detailUrl}$`));
+    expect(detailRequestCount).toBe(1);
+    expect(cidocRequestCount).toBe(1);
+    expect(cidocPermissionHeader).toBe('perm-curatorial');
+    expect(patchPermissionHeader).toBe('perm-curatorial');
+    expect(patchRequestBody).toEqual({
+      narrative: 'A carefully corrected museum narrative.',
+    });
   });
 
   test('collections staff can open report creation for an in-situ visit', async ({ page }) => {

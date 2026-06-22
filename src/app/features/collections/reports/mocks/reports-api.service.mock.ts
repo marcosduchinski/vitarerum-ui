@@ -4,6 +4,7 @@ import { makePageFrom, MockProjectState } from '@features/collections/proposals/
 import { Observable, of, throwError } from 'rxjs';
 
 import {
+  CidocCrmJsonObject,
   CreateInSituVisitReportRequest,
   InSituVisitRecord,
   InSituVisitReport,
@@ -11,9 +12,11 @@ import {
   InSituVisitReportEvidenceItem,
   InSituVisitReportListItem,
   InSituVisitReportListPage,
+  InSituVisitReportNarrative,
   InSituVisitReportsQuery,
   InSituVisitReportNarrativeType,
   InSituVisitReportTargetLanguage,
+  UpdateInSituVisitNarrativeRequest,
 } from '../models/report.model';
 
 const TARGET_LANGUAGES: readonly InSituVisitReportTargetLanguage[] = ['pt', 'en'];
@@ -126,6 +129,49 @@ export class ReportsApiServiceMock {
     return of(structuredClone(detail));
   }
 
+  getInSituVisitCidocCrm(recordId: string): Observable<CidocCrmJsonObject> {
+    if (!this.identity.isStaff()) {
+      return this.fail(403, 'ACCESS_DENIED', 'Staff access required');
+    }
+
+    const record = this.findDetailByRecordId(recordId)?.record;
+    if (!record) return this.fail(404, 'IN_SITU_VISIT_NOT_FOUND', `Record ${recordId} not found`);
+
+    return of({
+      '@context': { crm: 'http://www.cidoc-crm.org/cidoc-crm/' },
+      '@graph': [
+        {
+          '@id': `ex:visit/${record.id}`,
+          '@type': 'crm:E7_Activity',
+        },
+      ],
+    });
+  }
+
+  updateInSituVisitNarrative(
+    recordId: string,
+    narrativeId: string,
+    request: UpdateInSituVisitNarrativeRequest,
+  ): Observable<InSituVisitReportNarrative> {
+    if (!this.identity.isStaff()) {
+      return this.fail(403, 'ACCESS_DENIED', 'Staff access required');
+    }
+
+    const narrativeText = request.narrative.trim();
+    if (!narrativeText) {
+      return this.fail(422, 'VALIDATION_ERROR', 'Narrative is required');
+    }
+
+    const detail = this.findDetailByRecordId(recordId);
+    if (!detail?.narrative || detail.narrative.narrativeId !== narrativeId) {
+      return this.fail(404, 'NARRATIVE_NOT_FOUND', `Narrative ${narrativeId} not found`);
+    }
+
+    const narrative = { ...detail.narrative, text: narrativeText };
+    this.generatedDetails.set(detail.id, { ...detail, narrative });
+    return of(structuredClone(narrative));
+  }
+
   private toListItem(report: InSituVisitReport): InSituVisitReportListItem {
     const record = this.generatedDetails.get(report.id)?.record ?? null;
     return {
@@ -136,6 +182,13 @@ export class ReportsApiServiceMock {
       visitBeginDate: record?.visitBeginDate ?? null,
       visitEndDate: record?.visitEndDate ?? null,
     };
+  }
+
+  private findDetailByRecordId(recordId: string): InSituVisitReportDetail | null {
+    for (const detail of this.generatedDetails.values()) {
+      if (detail.inSituVisitRecordId === recordId) return detail;
+    }
+    return null;
   }
 
   private buildDetail(

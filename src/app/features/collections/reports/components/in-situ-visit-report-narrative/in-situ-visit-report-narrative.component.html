@@ -1,7 +1,35 @@
 <article class="narrative" aria-labelledby="narrative-heading">
   <header class="narrative__intro">
-    <p class="narrative__eyebrow">Generated narrative</p>
-    <h2 id="narrative-heading">Interpretive account</h2>
+    <div class="narrative__heading-row">
+      <div class="narrative__heading-copy">
+        <p class="narrative__eyebrow">Generated narrative</p>
+        <h2 id="narrative-heading">Interpretive account</h2>
+      </div>
+
+      <div class="narrative__actions" aria-label="Narrative actions">
+        <button
+          type="button"
+          class="narrative__action"
+          aria-label="View CIDOC-CRM data"
+          data-tooltip="View CIDOC-CRM data"
+          [disabled]="!effectiveRecordId()"
+          (click)="requestCidocCrm()"
+        >
+          <span class="pi pi-eye" aria-hidden="true"></span>
+        </button>
+        <button
+          type="button"
+          class="narrative__action"
+          aria-label="Edit narrative"
+          data-tooltip="Edit narrative"
+          [disabled]="!narrative()"
+          (click)="requestNarrativeEdit()"
+        >
+          <span class="pi pi-pencil" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
     @if (narrative(); as value) {
       <p class="narrative__byline">
         <span class="narrative__byline-mark" aria-hidden="true"></span>

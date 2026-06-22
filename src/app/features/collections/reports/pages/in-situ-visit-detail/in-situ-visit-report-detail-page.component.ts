@@ -5,6 +5,7 @@ import {
   inject,
   input,
   resource,
+  signal,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -17,6 +18,9 @@ import { LoadingStateComponent } from '@shared/components/loading-state/loading-
 import { InSituVisitReportNarrativeComponent } from '../../components/in-situ-visit-report-narrative/in-situ-visit-report-narrative.component';
 import { InSituVisitReportRailComponent } from '../../components/in-situ-visit-report-rail/in-situ-visit-report-rail.component';
 import { InSituVisitReportRecordComponent } from '../../components/in-situ-visit-report-record/in-situ-visit-report-record.component';
+import { InSituVisitCidocDialogComponent } from '../../components/in-situ-visit-cidoc-dialog/in-situ-visit-cidoc-dialog.component';
+import { EditInSituVisitNarrativeDialogComponent } from '../../components/edit-in-situ-visit-narrative-dialog/edit-in-situ-visit-narrative-dialog.component';
+import { InSituVisitReportNarrative } from '../../models/report.model';
 import { REPORTS_API_SERVICE } from '../../services/reports-api.service';
 
 function formatDateTime(iso: string): string {
@@ -55,6 +59,8 @@ function formatDate(date: string): string {
     InSituVisitReportNarrativeComponent,
     InSituVisitReportRailComponent,
     InSituVisitReportRecordComponent,
+    InSituVisitCidocDialogComponent,
+    EditInSituVisitNarrativeDialogComponent,
   ],
   templateUrl: './in-situ-visit-report-detail-page.component.html',
   styleUrl: './in-situ-visit-report-detail-page.component.scss',
@@ -75,7 +81,9 @@ export class InSituVisitReportDetailPageComponent {
       ),
   });
 
-  protected readonly detail = computed(() => this.detailResource.value() ?? null);
+  protected readonly detail = computed(() =>
+    this.detailResource.hasValue() ? this.detailResource.value() : null,
+  );
   protected readonly detailError = computed<ApiError | null>(() => {
     const err = this.detailResource.error();
     return err ? toApiError(err) : null;
@@ -86,6 +94,11 @@ export class InSituVisitReportDetailPageComponent {
     () => this.detail()?.record?.visitorName ?? 'In-situ visit report',
   );
   protected readonly code = computed(() => this.detail()?.record?.code ?? null);
+
+  protected readonly cidocDialogOpen = signal(false);
+  protected readonly cidocRecordId = signal<string | null>(null);
+  protected readonly narrativeEditorOpen = signal(false);
+  protected readonly narrativeBeingEdited = signal<InSituVisitReportNarrative | null>(null);
 
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatDate = formatDate;
@@ -106,5 +119,33 @@ export class InSituVisitReportDetailPageComponent {
     anchor.download = `${report.record?.code ?? report.id}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  protected openCidocDialog(recordId: string): void {
+    this.cidocRecordId.set(recordId);
+    this.cidocDialogOpen.set(true);
+  }
+
+  protected closeCidocDialog(): void {
+    this.cidocDialogOpen.set(false);
+    this.cidocRecordId.set(null);
+  }
+
+  protected openNarrativeEditor(narrative: InSituVisitReportNarrative): void {
+    this.narrativeBeingEdited.set(narrative);
+    this.narrativeEditorOpen.set(true);
+  }
+
+  protected closeNarrativeEditor(): void {
+    this.narrativeEditorOpen.set(false);
+    this.narrativeBeingEdited.set(null);
+  }
+
+  protected applyUpdatedNarrative(narrative: InSituVisitReportNarrative): void {
+    const detail = this.detail();
+    if (detail) {
+      this.detailResource.set({ ...detail, narrative, narrativeId: narrative.narrativeId });
+    }
+    this.closeNarrativeEditor();
   }
 }

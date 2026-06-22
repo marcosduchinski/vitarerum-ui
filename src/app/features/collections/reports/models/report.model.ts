@@ -9,6 +9,21 @@ export interface CreateInSituVisitReportRequest {
   readonly creativityTemperature: number;
 }
 
+export interface UpdateInSituVisitNarrativeRequest {
+  readonly narrative: string;
+}
+
+export type CidocCrmJsonPrimitive = string | number | boolean | null;
+
+export interface CidocCrmJsonObject {
+  readonly [key: string]: CidocCrmJsonValue;
+}
+
+export type CidocCrmJsonValue =
+  | CidocCrmJsonPrimitive
+  | CidocCrmJsonObject
+  | readonly CidocCrmJsonValue[];
+
 export interface InSituVisitReport {
   readonly id: string;
   readonly createdAt: string;

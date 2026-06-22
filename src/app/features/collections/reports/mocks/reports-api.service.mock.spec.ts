@@ -211,6 +211,89 @@ describe('ReportsApiServiceMock', () => {
     });
   });
 
+  it('returns a CIDOC-CRM JSON-LD document for a generated record', async () => {
+    const report = await firstValueFrom(service.createInSituVisitReport('proj-7', validRequest()));
+
+    const document = await firstValueFrom(
+      service.getInSituVisitCidocCrm(report.inSituVisitRecordId),
+    );
+
+    expect(document).toMatchObject({
+      '@context': { crm: 'http://www.cidoc-crm.org/cidoc-crm/' },
+      '@graph': [
+        {
+          '@id': `ex:visit/${report.inSituVisitRecordId}`,
+          '@type': 'crm:E7_Activity',
+        },
+      ],
+    });
+  });
+
+  it('updates only the narrative text and persists the trimmed result', async () => {
+    const report = await firstValueFrom(service.createInSituVisitReport('proj-7', validRequest()));
+    const before = await firstValueFrom(service.getInSituVisitReportDetail('proj-7', report.id));
+
+    const updated = await firstValueFrom(
+      service.updateInSituVisitNarrative(report.inSituVisitRecordId, report.narrativeId, {
+        narrative: '  Corrected narrative text.  ',
+      }),
+    );
+    const after = await firstValueFrom(service.getInSituVisitReportDetail('proj-7', report.id));
+
+    expect(updated.text).toBe('Corrected narrative text.');
+    expect(after.narrative).toEqual(updated);
+    expect(updated.meta).toEqual(before.narrative?.meta);
+    expect(updated.generatedAt).toBe(before.narrative?.generatedAt);
+  });
+
+  it('rejects missing CIDOC-CRM records, narrative mismatches, and blank edits', async () => {
+    const report = await firstValueFrom(service.createInSituVisitReport('proj-7', validRequest()));
+
+    await expect(
+      firstValueFrom(service.getInSituVisitCidocCrm('missing-record')),
+    ).rejects.toMatchObject({ status: 404, error: 'IN_SITU_VISIT_NOT_FOUND' });
+    await expect(
+      firstValueFrom(
+        service.updateInSituVisitNarrative(report.inSituVisitRecordId, 'missing-narrative', {
+          narrative: 'Valid replacement',
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 404, error: 'NARRATIVE_NOT_FOUND' });
+    await expect(
+      firstValueFrom(
+        service.updateInSituVisitNarrative(report.inSituVisitRecordId, report.narrativeId, {
+          narrative: '   ',
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 422, error: 'VALIDATION_ERROR' });
+  });
+
+  it('rejects non-staff CIDOC-CRM and narrative access', async () => {
+    activeSession = EXTERNAL_SESSION;
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: MOCK_SEED, useValue: TEST_SEED },
+        MockProjectState,
+        ReportsApiServiceMock,
+        { provide: IDENTITY_SERVICE, useClass: IdentityServiceStub },
+      ],
+    });
+    service = TestBed.inject(ReportsApiServiceMock);
+
+    await expect(firstValueFrom(service.getInSituVisitCidocCrm('record-1'))).rejects.toMatchObject({
+      status: 403,
+      error: 'ACCESS_DENIED',
+    });
+    await expect(
+      firstValueFrom(
+        service.updateInSituVisitNarrative('record-1', 'narrative-1', {
+          narrative: 'Corrected narrative',
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 403, error: 'ACCESS_DENIED' });
+  });
+
   it('rejects missing reports and project/report ownership mismatches', async () => {
     const report = await firstValueFrom(service.createInSituVisitReport('proj-7', validRequest()));
 

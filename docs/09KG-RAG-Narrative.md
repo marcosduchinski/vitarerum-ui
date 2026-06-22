@@ -40,7 +40,7 @@ record_id : UUID (required) — the stored InSituVisitRecord id
 ```
 target_language        : string  (default "pt")   — output language code
 narrative_type         : enum    (optional)       — see table; omitted → "institutional"
-creativity_temperature : number  (default 0.3, 0.0–2.0) — LLM temperature
+creativity_temperature : number  (default 0.3, 0.0–1.0) — LLM temperature
 ```
 
 ### Narrative types

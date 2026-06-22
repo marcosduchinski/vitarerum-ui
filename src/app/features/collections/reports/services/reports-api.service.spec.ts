@@ -3,7 +3,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/config/app-config.model';
 
-import { InSituVisitReport, InSituVisitReportDetail } from '../models/report.model';
+import {
+  CidocCrmJsonObject,
+  InSituVisitReport,
+  InSituVisitReportDetail,
+} from '../models/report.model';
 import { ReportsApiService } from './reports-api.service';
 
 describe('ReportsApiService', () => {
@@ -181,6 +185,54 @@ describe('ReportsApiService', () => {
     });
 
     expect(received).toMatchObject({ narrative: null, record: null });
+  });
+
+  it('loads the CIDOC-CRM JSON-LD document for an in-situ visit record', () => {
+    let received: CidocCrmJsonObject | null = null;
+    service.getInSituVisitCidocCrm('record-1').subscribe((document) => (received = document));
+
+    const request = http.expectOne(
+      'https://api.example.test/cedoc-mapping/in-situ-visit/record-1/cidoc-crm',
+    );
+    expect(request.request.method).toBe('GET');
+
+    const document = {
+      '@context': { crm: 'http://www.cidoc-crm.org/cidoc-crm/' },
+      '@graph': [{ '@id': 'ex:visit/record-1', '@type': 'crm:E7_Activity' }],
+    };
+    request.flush(document);
+
+    expect(received).toEqual(document);
+  });
+
+  it('updates and normalizes an in-situ visit narrative', () => {
+    let receivedText: string | null = null;
+    service
+      .updateInSituVisitNarrative('record-1', 'narrative-1', {
+        narrative: 'Corrected narrative text.',
+      })
+      .subscribe((narrative) => (receivedText = narrative.text));
+
+    const request = http.expectOne(
+      'https://api.example.test/cedoc-mapping/in-situ-visit/record-1/narratives/narrative-1',
+    );
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ narrative: 'Corrected narrative text.' });
+    request.flush({
+      narrative_id: 'narrative-1',
+      record_id: 'record-1',
+      generated_at: '2026-06-22T10:30:00Z',
+      meta: {
+        resolved_narrative_type: 'institutional',
+        resolution_source: 'default',
+        target_language: 'pt',
+        creativity_temperature: 0.3,
+        llm_model: 'llama3.1:8b',
+      },
+      data: { narrative: 'Corrected narrative text.' },
+    });
+
+    expect(receivedText).toBe('Corrected narrative text.');
   });
 
   it('creates an in-situ visit report with the contract wire format', () => {

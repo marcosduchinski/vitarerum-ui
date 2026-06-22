@@ -5,6 +5,7 @@ import { buildApiUrl } from '@core/http/api-url.util';
 import { map } from 'rxjs';
 
 import {
+  CidocCrmJsonObject,
   CreateInSituVisitReportRequest,
   InSituVisitRecord,
   InSituVisitReport,
@@ -14,6 +15,7 @@ import {
   InSituVisitReportListPage,
   InSituVisitReportNarrative,
   InSituVisitReportsQuery,
+  UpdateInSituVisitNarrativeRequest,
 } from '../models/report.model';
 
 interface NarrativeDto {
@@ -96,6 +98,25 @@ export class ReportsApiService {
         this.url(`/reports/collection-use/${projectId}/in_situ_visit/${reportId}/detail`),
       )
       .pipe(map((detail) => this.toDetail(detail)));
+  }
+
+  getInSituVisitCidocCrm(recordId: string) {
+    return this.http.get<CidocCrmJsonObject>(
+      this.url(`/cedoc-mapping/in-situ-visit/${recordId}/cidoc-crm`),
+    );
+  }
+
+  updateInSituVisitNarrative(
+    recordId: string,
+    narrativeId: string,
+    request: UpdateInSituVisitNarrativeRequest,
+  ) {
+    return this.http
+      .patch<NarrativeDto>(
+        this.url(`/cedoc-mapping/in-situ-visit/${recordId}/narratives/${narrativeId}`),
+        { narrative: request.narrative },
+      )
+      .pipe(map((narrative) => this.toNarrative(narrative)));
   }
 
   private buildPaginationParams(query: InSituVisitReportsQuery): HttpParams {

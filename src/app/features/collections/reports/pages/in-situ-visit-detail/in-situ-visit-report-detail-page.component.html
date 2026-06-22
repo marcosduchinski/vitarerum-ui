@@ -44,7 +44,12 @@
 
     <div class="report-detail__body">
       <main class="report-detail__main">
-        <app-in-situ-visit-report-narrative [narrative]="report.narrative" />
+        <app-in-situ-visit-report-narrative
+          [narrative]="report.narrative"
+          [recordId]="report.inSituVisitRecordId"
+          (viewCidocCrm)="openCidocDialog($event)"
+          (editNarrative)="openNarrativeEditor($event)"
+        />
         <app-in-situ-visit-report-record [record]="report.record" />
       </main>
 
@@ -74,3 +79,16 @@
     </details>
   }
 </div>
+
+<app-in-situ-visit-cidoc-dialog
+  [open]="cidocDialogOpen()"
+  [recordId]="cidocRecordId()"
+  (closed)="closeCidocDialog()"
+/>
+
+<app-edit-in-situ-visit-narrative-dialog
+  [open]="narrativeEditorOpen()"
+  [narrative]="narrativeBeingEdited()"
+  (closed)="closeNarrativeEditor()"
+  (saved)="applyUpdatedNarrative($event)"
+/>
