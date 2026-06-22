@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
-import { projectDetailRouteForGroup } from './project-detail-route.util';
+import { projectDetailRouteForGroup } from '../../utils/project-detail-route.util';
 import { ProjectPublicationLogPanelComponent } from './project-publication-log-panel.component';
 
 @Component({

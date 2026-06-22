@@ -78,7 +78,8 @@
                   <td>
                     <a
                       class="projects-table__title"
-                      [routerLink]="['/p/collections/projects', project.id]"
+                      [routerLink]="detailRoute(project.id)"
+                      [queryParams]="detailQueryParams"
                     >
                       {{ project.title }}
                     </a>
@@ -131,10 +132,7 @@
               </span>
               <label class="projects-pagination__size" for="cancelled-projects-page-size">
                 Rows
-                <select
-                  id="cancelled-projects-page-size"
-                  (change)="onPageSizeChange($event)"
-                >
+                <select id="cancelled-projects-page-size" (change)="onPageSizeChange($event)">
                   @for (size of pageSizeOptions; track size) {
                     <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
                   }

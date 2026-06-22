@@ -37,6 +37,29 @@ const PROJECTS: readonly CollectionUseProjectSummary[] = Array.from({ length: 25
   },
 }));
 
+const DETAIL_ROUTE_CASES = [
+  {
+    label: 'collections management',
+    email: 'bob@collections.example.com',
+    route: ['/p/collections/projects/collections', 'project-1'],
+  },
+  {
+    label: 'curatorial',
+    email: 'carol@curatorial.example.com',
+    route: ['/p/collections/projects/curatorial', 'project-1'],
+  },
+  {
+    label: 'direction',
+    email: 'dan@direction.example.com',
+    route: ['/p/collections/projects/direction', 'project-1'],
+  },
+  {
+    label: 'external fallback',
+    email: 'alice@ext.example.com',
+    route: ['/p/collections/projects', 'project-1'],
+  },
+] as const;
+
 class ProjectApiServiceStub {
   readonly queries: ProjectListQuery[] = [];
 
@@ -66,6 +89,7 @@ class ProjectApiServiceStub {
 
 describe('ProjectsCompletedPageComponent', () => {
   let projectService: ProjectApiServiceStub;
+  let identity: IdentityServiceMock;
   let router: Router;
 
   beforeEach(async () => {
@@ -81,9 +105,11 @@ describe('ProjectsCompletedPageComponent', () => {
     }).compileComponents();
 
     router = TestBed.inject(Router);
+    identity = TestBed.inject(IDENTITY_SERVICE) as IdentityServiceMock;
   });
 
   afterEach(() => {
+    identity.signOut();
     document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
@@ -117,31 +143,46 @@ describe('ProjectsCompletedPageComponent', () => {
     expect(text).toContain('Alice Ferreira');
     expect(text).toContain('Bob Santos');
     expect(text).toContain('1-20 of 25 projects');
-    expect(
-      compiled.querySelector('[aria-label="More actions for VR-2026-081"]'),
-    ).not.toBeNull();
+    expect(compiled.querySelector('[aria-label="More actions for VR-2026-081"]')).not.toBeNull();
   });
 
-  it('opens the row menu and navigates to the project detail', async () => {
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    const fixture = TestBed.createComponent(ProjectsCompletedPageComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+  it.each(DETAIL_ROUTE_CASES)(
+    'links and navigates $label users to the correct project detail',
+    async ({ email, route }) => {
+      await identity.signIn({ email, password: 'vita2026' });
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      const fixture = TestBed.createComponent(ProjectsCompletedPageComponent);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
 
-    (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-081"]')!
-      .click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+      const titleLink = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+        '.projects-table__title',
+      );
+      expect(titleLink?.getAttribute('href')).toContain(route.join('/'));
+      expect(titleLink?.getAttribute('href')).toContain(
+        'returnTo=%2Fp%2Fcollections%2Fprojects%2Fcompleted',
+      );
 
-    const details = Array.from(
-      document.body.querySelectorAll<HTMLElement>('.p-menu a, .p-menu button'),
-    ).find((item) => item.textContent?.trim() === 'Details');
-    details!.click();
+      (fixture.nativeElement as HTMLElement)
+        .querySelector<HTMLButtonElement>('[aria-label="More actions for VR-2026-081"]')!
+        .click();
+      fixture.detectChanges();
+      await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/p/collections/projects', 'project-1']);
-  });
+      const details = Array.from(
+        document.body.querySelectorAll<HTMLElement>('.p-menu a, .p-menu button'),
+      ).find((item) => item.textContent?.trim() === 'Details');
+      details!.click();
+
+      expect(navigateSpy).toHaveBeenCalledWith([...route], {
+        queryParams: {
+          returnTo: '/p/collections/projects/completed',
+          returnLabel: 'completed projects',
+        },
+      });
+    },
+  );
 
   it('applies and clears search from the first page', async () => {
     const fixture = TestBed.createComponent(ProjectsCompletedPageComponent);

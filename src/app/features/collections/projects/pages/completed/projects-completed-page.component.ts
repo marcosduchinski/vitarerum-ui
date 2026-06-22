@@ -21,6 +21,7 @@ import { UseType } from '@shared/models/collection-use-status.model';
 
 import { CollectionUseProjectSummary } from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
+import { projectDetailRouteForGroup } from '../../utils/project-detail-route.util';
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
@@ -30,6 +31,11 @@ const TYPE_LABELS: Record<UseType, string> = {
   IN_SITU_VISIT: 'In-situ visit',
   OTHER: 'Other',
 };
+
+const DETAIL_QUERY_PARAMS = {
+  returnTo: '/p/collections/projects/completed',
+  returnLabel: 'completed projects',
+} as const;
 
 @Component({
   selector: 'app-projects-completed-page',
@@ -95,6 +101,11 @@ export class ProjectsCompletedPageComponent {
 
   protected readonly typeLabels = TYPE_LABELS;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  protected readonly detailQueryParams = DETAIL_QUERY_PARAMS;
+
+  protected detailRoute(projectId: string): readonly string[] {
+    return projectDetailRouteForGroup(projectId, this.identity.session()?.group);
+  }
 
   protected actionItemsFor(project: CollectionUseProjectSummary): MenuItem[] {
     return [
@@ -102,7 +113,9 @@ export class ProjectsCompletedPageComponent {
         label: 'Details',
         icon: 'pi pi-eye',
         command: () => {
-          void this.router.navigate(['/p/collections/projects', project.id]);
+          void this.router.navigate([...this.detailRoute(project.id)], {
+            queryParams: this.detailQueryParams,
+          });
         },
       },
     ];
