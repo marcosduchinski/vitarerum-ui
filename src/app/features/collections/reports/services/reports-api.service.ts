@@ -4,6 +4,8 @@ import { API_BASE_URL } from '@core/config/app-config.model';
 import { buildApiUrl } from '@core/http/api-url.util';
 
 import {
+  CreateInSituVisitReportRequest,
+  InSituVisitReport,
   VisitsInSituReportPage,
   VisitsInSituReportQuery,
 } from '../models/report.model';
@@ -20,6 +22,14 @@ export class ReportsApiService {
       this.url('/reports/collection-use/visits-in-situ'),
       { params: this.buildVisitsInSituParams(query) },
     );
+  }
+
+  createInSituVisitReport(projectId: string, request: CreateInSituVisitReportRequest) {
+    return this.http.post<InSituVisitReport>(this.url(`/reports/${projectId}/in_situ_visit`), {
+      target_language: request.targetLanguage,
+      narrative_type: request.narrativeType,
+      creativity_temperature: request.creativityTemperature,
+    });
   }
 
   private buildVisitsInSituParams(query: VisitsInSituReportQuery): HttpParams {

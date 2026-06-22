@@ -1,8 +1,18 @@
-import { ComponentRef } from '@angular/core';
+import { ComponentRef, computed, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
+import { IDENTITY_SERVICE, IdentityService } from '@core/auth/identity.service';
+import { GroupName } from '@core/auth/models/group-name.enum';
+import { IdentitySession } from '@core/auth/models/identity-session.model';
+import { LoginRequest } from '@core/auth/models/login.model';
+
+import {
+  CreateInSituVisitReportRequest,
+  InSituVisitReport,
+} from '../../../reports/models/report.model';
+import { REPORTS_API_SERVICE } from '../../../reports/services/reports-api.service';
 import { CollectionUseProjectDetail, ProjectEventsPage } from '../../models/project.model';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 import { ProjectCuratorialDetailPageComponent } from './project-curatorial-detail-page.component';
@@ -84,17 +94,97 @@ class ProjectApiServiceStub {
   }
 }
 
+class IdentityServiceStub implements IdentityService {
+  private readonly sessionState = signal<IdentitySession | null>({
+    accessToken: 'token',
+    user: { id: 'u-carol', email: 'carol@example.test', displayName: 'Carol Souza' },
+    group: 'CURATORIAL',
+    availableGroups: ['CURATORIAL', 'COLLECTIONS_MANAGEMENT', 'DIRECTION'],
+    permissions: [
+      { permissionId: 'perm-carol', group: 'CURATORIAL' },
+      { permissionId: 'perm-carol-collections', group: 'COLLECTIONS_MANAGEMENT' },
+      { permissionId: 'perm-carol-direction', group: 'DIRECTION' },
+    ],
+  });
+
+  readonly session = this.sessionState.asReadonly();
+  readonly isAuthenticated = computed(() => this.session() !== null);
+  readonly isStaff = computed(() => {
+    const group = this.session()?.group;
+    return group != null && group !== 'EXTERNAL';
+  });
+
+  signIn(credentials: LoginRequest): Promise<void> {
+    void credentials;
+    return Promise.resolve();
+  }
+
+  signOut(): void {
+    this.sessionState.set(null);
+  }
+
+  getAccessToken(): string | null {
+    return this.session()?.accessToken ?? null;
+  }
+
+  getPermissionId(): string | null {
+    const session = this.session();
+    return (
+      session?.permissions?.find((permission) => permission.group === session.group)
+        ?.permissionId ?? null
+    );
+  }
+
+  setGroup(group: GroupName): void {
+    const session = this.session();
+    if (session) this.sessionState.set({ ...session, group });
+  }
+
+  updateAvailableGroups(groups: readonly GroupName[]): void {
+    const session = this.session();
+    if (session) this.sessionState.set({ ...session, availableGroups: groups });
+  }
+}
+
+class ReportsApiServiceStub {
+  readonly created: { projectId: string; request: CreateInSituVisitReportRequest }[] = [];
+
+  createInSituVisitReport(projectId: string, request: CreateInSituVisitReportRequest) {
+    this.created.push({ projectId, request });
+    return of<InSituVisitReport>({
+      id: 'report-1',
+      createdAt: '2026-06-22T10:30:00Z',
+      createdBy: 'perm-carol',
+      projectId,
+      narrativeId: 'narrative-1',
+      inSituVisitRecordId: 'record-1',
+      targetLanguage: request.targetLanguage,
+      narrativeType: request.narrativeType,
+      creativityTemperature: request.creativityTemperature,
+    });
+  }
+}
+
 describe('ProjectCuratorialDetailPageComponent', () => {
   let projectService: ProjectApiServiceStub;
+  let identity: IdentityServiceStub;
+  let reportsService: ReportsApiServiceStub;
   let router: Router;
   let componentRef: ComponentRef<ProjectCuratorialDetailPageComponent>;
 
   beforeEach(async () => {
     projectService = new ProjectApiServiceStub();
+    identity = new IdentityServiceStub();
+    reportsService = new ReportsApiServiceStub();
 
     await TestBed.configureTestingModule({
       imports: [ProjectCuratorialDetailPageComponent],
-      providers: [provideRouter([]), { provide: PROJECT_API_SERVICE, useValue: projectService }],
+      providers: [
+        provideRouter([]),
+        { provide: PROJECT_API_SERVICE, useValue: projectService },
+        { provide: IDENTITY_SERVICE, useValue: identity },
+        { provide: REPORTS_API_SERVICE, useValue: reportsService },
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -190,6 +280,64 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     );
   });
 
+  it('shows in-situ visit report creation for curatorial and collections groups', async () => {
+    const compiled = await render();
+    tabByName(compiled, 'Actions').click();
+    componentRef.changeDetectorRef.detectChanges();
+
+    expect(compiled.textContent).toContain('Reports');
+    expect(compiled.textContent).toContain('In-situ visit narrative report');
+    expect(compiled.textContent).toContain('Create new In Situ Visit Report');
+
+    identity.setGroup('COLLECTIONS_MANAGEMENT');
+    componentRef.changeDetectorRef.detectChanges();
+    expect(compiled.textContent).toContain('Create new In Situ Visit Report');
+  });
+
+  it('hides report creation for direction and non-in-situ projects', async () => {
+    identity.setGroup('DIRECTION');
+    const compiled = await render();
+    tabByName(compiled, 'Actions').click();
+    componentRef.changeDetectorRef.detectChanges();
+    expect(compiled.textContent).not.toContain('Create new In Situ Visit Report');
+
+    identity.setGroup('CURATORIAL');
+    projectService.project = { ...PROJECT, type: 'EXHIBITION' };
+    const exhibitionCompiled = await render();
+    tabByName(exhibitionCompiled, 'Actions').click();
+    componentRef.changeDetectorRef.detectChanges();
+    expect(exhibitionCompiled.textContent).not.toContain('Create new In Situ Visit Report');
+  });
+
+  it('creates a report with the selected options and shows success feedback', async () => {
+    const compiled = await render();
+    tabByName(compiled, 'Actions').click();
+    componentRef.changeDetectorRef.detectChanges();
+    buttonByText(compiled, 'Create new In Situ Visit Report').click();
+    componentRef.changeDetectorRef.detectChanges();
+
+    changeSelect(selectById(compiled, 'report-target-language'), 'en');
+    changeSelect(selectById(compiled, 'report-narrative-type'), 'scientific');
+    changeInput(inputById(compiled, 'report-creativity'), '0.6');
+    componentRef.changeDetectorRef.detectChanges();
+    buttonByText(compiled, 'Create report').click();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    componentRef.changeDetectorRef.detectChanges();
+
+    expect(reportsService.created).toEqual([
+      {
+        projectId: PROJECT.id,
+        request: {
+          targetLanguage: 'en',
+          narrativeType: 'scientific',
+          creativityTemperature: 0.6,
+        },
+      },
+    ]);
+    expect(compiled.textContent).toContain('In-situ visit report created');
+    expect(compiled.textContent).toContain('report-1');
+  });
+
   it('confirms cancellation and navigates to cancelled projects', async () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const compiled = await render();
@@ -234,4 +382,26 @@ function linkByText(root: HTMLElement, text: string): HTMLAnchorElement {
   );
   expect(link).not.toBeNull();
   return link!;
+}
+
+function selectById(root: HTMLElement, id: string): HTMLSelectElement {
+  const select = root.querySelector<HTMLSelectElement>(`#${id}`);
+  expect(select).not.toBeNull();
+  return select!;
+}
+
+function inputById(root: HTMLElement, id: string): HTMLInputElement {
+  const input = root.querySelector<HTMLInputElement>(`#${id}`);
+  expect(input).not.toBeNull();
+  return input!;
+}
+
+function changeSelect(element: HTMLSelectElement, value: string): void {
+  element.value = value;
+  element.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function changeInput(element: HTMLInputElement, value: string): void {
+  element.value = value;
+  element.dispatchEvent(new Event('input', { bubbles: true }));
 }

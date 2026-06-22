@@ -10,9 +10,11 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
+import { FeedbackMessageComponent } from '@shared/components/feedback-message/feedback-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import {
   StatusChipComponent,
@@ -21,6 +23,12 @@ import {
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
+import { CreateInSituVisitReportModalComponent } from '../../../reports/components/create-in-situ-visit-report-modal/create-in-situ-visit-report-modal.component';
+import {
+  CreateInSituVisitReportRequest,
+  InSituVisitReport,
+} from '../../../reports/models/report.model';
+import { REPORTS_API_SERVICE } from '../../../reports/services/reports-api.service';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
 type StaffProjectPanel = 'overview' | 'tasks';
@@ -74,15 +82,19 @@ function formatDateTime(iso: string): string {
     RouterLink,
     LoadingStateComponent,
     ErrorMessageComponent,
+    FeedbackMessageComponent,
     StatusChipComponent,
     TypeChipComponent,
     ConfirmModalComponent,
+    CreateInSituVisitReportModalComponent,
   ],
   templateUrl: './project-staff-detail-page.component.html',
   styleUrl: './project-staff-detail-page.component.scss',
 })
 export class ProjectStaffDetailPageComponent {
   private readonly projectService = inject(PROJECT_API_SERVICE);
+  private readonly reportsService = inject(REPORTS_API_SERVICE);
+  private readonly identity = inject(IDENTITY_SERVICE);
   private readonly router = inject(Router);
 
   readonly id = input.required<string>();
@@ -128,6 +140,13 @@ export class ProjectStaffDetailPageComponent {
     const status = this.project()?.status;
     return status === 'IN_PROGRESS' || status === 'COMPLETED';
   });
+  protected readonly canCreateInSituVisitReport = computed(() => {
+    const group = this.identity.session()?.group;
+    return (
+      this.project()?.type === 'IN_SITU_VISIT' &&
+      (group === 'CURATORIAL' || group === 'COLLECTIONS_MANAGEMENT')
+    );
+  });
   protected readonly logRouteSegment = computed(() => {
     const type = this.project()?.type;
     return type ? LOG_ROUTE_SEGMENTS[type] : 'research';
@@ -156,6 +175,10 @@ export class ProjectStaffDetailPageComponent {
   protected readonly acting = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly cancelConfirmOpen = signal(false);
+  protected readonly reportModalOpen = signal(false);
+  protected readonly reportCreating = signal(false);
+  protected readonly reportError = signal<ApiError | null>(null);
+  protected readonly createdReport = signal<InSituVisitReport | null>(null);
 
   protected readonly formatDate = formatDate;
   protected readonly formatDateTime = formatDateTime;
@@ -176,6 +199,42 @@ export class ProjectStaffDetailPageComponent {
 
   protected closeCancelConfirm(): void {
     this.cancelConfirmOpen.set(false);
+  }
+
+  protected openReportModal(): void {
+    if (!this.canCreateInSituVisitReport()) return;
+    this.reportError.set(null);
+    this.createdReport.set(null);
+    this.reportModalOpen.set(true);
+  }
+
+  protected closeReportModal(): void {
+    if (this.reportCreating()) return;
+    this.reportError.set(null);
+    this.reportModalOpen.set(false);
+  }
+
+  protected dismissCreatedReport(): void {
+    this.createdReport.set(null);
+  }
+
+  protected async createInSituVisitReport(request: CreateInSituVisitReportRequest): Promise<void> {
+    if (this.reportCreating() || !this.canCreateInSituVisitReport()) return;
+
+    this.reportCreating.set(true);
+    this.reportError.set(null);
+
+    try {
+      const report = await firstValueFrom(
+        this.reportsService.createInSituVisitReport(this.id(), request),
+      );
+      this.createdReport.set(report);
+      this.reportModalOpen.set(false);
+    } catch (err) {
+      this.reportError.set(toApiError(err));
+    } finally {
+      this.reportCreating.set(false);
+    }
   }
 
   protected async cancel(): Promise<void> {

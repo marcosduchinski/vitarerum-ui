@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/config/app-config.model';
 
+import { InSituVisitReport } from '../models/report.model';
 import { ReportsApiService } from './reports-api.service';
 
 describe('ReportsApiService', () => {
@@ -52,5 +53,43 @@ describe('ReportsApiService', () => {
     expect(request.request.params.get('page')).toBe('2');
     expect(request.request.params.get('size')).toBe('25');
     request.flush({ content: [], page: 2, size: 25, totalElements: 0, totalPages: 0 });
+  });
+
+  it('creates an in-situ visit report with the contract wire format', () => {
+    const response = {
+      id: 'report-1',
+      createdAt: '2026-06-22T10:30:00Z',
+      createdBy: 'permission-1',
+      projectId: 'project-1',
+      narrativeId: 'narrative-1',
+      inSituVisitRecordId: 'record-1',
+      targetLanguage: 'pt' as const,
+      narrativeType: 'institutional' as const,
+      creativityTemperature: 0.3,
+    };
+    let received: InSituVisitReport | null = null;
+
+    service
+      .createInSituVisitReport('project-1', {
+        targetLanguage: 'pt',
+        narrativeType: 'institutional',
+        creativityTemperature: 0.3,
+      })
+      .subscribe((value) => (received = value));
+
+    const request = http.expectOne('https://api.example.test/reports/project-1/in_situ_visit');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      target_language: 'pt',
+      narrative_type: 'institutional',
+      creativity_temperature: 0.3,
+    });
+
+    request.flush(response, {
+      status: 201,
+      statusText: 'Created',
+      headers: { Location: '/api/v1/reports/project-1/in_situ_visit/report-1' },
+    });
+    expect(received).toEqual(response);
   });
 });

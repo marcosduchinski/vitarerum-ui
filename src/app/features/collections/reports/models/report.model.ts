@@ -4,6 +4,27 @@ import { UseResult, UseStatus } from '@shared/models/collection-use-status.model
 
 export type ReportProjectStatus = Extract<UseStatus, 'COMPLETED' | 'CANCELLED'>;
 
+export type InSituVisitReportTargetLanguage = 'pt' | 'en';
+export type InSituVisitReportNarrativeType = 'institutional' | 'scientific' | 'social_media';
+
+export interface CreateInSituVisitReportRequest {
+  readonly targetLanguage: InSituVisitReportTargetLanguage;
+  readonly narrativeType: InSituVisitReportNarrativeType;
+  readonly creativityTemperature: number;
+}
+
+export interface InSituVisitReport {
+  readonly id: string;
+  readonly createdAt: string;
+  readonly createdBy: string;
+  readonly projectId: string;
+  readonly narrativeId: string;
+  readonly inSituVisitRecordId: string;
+  readonly targetLanguage: InSituVisitReportTargetLanguage;
+  readonly narrativeType: InSituVisitReportNarrativeType;
+  readonly creativityTemperature: number;
+}
+
 export interface VisitsInSituReportQuery extends PageQuery {
   readonly status?: readonly ReportProjectStatus[];
   readonly dateFrom?: string;
