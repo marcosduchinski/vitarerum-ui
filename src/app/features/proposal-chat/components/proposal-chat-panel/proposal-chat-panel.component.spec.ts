@@ -12,7 +12,6 @@ import {
 import { PROPOSAL_CHAT_SERVICE } from '../../services/proposal-chat.service';
 import { ProposalChatPanelComponent } from './proposal-chat-panel.component';
 import { PROPOSAL_API_SERVICE } from '@features/collections/proposals/services/proposal-api.service';
-import { ProposalDetail } from '@features/collections/proposals/models/proposal.model';
 
 const CONTEXT: ProposalChatContext = {
   conversationId: 'conv-4',
@@ -68,30 +67,23 @@ class ProposalChatServiceStub {
 class ProposalApiServiceStub {
   readonly updateCalls: {
     readonly proposalId: string;
-    readonly intendedUse: IntendedUseSuggestion['intendedUse'];
+    readonly request: { readonly intendedUse: IntendedUseSuggestion['intendedUse'] };
   }[] = [];
 
-  updateIntendedUse(proposalId: string, intendedUse: IntendedUseSuggestion['intendedUse']) {
-    this.updateCalls.push({ proposalId, intendedUse });
-    const updated: ProposalDetail = {
+  updateProposal(
+    proposalId: string,
+    request: { readonly intendedUse: IntendedUseSuggestion['intendedUse'] },
+  ) {
+    this.updateCalls.push({ proposalId, request });
+    return of({
       id: proposalId,
       referenceNumber: CONTEXT.proposal.referenceNumber,
       title: CONTEXT.proposal.title,
       status: CONTEXT.proposal.status,
-      type: intendedUse.useType,
-      intendedUse,
-      requestedBy: {
-        permissionId: 'perm-alice',
-        user: { id: 'u-alice', name: 'Alice', email: 'alice@example.test' },
-        group: 'EXTERNAL',
-      },
-      assignedTo: null,
-      submittedAt: '2026-06-01T10:30:00Z',
-      conversationId: CONTEXT.conversationId,
-      documents: [],
-      requestedObjects: [],
-    };
-    return of(updated);
+      beginDate: null,
+      endDate: null,
+      lastEvent: null,
+    });
   }
 }
 
@@ -210,8 +202,8 @@ describe('ProposalChatPanelComponent', () => {
 
   it('applies a suggestion through the proposal API', async () => {
     const { fixture, proposalService } = await setup();
-    const applied: ProposalDetail[] = [];
-    fixture.componentInstance.applied.subscribe((proposal) => applied.push(proposal));
+    let applied = false;
+    fixture.componentInstance.applied.subscribe(() => (applied = true));
 
     triageTask(fixture).click();
     await flushMicrotasks();
@@ -224,13 +216,10 @@ describe('ProposalChatPanelComponent', () => {
     expect(proposalService.updateCalls).toEqual([
       {
         proposalId: 'prop-4',
-        intendedUse: SUGGESTION.intendedUse,
+        request: { intendedUse: SUGGESTION.intendedUse },
       },
     ]);
-    expect(applied[0]).toMatchObject({
-      id: 'prop-4',
-      intendedUse: SUGGESTION.intendedUse,
-    });
+    expect(applied).toBe(true);
     // The applied suggestion is acknowledged in the thread.
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Applied');
   });

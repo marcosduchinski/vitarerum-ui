@@ -23,7 +23,7 @@ import {
   SendMessageRequest,
 } from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
-import { ApproveProposalRequest } from '../../models/proposal-actions.model';
+import { ApproveProposalRequest, UpdateProposalRequest } from '../../models/proposal-actions.model';
 import { ProposalMyDetailPageComponent } from './proposal-my-detail-page.component';
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
@@ -145,9 +145,9 @@ const STAFF_USERS: Page<UserDetail> = {
 class ProposalApiServiceStub {
   readonly getProposalCalls: string[] = [];
   readonly listEventsCalls: string[] = [];
-  readonly updateIntendedUseCalls: {
+  readonly updateProposalCalls: {
     readonly proposalId: string;
-    readonly intendedUse: ProposalDetail['intendedUse'];
+    readonly request: UpdateProposalRequest;
   }[] = [];
   readonly approveCalls: {
     readonly proposalId: string;
@@ -187,14 +187,22 @@ class ProposalApiServiceStub {
     return of(EVENTS);
   }
 
-  updateIntendedUse(proposalId: string, intendedUse: ProposalDetail['intendedUse']) {
-    this.updateIntendedUseCalls.push({ proposalId, intendedUse });
+  updateProposal(proposalId: string, request: UpdateProposalRequest) {
+    this.updateProposalCalls.push({ proposalId, request });
     this.proposal = {
       ...this.proposal,
-      type: intendedUse!.useType,
-      intendedUse,
+      type: request.intendedUse?.useType ?? this.proposal.type,
+      intendedUse: request.intendedUse ?? this.proposal.intendedUse,
     };
-    return of(this.proposal);
+    return of({
+      id: proposalId,
+      referenceNumber: this.proposal.referenceNumber,
+      title: this.proposal.title,
+      status: this.proposal.status,
+      beginDate: this.proposal.beginDate ?? null,
+      endDate: this.proposal.endDate ?? null,
+      lastEvent: null,
+    });
   }
 
   uploadDocument(proposalId: string, file: File, documentType: string) {
@@ -581,12 +589,14 @@ describe('ProposalMyDetailPageComponent', () => {
     await wait(20);
     fixture.detectChanges();
 
-    expect(proposalService.updateIntendedUseCalls).toEqual([
+    expect(proposalService.updateProposalCalls).toEqual([
       {
         proposalId: 'proposal-1',
-        intendedUse: {
-          useType: 'IN_SITU_VISIT',
-          description: 'Research access to photographic records.',
+        request: {
+          intendedUse: {
+            useType: 'IN_SITU_VISIT',
+            description: 'Research access to photographic records.',
+          },
         },
       },
     ]);

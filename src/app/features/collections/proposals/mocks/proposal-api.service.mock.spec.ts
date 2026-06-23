@@ -236,27 +236,6 @@ describe('ProposalApiServiceMock', () => {
     expect(last.type).toBe('APPROVED');
   });
 
-  it('updates intended use and records a proposal event', async () => {
-    const updated = await firstValueFrom(
-      service.updateIntendedUse('prop-3', {
-        useType: 'EXHIBITION',
-        description: 'Public exhibition based on field notebook materials.',
-      }),
-    );
-
-    expect(updated.type).toBe('EXHIBITION');
-    expect(updated.intendedUse).toEqual({
-      useType: 'EXHIBITION',
-      description: 'Public exhibition based on field notebook materials.',
-    });
-
-    const events = await firstValueFrom(service.listEvents('prop-3'));
-    expect(events.content.at(-1)).toMatchObject({
-      type: 'INTENDED_USE_UPDATED',
-      note: 'Intended use updated to exhibition.',
-    });
-  });
-
   it('propagates proposal APPROVED status to the associated project', async () => {
     const projectService = TestBed.inject(ProjectApiServiceMock);
 

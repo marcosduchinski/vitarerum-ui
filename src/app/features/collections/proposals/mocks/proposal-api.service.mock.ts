@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { PermissionPrincipal } from '@core/auth/models/permission.model';
-import { IntendedUse } from '@shared/models/collection-use-status.model';
 import { Page, PageQuery } from '@shared/models/page.model';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -287,32 +286,6 @@ export class ProposalApiServiceMock {
       note: request.note || null,
     });
     return of(undefined);
-  }
-
-  updateIntendedUse(proposalId: string, intendedUse: IntendedUse): Observable<ProposalDetail> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    if (!this.identity.isStaff()) {
-      return throwError(() => ({
-        status: 403,
-        error: 'ACCESS_DENIED',
-        message: 'Only staff members can update proposal intended use',
-      }));
-    }
-
-    const updated: ProposalDetail = {
-      ...proposal,
-      type: intendedUse.useType,
-      intendedUse,
-    };
-    this.proposals.set(proposalId, updated);
-    this.pushEvent(proposalId, {
-      occurredAt: new Date().toISOString(),
-      type: 'INTENDED_USE_UPDATED',
-      triggeredBy: this.currentPrincipal(),
-      note: `Intended use updated to ${intendedUse.useType.replace('_', ' ').toLowerCase()}.`,
-    });
-    return of(updated);
   }
 
   listDocuments(proposalId: string): Observable<ProposalDocumentsResponse> {

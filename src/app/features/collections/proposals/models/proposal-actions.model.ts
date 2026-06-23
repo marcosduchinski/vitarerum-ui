@@ -17,8 +17,6 @@ export interface ProposalNoteRequest {
   readonly note: string;
 }
 
-export type UpdateIntendedUseRequest = IntendedUse;
-
 // Omitted properties are left unchanged by the backend. Explicit null clears
 // only the nullable metadata fields; intendedUse is replaced as a whole.
 export interface UpdateProposalRequest {

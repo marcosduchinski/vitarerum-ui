@@ -19,7 +19,6 @@ import {
   ProposalNoteRequest,
   ProposalReasonRequest,
   ReferToDirectionRequest,
-  UpdateIntendedUseRequest,
   UpdateProposalRequest,
 } from '../models/proposal-actions.model';
 import {
@@ -121,15 +120,6 @@ export class ProposalApiService {
 
   requestDocuments(proposalId: string, request: ProposalNoteRequest): Observable<void> {
     return this.http.post<void>(this.url(`/proposals/${proposalId}/request-documents`), request);
-  }
-
-  updateIntendedUse(
-    proposalId: string,
-    request: UpdateIntendedUseRequest,
-  ): Observable<ProposalDetail> {
-    return this.http
-      .put<ProposalDetail>(this.url(`/proposals/${proposalId}/intended-use`), request)
-      .pipe(map((p) => normalizeProposalType(p)));
   }
 
   listDocuments(proposalId: string): Observable<ProposalDocumentsResponse> {

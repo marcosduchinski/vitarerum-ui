@@ -17,7 +17,6 @@ import { IntendedUse } from '@shared/models/collection-use-status.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 import { PROPOSAL_API_SERVICE } from '@features/collections/proposals/services/proposal-api.service';
-import { ProposalDetail } from '@features/collections/proposals/models/proposal.model';
 
 import { IntendedUseSuggestion } from '../../models/proposal-chat.model';
 import { PROPOSAL_CHAT_SERVICE } from '../../services/proposal-chat.service';
@@ -85,7 +84,7 @@ export class ProposalChatPanelComponent {
   readonly embedded = input(false);
   // Overridable so tests can disable the short "assistant is working" pause.
   readonly thinkingDelayMs = input(650);
-  readonly applied = output<ProposalDetail>();
+  readonly applied = output<void>();
 
   protected readonly contextResource = resource({
     params: () => ({ conversationId: this.conversationId(), messageId: this.messageId() }),
@@ -202,11 +201,10 @@ export class ProposalChatPanelComponent {
     this.applyError.set(null);
 
     try {
-      const updated = await firstValueFrom(
-        this.proposalService.updateIntendedUse(
-          context.proposal.proposalId,
-          turn.suggestion.intendedUse,
-        ),
+      await firstValueFrom(
+        this.proposalService.updateProposal(context.proposal.proposalId, {
+          intendedUse: turn.suggestion.intendedUse,
+        }),
       );
       this.appliedIds.update((ids) => new Set(ids).add(turn.id));
       this.appendTurn({
@@ -216,7 +214,7 @@ export class ProposalChatPanelComponent {
         text: `Applied “${this.formatUseType(turn.suggestion.intendedUse.useType)}” to the proposal.`,
       });
       this.liveMessage.set('Suggestion applied to the proposal.');
-      this.applied.emit(updated);
+      this.applied.emit();
       this.contextResource.reload();
     } catch (err) {
       this.applyError.set(toApiError(err));
