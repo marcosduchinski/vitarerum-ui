@@ -70,6 +70,18 @@
       >
         Actions
       </button>
+      <button
+        type="button"
+        id="todo-tab"
+        class="project-detail__tab"
+        [class.project-detail__tab--active]="activePanel() === 'todo'"
+        role="tab"
+        aria-controls="todo-panel"
+        [attr.aria-selected]="activePanel() === 'todo'"
+        (click)="selectPanel('todo')"
+      >
+        TODO List
+      </button>
     </nav>
 
     @switch (activePanel()) {
@@ -360,6 +372,16 @@
               </button>
             </div>
           </div>
+        </section>
+      }
+      @case ('todo') {
+        <section
+          id="todo-panel"
+          class="project-detail__panel"
+          role="tabpanel"
+          aria-labelledby="todo-tab"
+        >
+          <app-project-todo-list [projectId]="id()" />
         </section>
       }
     }

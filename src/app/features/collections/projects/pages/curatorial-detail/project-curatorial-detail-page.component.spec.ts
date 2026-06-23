@@ -226,6 +226,20 @@ describe('ProjectCuratorialDetailPageComponent', () => {
     expect(buttonByText(compiled, 'Cancel project').disabled).toBe(false);
   });
 
+  it('switches to the frontend-only TODO List tab', async () => {
+    const compiled = await render();
+
+    tabByName(compiled, 'TODO List').click();
+    componentRef.changeDetectorRef.detectChanges();
+
+    expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
+      'TODO List',
+    );
+    expect(compiled.querySelector('#todo-panel')).not.toBeNull();
+    expect(compiled.textContent).toContain('Items are kept only for this demonstration');
+    expect(projectService.cancelled).toEqual([]);
+  });
+
   it('disables the cancel task when project actions do not allow it', async () => {
     projectService.project = {
       ...PROJECT,
@@ -357,7 +371,10 @@ describe('ProjectCuratorialDetailPageComponent', () => {
   });
 });
 
-function tabByName(root: HTMLElement, name: 'Overview' | 'Actions'): HTMLButtonElement {
+function tabByName(
+  root: HTMLElement,
+  name: 'Overview' | 'Actions' | 'TODO List',
+): HTMLButtonElement {
   const tab = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) =>
     item.textContent?.includes(name),
   );

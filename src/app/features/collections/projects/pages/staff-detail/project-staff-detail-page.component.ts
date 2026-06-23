@@ -23,6 +23,7 @@ import {
 import { TypeChipComponent } from '@shared/components/type-chip/type-chip.component';
 import { UseType } from '@shared/models/collection-use-status.model';
 
+import { ProjectTodoListComponent } from '../../components/project-todo-list/project-todo-list.component';
 import { CreateInSituVisitReportModalComponent } from '../../../reports/components/create-in-situ-visit-report-modal/create-in-situ-visit-report-modal.component';
 import {
   CreateInSituVisitReportRequest,
@@ -31,7 +32,7 @@ import {
 import { REPORTS_API_SERVICE } from '../../../reports/services/reports-api.service';
 import { PROJECT_API_SERVICE } from '../../services/project-api.service';
 
-type StaffProjectPanel = 'overview' | 'tasks';
+type StaffProjectPanel = 'overview' | 'tasks' | 'todo';
 
 const LOG_ROUTE_SEGMENTS: Record<UseType, string> = {
   EXHIBITION: 'exhibition',
@@ -87,6 +88,7 @@ function formatDateTime(iso: string): string {
     TypeChipComponent,
     ConfirmModalComponent,
     CreateInSituVisitReportModalComponent,
+    ProjectTodoListComponent,
   ],
   templateUrl: './project-staff-detail-page.component.html',
   styleUrl: './project-staff-detail-page.component.scss',
