@@ -34,7 +34,7 @@ import { ProposalOverviewSectionComponent } from '../../components/proposal-over
 import { PROPOSAL_DETAIL_GROUP_LABELS, StaffOption } from '../../proposal-detail.presentation';
 import { Message } from '../../models/proposal.model';
 
-type MyDetailPanel = 'overview' | 'conversation' | 'ai-assistance';
+type MyDetailPanel = 'overview' | 'conversation' | 'ai-assistance' | 'actions';
 
 @Component({
   selector: 'app-proposal-my-detail-page',
@@ -134,6 +134,37 @@ export class ProposalMyDetailPageComponent {
     const status = this.proposal()?.status;
     return status === 'SUBMITTED' || status === 'PENDING';
   });
+
+  // Negative terminal outcome — drawn as a red off-shoot on the lifecycle rail,
+  // mirroring the cancelled step on the project detail page.
+  protected readonly closedOutcome = computed<string | null>(() => {
+    switch (this.proposal()?.status) {
+      case 'REJECTED':
+        return 'Rejected';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return null;
+    }
+  });
+
+  // Lifecycle rail for the Actions panel: Submitted -> Under review -> Decided.
+  // A negative outcome leaves every forward step un-reached (see closedOutcome).
+  protected readonly lifecycle = computed(() => {
+    const status = this.proposal()?.status ?? 'SUBMITTED';
+    const steps = [
+      { key: 'SUBMITTED', label: 'Submitted' },
+      { key: 'PENDING', label: 'Under review' },
+      { key: 'APPROVED', label: 'Decided' },
+    ] as const;
+    const reachedIndex: Record<string, number> = { SUBMITTED: 0, PENDING: 1, APPROVED: 2 };
+    const currentIndex = this.closedOutcome() ? -1 : (reachedIndex[status] ?? 0);
+    return steps.map((step, index) => ({
+      label: step.label,
+      done: currentIndex > index,
+      current: currentIndex === index,
+    }));
+  });
   protected readonly forwardTargetLabel = computed(
     () =>
       this.staffOptions().find((o) => o.permissionId === this.forwardTargetPermissionId())?.label ??
@@ -168,7 +199,9 @@ export class ProposalMyDetailPageComponent {
   }
 
   private normalizeTab(tab: string | undefined): MyDetailPanel {
-    return tab === 'conversation' || tab === 'ai-assistance' ? tab : 'overview';
+    return tab === 'conversation' || tab === 'ai-assistance' || tab === 'actions'
+      ? tab
+      : 'overview';
   }
 
   /** Reflects the current view state into the URL query string. A null value drops

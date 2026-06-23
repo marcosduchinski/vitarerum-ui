@@ -314,7 +314,7 @@ class ProposalChatServiceStub {
 
 async function selectPanel(
   fixture: ComponentFixture<ProposalMyDetailPageComponent>,
-  name: 'Overview' | 'Conversation' | 'AI Assistance',
+  name: 'Overview' | 'Conversation' | 'AI Assistance' | 'Actions',
 ): Promise<void> {
   const compiled = fixture.nativeElement as HTMLElement;
   const tab = Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
@@ -374,9 +374,15 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('AI Assistance');
     expect(compiled.textContent).toContain('Event log');
     expect(compiled.textContent).toContain('SUBMITTED');
-    expect(compiled.textContent).toContain('Accept');
-    expect(compiled.textContent).toContain('Reject');
-    expect(compiled.textContent).toContain('Edit');
+    // The decision actions now live behind the Actions tab, not the header.
+    expect(compiled.textContent).toContain('Actions');
+    expect(
+      Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).some((button) => {
+        const label = button.textContent?.trim();
+        return label === 'Accept' || label === 'Reject' || label === 'Edit';
+      }),
+    ).toBe(false);
+    expect(compiled.querySelector('#actions-panel')).toBeNull();
     expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
       'Overview',
     );
@@ -394,6 +400,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Actions');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const editButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
@@ -416,6 +423,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Actions');
 
     const compiled = fixture.nativeElement as HTMLElement;
 
@@ -659,6 +667,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Actions');
 
     const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const compiled = fixture.nativeElement as HTMLElement;
@@ -711,6 +720,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Actions');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const rejectButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
@@ -747,6 +757,7 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    await selectPanel(fixture, 'Actions');
 
     const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const compiled = fixture.nativeElement as HTMLElement;

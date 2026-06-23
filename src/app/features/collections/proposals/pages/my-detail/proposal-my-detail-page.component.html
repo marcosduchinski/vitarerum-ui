@@ -17,65 +17,6 @@
           <app-type-chip [type]="proposal()!.type" />
         </div>
       </div>
-
-      <aside class="proposal-actions" aria-label="Assignment decision">
-        <div class="proposal-actions__copy">
-          <span class="proposal-actions__eyebrow">Decision desk</span>
-          @if (proposal()!.assignedTo; as assignedTo) {
-            <div class="proposal-actions__assignee">
-              <span class="proposal-actions__avatar" aria-hidden="true">
-                <span class="pi pi-user"></span>
-              </span>
-              <span class="proposal-actions__identity">
-                <strong>{{ assignedTo.user.name }}</strong>
-                <span class="proposal-actions__email">{{ assignedTo.user.email }}</span>
-              </span>
-            </div>
-          } @else {
-            <strong>{{ proposal()!.status.replace('_', ' ') }}</strong>
-            <span class="proposal-actions__email">No reviewer is currently assigned.</span>
-          }
-        </div>
-        <div class="proposal-actions__buttons">
-          @if (canEdit()) {
-            <button type="button" class="action-btn" (click)="edit()">
-              <span class="pi pi-pencil" aria-hidden="true"></span>
-              Edit
-            </button>
-          }
-          @if (canDecide()) {
-            <button
-              type="button"
-              class="action-btn action-btn--primary"
-              [disabled]="accepting() || rejecting() || forwarding()"
-              (click)="requestAcceptConfirmation()"
-            >
-              <span class="pi pi-check-circle" aria-hidden="true"></span>
-              {{ accepting() ? 'Accepting...' : 'Accept' }}
-            </button>
-            <button
-              type="button"
-              class="action-btn"
-              [disabled]="accepting() || rejecting() || forwarding()"
-              (click)="openRejectModal()"
-            >
-              <span class="pi pi-times-circle" aria-hidden="true"></span>
-              Reject
-            </button>
-            <button
-              type="button"
-              class="action-btn"
-              [disabled]="accepting() || rejecting() || forwarding()"
-              (click)="openForwardModal()"
-            >
-              <span class="pi pi-send" aria-hidden="true"></span>
-              {{ forwarding() ? 'Forwarding...' : 'Forward' }}
-            </button>
-          } @else if (!canEdit()) {
-            <p class="proposal-actions__status-note">No actions available for this status.</p>
-          }
-        </div>
-      </aside>
     </header>
 
     @if (actionError()) {
@@ -204,6 +145,18 @@
       >
         AI Assistance
       </button>
+      <button
+        type="button"
+        id="actions-tab"
+        class="proposal-detail__tab"
+        [class.proposal-detail__tab--active]="activePanel() === 'actions'"
+        role="tab"
+        aria-controls="actions-panel"
+        [attr.aria-selected]="activePanel() === 'actions'"
+        (click)="selectPanel('actions')"
+      >
+        Actions
+      </button>
     </nav>
 
     @switch (activePanel()) {
@@ -259,6 +212,156 @@
                 Select a message from the Conversation tab to run intended-use triage.
               </p>
             </section>
+          }
+        </section>
+      }
+      @case ('actions') {
+        <section
+          id="actions-panel"
+          class="proposal-detail__panel actions-panel"
+          role="tabpanel"
+          aria-labelledby="actions-tab"
+        >
+          <ol
+            class="lifecycle"
+            [class.lifecycle--cancelled]="closedOutcome()"
+            aria-label="Proposal lifecycle"
+          >
+            @for (step of lifecycle(); track step.label) {
+              <li
+                class="lifecycle__step"
+                [class.lifecycle__step--done]="step.done"
+                [class.lifecycle__step--current]="step.current"
+                [attr.aria-current]="step.current ? 'step' : null"
+              >
+                <span class="lifecycle__marker" aria-hidden="true">
+                  @if (step.done) {
+                    <span class="pi pi-check"></span>
+                  }
+                </span>
+                <span class="lifecycle__label">{{ step.label }}</span>
+              </li>
+            }
+            @if (closedOutcome(); as outcome) {
+              <li class="lifecycle__step lifecycle__step--cancelled" aria-current="step">
+                <span class="lifecycle__marker" aria-hidden="true">
+                  <span class="pi pi-times"></span>
+                </span>
+                <span class="lifecycle__label">{{ outcome }}</span>
+              </li>
+            }
+          </ol>
+
+          <div class="action-group" aria-labelledby="assignment-group-title">
+            <p id="assignment-group-title" class="action-group__title">Assignment</p>
+            <div class="task-row" aria-labelledby="assignment-task-heading">
+              <span class="task-row__icon task-row__icon--accent" aria-hidden="true">
+                <span class="pi pi-user"></span>
+              </span>
+              <div class="task-row__body">
+                @if (proposal()!.assignedTo; as assignedTo) {
+                  <h3 id="assignment-task-heading" class="task-row__title">
+                    {{ assignedTo.user.name }}
+                  </h3>
+                  <p class="task-row__desc">{{ assignedTo.user.email }}</p>
+                } @else {
+                  <h3 id="assignment-task-heading" class="task-row__title">Unassigned</h3>
+                  <p class="task-row__desc">No reviewer is currently assigned.</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          @if (canDecide()) {
+            <div class="action-group" aria-labelledby="decision-group-title">
+              <p id="decision-group-title" class="action-group__title">Decision</p>
+
+              <div class="task-row" aria-labelledby="accept-task-heading">
+                <span class="task-row__icon task-row__icon--accent" aria-hidden="true">
+                  <span class="pi pi-check-circle"></span>
+                </span>
+                <div class="task-row__body">
+                  <h3 id="accept-task-heading" class="task-row__title">Accept proposal</h3>
+                  <p class="task-row__desc">
+                    Approve and create the project using its requested title and use period.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="action-btn action-btn--primary task-row__control"
+                  [disabled]="accepting() || rejecting() || forwarding()"
+                  (click)="requestAcceptConfirmation()"
+                >
+                  {{ accepting() ? 'Accepting...' : 'Accept' }}
+                </button>
+              </div>
+
+              <div class="task-row" aria-labelledby="reject-task-heading">
+                <span class="task-row__icon task-row__icon--danger" aria-hidden="true">
+                  <span class="pi pi-times-circle"></span>
+                </span>
+                <div class="task-row__body">
+                  <h3 id="reject-task-heading" class="task-row__title">Reject proposal</h3>
+                  <p class="task-row__desc">
+                    Decline the request with a reason. This cannot be undone.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="action-btn action-btn--danger task-row__control"
+                  [disabled]="accepting() || rejecting() || forwarding()"
+                  (click)="openRejectModal()"
+                >
+                  Reject
+                </button>
+              </div>
+
+              <div class="task-row" aria-labelledby="forward-task-heading">
+                <span class="task-row__icon" aria-hidden="true">
+                  <span class="pi pi-send"></span>
+                </span>
+                <div class="task-row__body">
+                  <h3 id="forward-task-heading" class="task-row__title">
+                    Forward to another reviewer
+                  </h3>
+                  <p class="task-row__desc">
+                    Hand this assignment to a different staff member with an optional note.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="action-btn task-row__control"
+                  [disabled]="accepting() || rejecting() || forwarding()"
+                  (click)="openForwardModal()"
+                >
+                  {{ forwarding() ? 'Forwarding...' : 'Forward' }}
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (canEdit()) {
+            <div class="action-group" aria-labelledby="edit-group-title">
+              <p id="edit-group-title" class="action-group__title">Corrections</p>
+              <div class="task-row" aria-labelledby="edit-task-heading">
+                <span class="task-row__icon" aria-hidden="true">
+                  <span class="pi pi-pencil"></span>
+                </span>
+                <div class="task-row__body">
+                  <h3 id="edit-task-heading" class="task-row__title">Edit proposal</h3>
+                  <p class="task-row__desc">
+                    Correct the title, intended use, or requested dates without changing the status.
+                  </p>
+                </div>
+                <button type="button" class="action-btn task-row__control" (click)="edit()">
+                  Edit
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (!canDecide() && !canEdit()) {
+            <p class="proposal-actions__status-note">No actions available for this status.</p>
           }
         </section>
       }
