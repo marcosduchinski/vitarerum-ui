@@ -4,10 +4,11 @@ import {
   computed,
   inject,
   input,
+  linkedSignal,
   resource,
   signal,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { groupNameOf } from '@core/auth/models/permission.model';
@@ -58,8 +59,16 @@ export class ProposalMyDetailPageComponent {
   private readonly proposalService = inject(PROPOSAL_API_SERVICE);
   private readonly userService = inject(USER_MANAGEMENT_SERVICE);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly id = input.required<string>();
+
+  // The active tab and the message under triage live in the URL (query params,
+  // bound via withComponentInputBinding) so the view is shareable and survives a
+  // refresh. linkedSignal keeps them locally writable while resetting to the URL
+  // whenever the params change.
+  readonly tab = input<string>();
+  readonly triageMessageId = input<string>();
 
   protected readonly proposalResource = resource({
     params: () => this.id(),
@@ -102,7 +111,7 @@ export class ProposalMyDetailPageComponent {
     return err ? toApiError(err) : null;
   });
 
-  protected readonly activePanel = signal<MyDetailPanel>('overview');
+  protected readonly activePanel = linkedSignal<MyDetailPanel>(() => this.normalizeTab(this.tab()));
   protected readonly accepting = signal(false);
   protected readonly rejecting = signal(false);
   protected readonly forwarding = signal(false);
@@ -116,7 +125,9 @@ export class ProposalMyDetailPageComponent {
   protected readonly sendingMessage = signal(false);
   protected readonly actionError = signal<ApiError | null>(null);
   protected readonly messageError = signal<ApiError | null>(null);
-  protected readonly selectedTriageMessageId = signal<string | null>(null);
+  protected readonly selectedTriageMessageId = linkedSignal<string | null>(
+    () => this.triageMessageId() ?? null,
+  );
 
   protected readonly canDecide = computed(() => this.proposal()?.status === 'PENDING');
   protected readonly forwardTargetLabel = computed(
@@ -131,17 +142,45 @@ export class ProposalMyDetailPageComponent {
 
   protected selectPanel(panel: MyDetailPanel): void {
     this.activePanel.set(panel);
+    this.syncUrl({ tab: panel });
   }
 
   protected openTriage(message: Message): void {
     this.selectedTriageMessageId.set(message.id);
     this.activePanel.set('ai-assistance');
+    this.syncUrl({ tab: 'ai-assistance', triageMessageId: message.id });
   }
 
   protected onTriageApplied(): void {
     this.proposalResource.reload();
     this.eventsResource.reload();
+    this.selectedTriageMessageId.set(null);
     this.activePanel.set('overview');
+    this.syncUrl({ tab: 'overview', triageMessageId: null });
+  }
+
+  private normalizeTab(tab: string | undefined): MyDetailPanel {
+    return tab === 'conversation' || tab === 'ai-assistance' ? tab : 'overview';
+  }
+
+  /** Reflects the current view state into the URL query string. A null value drops
+   *  the param (the 'overview' tab is the default, so its URL stays clean). */
+  private syncUrl(state: { tab?: MyDetailPanel; triageMessageId?: string | null }): void {
+    const queryParams: Record<string, string | null> = {};
+    if (state.tab !== undefined) {
+      queryParams['tab'] = state.tab === 'overview' ? null : state.tab;
+    }
+    if (state.triageMessageId !== undefined) {
+      queryParams['triageMessageId'] = state.triageMessageId;
+    }
+    void this.router
+      .navigate([], {
+        relativeTo: this.route,
+        queryParams,
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      })
+      .catch(() => undefined);
   }
 
   protected openRejectModal(): void {

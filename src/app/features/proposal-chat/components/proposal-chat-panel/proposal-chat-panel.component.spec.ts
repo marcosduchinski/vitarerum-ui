@@ -126,6 +126,16 @@ async function setup(): Promise<{
   return { fixture, componentRef, service, proposalService };
 }
 
+const triageTask = (fixture: ComponentFixture<ProposalChatPanelComponent>): HTMLButtonElement =>
+  (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+    '[data-task="intended-use"]',
+  )!;
+
+const applyButton = (
+  fixture: ComponentFixture<ProposalChatPanelComponent>,
+): HTMLButtonElement | null =>
+  (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.agent-apply');
+
 describe('ProposalChatPanelComponent', () => {
   it('loads ProposalChat context for the provided conversation and message', async () => {
     const { fixture, service } = await setup();
@@ -139,9 +149,9 @@ describe('ProposalChatPanelComponent', () => {
       'Science history exhibition on early laboratory instruments',
     );
     expect(compiled.textContent).toContain('Collection use request: VRP-20260601-0004');
-    expect(compiled.textContent).toContain('Current intended use');
-    expect(compiled.textContent).toContain('in situ visit');
-    expect(compiled.textContent).toContain('Run triage');
+    expect(compiled.textContent).toContain('Requester message');
+    expect(triageTask(fixture)).not.toBeNull();
+    expect(applyButton(fixture)).toBeNull();
     expect(compiled.textContent).not.toContain('Public science history exhibition');
   });
 
@@ -156,24 +166,28 @@ describe('ProposalChatPanelComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Back to assignments');
   });
 
-  it('runs intended-use triage on explicit staff action', async () => {
+  it('runs intended-use triage when the task is delegated', async () => {
     const { fixture, service } = await setup();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    compiled.querySelector<HTMLButtonElement>('.proposal-chat-action--primary')!.click();
+    triageTask(fixture).click();
     await flushMicrotasks();
     fixture.detectChanges();
 
     expect(service.suggestionCalls).toEqual([
       { conversationId: 'conv-4', messageId: 'msg-prop-4-initial' },
     ]);
-    expect(compiled.textContent).toContain('Suggested intended use');
+    // The curator's delegated turn is recorded in the thread.
+    expect(compiled.textContent).toContain('Analyse this message for its intended use.');
+    expect(compiled.textContent).toContain('Suggested classification');
     expect(compiled.textContent).toContain('exhibition');
     expect(compiled.textContent).toContain('91%');
     expect(compiled.textContent).toContain(
       'The focus message asks for exhibition use and public education.',
     );
+    // Technical source stays available, tucked inside the disclosure.
     expect(compiled.textContent).toContain('conv-4 / msg-prop-4-initial');
+    expect(applyButton(fixture)!.disabled).toBe(false);
   });
 
   it('shows when the suggestion matches the current intended use', async () => {
@@ -184,20 +198,14 @@ describe('ProposalChatPanelComponent', () => {
       confidence: 0.76,
     });
 
-    (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('.proposal-chat-action--primary')!
-      .click();
+    triageTask(fixture).click();
     await flushMicrotasks();
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      "The suggestion matches the proposal's current intended use.",
+      'This matches the proposal’s current intended use',
     );
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
-        '.proposal-chat-action',
-      )[1].disabled,
-    ).toBe(true);
+    expect(applyButton(fixture)!.disabled).toBe(true);
   });
 
   it('applies a suggestion through the proposal API', async () => {
@@ -205,18 +213,11 @@ describe('ProposalChatPanelComponent', () => {
     const applied: ProposalDetail[] = [];
     fixture.componentInstance.applied.subscribe((proposal) => applied.push(proposal));
 
-    const buttons = () =>
-      Array.from(
-        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
-          '.proposal-chat-action',
-        ),
-      );
-
-    buttons()[0].click();
+    triageTask(fixture).click();
     await flushMicrotasks();
     fixture.detectChanges();
 
-    buttons()[1].click();
+    applyButton(fixture)!.click();
     await flushMicrotasks();
     fixture.detectChanges();
 
@@ -230,6 +231,8 @@ describe('ProposalChatPanelComponent', () => {
       id: 'prop-4',
       intendedUse: SUGGESTION.intendedUse,
     });
+    // The applied suggestion is acknowledged in the thread.
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Applied');
   });
 
   it('renders model errors without replacing the loaded context', async () => {
@@ -239,9 +242,7 @@ describe('ProposalChatPanelComponent', () => {
       error: { error: 'MODEL_TIMEOUT', message: 'The language model did not respond in time' },
     }));
 
-    (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('.proposal-chat-action--primary')!
-      .click();
+    triageTask(fixture).click();
     await flushMicrotasks();
     fixture.detectChanges();
 

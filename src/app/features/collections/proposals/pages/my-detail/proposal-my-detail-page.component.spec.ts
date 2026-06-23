@@ -356,7 +356,9 @@ describe('ProposalMyDetailPageComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
     expect(compiled.textContent).toContain('Back to my assignments');
-    expect(compiled.querySelector('a[href="/p/collections/proposals/my"]')).not.toBeNull();
+    expect(
+      compiled.querySelector('a[href="/p/collections/proposals/my-assignments"]'),
+    ).not.toBeNull();
     expect(compiled.textContent).toContain('VR-2026-001');
     expect(compiled.textContent).toContain('Photographic history of Rio de Janeiro port');
     expect(compiled.textContent).toContain('Under review');
@@ -474,8 +476,8 @@ describe('ProposalMyDetailPageComponent', () => {
     ]);
     expect(compiled.textContent).toContain('ProposalChat');
     expect(compiled.textContent).toContain('Initial request');
-    expect(compiled.textContent).toContain('Current intended use');
-    expect(compiled.textContent).toContain('Run triage');
+    expect(compiled.textContent).toContain('Requester message');
+    expect(compiled.querySelector('[data-task="intended-use"]')).not.toBeNull();
     expect(proposalChatService.suggestionCalls).toEqual([]);
   });
 
@@ -496,20 +498,16 @@ describe('ProposalMyDetailPageComponent', () => {
     fixture.detectChanges();
 
     compiled = fixture.nativeElement as HTMLElement;
-    const actions = Array.from(
-      compiled.querySelectorAll<HTMLButtonElement>('.proposal-chat-action'),
-    );
-    actions[0].click();
+    // Delegate the intended-use task, wait out the assistant's "thinking" pause.
+    compiled.querySelector<HTMLButtonElement>('[data-task="intended-use"]')!.click();
     await wait(700);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
-        '.proposal-chat-action',
-      ),
-    )[1].click();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.agent-apply')!
+      .click();
     fixture.detectChanges();
     await fixture.whenStable();
     await wait(20);
