@@ -130,6 +130,10 @@ export class ProposalMyDetailPageComponent {
   );
 
   protected readonly canDecide = computed(() => this.proposal()?.status === 'PENDING');
+  protected readonly canEdit = computed(() => {
+    const status = this.proposal()?.status;
+    return status === 'SUBMITTED' || status === 'PENDING';
+  });
   protected readonly forwardTargetLabel = computed(
     () =>
       this.staffOptions().find((o) => o.permissionId === this.forwardTargetPermissionId())?.label ??
@@ -138,6 +142,10 @@ export class ProposalMyDetailPageComponent {
 
   protected asWorkflowStatus(value: string): WorkflowStatus {
     return value as WorkflowStatus;
+  }
+
+  protected edit(): void {
+    void this.router.navigate(['/p/collections/proposals/my-assignments', this.id(), 'edit']);
   }
 
   protected selectPanel(panel: MyDetailPanel): void {

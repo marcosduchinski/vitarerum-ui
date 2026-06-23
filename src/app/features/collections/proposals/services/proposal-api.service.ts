@@ -20,6 +20,7 @@ import {
   ProposalReasonRequest,
   ReferToDirectionRequest,
   UpdateIntendedUseRequest,
+  UpdateProposalRequest,
 } from '../models/proposal-actions.model';
 import {
   Conversation,
@@ -33,6 +34,7 @@ import {
   ProposalListQuery,
   ProposalSummary,
   SendMessageRequest,
+  UpdateProposalResult,
 } from '../models/proposal.model';
 
 // The backend returns the use type wrapped as `intendedUse: { useType, description }`.
@@ -79,6 +81,13 @@ export class ProposalApiService {
     return this.http
       .get<ProposalDetail>(this.url(`/proposals/${proposalId}`))
       .pipe(map((p) => normalizeProposalType(p)));
+  }
+
+  updateProposal(
+    proposalId: string,
+    request: UpdateProposalRequest,
+  ): Observable<UpdateProposalResult> {
+    return this.http.patch<UpdateProposalResult>(this.url(`/proposals/${proposalId}`), request);
   }
 
   addRequestedObjects(

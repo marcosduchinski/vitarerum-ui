@@ -157,6 +157,19 @@ export interface ProposalEventsPage extends Page<ProposalEvent> {
   readonly proposalId: string;
 }
 
+// Contract returned by PATCH /proposals/{proposalId}. The endpoint returns a
+// staff-action summary rather than a complete ProposalDetail and does not add
+// an event, so lastEvent may be null.
+export interface UpdateProposalResult {
+  readonly id: string;
+  readonly referenceNumber: string;
+  readonly title: string | null;
+  readonly status: ProposalStatus;
+  readonly beginDate: string | null;
+  readonly endDate: string | null;
+  readonly lastEvent: ProposalEvent | null;
+}
+
 export interface SendMessageRequest {
   readonly recipient: string;
   readonly subject: string;

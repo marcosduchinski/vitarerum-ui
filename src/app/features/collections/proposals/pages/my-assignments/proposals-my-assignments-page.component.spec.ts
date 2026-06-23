@@ -145,6 +145,7 @@ class IdentityServiceStub implements IdentityService {
 }
 
 class ProposalApiServiceStub {
+  proposals: ProposalSummary[] = [PROPOSAL];
   readonly queries: ProposalListQuery[] = [];
   readonly forwardCalls: {
     readonly proposalId: string;
@@ -156,7 +157,7 @@ class ProposalApiServiceStub {
     const size = query.size ?? 20;
 
     return of<Page<ProposalSummary>>({
-      content: [PROPOSAL],
+      content: this.proposals,
       page: query.page ?? 0,
       size,
       totalElements: 1,
@@ -230,6 +231,22 @@ describe('ProposalsMyAssignmentsPageComponent', () => {
       compiled.querySelector('a[href^="/p/collections/proposals/my-assignments/proposal-1"]'),
     ).not.toBeNull();
     expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
+  });
+
+  it('keeps a cleared-title assignment link identifiable and accessible', async () => {
+    proposalService.proposals = [{ ...PROPOSAL, title: null } as unknown as ProposalSummary];
+    const fixture = TestBed.createComponent(ProposalsMyAssignmentsPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const link = compiled.querySelector<HTMLAnchorElement>(
+      'a[href="/p/collections/proposals/my-assignments/proposal-1"]',
+    );
+
+    expect(link?.textContent?.trim()).toBe('Untitled proposal');
+    expect(compiled.textContent).toContain('VR-2026-001');
   });
 
   it('shows forward and view details in the row menu', async () => {

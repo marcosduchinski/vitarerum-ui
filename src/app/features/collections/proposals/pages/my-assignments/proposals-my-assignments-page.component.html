@@ -90,7 +90,7 @@
                       class="proposals-table__title"
                       [routerLink]="['/p/collections/proposals/my-assignments', proposal.id]"
                     >
-                      {{ proposal.title }}
+                      {{ proposal.title || 'Untitled proposal' }}
                     </a>
                   </td>
                   <td>
@@ -127,10 +127,7 @@
               </span>
               <label class="proposals-pagination__size" for="proposals-page-size">
                 Rows
-                <select
-                  id="proposals-page-size"
-                  (change)="onPageSizeChange($event)"
-                >
+                <select id="proposals-page-size" (change)="onPageSizeChange($event)">
                   @for (size of pageSizeOptions; track size) {
                     <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
                   }
@@ -197,7 +194,7 @@
         <div class="forward-modal-body">
           <p class="forward-modal-body__hint">
             {{ proposal.referenceNumber }} —
-            {{ proposal.title }}
+            {{ proposal.title || 'Untitled proposal' }}
           </p>
           @if (usersResource.isLoading()) {
             <app-loading-state label="Loading staff..." />

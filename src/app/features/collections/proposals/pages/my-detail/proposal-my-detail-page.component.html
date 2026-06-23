@@ -11,7 +11,7 @@
     <header class="proposal-detail__header">
       <div class="proposal-detail__header-meta">
         <p class="proposal-detail__ref">{{ proposal()!.referenceNumber }}</p>
-        <h1 class="proposal-detail__title">{{ proposal()!.title }}</h1>
+        <h1 class="proposal-detail__title">{{ proposal()!.title || 'Untitled proposal' }}</h1>
         <div class="proposal-detail__status-row">
           <app-status-chip kind="proposal" [status]="asWorkflowStatus(proposal()!.status)" />
           <app-type-chip [type]="proposal()!.type" />
@@ -37,6 +37,12 @@
           }
         </div>
         <div class="proposal-actions__buttons">
+          @if (canEdit()) {
+            <button type="button" class="action-btn" (click)="edit()">
+              <span class="pi pi-pencil" aria-hidden="true"></span>
+              Edit
+            </button>
+          }
           @if (canDecide()) {
             <button
               type="button"
@@ -65,7 +71,7 @@
               <span class="pi pi-send" aria-hidden="true"></span>
               {{ forwarding() ? 'Forwarding...' : 'Forward' }}
             </button>
-          } @else {
+          } @else if (!canEdit()) {
             <p class="proposal-actions__status-note">No actions available for this status.</p>
           }
         </div>
@@ -90,7 +96,7 @@
       <div class="forward-modal-body">
         <p>
           {{ proposal()!.referenceNumber }} —
-          {{ proposal()!.title }}
+          {{ proposal()!.title || 'Untitled proposal' }}
         </p>
         @if (staffUsersResource.isLoading()) {
           <app-loading-state label="Loading staff..." />

@@ -169,6 +169,10 @@ class ProposalApiServiceStub {
   private nextDocumentId = 1;
   private proposal = PROPOSAL;
 
+  setProposal(proposal: ProposalDetail): void {
+    this.proposal = proposal;
+  }
+
   getProposal(proposalId: string) {
     this.getProposalCalls.push(proposalId);
     return of(this.proposal);
@@ -372,6 +376,7 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('SUBMITTED');
     expect(compiled.textContent).toContain('Accept');
     expect(compiled.textContent).toContain('Reject');
+    expect(compiled.textContent).toContain('Edit');
     expect(compiled.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain(
       'Overview',
     );
@@ -379,6 +384,61 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.querySelector('#conversation-panel')).toBeNull();
     expect(compiled.querySelector('#ai-assistance-panel')).toBeNull();
     expect(compiled.textContent).not.toContain('Initial request');
+  });
+
+  it('navigates from the Decision Desk to the proposal edit page', async () => {
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    fixture.componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim() === 'Edit',
+    );
+
+    expect(editButton).toBeDefined();
+    editButton!.click();
+    expect(navigate).toHaveBeenCalledWith([
+      '/p/collections/proposals/my-assignments',
+      'proposal-1',
+      'edit',
+    ]);
+  });
+
+  it('hides the Edit action when the proposal has a terminal status', async () => {
+    proposalService.setProposal({ ...PROPOSAL, status: 'APPROVED' });
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    fixture.componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(
+      Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).some(
+        (button) => button.textContent?.trim() === 'Edit',
+      ),
+    ).toBe(false);
+    expect(compiled.textContent).toContain('No actions available for this status.');
+  });
+
+  it('uses an accessible fallback when the proposal title is cleared', async () => {
+    proposalService.setProposal({ ...PROPOSAL, title: null } as unknown as ProposalDetail);
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    fixture.componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const heading = (fixture.nativeElement as HTMLElement).querySelector<HTMLHeadingElement>('h1');
+
+    expect(heading?.textContent?.trim()).toBe('Untitled proposal');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('VR-2026-001');
   });
 
   it('switches between overview and conversation panels', async () => {

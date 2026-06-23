@@ -21,11 +21,12 @@ const sessionState = signal<IdentitySession | null>({
   group: 'COLLECTIONS_MANAGEMENT',
   availableGroups: ['COLLECTIONS_MANAGEMENT'],
 });
+const isStaffState = signal(true);
 
 const identityStub: IdentityService = {
   session: sessionState.asReadonly(),
   isAuthenticated: signal(true).asReadonly(),
-  isStaff: signal(true).asReadonly(),
+  isStaff: isStaffState.asReadonly(),
   signIn: async (credentials: LoginRequest) => {
     const session = sessionState();
     if (session) {
@@ -49,6 +50,7 @@ describe('ProposalApiServiceMock', () => {
   let service: ProposalApiServiceMock;
 
   beforeEach(() => {
+    isStaffState.set(true);
     sessionState.set({
       accessToken: 'mock-token',
       user: {
@@ -83,6 +85,81 @@ describe('ProposalApiServiceMock', () => {
     const p = await firstValueFrom(service.getProposal('prop-1'));
     expect(p.id).toBe('prop-1');
     expect(p.status).toBe('SUBMITTED');
+  });
+
+  it('partially updates editable metadata without recording an event', async () => {
+    const eventsBefore = await firstValueFrom(service.listEvents('prop-1'));
+
+    const result = await firstValueFrom(
+      service.updateProposal('prop-1', {
+        title: null,
+        intendedUse: {
+          useType: 'EXHIBITION',
+          description: 'Public exhibition of zoology catalogues.',
+        },
+        endDate: null,
+      }),
+    );
+
+    expect(result).toMatchObject({
+      id: 'prop-1',
+      title: null,
+      status: 'SUBMITTED',
+      endDate: null,
+    });
+
+    const updated = await firstValueFrom(service.getProposal('prop-1'));
+    expect(updated.title).toBeNull();
+    expect(updated.type).toBe('EXHIBITION');
+    expect(updated.intendedUse).toEqual({
+      useType: 'EXHIBITION',
+      description: 'Public exhibition of zoology catalogues.',
+    });
+    expect(updated.beginDate).toBe('2026-06-01');
+    expect(updated.endDate).toBeNull();
+
+    const eventsAfter = await firstValueFrom(service.listEvents('prop-1'));
+    expect(eventsAfter.content).toEqual(eventsBefore.content);
+
+    const searchResult = await firstValueFrom(
+      service.listProposals({ search: 'VRP-20260601-0001' }),
+    );
+    expect(searchResult.content.map((proposal) => proposal.id)).toContain('prop-1');
+  });
+
+  it('validates the effective date range when one date is omitted', async () => {
+    await expect(
+      firstValueFrom(service.updateProposal('prop-1', { beginDate: '2027-01-01' })),
+    ).rejects.toMatchObject({
+      status: 422,
+      error: 'INVALID_DATE_RANGE',
+    });
+  });
+
+  it('refuses updates for terminal proposals and non-staff callers', async () => {
+    await expect(
+      firstValueFrom(service.updateProposal('prop-4', { title: 'Changed' })),
+    ).rejects.toMatchObject({
+      status: 409,
+      error: 'INVALID_TRANSITION',
+    });
+
+    isStaffState.set(false);
+    await expect(
+      firstValueFrom(service.updateProposal('prop-1', { title: 'Changed' })),
+    ).rejects.toMatchObject({
+      status: 403,
+      error: 'INSUFFICIENT_GROUP',
+    });
+  });
+
+  it('returns not found when updating an unknown proposal', async () => {
+    await expect(
+      firstValueFrom(service.updateProposal('missing-proposal', { title: 'Changed' })),
+    ).rejects.toMatchObject({
+      status: 404,
+      error: 'PROPOSAL_NOT_FOUND',
+    });
   });
 
   it('starts seeded proposal conversations with the collection-use request', async () => {

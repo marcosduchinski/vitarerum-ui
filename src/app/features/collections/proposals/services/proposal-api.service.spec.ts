@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/config/app-config.model';
 
+import { UpdateProposalRequest } from '../models/proposal-actions.model';
 import { ProposalApiService } from './proposal-api.service';
 
 describe('ProposalApiService', () => {
@@ -182,6 +183,42 @@ describe('ProposalApiService', () => {
       });
 
     expect(listType).toBe('OTHER');
+  });
+
+  it('partially updates proposal metadata and preserves explicit null values', () => {
+    const body: UpdateProposalRequest = {
+      title: null,
+      intendedUse: {
+        useType: 'EXHIBITION',
+        description: 'Public display of selected collection objects.',
+      },
+      endDate: null,
+    };
+    let updatedTitle: string | null | undefined;
+    let updatedLastEvent: unknown;
+
+    service.updateProposal('proposal-1', body).subscribe((result) => {
+      updatedTitle = result.title;
+      updatedLastEvent = result.lastEvent;
+    });
+
+    const request = http.expectOne('https://api.example.test/proposals/proposal-1');
+
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual(body);
+    expect(request.request.body).not.toHaveProperty('beginDate');
+    request.flush({
+      id: 'proposal-1',
+      referenceNumber: 'VRP-20260101-0001',
+      title: null,
+      status: 'PENDING',
+      beginDate: '2026-06-01',
+      endDate: null,
+      lastEvent: null,
+    });
+
+    expect(updatedTitle).toBeNull();
+    expect(updatedLastEvent).toBeNull();
   });
 
   it('uploads proposal documents as multipart form data', () => {

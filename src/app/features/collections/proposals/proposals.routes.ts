@@ -60,6 +60,13 @@ export const PROPOSALS_ROUTES: Routes = [
       ),
   },
   {
+    path: 'my-assignments/:id/edit',
+    title: 'Edit Proposal',
+    canMatch: [staffGuard],
+    loadComponent: () =>
+      import('./pages/edit/proposal-edit-page.component').then((m) => m.ProposalEditPageComponent),
+  },
+  {
     path: 'my-assignments/:id',
     title: 'My Assignment',
     canMatch: [staffGuard],

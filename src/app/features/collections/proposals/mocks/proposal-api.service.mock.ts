@@ -18,6 +18,7 @@ import {
   ProposalNoteRequest,
   ProposalReasonRequest,
   ReferToDirectionRequest,
+  UpdateProposalRequest,
 } from '../models/proposal-actions.model';
 import {
   Conversation,
@@ -34,6 +35,7 @@ import {
   ProposalSummary,
   RequestedObject,
   SendMessageRequest,
+  UpdateProposalResult,
 } from '../models/proposal.model';
 import { makePageFrom, MOCK_SEED, MOCK_USERS, MockProjectState, P } from './mock-data';
 
@@ -129,7 +131,9 @@ export class ProposalApiServiceMock {
     if (query.search) {
       const q = query.search.toLowerCase();
       items = items.filter(
-        (p) => p.title.toLowerCase().includes(q) || p.referenceNumber.toLowerCase().includes(q),
+        (p) =>
+          (p.title ?? '').toLowerCase().includes(q) ||
+          p.referenceNumber.toLowerCase().includes(q),
       );
     }
 
@@ -154,6 +158,72 @@ export class ProposalApiServiceMock {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
     return of(proposal);
+  }
+
+  updateProposal(
+    proposalId: string,
+    request: UpdateProposalRequest,
+  ): Observable<UpdateProposalResult> {
+    const proposal = this.proposals.get(proposalId);
+    if (!proposal) {
+      return throwError(() => ({
+        status: 404,
+        error: 'PROPOSAL_NOT_FOUND',
+        message: `No proposal found with id ${proposalId}`,
+      }));
+    }
+    if (!this.identity.isStaff()) {
+      return throwError(() => ({
+        status: 403,
+        error: 'INSUFFICIENT_GROUP',
+        message: 'Only staff members can perform this action',
+      }));
+    }
+    if (proposal.status !== 'SUBMITTED' && proposal.status !== 'PENDING') {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Cannot edit a proposal that is already decided or cancelled',
+      }));
+    }
+
+    const title = request.title === undefined ? proposal.title : request.title;
+    const beginDate =
+      request.beginDate === undefined ? (proposal.beginDate ?? null) : request.beginDate;
+    const endDate = request.endDate === undefined ? (proposal.endDate ?? null) : request.endDate;
+    const intendedUse = request.intendedUse ?? proposal.intendedUse;
+
+    if (beginDate && endDate && endDate < beginDate) {
+      return throwError(() => ({
+        status: 422,
+        error: 'INVALID_DATE_RANGE',
+        message: 'endDate must be after beginDate',
+      }));
+    }
+
+    const updated = {
+      ...proposal,
+      title,
+      beginDate,
+      endDate,
+      intendedUse,
+      type: request.intendedUse?.useType ?? proposal.type,
+    };
+
+    // ProposalDetail still models rollout-era nullable fields as optional. The
+    // mock deliberately stores explicit nulls so PATCH behavior matches the
+    // backend contract; the UI nullability migration is handled separately.
+    this.proposals.set(proposalId, updated as ProposalDetail);
+
+    return of({
+      id: proposalId,
+      referenceNumber: proposal.referenceNumber,
+      title,
+      status: proposal.status,
+      beginDate,
+      endDate,
+      lastEvent: this.events.get(proposalId)?.at(-1) ?? null,
+    });
   }
 
   addRequestedObjects(
