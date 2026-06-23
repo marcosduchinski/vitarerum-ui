@@ -8,7 +8,7 @@
 
 **Query parameters**
 ```
-status      : ProposalStatus  (optional) SUBMITTED | PENDING | APPROVED | REJECTED | CANCELLED
+status      : ProposalStatus[] (optional, repeatable) SUBMITTED | PENDING | APPROVED | REJECTED | CANCELLED
 type        : UseType          (optional) EXHIBITION | IN_SITU_VISIT | OTHER — filters intendedUse.useType
 requested_by: UUID             (optional) filter by researcher (honoured for staff only)
 assigned_to : UUID             (optional) filter by attendant permissionId
@@ -18,6 +18,9 @@ search      : String           (optional) search by title or reference number
 page        : Integer          (default 0)
 size        : Integer          (default 20)
 ```
+
+Repeat `status` to match any of several statuses (OR semantics), for example
+`?status=REJECTED&status=CANCELLED`. A single `status` value remains supported.
 
 **Response `200 OK`**
 ```json

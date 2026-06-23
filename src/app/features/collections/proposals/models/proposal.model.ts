@@ -139,7 +139,7 @@ export interface CreateProposalResponse {
 }
 
 export interface ProposalListQuery extends PageQuery {
-  readonly status?: ProposalStatus;
+  readonly status?: ProposalStatus | readonly ProposalStatus[];
   readonly type?: UseType;
   readonly requestedBy?: string;
   readonly assignedTo?: string;

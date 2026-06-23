@@ -67,7 +67,7 @@ export class ProposalsRejectedPageComponent {
     loader: ({ params }) =>
       firstValueFrom(
         this.proposalService.listProposals({
-          status: 'REJECTED',
+          status: ['REJECTED', 'CANCELLED'],
           page: 0,
           size: TERMINAL_FETCH_SIZE,
           search: params.search,

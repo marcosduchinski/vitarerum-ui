@@ -481,6 +481,15 @@ describe('ProposalApiServiceMock', () => {
     expect(page.content.every((p) => p.status === 'SUBMITTED')).toBe(true);
   });
 
+  it('filters proposals by multiple statuses using OR semantics', async () => {
+    const page = await firstValueFrom(service.listProposals({ status: ['REJECTED', 'CANCELLED'] }));
+
+    expect(page.content.length).toBeGreaterThan(0);
+    expect(page.content.every((p) => p.status === 'REJECTED' || p.status === 'CANCELLED')).toBe(
+      true,
+    );
+  });
+
   it('filters proposals by requester permission', async () => {
     const page = await firstValueFrom(service.listProposals({ requestedBy: 'perm-alice' }));
     expect(page.content.length).toBeGreaterThan(0);

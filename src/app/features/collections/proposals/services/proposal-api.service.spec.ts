@@ -128,6 +128,18 @@ describe('ProposalApiService', () => {
     request.flush({ content: [], page: 1, size: 25, totalElements: 0, totalPages: 0 });
   });
 
+  it('lists proposals using repeated status filters', () => {
+    service.listProposals({ status: ['REJECTED', 'CANCELLED'], page: 0, size: 100 }).subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/proposals?status=REJECTED&status=CANCELLED&page=0&size=100',
+    );
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.getAll('status')).toEqual(['REJECTED', 'CANCELLED']);
+    request.flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+  });
+
   it('normalizes intendedUse.useType into the flat type field', () => {
     let listType: string | undefined;
     service.listProposals().subscribe((page) => (listType = page.content[0]?.type));

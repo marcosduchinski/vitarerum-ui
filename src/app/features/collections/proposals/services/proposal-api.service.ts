@@ -58,19 +58,30 @@ export class ProposalApiService {
 
   listProposals(query: ProposalListQuery = {}): Observable<Page<ProposalSummary>> {
     // The contract uses snake_case filter names; the TS query stays camelCase.
+    const statuses = typeof query.status === 'string' ? [query.status] : (query.status ?? []);
+    let params = statuses.reduce(
+      (httpParams, status) => httpParams.append('status', status),
+      buildHttpParams({}),
+    );
+    const remainingParams = buildHttpParams({
+      type: query.type,
+      requested_by: query.requestedBy,
+      assigned_to: query.assignedTo,
+      date_from: query.dateFrom,
+      date_to: query.dateTo,
+      search: query.search,
+      page: query.page,
+      size: query.size,
+    });
+    for (const key of remainingParams.keys()) {
+      for (const value of remainingParams.getAll(key) ?? []) {
+        params = params.append(key, value);
+      }
+    }
+
     return this.http
       .get<Page<ProposalSummary>>(this.url('/proposals'), {
-        params: buildHttpParams({
-          status: query.status,
-          type: query.type,
-          requested_by: query.requestedBy,
-          assigned_to: query.assignedTo,
-          date_from: query.dateFrom,
-          date_to: query.dateTo,
-          search: query.search,
-          page: query.page,
-          size: query.size,
-        }),
+        params,
       })
       .pipe(
         map((page) => ({ ...page, content: page.content.map((p) => normalizeProposalType(p)) })),

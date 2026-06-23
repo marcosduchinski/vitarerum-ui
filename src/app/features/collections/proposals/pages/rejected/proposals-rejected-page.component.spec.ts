@@ -35,13 +35,25 @@ const REJECTED_PROPOSAL: ProposalSummary = {
   submittedAt: '2026-05-01T10:00:00',
 };
 
+const CANCELLED_PROPOSAL: ProposalSummary = {
+  ...REJECTED_PROPOSAL,
+  id: 'proposal-cancelled',
+  referenceNumber: 'VR-2026-002',
+  title: 'Cancelled research request',
+  status: 'CANCELLED',
+  submittedAt: '2026-05-02T10:00:00',
+};
+
 class ProposalApiServiceStub {
   readonly queries: ProposalListQuery[] = [];
 
   listProposals(query: ProposalListQuery = {}) {
     this.queries.push(query);
     const size = query.size ?? 20;
-    const content = query.status === 'REJECTED' ? [REJECTED_PROPOSAL] : [];
+    const statuses = typeof query.status === 'string' ? [query.status] : (query.status ?? []);
+    const content = [REJECTED_PROPOSAL, CANCELLED_PROPOSAL].filter((proposal) =>
+      statuses.includes(proposal.status),
+    );
 
     return of<Page<ProposalSummary>>({
       content,
@@ -77,7 +89,7 @@ describe('ProposalsRejectedPageComponent', () => {
     document.querySelectorAll('.p-menu').forEach((element) => element.remove());
   });
 
-  it('fetches rejected proposals', async () => {
+  it('fetches rejected and cancelled proposals', async () => {
     const fixture = TestBed.createComponent(ProposalsRejectedPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -85,7 +97,12 @@ describe('ProposalsRejectedPageComponent', () => {
 
     expect(proposalService.queries).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ status: 'REJECTED', page: 0, size: 100, search: '' }),
+        expect.objectContaining({
+          status: ['REJECTED', 'CANCELLED'],
+          page: 0,
+          size: 100,
+          search: '',
+        }),
       ]),
     );
   });
@@ -100,10 +117,10 @@ describe('ProposalsRejectedPageComponent', () => {
 
     expect(compiled.querySelector('#proposals-search')).not.toBeNull();
     expect(compiled.textContent).toContain('Rejected research request');
+    expect(compiled.textContent).toContain('Cancelled research request');
     expect(compiled.textContent).toContain('Rejected');
-    expect(
-      compiled.querySelector('[aria-label="More actions for VR-2026-001"]'),
-    ).not.toBeNull();
+    expect(compiled.textContent).toContain('Cancelled');
+    expect(compiled.querySelector('[aria-label="More actions for VR-2026-001"]')).not.toBeNull();
   });
 
   it('opens the row menu and navigates to the rejected proposal detail', async () => {

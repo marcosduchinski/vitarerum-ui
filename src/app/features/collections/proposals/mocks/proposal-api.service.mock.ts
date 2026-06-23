@@ -122,7 +122,8 @@ export class ProposalApiServiceMock {
   listProposals(query: ProposalListQuery = {}): Observable<Page<ProposalSummary>> {
     let items = [...this.proposals.values()];
 
-    if (query.status) items = items.filter((p) => p.status === query.status);
+    const statuses = typeof query.status === 'string' ? [query.status] : (query.status ?? []);
+    if (statuses.length) items = items.filter((p) => statuses.includes(p.status));
     if (query.type) items = items.filter((p) => p.type === query.type);
     if (query.requestedBy)
       items = items.filter((p) => p.requestedBy.permissionId === query.requestedBy);
@@ -132,8 +133,7 @@ export class ProposalApiServiceMock {
       const q = query.search.toLowerCase();
       items = items.filter(
         (p) =>
-          (p.title ?? '').toLowerCase().includes(q) ||
-          p.referenceNumber.toLowerCase().includes(q),
+          (p.title ?? '').toLowerCase().includes(q) || p.referenceNumber.toLowerCase().includes(q),
       );
     }
 
