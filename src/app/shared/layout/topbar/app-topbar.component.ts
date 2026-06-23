@@ -16,6 +16,8 @@ const GROUP_LABELS: Record<GroupName, string> = {
   SYS_ADMIN: 'Administrator',
 };
 
+const INSTITUTION_NAME = 'MUHNAC - Museu Nacional de História Natural e da Ciência de Lisboa';
+
 @Component({
   selector: 'app-topbar',
   standalone: true,
@@ -28,6 +30,7 @@ export class AppTopbarComponent {
   protected readonly layoutService = inject(LayoutService);
   private readonly identity = inject(IDENTITY_SERVICE);
   private readonly router = inject(Router);
+  private readonly institutionName = INSTITUTION_NAME;
 
   protected readonly session = this.identity.session;
   protected readonly currentGroup = computed(() => this.session()?.group ?? null);
@@ -60,5 +63,9 @@ export class AppTopbarComponent {
   private signOut(): void {
     this.identity.signOut();
     void this.router.navigateByUrl('/login');
+  }
+
+  protected getInstitutionName(): string {
+    return this.institutionName;
   }
 }
