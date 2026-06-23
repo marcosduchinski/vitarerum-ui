@@ -21,9 +21,11 @@ export class ProposalSubmitPageComponent {
   private readonly router = inject(Router);
 
   protected readonly recipient = signal('collections@vitarerum.example.com');
-  protected readonly subject = signal('Collection use request: palaeontology specimen records');
+  protected readonly subject = signal(
+    'Solicitação de acesso à Coleção de Zoologia para fins de investigação',
+  );
   protected readonly body = signal(
-    'I am requesting access to palaeontology specimen records from late Cretaceous excavations for a comparative study on collection methods and documentation practices across South American sites.',
+    'Meu nome é Pedro Silva, sou  estudante de  na Universidade de Coimbra e venho, por este meio, solicitar  a autorização para consultar um objeto pertencente à Coleção de Zoologia desta prestigiada instituição, o lince ibérico. O objetivo desta visita é integrar a análise do referido espécime na investigação de minha tese, orientada pela Dra Maria Catarina. Proponho que a visita ocorra entre os dias 09/06/2026 e 20/06/2026. Cumprimentos. Pedro Silva',
   );
 
   protected readonly submitted = signal(false);
