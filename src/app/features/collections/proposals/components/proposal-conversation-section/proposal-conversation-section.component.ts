@@ -72,6 +72,7 @@ export class ProposalConversationSectionComponent {
   readonly replyHeading = input('Reply to requester');
   readonly recipientEmail = input<string | null>(null);
   readonly canReply = input(true);
+  readonly showRequestedObjectPicker = input(false);
   readonly showTriageAction = input(false);
   readonly replySubmitted = output<ReplyComposerPayload>();
   readonly triageRequested = output<Message>();
@@ -83,6 +84,7 @@ export class ProposalConversationSectionComponent {
   protected readonly selectedFiles = signal<readonly File[]>([]);
   protected readonly selectedRequestedObjectIds = signal<readonly string[]>([]);
   protected readonly insertedRequestedObjectIds = signal<readonly string[]>([]);
+  protected readonly requestedObjectPickerExpanded = signal(false);
   protected readonly replyBody = signal('');
   protected readonly hasSelectedRequestedObjects = computed(
     () => this.selectedRequestedObjectIds().length > 0,
@@ -157,6 +159,10 @@ export class ProposalConversationSectionComponent {
 
   protected isRequestedObjectInserted(requestedObjectId: string): boolean {
     return this.insertedRequestedObjectIds().includes(requestedObjectId);
+  }
+
+  protected toggleRequestedObjectPicker(): void {
+    this.requestedObjectPickerExpanded.update((expanded) => !expanded);
   }
 
   protected onRequestedObjectSelectionChange(requestedObjectId: string, event: Event): void {
@@ -263,6 +269,7 @@ export class ProposalConversationSectionComponent {
     this.selectedFiles.set([]);
     this.selectedRequestedObjectIds.set([]);
     this.insertedRequestedObjectIds.set([]);
+    this.requestedObjectPickerExpanded.set(false);
   }
 
   private requestedObjectMessageText(requestedObject: RequestedObject): string {

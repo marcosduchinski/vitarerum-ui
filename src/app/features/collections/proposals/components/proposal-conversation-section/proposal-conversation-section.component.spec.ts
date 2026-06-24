@@ -106,7 +106,7 @@ function setRequiredInputs(
 }
 
 describe('ProposalConversationSectionComponent', () => {
-  it('hides the requested-object picker when the proposal has no requested objects', async () => {
+  it('hides the requested-object control when the proposal has no requested objects', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalConversationSectionComponent],
       providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
@@ -114,12 +114,76 @@ describe('ProposalConversationSectionComponent', () => {
 
     const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
     setRequiredInputs(fixture.componentRef);
+    fixture.componentRef.setInput('showRequestedObjectPicker', true);
     fixture.detectChanges();
     await fixture.whenStable();
 
     expect(
-      (fixture.nativeElement as HTMLElement).querySelector('.requested-object-picker'),
+      (fixture.nativeElement as HTMLElement).querySelector('.requested-object-disclosure'),
     ).toBeNull();
+  });
+
+  it('does not expose the requested-object control unless its staff-only input is enabled', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    setRequiredInputs(fixture.componentRef);
+    fixture.componentRef.setInput('proposal', PROPOSAL_WITH_REQUESTED_OBJECTS);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.requested-object-disclosure'),
+    ).toBeNull();
+  });
+
+  it('shows the staff requested-object control collapsed and toggles it accessibly', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    setRequiredInputs(fixture.componentRef);
+    fixture.componentRef.setInput('proposal', PROPOSAL_WITH_REQUESTED_OBJECTS);
+    fixture.componentRef.setInput('showRequestedObjectPicker', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const toggle = compiled.querySelector<HTMLButtonElement>(
+      '[aria-controls="requested-object-picker-panel"]',
+    );
+
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle?.querySelector('.pi-chevron-right')).not.toBeNull();
+    expect(compiled.querySelector('#requested-object-picker-panel')).toBeNull();
+
+    toggle!.click();
+    fixture.detectChanges();
+
+    expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle?.querySelector('.pi-chevron-down')).not.toBeNull();
+    expect(compiled.querySelector('#requested-object-picker-panel')).not.toBeNull();
+
+    compiled.querySelector<HTMLInputElement>('.requested-object-picker input')!.click();
+    fixture.detectChanges();
+
+    toggle!.click();
+    fixture.detectChanges();
+
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(compiled.querySelector('#requested-object-picker-panel')).toBeNull();
+
+    toggle!.click();
+    fixture.detectChanges();
+
+    expect(
+      compiled.querySelector<HTMLInputElement>('.requested-object-picker input')?.checked,
+    ).toBe(true);
   });
 
   it('inserts selected requested objects safely into the reply without duplicates', async () => {
@@ -134,11 +198,16 @@ describe('ProposalConversationSectionComponent', () => {
 
     setRequiredInputs(componentRef);
     componentRef.setInput('proposal', PROPOSAL_WITH_REQUESTED_OBJECTS);
+    componentRef.setInput('showRequestedObjectPicker', true);
     fixture.componentInstance.replySubmitted.subscribe((payload) => submitted.push(payload));
     fixture.detectChanges();
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
+    compiled
+      .querySelector<HTMLButtonElement>('[aria-controls="requested-object-picker-panel"]')!
+      .click();
+    fixture.detectChanges();
     const checkboxes = Array.from(
       compiled.querySelectorAll<HTMLInputElement>(
         '.requested-object-picker input[type="checkbox"]',
@@ -178,6 +247,17 @@ describe('ProposalConversationSectionComponent', () => {
         files: [],
       },
     ]);
+
+    componentRef.setInput('replyResetVersion', 1);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(
+      compiled
+        .querySelector<HTMLButtonElement>('[aria-controls="requested-object-picker-panel"]')
+        ?.getAttribute('aria-expanded'),
+    ).toBe('false');
+    expect(compiled.querySelector('#requested-object-picker-panel')).toBeNull();
   });
 
   it('renders requester and staff messages with roles and attachments', async () => {

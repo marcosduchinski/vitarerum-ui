@@ -518,6 +518,40 @@ describe('ProposalMyDetailPageComponent', () => {
     expect(compiled.textContent).toContain('signed-response.docx');
   });
 
+  it('enables the staff-only requested-object disclosure in the conversation panel', async () => {
+    proposalService.setProposal({
+      ...PROPOSAL,
+      requestedObjects: [
+        {
+          id: 'requested-object-1',
+          objectReference: {
+            inventoryNumber: 'MNHN-2026-001',
+            displayTitle: 'Iberian lynx specimen',
+            objectName: 'Lynx pardinus',
+            briefDescriptionSnapshot: 'Adult study skin',
+          },
+          category: 'Zoology',
+          description: 'Requested for comparative research',
+          requestedAt: '2026-05-01T10:00:00',
+          requestedBy: PROPOSAL.requestedBy,
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    fixture.componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    await selectPanel(fixture, 'Conversation');
+
+    const toggle = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '[aria-controls="requested-object-picker-panel"]',
+    );
+    expect(toggle).not.toBeNull();
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('shows an empty AI Assistance panel until a message is selected', async () => {
     const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
     const componentRef: ComponentRef<ProposalMyDetailPageComponent> = fixture.componentRef;
