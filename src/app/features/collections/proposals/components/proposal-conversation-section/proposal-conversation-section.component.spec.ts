@@ -41,6 +41,38 @@ const PROPOSAL: ProposalDetail = {
   requestedObjects: [],
 };
 
+const PROPOSAL_WITH_REQUESTED_OBJECTS: ProposalDetail = {
+  ...PROPOSAL,
+  requestedObjects: [
+    {
+      id: 'requested-object-1',
+      objectReference: {
+        inventoryNumber: 'MNHN-2026-001',
+        displayTitle: 'Iberian lynx specimen',
+        objectName: 'Lynx pardinus',
+        briefDescriptionSnapshot: 'Adult study skin',
+      },
+      category: 'Zoology',
+      description: 'Requested for comparative research',
+      requestedAt: '2026-05-01T10:00:00',
+      requestedBy: PROPOSAL.requestedBy,
+    },
+    {
+      id: 'requested-object-2',
+      objectReference: {
+        inventoryNumber: 'MNHN-2026-002',
+        displayTitle: 'Iberian lynx skull',
+        objectName: 'Lynx pardinus',
+        briefDescriptionSnapshot: null,
+      },
+      category: 'Zoology',
+      description: '',
+      requestedAt: '2026-05-01T10:00:00',
+      requestedBy: PROPOSAL.requestedBy,
+    },
+  ],
+};
+
 const MESSAGES: readonly Message[] = [
   {
     id: 'message-1',
@@ -74,6 +106,80 @@ function setRequiredInputs(
 }
 
 describe('ProposalConversationSectionComponent', () => {
+  it('hides the requested-object picker when the proposal has no requested objects', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    setRequiredInputs(fixture.componentRef);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.requested-object-picker'),
+    ).toBeNull();
+  });
+
+  it('inserts selected requested objects safely into the reply without duplicates', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProposalConversationSectionComponent],
+      providers: [{ provide: PROPOSAL_API_SERVICE, useValue: proposalServiceStub }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ProposalConversationSectionComponent);
+    const componentRef: ComponentRef<ProposalConversationSectionComponent> = fixture.componentRef;
+    const submitted: ReplyComposerPayload[] = [];
+
+    setRequiredInputs(componentRef);
+    componentRef.setInput('proposal', PROPOSAL_WITH_REQUESTED_OBJECTS);
+    fixture.componentInstance.replySubmitted.subscribe((payload) => submitted.push(payload));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const checkboxes = Array.from(
+      compiled.querySelectorAll<HTMLInputElement>(
+        '.requested-object-picker input[type="checkbox"]',
+      ),
+    );
+    const insertButton = compiled.querySelector<HTMLButtonElement>(
+      '.requested-object-picker__insert',
+    );
+    const editor = compiled.querySelector<HTMLElement>('.reply-editor');
+    const sendButton = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Send response'),
+    );
+
+    expect(checkboxes).toHaveLength(2);
+    expect(insertButton?.disabled).toBe(true);
+
+    checkboxes[0].checked = true;
+    checkboxes[0].dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    insertButton!.click();
+    fixture.detectChanges();
+
+    expect(editor?.textContent).toContain('Requested objects');
+    expect(editor?.textContent).toContain('MNHN-2026-001 — Iberian lynx specimen');
+    expect(editor?.textContent).toContain('Lynx pardinus');
+    expect(checkboxes[0].disabled).toBe(true);
+    expect(insertButton?.disabled).toBe(true);
+    expect(
+      editor?.querySelectorAll('[data-requested-object-id="requested-object-1"]'),
+    ).toHaveLength(1);
+
+    sendButton!.click();
+
+    expect(submitted).toEqual([
+      {
+        body: '<p><strong>Requested objects</strong></p><ul><li>MNHN-2026-001 — Iberian lynx specimen (Lynx pardinus; Adult study skin; Requested for comparative research)</li></ul>',
+        files: [],
+      },
+    ]);
+  });
+
   it('renders requester and staff messages with roles and attachments', async () => {
     await TestBed.configureTestingModule({
       imports: [ProposalConversationSectionComponent],
@@ -206,7 +312,9 @@ describe('ProposalConversationSectionComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const body = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.message__body');
+    const body = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '.message__body',
+    );
 
     expect(body?.innerHTML).toBe('<p>Visible <em>text</em></p>link');
     expect(body?.querySelector('iframe')).toBeNull();

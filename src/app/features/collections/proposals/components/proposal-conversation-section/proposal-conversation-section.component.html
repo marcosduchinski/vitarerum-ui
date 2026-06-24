@@ -83,6 +83,64 @@
         <span class="reply-composer__recipient"> To {{ resolvedRecipientEmail() }} </span>
       </div>
 
+      @if (proposal().requestedObjects.length) {
+        <fieldset class="requested-object-picker">
+          <legend>Requested objects</legend>
+          <p class="requested-object-picker__hint">
+            Select the collection records that should be referenced in this response.
+          </p>
+          <ul class="requested-object-picker__list">
+            @for (requestedObject of proposal().requestedObjects; track requestedObject.id) {
+              <li
+                class="requested-object-picker__item"
+                [class.requested-object-picker__item--inserted]="
+                  isRequestedObjectInserted(requestedObject.id)
+                "
+              >
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="isRequestedObjectSelected(requestedObject.id)"
+                    [disabled]="isRequestedObjectInserted(requestedObject.id)"
+                    (change)="onRequestedObjectSelectionChange(requestedObject.id, $event)"
+                  />
+                  <span class="requested-object-picker__content">
+                    <span class="requested-object-picker__title">
+                      {{ requestedObject.objectReference.inventoryNumber }} —
+                      {{
+                        requestedObject.objectReference.displayTitle ??
+                          requestedObject.objectReference.objectName ??
+                          'Untitled object'
+                      }}
+                    </span>
+                    @if (requestedObject.objectReference.objectName) {
+                      <span class="requested-object-picker__meta">
+                        {{ requestedObject.objectReference.objectName }}
+                      </span>
+                    }
+                  </span>
+                </label>
+                @if (isRequestedObjectInserted(requestedObject.id)) {
+                  <span class="requested-object-picker__status">
+                    <span class="pi pi-check" aria-hidden="true"></span>
+                    Included
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+          <button
+            type="button"
+            class="requested-object-picker__insert"
+            [disabled]="!hasSelectedRequestedObjects()"
+            (click)="insertSelectedRequestedObjects()"
+          >
+            <span class="pi pi-plus" aria-hidden="true"></span>
+            Insert selected into message
+          </button>
+        </fieldset>
+      }
+
       <div class="reply-toolbar" aria-label="Rich text formatting">
         <button
           type="button"

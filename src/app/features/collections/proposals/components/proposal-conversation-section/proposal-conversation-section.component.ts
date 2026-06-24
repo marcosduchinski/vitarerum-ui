@@ -19,7 +19,12 @@ import { ApiError, toApiError } from '@core/http/api-error.model';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
 
-import { Message, MessageAttachment, ProposalDetail } from '../../models/proposal.model';
+import {
+  Message,
+  MessageAttachment,
+  ProposalDetail,
+  RequestedObject,
+} from '../../models/proposal.model';
 import { PROPOSAL_API_SERVICE } from '../../services/proposal-api.service';
 import { formatProposalDetailDateTime } from '../../proposal-detail.presentation';
 
@@ -33,7 +38,15 @@ type ReplyEditorCommand = 'bold' | 'italic' | 'insertUnorderedList' | 'removeFor
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const ALLOWED_RICH_TEXT_TAGS = new Set(['B', 'BR', 'EM', 'I', 'LI', 'OL', 'P', 'STRONG', 'UL']);
-const BLOCKED_RICH_TEXT_TAGS = new Set(['EMBED', 'IFRAME', 'LINK', 'META', 'OBJECT', 'SCRIPT', 'STYLE']);
+const BLOCKED_RICH_TEXT_TAGS = new Set([
+  'EMBED',
+  'IFRAME',
+  'LINK',
+  'META',
+  'OBJECT',
+  'SCRIPT',
+  'STYLE',
+]);
 
 @Component({
   selector: 'app-proposal-conversation-section',
@@ -68,7 +81,12 @@ export class ProposalConversationSectionComponent {
   );
 
   protected readonly selectedFiles = signal<readonly File[]>([]);
+  protected readonly selectedRequestedObjectIds = signal<readonly string[]>([]);
+  protected readonly insertedRequestedObjectIds = signal<readonly string[]>([]);
   protected readonly replyBody = signal('');
+  protected readonly hasSelectedRequestedObjects = computed(
+    () => this.selectedRequestedObjectIds().length > 0,
+  );
   protected readonly formatDateTime = formatProposalDetailDateTime;
 
   // documentId currently downloading, plus the last download error (per section).
@@ -128,7 +146,65 @@ export class ProposalConversationSectionComponent {
   }
 
   protected onReplyInput(event: Event): void {
-    this.replyBody.set(this.sanitizeRichTextHtml((event.target as HTMLElement).innerHTML));
+    const editor = event.target as HTMLElement;
+    this.replyBody.set(this.sanitizeRichTextHtml(editor.innerHTML));
+    this.syncInsertedRequestedObjects(editor);
+  }
+
+  protected isRequestedObjectSelected(requestedObjectId: string): boolean {
+    return this.selectedRequestedObjectIds().includes(requestedObjectId);
+  }
+
+  protected isRequestedObjectInserted(requestedObjectId: string): boolean {
+    return this.insertedRequestedObjectIds().includes(requestedObjectId);
+  }
+
+  protected onRequestedObjectSelectionChange(requestedObjectId: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.selectedRequestedObjectIds.update((selectedIds) =>
+      checked
+        ? [...selectedIds, requestedObjectId]
+        : selectedIds.filter((id) => id !== requestedObjectId),
+    );
+  }
+
+  protected insertSelectedRequestedObjects(): void {
+    const editor = this.replyEditor()?.nativeElement;
+    if (!editor) return;
+
+    const selectedIds = new Set(this.selectedRequestedObjectIds());
+    const insertedIds = new Set(this.insertedRequestedObjectIds());
+    const objectsToInsert = this.proposal().requestedObjects.filter(
+      (requestedObject) =>
+        selectedIds.has(requestedObject.id) && !insertedIds.has(requestedObject.id),
+    );
+    if (!objectsToInsert.length) return;
+
+    if (editor.textContent?.trim()) {
+      const separator = this.document.createElement('p');
+      separator.append(this.document.createElement('br'));
+      editor.append(separator);
+    }
+
+    const heading = this.document.createElement('p');
+    const headingText = this.document.createElement('strong');
+    headingText.textContent = 'Requested objects';
+    heading.append(headingText);
+
+    const list = this.document.createElement('ul');
+    for (const requestedObject of objectsToInsert) {
+      const item = this.document.createElement('li');
+      item.dataset['requestedObjectId'] = requestedObject.id;
+      item.textContent = this.requestedObjectMessageText(requestedObject);
+      list.append(item);
+      insertedIds.add(requestedObject.id);
+    }
+
+    editor.append(heading, list);
+    this.insertedRequestedObjectIds.set([...insertedIds]);
+    this.selectedRequestedObjectIds.set([]);
+    this.syncReplyBody();
+    editor.focus();
   }
 
   protected applyEditorCommand(command: 'bold' | 'italic' | 'insertUnorderedList'): void {
@@ -185,6 +261,29 @@ export class ProposalConversationSectionComponent {
     if (editor) editor.innerHTML = '';
     this.replyBody.set('');
     this.selectedFiles.set([]);
+    this.selectedRequestedObjectIds.set([]);
+    this.insertedRequestedObjectIds.set([]);
+  }
+
+  private requestedObjectMessageText(requestedObject: RequestedObject): string {
+    const reference = requestedObject.objectReference;
+    const title = reference.displayTitle ?? reference.objectName ?? 'Untitled object';
+    const details = [
+      reference.objectName && reference.objectName !== title ? reference.objectName : null,
+      reference.briefDescriptionSnapshot,
+      requestedObject.description,
+    ].filter((value): value is string => Boolean(value?.trim()));
+
+    return `${reference.inventoryNumber} — ${title}${details.length ? ` (${details.join('; ')})` : ''}`;
+  }
+
+  private syncInsertedRequestedObjects(editor: HTMLElement): void {
+    const insertedIds = Array.from(
+      editor.querySelectorAll<HTMLElement>('[data-requested-object-id]'),
+    )
+      .map((element) => element.dataset['requestedObjectId'])
+      .filter((id): id is string => Boolean(id));
+    this.insertedRequestedObjectIds.set(insertedIds);
   }
 
   private hasReplyContent(): boolean {
@@ -193,7 +292,9 @@ export class ProposalConversationSectionComponent {
   }
 
   private currentSanitizedReplyBody(): string {
-    return this.sanitizeRichTextHtml(this.replyEditor()?.nativeElement.innerHTML ?? this.replyBody());
+    return this.sanitizeRichTextHtml(
+      this.replyEditor()?.nativeElement.innerHTML ?? this.replyBody(),
+    );
   }
 
   private sanitizeRichTextHtml(html: string): string {
