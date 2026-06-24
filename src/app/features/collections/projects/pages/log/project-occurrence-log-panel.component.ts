@@ -114,6 +114,13 @@ export class ProjectOccurrenceLogPanelComponent {
     const err = this.projectResource.error();
     return err ? toApiError(err) : null;
   });
+  protected readonly canDownloadDocxDemo = computed(
+    () =>
+      !this.occurrenceResource.isLoading() &&
+      !this.occurrenceError() &&
+      !!this.occurrenceLog() &&
+      this.occurrenceEntries().length > 0,
+  );
   protected readonly occurrenceConcludeConfirmOpen = signal(false);
   protected readonly occurrenceConcludeSubmitting = signal(false);
   protected readonly occurrenceConcludeError = signal<ApiError | null>(null);
@@ -389,6 +396,17 @@ export class ProjectOccurrenceLogPanelComponent {
     }
   }
 
+  protected downloadObjectOccurrenceLogDemo(): void {
+    if (!this.canDownloadDocxDemo()) return;
+
+    const blob = new Blob([this.objectOccurrenceLogDemoContent()], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const reference = this.occurrenceLog()?.referenceNumber ?? `project-${this.projectId()}`;
+    const safeReference = reference.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+    this.saveBlob(blob, `${safeReference || 'object-occurrence-log'}-occurrence-log.docx`);
+  }
+
   private saveBlob(blob: Blob, fileName: string): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
@@ -398,6 +416,39 @@ export class ProjectOccurrenceLogPanelComponent {
     anchor.download = fileName;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  private objectOccurrenceLogDemoContent(): string {
+    const log = this.occurrenceLog();
+    const lines = [
+      'DEMONSTRATION DOCX EXPORT',
+      'This placeholder contains plain text and will be replaced by the document endpoint.',
+      '',
+      `Log reference: ${log?.referenceNumber ?? 'Not issued'}`,
+      `Project ID: ${this.projectId()}`,
+      `Status: ${log?.dateConclusion ? 'Concluded' : 'Open'}`,
+      `Conclusion: ${log?.dateConclusion ?? '—'}`,
+      `Curator: ${log?.curator?.user.name ?? '—'}`,
+      '',
+      'OCCURRENCES',
+    ];
+
+    this.occurrenceEntries().forEach((entry, index) => {
+      lines.push(
+        '',
+        `${index + 1}. ${entry.objectReference.inventoryNumber}`,
+        `Object: ${entry.objectReference.displayTitle ?? entry.objectReference.objectName ?? '—'}`,
+        `Number of objects: ${entry.numberOfObjects}`,
+        `Occurrence date: ${entry.occurrenceDate}`,
+        `Location: ${entry.location}`,
+        `Reported by: ${entry.reportedBy.user.name}`,
+        `Description: ${entry.detailedDescription}`,
+        `Testimonial: ${entry.testimonial ?? '—'}`,
+        `Attachments: ${entry.attachments.length}`,
+      );
+    });
+
+    return lines.join('\r\n');
   }
 
   protected toggleOccurrenceAttachments(entryId: string): void {

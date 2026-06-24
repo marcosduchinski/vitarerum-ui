@@ -6,16 +6,29 @@
         <h2 id="object-occurrence-log-heading" class="access-sheet__title">
           Object occurrence log
         </h2>
-        @if (canConcludeOccurrenceLog()) {
+        <div class="access-sheet__actions">
+          @if (canConcludeOccurrenceLog()) {
+            <button
+              type="button"
+              class="access-sheet__action"
+              [disabled]="occurrenceConcludeSubmitting()"
+              (click)="openOccurrenceConcludeConfirm()"
+            >
+              {{ occurrenceConcludeSubmitting() ? 'Concluding...' : 'Conclude occurrence log' }}
+            </button>
+          }
           <button
             type="button"
-            class="access-sheet__action"
-            [disabled]="occurrenceConcludeSubmitting()"
-            (click)="openOccurrenceConcludeConfirm()"
+            class="access-sheet__action access-sheet__action--download"
+            [disabled]="!canDownloadDocxDemo()"
+            title="Demonstration export; backend document generation is not connected"
+            (click)="downloadObjectOccurrenceLogDemo()"
           >
-            {{ occurrenceConcludeSubmitting() ? 'Concluding...' : 'Conclude occurrence log' }}
+            <span class="pi pi-download" aria-hidden="true"></span>
+            Download DOCX
+            <span class="access-sheet__action-badge">Demo</span>
           </button>
-        }
+        </div>
       </div>
 
       <dl class="access-summary" aria-label="Object occurrence log summary">
