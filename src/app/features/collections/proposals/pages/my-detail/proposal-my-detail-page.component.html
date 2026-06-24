@@ -204,6 +204,7 @@
               [messageId]="messageId"
               [embedded]="true"
               (applied)="onTriageApplied()"
+              (requestedObjectsAdded)="onRequestedObjectsAdded()"
             />
           } @else {
             <section class="detail-card" aria-labelledby="ai-assistance-empty-heading">

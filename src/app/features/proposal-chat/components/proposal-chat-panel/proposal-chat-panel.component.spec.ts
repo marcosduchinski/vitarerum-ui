@@ -1,9 +1,11 @@
 import { ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 
 import {
+  CatalogRecordSnapshot,
   IntendedUseSuggestion,
   ProposalChatContext,
   ProposalChatContextQuery,
@@ -69,6 +71,11 @@ class ProposalApiServiceStub {
     readonly proposalId: string;
     readonly request: { readonly intendedUse: IntendedUseSuggestion['intendedUse'] };
   }[] = [];
+  readonly addRequestedObjectsCalls: {
+    readonly proposalId: string;
+    readonly objects: readonly CatalogRecordSnapshot[];
+  }[] = [];
+  addRequestedObjectsResponse: Observable<unknown> = of({});
 
   updateProposal(
     proposalId: string,
@@ -85,17 +92,26 @@ class ProposalApiServiceStub {
       lastEvent: null,
     });
   }
+
+  addRequestedObjects(
+    proposalId: string,
+    request: { readonly objects: readonly CatalogRecordSnapshot[] },
+  ) {
+    this.addRequestedObjectsCalls.push({ proposalId, objects: request.objects });
+    return this.addRequestedObjectsResponse;
+  }
 }
 
 const flushMicrotasks = (): Promise<void> => new Promise((resolve) => setTimeout(resolve));
 
-async function setup(): Promise<{
+async function setup(context: ProposalChatContext = CONTEXT): Promise<{
   readonly fixture: ComponentFixture<ProposalChatPanelComponent>;
   readonly componentRef: ComponentRef<ProposalChatPanelComponent>;
   readonly service: ProposalChatServiceStub;
   readonly proposalService: ProposalApiServiceStub;
 }> {
   const service = new ProposalChatServiceStub();
+  service.contextResponse = of(context);
   const proposalService = new ProposalApiServiceStub();
   await TestBed.configureTestingModule({
     imports: [ProposalChatPanelComponent],
@@ -121,6 +137,13 @@ async function setup(): Promise<{
 const triageTask = (fixture: ComponentFixture<ProposalChatPanelComponent>): HTMLButtonElement =>
   (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
     '[data-task="intended-use"]',
+  )!;
+
+const searchRecordsTask = (
+  fixture: ComponentFixture<ProposalChatPanelComponent>,
+): HTMLButtonElement =>
+  (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+    '[data-task="search-records"]',
   )!;
 
 const applyButton = (
@@ -223,6 +246,106 @@ describe('ProposalChatPanelComponent', () => {
     // The applied suggestion is acknowledged in the thread.
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Applied');
   });
+
+  it('simulates three Lynx pardinus records and submits the selected snapshots', async () => {
+    const { fixture, proposalService } = await setup();
+    let requestedObjectsAdded = false;
+    fixture.componentInstance.requestedObjectsAdded.subscribe(() => (requestedObjectsAdded = true));
+
+    expect(searchRecordsTask(fixture).disabled).toBe(false);
+    searchRecordsTask(fixture).click();
+    await flushMicrotasks();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const cards = compiled.querySelectorAll<HTMLElement>('.record-card');
+    expect(cards).toHaveLength(3);
+    expect(Array.from(cards).every((card) => card.textContent?.includes('Lynx pardinus'))).toBe(
+      true,
+    );
+
+    const checkboxes = compiled.querySelectorAll<HTMLInputElement>(
+      '.record-card input[type="checkbox"]',
+    );
+    checkboxes[0].click();
+    checkboxes[2].click();
+    fixture.detectChanges();
+
+    const submit = Array.from(compiled.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Add selected objects'),
+    )!;
+    expect(submit.disabled).toBe(false);
+    submit.click();
+    await flushMicrotasks();
+    fixture.detectChanges();
+
+    expect(proposalService.addRequestedObjectsCalls).toEqual([
+      {
+        proposalId: 'prop-4',
+        objects: [
+          expect.objectContaining({
+            inventoryNumber: 'MNHN-MAM-00421',
+            displayTitle: 'Lynx pardinus study skin',
+            objectName: 'Zoological study skin',
+          }),
+          expect.objectContaining({
+            inventoryNumber: 'ARC-PHO-01977',
+            displayTitle: 'Lynx pardinus field photograph',
+            objectName: 'Archival photograph',
+          }),
+        ],
+      },
+    ]);
+    expect(requestedObjectsAdded).toBe(true);
+    expect(compiled.textContent).toContain('Requested objects added');
+    expect(compiled.textContent).toContain('2 catalog records were added');
+  });
+
+  it('shows authorization errors when selected records cannot be attached', async () => {
+    const { fixture, proposalService } = await setup();
+    proposalService.addRequestedObjectsResponse = throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 403,
+          error: { error: 'ACCESS_DENIED', message: 'Staff cannot attach requested objects' },
+        }),
+    );
+
+    searchRecordsTask(fixture).click();
+    await flushMicrotasks();
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLInputElement>('.record-card input[type="checkbox"]')!.click();
+    fixture.detectChanges();
+    Array.from(compiled.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent?.includes('Add selected objects'))!
+      .click();
+    await flushMicrotasks();
+    fixture.detectChanges();
+
+    expect(compiled.textContent).toContain('Access denied');
+  });
+
+  it.each(['APPROVED', 'REJECTED', 'CANCELLED'] as const)(
+    'blocks requested-object submission when the proposal is %s',
+    async (status) => {
+      const { fixture, proposalService } = await setup({
+        ...CONTEXT,
+        proposal: { ...CONTEXT.proposal, status },
+      });
+
+      searchRecordsTask(fixture).click();
+      await flushMicrotasks();
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+
+      expect(compiled.querySelector<HTMLFieldSetElement>('fieldset')!.disabled).toBe(true);
+      expect(compiled.textContent).toContain(
+        'Records cannot be added to a decided or cancelled proposal.',
+      );
+      expect(proposalService.addRequestedObjectsCalls).toEqual([]);
+    },
+  );
 
   it('renders model errors without replacing the loaded context', async () => {
     const { fixture, service } = await setup();

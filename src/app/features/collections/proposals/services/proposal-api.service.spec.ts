@@ -174,6 +174,37 @@ describe('ProposalApiService', () => {
     expect(detailType).toBe('EXHIBITION');
   });
 
+  it('adds selected catalog snapshots to a proposal', () => {
+    const body = {
+      objects: [
+        {
+          inventoryNumber: 'MNHN-MAM-00421',
+          displayTitle: 'Lynx pardinus study skin',
+          objectName: 'Zoological study skin',
+          briefDescriptionSnapshot: 'Historic Iberian lynx reference specimen.',
+          category: 'mammalogy',
+          description: 'Requested for comparative research.',
+        },
+      ],
+    };
+
+    service.addRequestedObjects('proposal-1', body).subscribe();
+
+    const request = http.expectOne(
+      'https://api.example.test/proposals/proposal-1/requested-objects',
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(body);
+    request.flush({
+      id: 'proposal-1',
+      referenceNumber: 'VRP-20260101-0001',
+      title: 'Lynx research',
+      status: 'PENDING',
+      type: 'IN_SITU_VISIT',
+      requestedObjects: [],
+    });
+  });
+
   it('defaults missing proposal type data to other', () => {
     let listType: string | undefined;
     service.listProposals().subscribe((page) => (listType = page.content[0]?.type));

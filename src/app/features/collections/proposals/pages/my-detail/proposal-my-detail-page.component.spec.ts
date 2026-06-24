@@ -1,10 +1,12 @@
 import { ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { UserDetail } from '@core/auth/models/user.model';
 import { PROPOSAL_CHAT_SERVICE } from '@features/proposal-chat/services/proposal-chat.service';
+import { ProposalChatPanelComponent } from '@features/proposal-chat/components/proposal-chat-panel/proposal-chat-panel.component';
 import { USER_MANAGEMENT_SERVICE } from '@features/admin/services/user-management.service';
 import { Page } from '@shared/models/page.model';
 import {
@@ -645,6 +647,38 @@ describe('ProposalMyDetailPageComponent', () => {
     ).toContain('Overview');
     expect(proposalService.getProposalCalls.length).toBeGreaterThan(1);
     expect(proposalService.listEventsCalls.length).toBeGreaterThan(1);
+  });
+
+  it('reloads proposal data after requested objects are added and keeps AI Assistance open', async () => {
+    const fixture = TestBed.createComponent(ProposalMyDetailPageComponent);
+    fixture.componentRef.setInput('id', 'proposal-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await selectPanel(fixture, 'Conversation');
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label^="Run intended-use triage"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const proposalCallsBefore = proposalService.getProposalCalls.length;
+    const eventCallsBefore = proposalService.listEventsCalls.length;
+    const chat = fixture.debugElement.query(By.directive(ProposalChatPanelComponent))
+      .componentInstance as ProposalChatPanelComponent;
+    chat.requestedObjectsAdded.emit();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(proposalService.getProposalCalls.length).toBeGreaterThan(proposalCallsBefore);
+    expect(proposalService.listEventsCalls).toHaveLength(eventCallsBefore);
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[role="tab"][aria-selected="true"]')
+        ?.textContent,
+    ).toContain('AI Assistance');
   });
 
   it('uploads selected files and attaches them to a staff response message', async () => {

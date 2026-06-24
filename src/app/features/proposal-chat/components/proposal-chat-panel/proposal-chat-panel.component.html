@@ -178,6 +178,23 @@
             </div>
           }
 
+          @case ('search-records') {
+            @let result = asSearchRecords(turn);
+            <div class="agent-turn agent-turn--assistant">
+              <span class="agent-turn__mark" aria-hidden="true">
+                <span class="pi pi-database"></span>
+              </span>
+              <app-proposal-record-search-results
+                [records]="result.records"
+                [submissionAllowed]="canAddRequestedObjects()"
+                [pending]="isSavingRecords(result)"
+                [saved]="isRecordsSaved(result)"
+                [apiError]="recordsError()"
+                (submitted)="addRequestedObjects(result, $event)"
+              />
+            </div>
+          }
+
           @case ('error') {
             @let failed = asError(turn);
             <div class="agent-turn agent-turn--assistant">

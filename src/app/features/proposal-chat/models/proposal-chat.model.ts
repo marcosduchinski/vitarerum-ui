@@ -44,3 +44,12 @@ export interface IntendedUseSuggestion {
 export interface IntendedUseSuggestionResponse {
   readonly suggestion: IntendedUseSuggestion;
 }
+
+export interface CatalogRecordSnapshot {
+  readonly inventoryNumber: string;
+  readonly displayTitle: string;
+  readonly objectName: string;
+  readonly briefDescriptionSnapshot: string | null;
+  readonly category: string;
+  readonly description: string;
+}

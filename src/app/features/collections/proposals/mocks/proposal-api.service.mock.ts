@@ -231,14 +231,25 @@ export class ProposalApiServiceMock {
   ): Observable<ProposalDetail> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
+    if (
+      proposal.status === 'APPROVED' ||
+      proposal.status === 'REJECTED' ||
+      proposal.status === 'CANCELLED'
+    ) {
+      return throwError(() => ({
+        status: 409,
+        error: 'INVALID_TRANSITION',
+        message: 'Cannot add requested objects to a decided proposal',
+      }));
+    }
     const now = new Date().toISOString();
     const added: RequestedObject[] = request.objects.map((o) => ({
       id: `reqobj-${this.nextId++}`,
       objectReference: {
         inventoryNumber: o.inventoryNumber,
-        displayTitle: null,
-        objectName: null,
-        briefDescriptionSnapshot: null,
+        displayTitle: o.displayTitle,
+        objectName: o.objectName,
+        briefDescriptionSnapshot: o.briefDescriptionSnapshot ?? null,
       },
       category: o.category ?? '',
       description: o.description ?? '',

@@ -87,6 +87,50 @@ describe('ProposalApiServiceMock', () => {
     expect(p.status).toBe('SUBMITTED');
   });
 
+  it('stores complete requested-object snapshots on editable proposals', async () => {
+    const updated = await firstValueFrom(
+      service.addRequestedObjects('prop-1', {
+        objects: [
+          {
+            inventoryNumber: 'MNHN-OST-00108',
+            displayTitle: 'Lynx pardinus skull',
+            objectName: 'Osteological specimen',
+            briefDescriptionSnapshot: 'Adult Iberian lynx skull.',
+            category: 'osteology',
+            description: 'Selected by staff from the simulated catalog search.',
+          },
+        ],
+      }),
+    );
+
+    expect(updated.requestedObjects.at(-1)).toMatchObject({
+      objectReference: {
+        inventoryNumber: 'MNHN-OST-00108',
+        displayTitle: 'Lynx pardinus skull',
+        objectName: 'Osteological specimen',
+        briefDescriptionSnapshot: 'Adult Iberian lynx skull.',
+      },
+      category: 'osteology',
+      description: 'Selected by staff from the simulated catalog search.',
+    });
+  });
+
+  it('rejects requested objects for terminal proposals', async () => {
+    await expect(
+      firstValueFrom(
+        service.addRequestedObjects('prop-3', {
+          objects: [
+            {
+              inventoryNumber: 'MNHN-MAM-00421',
+              displayTitle: 'Lynx pardinus study skin',
+              objectName: 'Zoological study skin',
+            },
+          ],
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 409, error: 'INVALID_TRANSITION' });
+  });
+
   it('partially updates editable metadata without recording an event', async () => {
     const eventsBefore = await firstValueFrom(service.listEvents('prop-1'));
 

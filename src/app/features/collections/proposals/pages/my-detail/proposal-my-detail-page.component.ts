@@ -211,6 +211,10 @@ export class ProposalMyDetailPageComponent {
     this.syncUrl({ tab: 'overview', triageMessageId: null });
   }
 
+  protected onRequestedObjectsAdded(): void {
+    this.proposalResource.reload();
+  }
+
   private normalizeTab(tab: string | undefined): MyDetailPanel {
     return tab === 'conversation' || tab === 'ai-assistance' || tab === 'actions'
       ? tab
