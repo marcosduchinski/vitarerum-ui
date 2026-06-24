@@ -73,6 +73,13 @@ export class ProjectObjectLogPanelComponent {
     }
     return null;
   });
+  protected readonly canDownloadDocxDemo = computed(
+    () =>
+      !this.logResource.isLoading() &&
+      !this.logError() &&
+      !!this.accessLog() &&
+      this.logEntries().length > 0,
+  );
   protected readonly canConcludeAccessLog = computed(() => {
     const group = this.identity.session()?.group;
     return (
@@ -230,6 +237,17 @@ export class ProjectObjectLogPanelComponent {
     }
   }
 
+  protected downloadObjectAccessLogDemo(): void {
+    if (!this.canDownloadDocxDemo()) return;
+
+    const blob = new Blob([this.objectAccessLogDemoContent()], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const reference = this.accessLog()?.referenceNumber ?? `project-${this.projectId()}`;
+    const safeReference = reference.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+    this.saveBlob(blob, `${safeReference || 'object-access-log'}-research-log.docx`);
+  }
+
   private saveBlob(blob: Blob, fileName: string): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
@@ -239,6 +257,35 @@ export class ProjectObjectLogPanelComponent {
     anchor.download = fileName;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  private objectAccessLogDemoContent(): string {
+    const log = this.accessLog();
+    const lines = [
+      'DEMONSTRATION DOCX EXPORT',
+      'This placeholder contains plain text and will be replaced by the document endpoint.',
+      '',
+      `Log reference: ${log?.referenceNumber ?? 'Not issued'}`,
+      `Project ID: ${this.projectId()}`,
+      `Status: ${log?.dateConclusion ? 'Concluded' : 'Open'}`,
+      `Conclusion: ${log?.dateConclusion ?? '—'}`,
+      `Curator: ${log?.curator?.user.name ?? '—'}`,
+      '',
+      'OBJECTS CONSULTED',
+    ];
+
+    this.logEntries().forEach((entry, index) => {
+      lines.push(
+        '',
+        `${index + 1}. ${entry.objectReference.inventoryNumber}`,
+        `Object: ${entry.objectReference.displayTitle ?? entry.objectReference.objectName ?? '—'}`,
+        `Access date: ${this.draftAddedAt(entry)}`,
+        `Number of objects: ${this.draftNumberOfObjects(entry)}`,
+        `Observations: ${this.draftObservations(entry) || '—'}`,
+      );
+    });
+
+    return lines.join('\r\n');
   }
 
   protected toggleObjectAttachments(entryId: string): void {

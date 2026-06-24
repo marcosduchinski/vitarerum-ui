@@ -4,16 +4,29 @@
       <div>
         <p class="access-sheet__eyebrow">RAIS · Collection access</p>
         <h2 id="object-access-log-heading" class="access-sheet__title">Object access log</h2>
-        @if (canConcludeAccessLog()) {
+        <div class="access-sheet__actions">
+          @if (canConcludeAccessLog()) {
+            <button
+              type="button"
+              class="access-sheet__action"
+              [disabled]="concludeSubmitting()"
+              (click)="openConcludeConfirm()"
+            >
+              {{ concludeSubmitting() ? 'Concluding...' : 'Conclude access log' }}
+            </button>
+          }
           <button
             type="button"
-            class="access-sheet__action"
-            [disabled]="concludeSubmitting()"
-            (click)="openConcludeConfirm()"
+            class="access-sheet__action access-sheet__action--download"
+            [disabled]="!canDownloadDocxDemo()"
+            title="Demonstration export; backend document generation is not connected"
+            (click)="downloadObjectAccessLogDemo()"
           >
-            {{ concludeSubmitting() ? 'Concluding...' : 'Conclude access log' }}
+            <span class="pi pi-download" aria-hidden="true"></span>
+            Download DOCX
+            <span class="access-sheet__action-badge">Demo</span>
           </button>
-        }
+        </div>
       </div>
 
       <dl class="access-summary" aria-label="Object access log summary">

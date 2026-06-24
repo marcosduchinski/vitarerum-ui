@@ -318,6 +318,41 @@ describe('project log pages', () => {
     expect(root.textContent).toContain('No object access entries have been added yet.');
     expect(root.textContent).not.toContain('Save');
     expect(root.querySelector('.object-register-form__save')).toBeNull();
+    expect(buttonByText(root, 'Download DOCX').disabled).toBe(true);
+  });
+
+  it('downloads a frontend-only DOCX placeholder when access entries exist', async () => {
+    const service = TestBed.inject(PROJECT_API_SERVICE);
+    const downloadAttachment = vi.spyOn(service, 'downloadLogEntryAttachment');
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:log-docx-demo');
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
+    fixture.componentRef.setInput('projectId', 'proj-3');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const downloadButton = buttonByText(root, 'Download DOCX');
+    expect(downloadButton.disabled).toBe(false);
+
+    downloadButton.click();
+
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    await expect(blob.text()).resolves.toContain('INV-ZOO-1892-001');
+    await expect(blob.text()).resolves.toContain('Number of objects: 1');
+    await expect(blob.text()).resolves.toContain(
+      'Observations: Reviewed and compared with specimen records.',
+    );
+    expect(anchorClick).toHaveBeenCalledOnce();
+    const anchor = anchorClick.mock.instances[0] as HTMLAnchorElement;
+    expect(anchor.download).toMatch(/^OAL-.*-research-log\.docx$/);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:log-docx-demo');
+    expect(downloadAttachment).not.toHaveBeenCalled();
   });
 
   it('locks researcher entry controls when the project is not in progress', async () => {
@@ -822,4 +857,12 @@ function renderOccurrence<T extends { readonly id: () => string }>(
   expect(text).toContain('Object occurrence log');
   expect(text).not.toContain('Object access log');
   return text;
+}
+
+function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {
+  const button = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(text),
+  );
+  expect(button).toBeDefined();
+  return button!;
 }
