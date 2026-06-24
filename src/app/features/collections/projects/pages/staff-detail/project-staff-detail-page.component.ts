@@ -143,9 +143,11 @@ export class ProjectStaffDetailPageComponent {
     return status === 'IN_PROGRESS' || status === 'COMPLETED';
   });
   protected readonly canCreateInSituVisitReport = computed(() => {
+    const project = this.project();
     const group = this.identity.session()?.group;
     return (
-      this.project()?.type === 'IN_SITU_VISIT' &&
+      project?.type === 'IN_SITU_VISIT' &&
+      project.status === 'COMPLETED' &&
       (group === 'CURATORIAL' || group === 'COLLECTIONS_MANAGEMENT')
     );
   });

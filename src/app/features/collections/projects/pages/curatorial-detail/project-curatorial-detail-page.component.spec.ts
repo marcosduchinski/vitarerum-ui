@@ -292,6 +292,7 @@ describe('ProjectCuratorialDetailPageComponent', () => {
   });
 
   it('shows in-situ visit report creation for curatorial and collections groups', async () => {
+    projectService.project = { ...PROJECT, status: 'COMPLETED' };
     const compiled = await render();
     tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
@@ -307,20 +308,34 @@ describe('ProjectCuratorialDetailPageComponent', () => {
 
   it('hides report creation for direction and non-in-situ projects', async () => {
     identity.setGroup('DIRECTION');
+    projectService.project = { ...PROJECT, status: 'COMPLETED' };
     const compiled = await render();
     tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
     expect(compiled.textContent).not.toContain('Create new In Situ Visit Report');
 
     identity.setGroup('CURATORIAL');
-    projectService.project = { ...PROJECT, type: 'EXHIBITION' };
+    projectService.project = { ...PROJECT, type: 'EXHIBITION', status: 'COMPLETED' };
     const exhibitionCompiled = await render();
     tabByName(exhibitionCompiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
     expect(exhibitionCompiled.textContent).not.toContain('Create new In Situ Visit Report');
   });
 
+  it('hides report creation until the in-situ project is completed', async () => {
+    identity.setGroup('CURATORIAL');
+
+    for (const status of ['CREATED', 'IN_PROGRESS', 'CANCELLED'] as const) {
+      projectService.project = { ...PROJECT, status };
+      const compiled = await render();
+      tabByName(compiled, 'Actions').click();
+      componentRef.changeDetectorRef.detectChanges();
+      expect(compiled.textContent).not.toContain('Create new In Situ Visit Report');
+    }
+  });
+
   it('creates a report with the selected options and shows success feedback', async () => {
+    projectService.project = { ...PROJECT, status: 'COMPLETED' };
     const compiled = await render();
     tabByName(compiled, 'Actions').click();
     componentRef.changeDetectorRef.detectChanges();
