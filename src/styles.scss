@@ -43,7 +43,7 @@
 
   /* ── Shell surfaces (cool deep slate) ─────────────────── */
   --color-sidebar: #1b2230;
-  --color-sidebar-muted: rgba(231, 236, 242, 0.56);
+  --color-sidebar-muted: rgba(231, 236, 242, 0.72);
 
   /* ── Focus ────────────────────────────────────────────── */
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
@@ -266,6 +266,7 @@ h3 {
   padding: 0.6rem 1rem;
   border-radius: var(--content-border-radius);
   font-size: 0.9rem;
+  font-weight: 500;
   text-decoration: none;
   transition:
     background-color 120ms ease,

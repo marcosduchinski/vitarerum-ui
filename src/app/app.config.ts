@@ -10,7 +10,12 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
-import { API_BASE_URL, USE_MOCK_API, USE_MOCK_AUTH } from '@core/config/app-config.model';
+import {
+  API_BASE_URL,
+  TURNSTILE_SITE_KEY,
+  USE_MOCK_API,
+  USE_MOCK_AUTH,
+} from '@core/config/app-config.model';
 import { AppConfigService } from '@core/config/app-config.service';
 import { authInterceptor } from '@core/auth/auth.interceptor';
 import { sessionExpiredInterceptor } from '@core/auth/session-expired.interceptor';
@@ -81,6 +86,12 @@ export const appConfig: ApplicationConfig = {
       // Falls back to use-mock-api when the key is absent, preserving older config files.
       useFactory: (config: AppConfigService) =>
         config.get('use-mock-auth') ?? config.get('use-mock-api'),
+      deps: [AppConfigService],
+    },
+    {
+      provide: TURNSTILE_SITE_KEY,
+      // Empty string when unset: the public page treats that as "no captcha configured".
+      useFactory: (config: AppConfigService) => config.get('turnstile-site-key') ?? '',
       deps: [AppConfigService],
     },
     provideIdentity(),

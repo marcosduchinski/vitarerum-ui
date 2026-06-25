@@ -12,6 +12,12 @@ export const routes: Routes = [
       import('@features/auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    // Public, unauthenticated proposal submission for any citizen — no authGuard.
+    path: 'submit-proposal',
+    loadChildren: () =>
+      import('@features/public/public.routes').then((m) => m.PUBLIC_ROUTES),
+  },
+  {
     path: 'p',
     title: 'Vitarerum',
     canActivate: [authGuard],
