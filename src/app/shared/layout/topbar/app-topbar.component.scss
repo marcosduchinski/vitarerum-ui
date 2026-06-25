@@ -31,12 +31,6 @@
   letter-spacing: 0.005em;
   text-decoration: none;
   border-radius: var(--radius-sm);
-
-  /* The wordmark's full stop — the one warm flourish in the ink frame. */
-  .layout-topbar-logo__text::after {
-    content: '.';
-    color: var(--brand-vermilion);
-  }
 }
 
 /* Knockout variant: navy is invisible on the ink shell, so ink shapes go paper. */

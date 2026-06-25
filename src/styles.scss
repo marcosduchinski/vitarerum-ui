@@ -4,7 +4,9 @@
 
   /* ── Typography ───────────────────────────────────────── */
   --font-body: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  /* Corporate-sober: titles share the body sans. The token is kept so the 16
+     stylesheets that reference var(--font-display) need no edits. */
+  --font-display: var(--font-body);
 
   /* ── Core palette ─────────────────────────────────────── */
   --color-indigo: #2c4bce;
@@ -14,20 +16,20 @@
   --brand-navy: #022149;
   --brand-vermilion: #f43e1a;
 
-  /* ── Backgrounds (warm paper) ─────────────────────────── */
-  --color-bg: #f5f4ef;
-  --color-bg-raised: #fdfdfb;
-  --color-panel: #fdfdfb;
-  --color-panel-muted: #f0eee7;
+  /* ── Backgrounds (cool neutral) ───────────────────────── */
+  --color-bg: #f4f6f8;
+  --color-bg-raised: #ffffff;
+  --color-panel: #ffffff;
+  --color-panel-muted: #eef1f5;
 
-  /* ── Text (warm ink) ──────────────────────────────────── */
-  --color-text: #201e1a;
-  --color-muted: #6b675e;
-  --color-subtle: #8f8a7f;
+  /* ── Text (cool slate ink) ────────────────────────────── */
+  --color-text: #1a1f29;
+  --color-muted: #5b6471;
+  --color-subtle: #889099;
 
   /* ── Borders (hairlines carry the structure) ──────────── */
-  --color-line: #e0dcd1;
-  --color-line-strong: #c6c1b3;
+  --color-line: #e2e6ec;
+  --color-line-strong: #cbd1da;
 
   /* ── Accent (ultramarine, used with discipline) ───────── */
   --color-accent: #2c4bce;
@@ -39,9 +41,9 @@
   --color-cta-hover: #b32d0e;
   --color-cta-soft: #fdeae3;
 
-  /* ── Shell surfaces (warm ink) ────────────────────────── */
-  --color-sidebar: #1b1916;
-  --color-sidebar-muted: rgba(245, 244, 239, 0.56);
+  /* ── Shell surfaces (cool deep slate) ─────────────────── */
+  --color-sidebar: #1b2230;
+  --color-sidebar-muted: rgba(231, 236, 242, 0.56);
 
   /* ── Focus ────────────────────────────────────────────── */
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
@@ -86,17 +88,17 @@
 .app-dark {
   color-scheme: dark;
 
-  --color-bg: #141311;
-  --color-bg-raised: #1d1b18;
-  --color-panel: #1d1b18;
-  --color-panel-muted: #26241f;
+  --color-bg: #0f1420;
+  --color-bg-raised: #161c28;
+  --color-panel: #161c28;
+  --color-panel-muted: #1d2533;
 
-  --color-text: #ebe8e0;
-  --color-muted: #a39e92;
-  --color-subtle: #757064;
+  --color-text: #e6eaf0;
+  --color-muted: #9aa3b2;
+  --color-subtle: #69727f;
 
-  --color-line: #302d27;
-  --color-line-strong: #423e35;
+  --color-line: #272f3d;
+  --color-line-strong: #3a4456;
 
   --color-accent: #7d93ec;
   --color-accent-strong: #a3b3f3;
@@ -106,7 +108,7 @@
   --color-cta-hover: #f58465;
   --color-cta-soft: #321507;
 
-  --color-sidebar: #100f0d;
+  --color-sidebar: #0c111b;
 
   --status-submitted-bg: #1a1f4a;
   --status-submitted-text: #8fa5f8;
@@ -166,13 +168,13 @@ a {
   color: inherit;
 }
 
-/* Editorial voice: page and panel titles set in the display serif. */
+/* Sober corporate voice: titles share the body sans, tight but neutral tracking. */
 h1,
 h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
 }
 
 :focus-visible {
