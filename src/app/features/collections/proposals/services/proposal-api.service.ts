@@ -18,7 +18,6 @@ import {
   ProposalEventResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
-  ReferToDirectionRequest,
   UpdateProposalRequest,
 } from '../models/proposal-actions.model';
 import {
@@ -170,16 +169,6 @@ export class ProposalApiService {
   ): Observable<ProposalAssignmentResult> {
     return this.http.post<ProposalAssignmentResult>(
       this.url(`/proposals/${proposalId}/forward`),
-      request,
-    );
-  }
-
-  referToDirection(
-    proposalId: string,
-    request: ReferToDirectionRequest,
-  ): Observable<ProposalEventResult> {
-    return this.http.post<ProposalEventResult>(
-      this.url(`/proposals/${proposalId}/refer-to-direction`),
       request,
     );
   }

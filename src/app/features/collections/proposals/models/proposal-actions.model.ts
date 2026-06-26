@@ -39,11 +39,6 @@ export interface ApproveProposalRequest {
   readonly note?: string;
 }
 
-export interface ReferToDirectionRequest {
-  readonly question: string;
-  readonly note?: string;
-}
-
 export interface DirectionClarificationRequest {
   readonly clarification: string;
   readonly note?: string;
@@ -68,7 +63,7 @@ export interface ProposalAssignmentResult {
 }
 
 // Shape returned by status-preserving review commands (request-documents,
-// refer-to-direction, direction-clarification): the proposal plus its newest event.
+// direction-clarification): the proposal plus its newest event.
 export interface ProposalEventResult {
   readonly id: string;
   readonly status: ProposalStatus;

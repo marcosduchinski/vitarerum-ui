@@ -16,7 +16,6 @@ import {
   ProposalEventResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
-  ReferToDirectionRequest,
   UpdateProposalRequest,
 } from '../models/proposal-actions.model';
 import {
@@ -416,22 +415,6 @@ export class ProposalApiServiceMock {
     );
     this.pushEvent(proposalId, evt);
     return of({ id: proposalId, status: proposal.status, assignedTo, lastEvent: evt });
-  }
-
-  referToDirection(
-    proposalId: string,
-    request: ReferToDirectionRequest,
-  ): Observable<ProposalEventResult> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    const evt: ProposalEvent = {
-      occurredAt: new Date().toISOString(),
-      type: 'REFERRED_TO_DIRECTION',
-      triggeredBy: this.currentPrincipal(),
-      note: request.note || request.question,
-    };
-    this.pushEvent(proposalId, evt);
-    return of({ id: proposalId, status: proposal.status, lastEvent: evt });
   }
 
   directionClarification(
