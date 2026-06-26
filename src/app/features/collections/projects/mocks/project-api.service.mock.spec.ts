@@ -179,7 +179,6 @@ describe('ProjectApiServiceMock', () => {
     const accessLog = await firstValueFrom(service.getObjectAccessLog('proj-4'));
     expect(accessLog.projectId).toBe('proj-4');
     expect(accessLog.referenceNumber).toMatch(/^OAL-/);
-    expect(accessLog.dateConclusion).toBeNull();
   });
 
   it('updates editable object log entry fields', async () => {
@@ -513,64 +512,6 @@ describe('ProjectApiServiceMock', () => {
         service.createObjectLogEntry('proj-4', {
           inventoryNumber: 'INV-004',
           numberOfObjects: 1,
-        }),
-      ),
-    ).rejects.toMatchObject({
-      status: 409,
-      error: 'INVALID_TRANSITION',
-    });
-  });
-
-  it('allows curatorial staff to conclude an object access log', async () => {
-    session.set(curatorialSession());
-    await firstValueFrom(
-      service.createObjectLogEntry('proj-4', {
-        inventoryNumber: 'INV-005',
-        numberOfObjects: 1,
-      }),
-    );
-
-    const concluded = await firstValueFrom(service.concludeObjectAccessLog('proj-4'));
-
-    expect(concluded.dateConclusion).toBeTruthy();
-    expect(concluded.curator?.permissionId).toBe('perm-carol');
-  });
-
-  it('rejects object log entries and attachments after conclusion', async () => {
-    session.set(curatorialSession());
-    const entry = await firstValueFrom(
-      service.createObjectLogEntry('proj-4', {
-        inventoryNumber: 'INV-006',
-        numberOfObjects: 1,
-      }),
-    );
-    await firstValueFrom(service.concludeObjectAccessLog('proj-4'));
-
-    await expect(
-      firstValueFrom(
-        service.createObjectLogEntry('proj-4', {
-          inventoryNumber: 'INV-007',
-          numberOfObjects: 1,
-        }),
-      ),
-    ).rejects.toMatchObject({
-      status: 409,
-      error: 'INVALID_TRANSITION',
-    });
-
-    await expect(
-      firstValueFrom(
-        service.uploadLogEntryAttachment('proj-4', entry.id, new File(['x'], 'x.jpg'), 'IMAGE'),
-      ),
-    ).rejects.toMatchObject({
-      status: 409,
-      error: 'INVALID_TRANSITION',
-    });
-
-    await expect(
-      firstValueFrom(
-        service.updateObjectLogEntry('proj-4', entry.id, {
-          observations: 'Too late.',
         }),
       ),
     ).rejects.toMatchObject({

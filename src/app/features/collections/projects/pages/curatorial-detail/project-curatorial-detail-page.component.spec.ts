@@ -48,7 +48,6 @@ const PROJECT: CollectionUseProjectDetail = {
     canOpenLog: true,
     canCreateObjectLogEntry: true,
     canCreateOccurrenceEntry: true,
-    canConcludeObjectAccessLog: false,
     canConcludeObjectOccurrenceLog: false,
   },
   staffContext: null,

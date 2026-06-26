@@ -176,7 +176,6 @@ describe('ProjectApiService', () => {
         id: 'access-log-1',
         referenceNumber: 'OAL-1A2B3C4D',
         projectId: 'project-1',
-        dateConclusion: null,
         curator: null,
       },
       content: [],
@@ -227,7 +226,7 @@ describe('ProjectApiService', () => {
     });
   });
 
-  it('gets and concludes object access logs', () => {
+  it('gets object access logs', () => {
     service.getObjectAccessLog('project-1').subscribe();
 
     const getRequest = http.expectOne(
@@ -239,28 +238,7 @@ describe('ProjectApiService', () => {
       id: 'access-log-1',
       referenceNumber: 'OAL-1A2B3C4D',
       projectId: 'project-1',
-      dateConclusion: null,
       curator: null,
-    });
-
-    service.concludeObjectAccessLog('project-1').subscribe();
-
-    const concludeRequest = http.expectOne(
-      'https://api.example.test/collection-use-projects/project-1/object-access-log/conclusion',
-    );
-
-    expect(concludeRequest.request.method).toBe('POST');
-    expect(concludeRequest.request.body).toEqual({});
-    concludeRequest.flush({
-      id: 'access-log-1',
-      referenceNumber: 'OAL-1A2B3C4D',
-      projectId: 'project-1',
-      dateConclusion: '2026-06-04T16:00:00',
-      curator: {
-        permissionId: 'permission-1',
-        user: { id: 'user-1', name: 'Ana', email: 'ana@example.test' },
-        group: 'COLLECTIONS_MANAGEMENT',
-      },
     });
   });
 

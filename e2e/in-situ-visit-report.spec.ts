@@ -34,7 +34,6 @@ const PROJECT = {
     canOpenLog: true,
     canCreateObjectLogEntry: false,
     canCreateOccurrenceEntry: false,
-    canConcludeObjectAccessLog: false,
     canConcludeObjectOccurrenceLog: false,
   },
   staffContext: null,

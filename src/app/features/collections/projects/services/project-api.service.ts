@@ -137,13 +137,6 @@ export class ProjectApiService {
     );
   }
 
-  concludeObjectAccessLog(projectId: string): Observable<ObjectAccessLog> {
-    return this.http.post<ObjectAccessLog>(
-      this.url(`/collection-use-projects/${projectId}/object-access-log/conclusion`),
-      {},
-    );
-  }
-
   uploadLogEntryAttachment(
     projectId: string,
     entryId: string,

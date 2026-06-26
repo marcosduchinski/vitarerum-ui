@@ -753,7 +753,6 @@ export const SEED_PROJECT_OBJECT_ACCESS_LOGS: Record<string, ObjectAccessLog> = 
     id: 'oal-proj-3',
     referenceNumber: 'OAL-PROJ3',
     projectId: 'proj-3',
-    dateConclusion: null,
     curator: null,
   },
 };

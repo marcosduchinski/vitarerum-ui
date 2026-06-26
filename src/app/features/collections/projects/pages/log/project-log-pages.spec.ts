@@ -193,38 +193,6 @@ describe('project log pages', () => {
     expect(save.disabled).toBe(true);
   });
 
-  it('allows curatorial staff to conclude an open access log', async () => {
-    const state = TestBed.inject(MockProjectState);
-    const fixture = TestBed.createComponent(ProjectObjectLogPanelComponent);
-    fixture.componentRef.setInput('projectId', 'proj-3');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const root = fixture.nativeElement as HTMLElement;
-    const concludeButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Conclude access log'),
-    );
-    expect(concludeButton).toBeTruthy();
-
-    concludeButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const confirmButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Conclude log'),
-    );
-    expect(confirmButton).toBeTruthy();
-
-    confirmButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(state.objectAccessLogs.get('proj-3')?.dateConclusion).toBeTruthy();
-  });
-
   it('uploads attachments for object entries', async () => {
     const state = TestBed.inject(MockProjectState);
 

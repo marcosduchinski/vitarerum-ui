@@ -5,16 +5,6 @@
         <p class="access-sheet__eyebrow">RAIS · Collection access</p>
         <h2 id="object-access-log-heading" class="access-sheet__title">Object access log</h2>
         <div class="access-sheet__actions">
-          @if (canConcludeAccessLog()) {
-            <button
-              type="button"
-              class="access-sheet__action"
-              [disabled]="concludeSubmitting()"
-              (click)="openConcludeConfirm()"
-            >
-              {{ concludeSubmitting() ? 'Concluding...' : 'Conclude access log' }}
-            </button>
-          }
           <button
             type="button"
             class="access-sheet__action access-sheet__action--download"
@@ -35,35 +25,11 @@
           <dd>{{ accessLog()?.referenceNumber ?? 'Not issued' }}</dd>
         </div>
         <div class="access-summary__item">
-          <dt>Status</dt>
-          <dd>{{ accessLog()?.dateConclusion ? 'Concluded' : 'Open' }}</dd>
-        </div>
-        <div class="access-summary__item">
-          <dt>Conclusion</dt>
-          <dd>{{ accessLog()?.dateConclusion ? dateLabel(accessLog()!.dateConclusion!) : '—' }}</dd>
-        </div>
-        <div class="access-summary__item">
           <dt>Curator</dt>
           <dd>{{ accessLog()?.curator?.user?.name ?? '—' }}</dd>
         </div>
       </dl>
     </header>
-
-    <app-confirm-modal
-      [open]="concludeConfirmOpen()"
-      title="Conclude access log?"
-      message="This records the conclusion date and prevents more object access entries or object attachments."
-      confirmLabel="Conclude log"
-      cancelLabel="Keep open"
-      tone="warning"
-      [pending]="concludeSubmitting()"
-      (confirmed)="concludeAccessLog()"
-      (cancelled)="closeConcludeConfirm()"
-    >
-      @if (concludeError()) {
-        <app-error-message [apiError]="concludeError()!" />
-      }
-    </app-confirm-modal>
 
     <div class="access-band">
       <span>Objects Consulted</span>

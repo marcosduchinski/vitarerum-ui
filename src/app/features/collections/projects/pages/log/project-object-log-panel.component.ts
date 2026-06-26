@@ -13,7 +13,6 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
-import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
@@ -29,12 +28,7 @@ import { PROJECT_API_SERVICE } from '../../services/project-api.service';
   selector: 'app-project-object-log-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    LoadingStateComponent,
-    ErrorMessageComponent,
-    EmptyStateComponent,
-    ConfirmModalComponent,
-  ],
+  imports: [LoadingStateComponent, ErrorMessageComponent, EmptyStateComponent],
   templateUrl: './project-object-log-panel.component.html',
   styleUrl: './project-object-log-panel.component.scss',
 })
@@ -57,17 +51,15 @@ export class ProjectObjectLogPanelComponent {
   });
   protected readonly logEntries = computed(() => this.logResource.value()?.content ?? []);
   protected readonly accessLog = computed(() => this.logResource.value()?.accessLog ?? null);
-  protected readonly accessLogConcluded = computed(() => this.accessLog()?.dateConclusion != null);
   protected readonly project = computed(() => this.projectResource.value() ?? null);
   protected readonly isExternalResearcher = computed(
     () => this.identity.session()?.group === 'EXTERNAL',
   );
   protected readonly projectInProgress = computed(() => this.project()?.status === 'IN_PROGRESS');
   protected readonly canEditObjectEntries = computed(
-    () => !this.accessLogConcluded() && (!this.isExternalResearcher() || this.projectInProgress()),
+    () => !this.isExternalResearcher() || this.projectInProgress(),
   );
   protected readonly objectAccessMessage = computed(() => {
-    if (this.accessLogConcluded()) return 'This access log is concluded.';
     if (this.isExternalResearcher() && this.project() && !this.projectInProgress()) {
       return 'Researcher entries are only available while the project is in progress.';
     }
@@ -80,14 +72,6 @@ export class ProjectObjectLogPanelComponent {
       !!this.accessLog() &&
       this.logEntries().length > 0,
   );
-  protected readonly canConcludeAccessLog = computed(() => {
-    const group = this.identity.session()?.group;
-    return (
-      !!this.accessLog() &&
-      !this.accessLogConcluded() &&
-      (group === 'CURATORIAL' || group === 'COLLECTIONS_MANAGEMENT')
-    );
-  });
   protected readonly logError = computed<ApiError | null>(() => {
     const err = this.logResource.error();
     return err ? toApiError(err) : null;
@@ -96,9 +80,6 @@ export class ProjectObjectLogPanelComponent {
     const err = this.projectResource.error();
     return err ? toApiError(err) : null;
   });
-  protected readonly concludeConfirmOpen = signal(false);
-  protected readonly concludeSubmitting = signal(false);
-  protected readonly concludeError = signal<ApiError | null>(null);
   protected readonly objectDraftAddedAt = signal<Record<string, string>>({});
   protected readonly objectDraftNumberOfObjects = signal<Record<string, number>>({});
   protected readonly objectDraftObservations = signal<Record<string, string>>({});
@@ -267,8 +248,6 @@ export class ProjectObjectLogPanelComponent {
       '',
       `Log reference: ${log?.referenceNumber ?? 'Not issued'}`,
       `Project ID: ${this.projectId()}`,
-      `Status: ${log?.dateConclusion ? 'Concluded' : 'Open'}`,
-      `Conclusion: ${log?.dateConclusion ?? '—'}`,
       `Curator: ${log?.curator?.user.name ?? '—'}`,
       '',
       'OBJECTS CONSULTED',
@@ -290,36 +269,6 @@ export class ProjectObjectLogPanelComponent {
 
   protected toggleObjectAttachments(entryId: string): void {
     this.expandedObjectEntryId.update((current) => (current === entryId ? null : entryId));
-  }
-
-  protected openConcludeConfirm(): void {
-    this.concludeError.set(null);
-    this.concludeConfirmOpen.set(true);
-  }
-
-  protected closeConcludeConfirm(): void {
-    if (!this.concludeSubmitting()) {
-      this.concludeConfirmOpen.set(false);
-    }
-  }
-
-  protected async concludeAccessLog(): Promise<void> {
-    if (this.concludeSubmitting()) return;
-    this.concludeSubmitting.set(true);
-    this.concludeError.set(null);
-    try {
-      await firstValueFrom(this.projectService.concludeObjectAccessLog(this.projectId()));
-      this.concludeConfirmOpen.set(false);
-      this.logResource.reload();
-    } catch (err) {
-      this.concludeError.set(toApiError(err));
-    } finally {
-      this.concludeSubmitting.set(false);
-    }
-  }
-
-  protected dateLabel(date: string): string {
-    return date.slice(0, 10);
   }
 
   protected dateTimeInputValue(date: string): string {
