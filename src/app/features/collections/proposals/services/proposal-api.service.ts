@@ -14,7 +14,6 @@ import {
   ProposalAssignmentResult,
   ProposalCancellationResult,
   ProposalDecisionResult,
-  ProposalNoteRequest,
   ProposalReasonRequest,
   UpdateProposalRequest,
 } from '../models/proposal-actions.model';
@@ -113,10 +112,6 @@ export class ProposalApiService {
     body.append('documentType', documentType);
 
     return this.http.post<Document>(this.url(`/proposals/${proposalId}/documents`), body);
-  }
-
-  requestDocuments(proposalId: string, request: ProposalNoteRequest): Observable<void> {
-    return this.http.post<void>(this.url(`/proposals/${proposalId}/request-documents`), request);
   }
 
   listDocuments(proposalId: string): Observable<ProposalDocumentsResponse> {

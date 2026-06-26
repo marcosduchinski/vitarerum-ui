@@ -110,12 +110,6 @@ export interface Conversation {
   readonly totalPages: number;
 }
 
-export interface CreateProposalRequestObject {
-  readonly inventoryNumber: string;
-  readonly category?: string;
-  readonly description?: string;
-}
-
 export interface CreateProposalRequest {
   readonly title?: string | null;
   readonly intendedUse?: IntendedUse | null;
@@ -128,7 +122,6 @@ export interface CreateProposalRequest {
   readonly initialMessageRecipient?: string;
   readonly initialMessageSubject?: string;
   readonly initialMessageBody?: string;
-  readonly requestedObjects?: readonly CreateProposalRequestObject[];
 }
 
 // Contract: POST /proposals returns only the proposal summary + conversationId.

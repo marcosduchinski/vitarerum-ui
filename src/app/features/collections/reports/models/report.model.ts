@@ -1,7 +1,12 @@
 import { Page, PageQuery } from '@shared/models/page.model';
 
 export type InSituVisitReportTargetLanguage = 'pt' | 'en';
-export type InSituVisitReportNarrativeType = 'institutional' | 'scientific' | 'social_media';
+export type InSituVisitReportNarrativeType =
+  | 'institutional'
+  | 'scientific'
+  | 'audioguide_adult'
+  | 'audioguide_child'
+  | 'social_media';
 
 export interface CreateInSituVisitReportRequest {
   readonly targetLanguage: InSituVisitReportTargetLanguage;

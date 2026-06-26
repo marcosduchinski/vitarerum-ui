@@ -12,7 +12,6 @@ import {
   ProposalAssignmentResult,
   ProposalCancellationResult,
   ProposalDecisionResult,
-  ProposalNoteRequest,
   ProposalReasonRequest,
   UpdateProposalRequest,
 } from '../models/proposal-actions.model';
@@ -282,18 +281,6 @@ export class ProposalApiServiceMock {
       note: null,
     });
     return of(doc);
-  }
-
-  requestDocuments(proposalId: string, request: ProposalNoteRequest): Observable<void> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    this.pushEvent(proposalId, {
-      occurredAt: new Date().toISOString(),
-      type: 'DOCUMENTS_REQUESTED',
-      triggeredBy: this.currentPrincipal(),
-      note: request.note || null,
-    });
-    return of(undefined);
   }
 
   listDocuments(proposalId: string): Observable<ProposalDocumentsResponse> {

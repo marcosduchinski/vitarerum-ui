@@ -11,14 +11,15 @@
 status      : UseStatus    (optional) CREATED | IN_PROGRESS | COMPLETED | CANCELLED
 type        : UseType      (optional) EXHIBITION | IN_SITU_VISIT | OTHER — filters intendedUse.useType
 requestedBy : PermissionId (optional) scope to projects requested by this permission
-dateFrom    : LocalDate    (optional) reserved — accepted but not yet applied
-dateTo      : LocalDate    (optional) reserved — accepted but not yet applied
-search      : String       (optional) reserved — accepted but not yet applied
+dateFrom    : LocalDate    (optional) filter by begin date ≥ dateFrom
+dateTo      : LocalDate    (optional) filter by begin date ≤ dateTo
+search      : String       (optional) case-insensitive match on title or reference number
 page        : Integer       (default 0)
 size        : Integer       (default 20)
 ```
 
 > `requestedBy` is honored only for staff callers — e.g. pass the caller's own `permissionId` for a staff "my projects" view. For non-staff callers it is ignored and the list is always scoped to their own id. The `assignedTo`, `referenceNumber`, and `proposalApproved` filters from the original design are **not implemented**.
+`page` is zero-based. `size` must be between 1 and 100.
 
 **Response `200 OK`**
 ```json
@@ -76,13 +77,13 @@ size        : Integer       (default 20)
 
 ---
 
-### `GET /collection-use-projects/{projectId}`
+### `GET /collection-use-projects/{project_id}`
 
 **Description** — Get full detail of any project. Staff have access to all projects regardless of ownership; the response populates the `requestedBy` detail from `CollectionUseProject.requestedBy` (it is `null` for non-staff callers).
 
 **Path parameters**
 ```
-projectId : UUID (required)
+project_id : UUID (required)
 ```
 
 **Response `200 OK`**
@@ -103,16 +104,6 @@ projectId : UUID (required)
   "endDate": "2025-06-30",
   "authorisedBy": null,
   "authorisedAt": null,
-  "actions": {
-    "canStart": false,
-    "canComplete": false,
-    "canCancel": true,
-    "canOpenLog": true,
-    "canCreateObjectLogEntry": true,
-    "canCreateOccurrenceEntry": true,
-    "canConcludeObjectAccessLog": true,
-    "canConcludeObjectOccurrenceLog": true
-  },
   "proposal": {
     "id": "uuid",
     "referenceNumber": "VRP-20250115-0001",
@@ -139,130 +130,11 @@ projectId : UUID (required)
       "email": "string"
     },
     "group": "EXTERNAL"
-  },
-  "staffContext": {
-    "viewerGroup": "COLLECTIONS_MANAGEMENT | CURATORIAL | DIRECTION | SYS_ADMIN",
-    "proposal": {
-      "id": "uuid",
-      "referenceNumber": "VRP-20250115-0001",
-      "title": "string",
-      "status": "APPROVED",
-      "submittedAt": "2025-01-15T10:30:00",
-      "submittedBy": {
-        "permissionId": "uuid",
-        "user": { "id": "uuid", "name": "string", "email": "string" },
-        "group": "EXTERNAL"
-      },
-      "assignedTo": {
-        "permissionId": "uuid",
-        "user": { "id": "uuid", "name": "string", "email": "string" },
-        "group": "CURATORIAL"
-      },
-      "watchers": [
-        {
-          "permissionId": "uuid",
-          "user": { "id": "uuid", "name": "string", "email": "string" },
-          "group": "COLLECTIONS_MANAGEMENT"
-        }
-      ]
-    },
-    "requestedObjects": [
-      {
-        "id": "uuid",
-        "objectReference": {
-          "inventoryNumber": "INV-001",
-          "displayTitle": "Book of Hours",
-          "objectName": "Illuminated manuscript",
-          "briefDescriptionSnapshot": "string | null"
-        },
-        "category": "manuscript",
-        "description": "string",
-        "requestedAt": "2025-01-15T10:30:00",
-        "requestedBy": {
-          "permissionId": "uuid",
-          "user": { "id": "uuid", "name": "string", "email": "string" },
-          "group": "EXTERNAL"
-        }
-      }
-    ],
-    "requestedDocuments": [
-      {
-        "id": "uuid",
-        "type": "RESEARCH_FORM",
-        "description": "string",
-        "requestedAt": "2025-01-16T09:00:00",
-        "requestedBy": {
-          "permissionId": "uuid",
-          "user": { "id": "uuid", "name": "string", "email": "string" },
-          "group": "COLLECTIONS_MANAGEMENT"
-        }
-      }
-    ],
-    "documents": [
-      {
-        "id": "uuid",
-        "type": "RESEARCH_FORM",
-        "fileName": "research_form.docx",
-        "fileReference": "string",
-        "submittedAt": "2025-01-16T10:00:00",
-        "submittedBy": {
-          "permissionId": "uuid",
-          "user": { "id": "uuid", "name": "string", "email": "string" },
-          "group": "EXTERNAL"
-        }
-      }
-    ],
-    "conversationSummary": {
-      "conversationId": "uuid",
-      "totalMessages": 4,
-      "lastMessageAt": "2025-01-18T16:20:00",
-      "lastMessageBy": {
-        "permissionId": "uuid",
-        "user": { "id": "uuid", "name": "string", "email": "string" },
-        "group": "CURATORIAL"
-      }
-    },
-    "logSummary": {
-      "accessLog": {
-        "id": "uuid",
-        "referenceNumber": "OAL-1A2B3C4D",
-        "projectId": "uuid",
-        "dateConclusion": null,
-        "curator": null
-      },
-      "occurrenceLog": {
-        "id": "uuid",
-        "referenceNumber": "OOL-1A2B3C4D",
-        "projectId": "uuid",
-        "dateConclusion": null,
-        "curator": null
-      },
-      "objectLogEntryCount": 7,
-      "occurrenceEntryCount": 2,
-      "attachmentCount": 3
-    },
-    "directionContext": {
-      "latestQuestion": "string",
-      "latestClarification": "string",
-      "referredAt": "2025-01-17T11:00:00",
-      "clarifiedAt": "2025-01-18T09:00:00"
-    }
   }
 }
 ```
 
-> `requestedBy` is a required `PermissionId` on `CollectionUseProject`; the API hydrates it as a permission detail for staff callers and returns `null` for non-staff. `authorisedBy` / `authorisedAt` are nullable fields on the response that are **not currently populated by any flow** — they remain `null` (the approval flow that previously set them was removed).
-
-`actions` is a convenience permission block for the active caller and current project state. Staff callers never receive `canStart: true` or `canComplete: true`; those lifecycle commands are researcher actions. Staff log permissions depend on active group and log conclusion state. The backend remains authoritative and must still return `403`/`409` for invalid commands.
-
-`staffContext` is populated only for staff callers and is the backing data for the role-specific detail pages:
-
-- `COLLECTIONS_MANAGEMENT` uses `proposal`, `requestedDocuments`, `documents`, `conversationSummary`, and `logSummary` for operational follow-up.
-- `CURATORIAL` uses `requestedObjects`, `documents`, `proposal.assignedTo`, `logSummary`, and project/proposal status for collection review.
-- `DIRECTION` uses `proposal`, `conversationSummary`, `directionContext`, project status, and lifecycle events for oversight/clarification.
-- `SYS_ADMIN` may receive the same `staffContext` as a read-only administrative view.
-
-Arrays must be present and empty when there is no data. `conversationSummary`, `logSummary.accessLog`, `logSummary.occurrenceLog`, and `directionContext` may be `null` when not applicable. The detail response intentionally embeds summary counts only; use the existing paginated `log-entries`, `occurrence-entries`, `events`, proposal `documents`, and proposal `conversation` endpoints for full lists.
+> `requestedBy` is a required `PermissionId` on `CollectionUseProject`; the API hydrates it as a permission detail for staff callers and returns `null` for non-staff. `authorisedBy` / `authorisedAt` are nullable and are populated only when a stored project has an `authorisedBy` permission that can be hydrated. Staff review context is not embedded here; use the linked proposal endpoints for proposal documents/conversation/requested objects and the paginated project journal endpoints below for logs.
 
 **Response `404 Not Found`**
 ```json
@@ -274,7 +146,7 @@ Arrays must be present and empty when there is no data. `conversationSummary`, `
 
 ---
 
-### `POST /collection-use-projects/{projectId}/log-entries` · `.../occurrence-entries`
+### `POST /collection-use-projects/{project_id}/log-entries` · `.../occurrence-entries`
 
 **Description** — Staff add **object log entries** (to the project's object access log) and **object occurrence entries** (to the project's object occurrence log). Unlike non-staff callers (restricted to `IN_PROGRESS`), staff may add entries at **any** project status — but entries are rejected with `409` once the respective log is concluded. The caller's `permissionId` is recorded as `addedBy` / `reportedBy`. Request/response shapes are defined in the researcher group (file 04).
 
@@ -307,14 +179,14 @@ Both bodies accept an optional `requestedObjectId` linking the entry to a `Reque
 
 ---
 
-### `PATCH /collection-use-projects/{projectId}/log-entries/{entryId}`
+### `PATCH /collection-use-projects/{project_id}/log-entries/{entry_id}`
 
 **Description** — Edit an existing object log entry. Only `addedAt`, `numberOfObjects` and `observations` are editable; the entry's object, `addedBy` and `requestedObjectId` are immutable. Partial update — only fields present in the body change (`observations: null` clears it). Staff may edit at any project status, but not once the access log is concluded (`409`). Request/response shapes are defined in the researcher group (file 04).
 
 **Path parameters**
 ```
-projectId : UUID (required)
-entryId   : UUID (required)
+project_id : UUID (required)
+entry_id   : UUID (required)
 ```
 
 **Request body** (all fields optional)
@@ -330,14 +202,14 @@ entryId   : UUID (required)
 
 ---
 
-### `PATCH /collection-use-projects/{projectId}/occurrence-entries/{entryId}`
+### `PATCH /collection-use-projects/{project_id}/occurrence-entries/{entry_id}`
 
 **Description** — Edit an existing object occurrence entry. Only `numberOfObjects`, `occurrenceDate`, `location`, `detailedDescription` and `testimonial` are editable; the entry's object, `reportedBy` and `requestedObjectId` are immutable. Partial update — only fields present in the body change (`testimonial: null` clears it). Staff may edit at any project status, but not once the occurrence log is concluded (`409`). Request/response shapes are defined in the researcher group (file 04).
 
 **Path parameters**
 ```
-projectId : UUID (required)
-entryId   : UUID (required)
+project_id : UUID (required)
+entry_id   : UUID (required)
 ```
 
 **Request body** (all fields optional)
@@ -355,72 +227,28 @@ entryId   : UUID (required)
 
 ---
 
-### `GET /collection-use-projects/{projectId}/log-entries` · `.../occurrence-entries`
+### `GET /collection-use-projects/{project_id}/log-entries` · `.../occurrence-entries`
 
-**Description** — List a project's object log entries / occurrence entries ordered chronologically, including entries from both the researcher and staff. Both accept `page`/`size` and a permission filter (`addedBy` on log entries, `reportedBy` on occurrence entries), and return the paginated envelopes defined in file 04 (with the `accessLog` / `occurrenceLog` header respectively).
+**Description** — List a project's object log entries / occurrence entries ordered chronologically, including entries from both the researcher and staff. Both accept `page`/`size` and a permission filter (`added_by` on log entries, `reportedBy` on occurrence entries), and return the paginated envelopes defined in file 04 (with the `accessLog` / `occurrenceLog` header respectively).
 
 **Query parameters**
 ```
-addedBy / reportedBy : UUID     (optional) filter by permissionId
+added_by / reportedBy : UUID    (optional) filter by permissionId
 page                 : Integer  (default 0)
 size                 : Integer  (default 20)
 ```
 
+`page` is zero-based. `size` must be between 1 and 100.
+
 ---
 
-### `GET /collection-use-projects/{projectId}/object-access-log` · `.../object-occurrence-log`
+### `GET /collection-use-projects/{project_id}/object-access-log` · `.../object-occurrence-log`
 
 **Description** — Get the project's object access log / object occurrence log header (`referenceNumber`, `dateConclusion`, `curator`), as defined in file 04. `404` while the project has no entries yet.
 
 ---
 
-### `POST /collection-use-projects/{projectId}/object-access-log/conclusion` · `.../object-occurrence-log/conclusion`
-
-**Description** — Curator concludes the project's object access log / object occurrence log, recording the caller as `curator` and setting `dateConclusion`. Restricted to `CURATORIAL` and `COLLECTIONS_MANAGEMENT` members (`403` otherwise). A concluded log accepts no further entries or attachments.
-
-**Path parameters**
-```
-projectId : UUID (required)
-```
-
-**Response `200 OK`**
-```json
-{
-  "id": "uuid",
-  "referenceNumber": "OAL-1A2B3C4D",
-  "projectId": "uuid",
-  "dateConclusion": "2025-06-04T16:00:00",
-  "curator": {
-    "permissionId": "uuid",
-    "user": { "id": "uuid", "name": "string", "email": "string" },
-    "group": "CURATORIAL"
-  }
-}
-```
-
-The occurrence-log variant returns an `OOL-` reference number.
-
-**Response `404 Not Found`**
-```json
-{
-  "error": "OBJECT_ACCESS_LOG_NOT_FOUND",
-  "message": "No object_access_log found with id uuid"
-}
-```
-
-(`OBJECT_OCCURRENCE_LOG_NOT_FOUND` for the occurrence-log variant.)
-
-**Response `409 Conflict`**
-```json
-{
-  "error": "INVALID_TRANSITION",
-  "message": "Object access log is already concluded"
-}
-```
-
----
-
-### `POST /collection-use-projects/{projectId}/log-entries/{entryId}/attachments` · `.../occurrence-entries/{entryId}/attachments`
+### `POST /collection-use-projects/{project_id}/log-entries/{entry_id}/attachments` · `.../occurrence-entries/{entry_id}/attachments`
 
 **Description** — Staff upload a file to an existing log / occurrence entry at any project status, while the respective log is not concluded (`409` afterwards). `mediaType` is one of `DOCUMENT`, `IMAGE`, `VIDEO`, `OTHER`. `note` is an optional free-text description of the attachment.
 
@@ -460,13 +288,13 @@ note      : String    (optional)
 
 ---
 
-### `GET /collection-use-projects/{projectId}/log-entries/{entryId}/attachments/{fileReference}` · `.../occurrence-entries/{entryId}/attachments/{fileReference}`
+### `GET /collection-use-projects/{project_id}/log-entries/{entry_id}/attachments/{file_reference}` · `.../occurrence-entries/{entry_id}/attachments/{file_reference}`
 
 **Description** — Download the raw bytes of an attachment on a log / occurrence entry, keyed by the entry's `attachments[].fileReference`. The response is the binary file (not JSON), with `Content-Disposition: attachment` and a `Content-Type` derived from the file name's extension (falling back to `application/octet-stream`). `404` when the entry doesn't belong to this project (`ENTRY_NOT_FOUND`) or no attachment with that `fileReference` exists (`ATTACHMENT_NOT_FOUND`).
 
 ---
 
-### `POST /collection-use-projects/{projectId}/publication-entries` · `PATCH …/{entryId}` · `…/{entryId}/attachments`
+### `POST /collection-use-projects/{project_id}/publication-entries` · `PATCH …/{entry_id}` · `…/{entry_id}/attachments`
 
 **Description** — Staff add, edit, and attach files to **publication log entries** (a `note` recording a publication/output derived from the project, plus optional attachments). Request/response shapes are defined in the researcher group (file 04). The publication log carries an informational `curator` (the staff member related to the project) and is **not concluded**.
 
@@ -487,19 +315,19 @@ So unlike object access/occurrence logs (where staff may write at any status), s
 
 ---
 
-### `GET /collection-use-projects/{projectId}/publication-entries` · `…/publication-log`
+### `GET /collection-use-projects/{project_id}/publication-entries` · `…/publication-log`
 
-**Description** — List a project's publication entries (paginated, with `addedBy` filter and the `publicationLog` header) and get the publication log header (`id`, `referenceNumber`, `projectId`, `curator`), as defined in file 04. `404` (`PUBLICATION_LOG_NOT_FOUND`) while the project has no entries yet. Staff see all projects' publication logs.
+**Description** — List a project's publication entries (paginated, with `added_by` filter and the `publicationLog` header) and get the publication log header (`id`, `referenceNumber`, `projectId`, `curator`), as defined in file 04. `404` (`PUBLICATION_LOG_NOT_FOUND`) while the project has no entries yet. Staff see all projects' publication logs.
 
 ---
 
-### `GET /collection-use-projects/{projectId}/events`
+### `GET /collection-use-projects/{project_id}/events`
 
 **Description** — Get the immutable audit trail of the project lifecycle ordered chronologically. Staff see the complete event history including transitions triggered by the researcher, and can filter by `type`.
 
 **Path parameters**
 ```
-projectId : UUID (required)
+project_id : UUID (required)
 ```
 
 **Query parameters**
@@ -508,6 +336,8 @@ type : UseEventType (optional) filter by event type
 page : Integer      (default 0)
 size : Integer      (default 20)
 ```
+
+`page` is zero-based. `size` must be between 1 and 100.
 
 `UseEventType` values: `REQUESTED` · `STARTED` · `COMPLETED` · `CANCELLED`
 
@@ -568,7 +398,7 @@ size : Integer      (default 20)
 
 ---
 
-### `POST /collection-use-projects/{projectId}/export-in-situ-visit-record`
+### `POST /collection-use-projects/{project_id}/export-in-situ-visit-record`
 
 **Description** — Staff-only. Generates and persists an `InSituVisitRecord`
 (the CIDOC-CRM mapping snapshot) from a project whose `intendedUse.useType` is
@@ -576,6 +406,11 @@ size : Integer      (default 20)
 requested objects, and the three journals, and returns the stored record
 (`201 Created`). Errors: `404 PROJECT_NOT_FOUND`, `409 INVALID_USE_TYPE`,
 `403` for non-staff callers.
+
+**Path parameters**
+```
+project_id : UUID (required)
+```
 
 The full request/response contract lives in
 [`08InSituVisit-CIDOC-CRM.md`](08InSituVisit-CIDOC-CRM.md), which owns the
@@ -588,10 +423,10 @@ To run the export → narrative chain and persist a durable report in one call, 
 
 A few conventions worth noting across this group:
 
-**Staff entry constraint differs from researcher** — the researcher may only add entries while `IN_PROGRESS`; staff may add entries at any project status. This reflects the domain rule that the institution retains the right to annotate the record throughout its lifetime — before, during, and after the visit.
+**Staff object-journal constraint differs from researcher** — for object access and occurrence logs, the researcher may only add entries while `IN_PROGRESS`; staff may add entries at any project status. Publication entries use the separate phase/role gate documented above.
 
 **No staff-only project commands** — `start`, `complete`, and `cancel` (file 04) are the only state-changing project commands and carry no group restriction; any authorised caller may invoke them. The earlier `suspend`, `resume`, and `close` commands have been removed, along with the `SUSPENDED` and `CLOSED` states.
 
-**Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number) with `numberOfObjects` and optional `observations`; `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number) with `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and optional `testimonial`. Both gain the staff permission filter on their `GET` endpoints (`addedBy` / `reportedBy`) and hydrate it as a full `PermissionDetail`. Either entry may carry an optional `requestedObjectId` tying it back to a `RequestedObject` of the proposal, for end-to-end object traceability.
+**Two distinct journal resources** — both are per-project, curator-concluded log aggregates whose entries record exactly one `objectReference`. `log-entries` belong to the **object access log** (`ObjectAccessLog`, `OAL-` reference number) with `numberOfObjects` and optional `observations`; `occurrence-entries` belong to the **object occurrence log** (`ObjectOccurrenceLog`, `OOL-` reference number) with `numberOfObjects`, `occurrenceDate`, `location`, `reportedBy`, `detailedDescription` and optional `testimonial`. Both gain the staff permission filter on their `GET` endpoints (`added_by` / `reportedBy`) and hydrate it as a full `PermissionDetail`. Either entry may carry an optional `requestedObjectId` tying it back to a `RequestedObject` of the proposal, for end-to-end object traceability.
 
-**Shared endpoints are not repeated** — `GET /collection-use-projects/{projectId}` and `GET /collection-use-projects/{projectId}/events` follow the same response structure as the researcher group. The only difference is access scope (staff see all, plus a populated `requestedBy`).
+**Shared endpoints are not repeated** — `GET /collection-use-projects/{project_id}` and `GET /collection-use-projects/{project_id}/events` follow the same response structure as the researcher group. The only difference is access scope (staff see all, plus a populated `requestedBy`).

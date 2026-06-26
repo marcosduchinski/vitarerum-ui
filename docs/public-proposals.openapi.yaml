@@ -90,14 +90,17 @@ paths:
               example:
                 status: PENDING_CONFIRMATION
                 email: pedro@example.test
-        '400':
-          description: Validation failed (missing/invalid fields, consent not given).
+        '422':
+          description: |
+            Validation failed (missing/invalid fields, consent not given). Request
+            validation is normalised app-wide to 422; the field errors are carried
+            under `errors`.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ServerError' }
               example:
-                message: Validation failed.
-                fieldErrors:
+                message: Validation failed
+                errors:
                   - field: citizenEmail
                     message: A valid e-mail address is required.
         '403':
@@ -211,11 +214,13 @@ components:
             `siteverify`; never trust it as-is.
         website:
           type: string
-          maxLength: 0
+          maxLength: 255
           default: ''
           description: |
-            **Honeypot.** Hidden from real users; must be empty. A non-empty value
+            **Honeypot.** Hidden from real users; should be empty. A non-empty value
             marks the request as a bot — the server accept-and-drops (`202`, no work).
+            It is deliberately NOT schema-rejected (a `422` would reveal to the bot
+            that the field is monitored), only bounded in length.
 
     PublicSubmissionReceipt:
       type: object
@@ -257,12 +262,18 @@ components:
       type: object
       description: |
         Error body shape consumed by the frontend `toApiError()`
-        (`src/app/core/http/api-error.model.ts`). It reads `message` and, for
-        validation, `fieldErrors`.
+        (`src/app/core/http/api-error.model.ts`). It reads `message` and the
+        field-error array. Request-validation failures (`422`) carry that array
+        under `errors`; `toApiError()` reads both `errors` and `fieldErrors`.
       properties:
         message:
           type: [string, 'null']
           description: Human-readable summary; surfaced to the user.
+        errors:
+          type: array
+          description: Field errors from request validation (`422`).
+          items:
+            $ref: '#/components/schemas/ValidationFieldError'
         fieldErrors:
           type: array
           items:

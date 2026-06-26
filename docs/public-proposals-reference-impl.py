@@ -70,7 +70,10 @@ class PublicProposalSubmission(BaseModel):
     body: str = Field(min_length=1, max_length=4000)
     consent: Literal[True]  # must be exactly true; anything else 422s
     captchaToken: str = Field(min_length=1, max_length=2048)
-    website: str = Field(default="", max_length=0)  # honeypot: must be empty
+    # Honeypot: bounded but NOT capped at 0 — a length-0 cap would 422 a filled
+    # field, revealing to the bot that it is monitored. The handler below silently
+    # accept-and-drops a non-empty value instead (202, no work).
+    website: str = Field(default="", max_length=255)
 
     @field_validator("citizenName", "subject", "body")
     @classmethod

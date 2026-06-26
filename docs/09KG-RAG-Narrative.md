@@ -12,10 +12,11 @@ visit: the same facts are retold in different tones. The graph is the model's on
 permitted source of facts. Same auth as the rest of the API (`Authorization` +
 `X-Permission-Id`); **staff-only**. Errors use `{ "error": CODE, "message": str }`.
 
-Every generation is **persisted** as an immutable row (append-only history): the
-same record can be retold many times in different styles/languages/temperatures,
-and each run is kept. The `POST` returns the new `narrative_id`; the two `GET`
-endpoints below read the stored history back.
+Every generation is **persisted** as a stored history row: the same record can be
+retold many times in different styles/languages/temperatures, and each run is
+kept. A manual `PATCH` may later correct only the narrative text; the generation
+metadata stays unchanged. The `POST` returns the new `narrative_id`; the two
+`GET` endpoints below read the stored history back.
 
 ---
 
@@ -101,8 +102,9 @@ and `generated_at`.
 }
 ```
 
-**403** — non-staff caller. **503 `MODEL_UNAVAILABLE`** — the local LLM could not be
-reached. **504 `MODEL_TIMEOUT`** — the LLM did not respond in time.
+**403 `INSUFFICIENT_GROUP`** — non-staff caller. **503 `MODEL_UNAVAILABLE`** — the
+local LLM could not be reached or returned an empty narrative. **504
+`MODEL_TIMEOUT`** — the LLM did not respond in time.
 
 ---
 
@@ -163,7 +165,7 @@ Returns one stored narrative. Staff-only. The body is a single
 }
 ```
 
-**403** — non-staff caller.
+**403 `INSUFFICIENT_GROUP`** — non-staff caller.
 
 ---
 
@@ -188,7 +190,8 @@ narrative : string (required, non-empty) — the replacement text (trimmed)
 **404 `NARRATIVE_NOT_FOUND`** — no stored narrative with `narrative_id` under this
 `record_id` (the narrative must belong to the visit record in the path).
 
-**422** — empty/blank `narrative` (validation). **403** — non-staff caller.
+**422** — empty/blank `narrative` (validation). **403 `INSUFFICIENT_GROUP`** —
+non-staff caller.
 
 ---
 

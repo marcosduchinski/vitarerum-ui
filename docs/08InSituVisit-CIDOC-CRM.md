@@ -93,9 +93,9 @@ inSituPublications : array (optional, default [])
 
 Each child item carries `sourceId` (required), `description` (optional, default
 `""`), and `position` (required integer, used for ordering). Occurrences, logs, and
-publications also carry `attachments`; each attachment carries `sourceId`,
-`description`, `reference` (required URL/locator), and `position`. `requestedObjects`
-have no attachments.
+publications also carry `attachments` (optional, default `[]`); each attachment
+carries `sourceId`, `description` (optional, default `""`), `reference` (required
+URL/locator), and `position`. `requestedObjects` have no attachments.
 
 **Response 201 Created**
 
@@ -222,7 +222,7 @@ is the total count across all pages; `totalPages` is `ceil(totalElements / size)
 
 ---
 
-## GET /api/v1/cedoc-mapping/in-situ-visit/{id}/cidoc-crm
+## GET /api/v1/cedoc-mapping/in-situ-visit/{record_id}/cidoc-crm
 
 **Description** — Returns a **CIDOC-CRM 7.1.3 JSON-LD** representation of a stored
 record, mapping the aggregate onto CRM entities and properties. The visit becomes an
@@ -242,13 +242,14 @@ literal. Each `requestedObject` becomes an `E20_Biological_Object`
 **Path parameters**
 
 ```
-id : UUID (required) — the InSituVisitRecord id returned by POST
+record_id : UUID (required) — the InSituVisitRecord id returned by POST
 ```
 
-**Response 200 OK** — a JSON-LD document (`application/json`). The `@context` is the
-official CIDOC-CRM 7.1.3 term map (defining the `crm` prefix and every E/P term)
-**inlined** so the document is self-contained, merged with the project-local prefixes
-(`ex`, `dcterms`, `schema`, `xsd`, `rdfs`):
+**Response 200 OK** — a raw JSON-LD document (`application/json`; no Pydantic
+response model). The `@context` is the official CIDOC-CRM 7.1.3 term map
+(defining the `crm` prefix and every E/P term) **inlined** so the document is
+self-contained, merged with the project-local prefixes (`ex`, `dcterms`,
+`schema`, `xsd`, `rdfs`):
 
 ```json
 {
@@ -329,9 +330,9 @@ visitEndDate       <- project.endDate
 visitorName        <- requester's display name (falls back to the permission id)
 placeName          <- configured INSTITUTION_NAME
 requestedObjects   <- proposal.requestedObjects  (sourceId = inventory number)
-inSituOccurrences  <- ObjectOccurrenceLog entries (+ attachments)
-inSituLogs         <- ObjectAccessLog entries     (+ attachments)
-inSituPublications <- PublicationLog entries       (+ attachments)
+inSituOccurrences  <- ObjectOccurrenceLog entries (sourceId = entry id, attachments sourceId/reference = fileReference)
+inSituLogs         <- ObjectAccessLog entries     (sourceId = entry id, attachments sourceId/reference = fileReference)
+inSituPublications <- PublicationLog entries      (sourceId = entry id, attachments sourceId/reference = fileReference)
 ```
 
 There is no request body; `place_name` comes from the `INSTITUTION_NAME` setting.

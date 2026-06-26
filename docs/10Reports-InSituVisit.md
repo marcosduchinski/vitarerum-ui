@@ -7,8 +7,8 @@ generation (`09KG-RAG-Narrative.md`) — and persists the linkage between the
 project, the exported `InSituVisitRecord`, and the generated narrative as an
 `InSituVisitReport`.
 
-Lives in its own context (`app/reports/in_situ_visit`). Like the email webhook's
-`IngestInboundEmail`, it is a **cross-context orchestrator**: it owns only the
+Lives in its own context (`app/reports/in_situ_visit`). It is a **cross-context
+orchestrator**: it owns only the
 `InSituVisitReport` aggregate and composes the export and narrative use cases
 through their published interfaces — it never touches another context's
 aggregates directly. The whole chain runs in **one database transaction**, so a
@@ -96,12 +96,12 @@ union of their failures. All share the `{ "error": CODE, "message": str }` shape
 | Status | Code                         | When                                            |
 | ------ | ---------------------------- | ----------------------------------------------- |
 | `401`  | —                            | Missing/invalid credentials.                    |
-| `403`  | —                            | Non-staff caller.                               |
+| `403`  | `INSUFFICIENT_GROUP`         | Non-staff caller.                               |
 | `404`  | `PROJECT_NOT_FOUND`          | No project with `project_id`.                   |
 | `409`  | `INVALID_USE_TYPE`           | The project's `useType` is not `IN_SITU_VISIT`. |
 | `400`  | `INVALID_NARRATIVE_TYPE`     | Unknown `narrative_type`.                       |
 | `422`  | `SEMANTIC_VALIDATION_FAILED` | The reasoner/SHACL rejected the graph.          |
-| `503`  | `MODEL_UNAVAILABLE`          | The local LLM could not be reached.             |
+| `503`  | `MODEL_UNAVAILABLE`          | The local LLM could not be reached or returned an empty narrative. |
 | `504`  | `MODEL_TIMEOUT`              | The LLM did not respond in time.                |
 
 The export step (`404` / `409`) runs first; if it fails, no narrative or report
@@ -155,7 +155,7 @@ onto the report). Those record fields are `null` if the record can't be read.
 }
 ```
 
-An empty store returns `totalElements: 0`. `403` for non-staff callers.
+An empty store returns `totalElements: 0`. `403 INSUFFICIENT_GROUP` for non-staff callers.
 
 ---
 
@@ -199,7 +199,7 @@ size : integer (optional, default 20, 1..100)
 ```
 
 An unknown `project_id` simply returns an empty page (`totalElements: 0`).
-`403` for non-staff callers.
+`403 INSUFFICIENT_GROUP` for non-staff callers.
 
 ---
 
@@ -228,7 +228,7 @@ report_id  : UUID (required) — the InSituVisitReport id
 }
 ```
 
-`403` for non-staff callers.
+`403 INSUFFICIENT_GROUP` for non-staff callers.
 
 ---
 
@@ -313,7 +313,7 @@ report_id  : UUID (required) — the InSituVisitReport id
 never deleted); they are nullable only to guard against a broken link.
 
 **Response `404 REPORT_NOT_FOUND`** — no report with `report_id` under this
-`project_id`. `403` for non-staff callers.
+`project_id`. `403 INSUFFICIENT_GROUP` for non-staff callers.
 
 ---
 
@@ -329,7 +329,6 @@ failure modes. Clients should set a generous timeout. Runtime requirements match
 `09KG-RAG-Narrative.md` (`OLLAMA_BASE_URL`, `NARRATIVE_MODEL`,
 `NARRATIVE_TIMEOUT_SECONDS`).
 
-**Append-only, no dedup.** Unlike the email webhook (which is idempotent on
-`message_id`), this endpoint creates fresh artifacts on every call. Re-running it
+**Append-only, no dedup.** This endpoint creates fresh artifacts on every call. Re-running it
 for the same project is intentional — e.g. to produce a narrative in a different
 style or language — and yields a distinct `InSituVisitReport`.

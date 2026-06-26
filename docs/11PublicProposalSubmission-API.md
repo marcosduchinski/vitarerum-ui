@@ -58,7 +58,7 @@ visible to staff until the citizen confirms.**
 | `body` | string | ✅ | 1–4000 chars |
 | `consent` | boolean | ✅ | **must be `true`** (RGPD) |
 | `captchaToken` | string | ✅ | Turnstile response token; server verifies via `siteverify` |
-| `website` | string | — | **honeypot** — must be empty; non-empty ⇒ silent drop |
+| `website` | string | — | **honeypot** — should be empty (≤255 chars accepted); non-empty ⇒ silent accept-and-drop (`202`, no work). Not schema-rejected, so a bot cannot tell the field is monitored. |
 
 ```json
 {
@@ -77,7 +77,7 @@ visible to staff until the citizen confirms.**
 | Status | Meaning | Body |
 |---|---|---|
 | `202` | Accepted; confirmation e-mail sent (or honeypot drop) | `PublicSubmissionReceipt` |
-| `400` | Validation failed (missing/invalid fields, consent not given) | `ServerError` |
+| `422` | Validation failed (missing/invalid fields, consent not given) | `ServerError` |
 | `403` | Turnstile verification failed (missing/invalid/expired) | `ServerError` |
 | `429` | Rate limit exceeded (`Retry-After` header) | `ServerError` |
 | `503` | Captcha provider unreachable | `ServerError` |
@@ -130,16 +130,31 @@ so the public page can render a friendly message. Reserve non-2xx for unexpected
 ### `ServerError`
 The error body the frontend's `toApiError()`
 (`src/app/core/http/api-error.model.ts`) consumes — it reads `message` and, for validation,
-`fieldErrors`.
+the field-error array. Request-validation failures (`422`) carry the array under `errors`
+(the API's global validation handler); `toApiError()` reads both `errors` and `fieldErrors`.
 
 ```json
 {
-  "message": "Validation failed.",
-  "fieldErrors": [
+  "message": "Validation failed",
+  "errors": [
     { "field": "citizenEmail", "message": "A valid e-mail address is required." }
   ]
 }
 ```
+
+---
+
+## Implementation notes (deployed behaviour)
+
+The deployed API differs from the literal OpenAPI schema in two deliberate spots; the
+behaviour below is authoritative for these two points:
+
+- **Validation status is `422`, not `400`.** Invalid bodies are rejected by request
+  validation, which the API normalises app-wide to `422` with `{ "message", "errors": [{ "field", "message" }] }`.
+- **The honeypot is not capped at length 0.** The OpenAPI lists `website maxLength: 0`,
+  but enforcing that would `422` a filled honeypot — revealing to a bot that the field is
+  watched. To keep the silent accept-and-drop, the field accepts a bounded value (≤255) and
+  the server drops it (`202`, no work).
 
 ---
 

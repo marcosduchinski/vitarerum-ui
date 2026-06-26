@@ -21,6 +21,7 @@ size        : Integer          (default 20)
 
 Repeat `status` to match any of several statuses (OR semantics), for example
 `?status=REJECTED&status=CANCELLED`. A single `status` value remains supported.
+`page` is zero-based. `size` must be between 1 and 100.
 
 **Response `200 OK`**
 ```json
@@ -65,19 +66,19 @@ Repeat `status` to match any of several statuses (OR semantics), for example
 }
 ```
 
-List items carry the proposal summary only, including the proposal `referenceNumber` (`VRP-YYYYMMDD-XXXX`) and `title` — there is no embedded `collectionUseProject` (use `GET /proposals/{proposalId}` for the linked project reference). `title`, `intendedUse`, `beginDate`, and `endDate` are nullable: a proposal submitted as a stub carries `null` for any of these until it is filled in.
+List items carry the proposal summary only, including the proposal `referenceNumber` (`VRP-YYYYMMDD-XXXX`) and `title` — there is no embedded `collectionUseProject` (use `GET /proposals/{proposal_id}` for the linked project reference). `title`, `intendedUse`, `beginDate`, and `endDate` are nullable: a proposal submitted as a stub carries `null` for any of these until it is filled in.
 
 > **Note — nullable proposal fields in command responses.** Every staff command below returns a proposal summary whose `title`, `beginDate`, and `endDate` (and, where shown, `intendedUse`) echo the stored proposal. For a stub proposal that has not yet been completed these are `null`. They are shown below with concrete example values for brevity.
 
 ---
 
-### `PATCH /proposals/{proposalId}`
+### `PATCH /proposals/{proposal_id}`
 
 **Description** — Staff correct a proposal's defining metadata: `title`, `intendedUse`, `beginDate`, and `endDate`. Partial update — an omitted key leaves the field unchanged, while an explicit `null` clears it (`title`, `beginDate`, `endDate` are nullable). `intendedUse` is replaced as a whole object when supplied. Records **no** `ProposalEvent` and does **not** change the proposal status. Allowed only while the proposal is in a non-terminal status (`SUBMITTED` or `PENDING`); editing a decided or cancelled proposal returns `409`. The caller must belong to a staff group.
 
 **Path parameters**
 ```
-proposalId : UUID (required)
+proposal_id : UUID (required)
 ```
 
 **Request body**
@@ -131,6 +132,9 @@ All fields are optional. Omit a field to leave it untouched; send `null` to clea
 }
 ```
 
+If the caller is neither staff nor the requester, the proposal access check may instead
+return `ACCESS_DENIED` with message `You do not have access to this proposal`.
+
 **Response `404 Not Found`**
 ```json
 {
@@ -157,13 +161,13 @@ All fields are optional. Omit a field to leave it untouched; send `null` to clea
 
 ---
 
-### `POST /proposals/{proposalId}/assign`
+### `POST /proposals/{proposal_id}/assign`
 
 **Description** — A staff member assumes responsibility for the request, becoming its attendant and moving it into review. If no `targetPermissionId` is provided the caller assigns themselves. Updates `assignedTo`, transitions the proposal from `SUBMITTED` to `PENDING`, and records an `ASSIGNED` `ProposalEvent`. Allowed from any non-terminal status. The caller must belong to a staff group, and any explicit `targetPermissionId` must also belong to a staff group.
 
 **Path parameters**
 ```
-proposalId : UUID (required)
+proposal_id : UUID (required)
 ```
 
 **Request body**
@@ -219,15 +223,32 @@ Both fields are optional. When `targetPermissionId` is omitted the caller is ass
 }
 ```
 
+**Response `404 Not Found`** — when an explicit `targetPermissionId` does not exist.
+```json
+{
+  "error": "PERMISSION_NOT_FOUND",
+  "message": "No permission found with id uuid"
+}
+```
+
+**Response `422 Unprocessable Entity`** — when an explicit `targetPermissionId` belongs
+to a non-staff group.
+```json
+{
+  "error": "INVALID_PERMISSION_TARGET",
+  "message": "Target permission must belong to a staff group"
+}
+```
+
 ---
 
-### `POST /proposals/{proposalId}/request-documents`
+### `POST /proposals/{proposal_id}/request-documents`
 
 **Description** — Staff formally request supplementary documents from the researcher. Records a `DOCUMENTS_REQUESTED` `ProposalEvent` and appends the requested document types. The proposal must be in `PENDING` status; the status is unchanged. Each requested document carries a `type` and a `description`.
 
 **Path parameters**
 ```
-proposalId : UUID (required)
+proposal_id : UUID (required)
 ```
 
 **Request body**
@@ -277,15 +298,23 @@ proposalId : UUID (required)
 }
 ```
 
+**Response `403 Forbidden`**
+```json
+{
+  "error": "INSUFFICIENT_GROUP",
+  "message": "Only CURATORIAL or COLLECTIONS_MANAGEMENT or DIRECTION or SYS_ADMIN members can perform this action"
+}
+```
+
 ---
 
-### `POST /proposals/{proposalId}/forward`
+### `POST /proposals/{proposal_id}/forward`
 
-**Description** — Staff forward the request to another staff member with a question or solicitation. Updates `assignedTo` and records a `FORWARDED` `ProposalEvent`. Does not change the proposal status. The caller and target permission must both belong to staff groups.
+**Description** — Staff forward the request to another staff member with a question or solicitation. Updates `assignedTo` and records a `FORWARDED` `ProposalEvent`. Does not change the proposal status. The proposal must be in `PENDING` status. The caller and target permission must both belong to staff groups.
 
 **Path parameters**
 ```
-proposalId : UUID (required)
+proposal_id : UUID (required)
 ```
 
 **Request body**
@@ -333,141 +362,40 @@ proposalId : UUID (required)
 }
 ```
 
----
-
-### `POST /proposals/{proposalId}/refer-to-direction`
-
-**Description** — Curator escalates the proposal to direction for clarification before making a final decision. Records a `REFERRED_TO_DIRECTION` `ProposalEvent`. The proposal must be in `PENDING` status; the status is unchanged. Only available to `CURATORIAL` group members.
-
-**Path parameters**
-```
-proposalId : UUID (required)
-```
-
-**Request body**
-```json
-{
-  "question": "string",
-  "note": "string"
-}
-```
-
-`question` is required; `note` is optional. The note recorded on the event is `note` when present, otherwise `question`.
-
-**Response `200 OK`**
-```json
-{
-  "id": "uuid",
-  "referenceNumber": "VRP-20250115-0001",
-  "title": "string",
-  "status": "PENDING",
-  "beginDate": "2025-06-01",
-  "endDate": "2025-06-30",
-  "lastEvent": {
-    "occurredAt": "2025-01-19T11:00:00",
-    "type": "REFERRED_TO_DIRECTION",
-    "triggeredBy": {
-      "permissionId": "uuid",
-      "user": {
-        "id": "uuid",
-        "name": "string",
-        "email": "string"
-      },
-      "group": "CURATORIAL"
-    },
-    "note": "string"
-  }
-}
-```
-
-**Response `403 Forbidden`**
-```json
-{
-  "error": "INSUFFICIENT_GROUP",
-  "message": "Only CURATORIAL members can perform this action"
-}
-```
-
 **Response `409 Conflict`**
 ```json
 {
   "error": "INVALID_TRANSITION",
-  "message": "Proposal must be PENDING to be referred to direction"
+  "message": "Proposal must be PENDING to be forwarded to another staff member"
+}
+```
+
+**Response `404 Not Found`** — when `targetPermissionId` does not exist.
+```json
+{
+  "error": "PERMISSION_NOT_FOUND",
+  "message": "No permission found with id uuid"
+}
+```
+
+**Response `422 Unprocessable Entity`** — when `targetPermissionId` belongs to a non-staff
+group.
+```json
+{
+  "error": "INVALID_PERMISSION_TARGET",
+  "message": "Target permission must belong to a staff group"
 }
 ```
 
 ---
 
-### `POST /proposals/{proposalId}/direction-clarification`
-
-**Description** — A direction member provides the requested clarification. Records a `DIRECTION_CLARIFIED` `ProposalEvent`. The proposal must be in `PENDING` status; the status is unchanged. Only available to `DIRECTION` group members.
-
-**Path parameters**
-```
-proposalId : UUID (required)
-```
-
-**Request body**
-```json
-{
-  "clarification": "string",
-  "note": "string"
-}
-```
-
-`clarification` is required; `note` is optional. The note recorded on the event is `clarification` when present, otherwise `note`.
-
-**Response `200 OK`**
-```json
-{
-  "id": "uuid",
-  "referenceNumber": "VRP-20250115-0001",
-  "title": "string",
-  "status": "PENDING",
-  "beginDate": "2025-06-01",
-  "endDate": "2025-06-30",
-  "lastEvent": {
-    "occurredAt": "2025-01-20T09:30:00",
-    "type": "DIRECTION_CLARIFIED",
-    "triggeredBy": {
-      "permissionId": "uuid",
-      "user": {
-        "id": "uuid",
-        "name": "string",
-        "email": "string"
-      },
-      "group": "DIRECTION"
-    },
-    "note": "string"
-  }
-}
-```
-
-**Response `403 Forbidden`**
-```json
-{
-  "error": "INSUFFICIENT_GROUP",
-  "message": "Only DIRECTION members can perform this action"
-}
-```
-
-**Response `409 Conflict`**
-```json
-{
-  "error": "INVALID_TRANSITION",
-  "message": "Proposal must be PENDING to receive direction clarification"
-}
-```
-
----
-
-### `POST /proposals/{proposalId}/approve`
+### `POST /proposals/{proposal_id}/approve`
 
 **Description** — Curator approves the proposal and materialises the project. Transitions the proposal from `PENDING` to `APPROVED` and **creates** the linked `CollectionUseProject` in `CREATED` status. Records an `APPROVED` `ProposalEvent` and a `REQUESTED` `UseEvent` on the new project. The project's `title`, `purpose`, `beginDate`, and `endDate` are taken from this request body (the curator confirms/adjusts the project parameters at approval time), and `requestedBy` is copied from the approved proposal. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
-proposalId : UUID (required)
+proposal_id : UUID (required)
 ```
 
 **Request body**
@@ -481,7 +409,9 @@ proposalId : UUID (required)
 }
 ```
 
-`title`, `purpose`, `beginDate`, `endDate` are required; `note` is optional.
+`title`, `purpose`, `beginDate`, `endDate` are required; `note` is optional. These fields
+define the created `CollectionUseProject`; the proposal summary in the response echoes the
+proposal's already stored `title`, `beginDate`, and `endDate`.
 
 **Response `200 OK`**
 ```json
@@ -555,13 +485,13 @@ The proposal `referenceNumber` follows `VRP-YYYYMMDD-XXXX`. The project `collect
 
 ---
 
-### `POST /proposals/{proposalId}/reject`
+### `POST /proposals/{proposal_id}/reject`
 
 **Description** — Curator rejects the proposal. Transitions the proposal from `PENDING` to `REJECTED`, records a `REJECTED` `ProposalEvent`, and appends a conversation message from the caller's permission user to the requester using `reason` as the message body. No project is created or affected (the project only exists after approval). A `reason` is mandatory. Only available to `CURATORIAL` group members.
 
 **Path parameters**
 ```
-proposalId : UUID (required)
+proposal_id : UUID (required)
 ```
 
 **Request body**
@@ -618,77 +548,14 @@ proposalId : UUID (required)
 
 ---
 
-### `POST /proposals/{proposalId}/watchers`
-
-**Description** — Add a staff member as a watcher on a proposal. Watchers receive visibility into the proposal without being the assigned attendant. Idempotent — adding a permission that is already watching has no effect and still returns `201`.
-
-**Path parameters**
-```
-proposalId : UUID (required)
-```
-
-**Request body**
-```json
-{
-  "permissionId": "uuid"
-}
-```
-
-**Response `201 Created`**
-```json
-{
-  "permissionId": "uuid",
-  "user": {
-    "id": "uuid",
-    "name": "string",
-    "email": "string"
-  },
-  "group": "CURATORIAL"
-}
-```
-
-**Response `404 Not Found`**
-```json
-{
-  "error": "PROPOSAL_NOT_FOUND",
-  "message": "No proposal found with id uuid"
-}
-```
-
----
-
-### `DELETE /proposals/{proposalId}/watchers/{permissionId}`
-
-**Description** — Remove a watcher from a proposal.
-
-**Path parameters**
-```
-proposalId   : UUID (required)
-permissionId : UUID (required)
-```
-
-**Response `204 No Content`**
-
-**Response `404 Not Found`**
-```json
-{
-  "error": "WATCHER_NOT_FOUND",
-  "message": "Permission uuid is not watching this proposal"
-}
-```
-
----
-
 A few conventions worth noting across this group:
 
-**Group-restricted commands** — `assign`, `forward`, and `request-documents` require a staff permission (`CURATORIAL`, `COLLECTIONS_MANAGEMENT`, `DIRECTION`, or `SYS_ADMIN`). `approve`, `reject`, and `refer-to-direction` require `CURATORIAL`; `direction-clarification` requires `DIRECTION`. Invalid group membership returns `403 Forbidden` (`INSUFFICIENT_GROUP`). Explicit assignment/forwarding/watcher targets must be staff permissions, otherwise the API returns `422 INVALID_PERMISSION_TARGET`.
+**Group-restricted commands** — `assign`, `forward`, and `request-documents` require a staff permission (`CURATORIAL`, `COLLECTIONS_MANAGEMENT`, `DIRECTION`, or `SYS_ADMIN`). `approve` and `reject` require `CURATORIAL`. Invalid group membership returns `403 Forbidden` (`INSUFFICIENT_GROUP`). Explicit assignment/forwarding targets must be staff permissions, otherwise the API returns `422 INVALID_PERMISSION_TARGET`.
 
-**Single review state** — the implemented flow is `SUBMITTED` → `assign` (`→ PENDING`, event `ASSIGNED`) → all review activity happens in `PENDING` (`request-documents`, document uploads, `forward`, `refer-to-direction`, `direction-clarification`, messages — none change the status) → `approve` (`→ APPROVED`, creates the project), `reject` (`→ REJECTED`), or requester cancellation (`→ CANCELLED`). There is no separate `PENDING_DOCUMENTS`/`UNDER_REVIEW`/`PENDING_DIRECTION` state, and there is no `start-review` endpoint.
+**Single review state** — the implemented flow is `SUBMITTED` → `assign` (`→ PENDING`, event `ASSIGNED`) → all review activity happens in `PENDING` (`request-documents`, document uploads, `forward`, messages — none change the status) → `approve` (`→ APPROVED`, creates the project), `reject` (`→ REJECTED`), or requester cancellation (`→ CANCELLED`). There is no separate `PENDING_DOCUMENTS`/`UNDER_REVIEW`/`PENDING_DIRECTION` state, and there is no `start-review` endpoint.
 
-**Dual-aggregate responses** — `approve` returns the updated `Proposal` and the newly-created `CollectionUseProject` together, reflecting that it atomically decides the proposal and materialises the project. Requester cancellation (`POST /proposals/{proposalId}/cancel`, defined in file 02) returns the cancelled proposal and the linked project summary when a project already exists. `reject` returns the proposal alone.
+**Dual-aggregate responses** — `approve` returns the updated `Proposal` and the newly-created `CollectionUseProject` together, reflecting that it atomically decides the proposal and materialises the project. Requester cancellation (`POST /proposals/{proposal_id}/cancel`, defined in file 02) returns the cancelled proposal and the linked project summary when a project already exists. `reject` returns the proposal alone.
 
 **`reason` is schema-mandatory on rejection** — a missing `reason` is rejected by request validation with `422 Unprocessable Entity`.
 
-**Conversation and document endpoints are shared** — staff use the same `GET/POST /proposals/{proposalId}/conversation`, `POST /proposals/{proposalId}/conversation/messages`, `POST/GET /proposals/{proposalId}/documents`, and `GET /proposals/{proposalId}/documents/{documentId}` (download) contracts defined in the researcher group. The sender is always resolved from the authenticated user's session.
-
-**Watchers carry no behavior** — watcher endpoints manage visibility only. They produce no `ProposalEvent` and have no effect on status transitions. The `watchers` list is always returned in the `GET /proposals/{proposalId}` response.
+**Conversation and document endpoints are shared** — staff use the same `GET/POST /proposals/{proposal_id}/conversation`, `POST /proposals/{proposal_id}/conversation/messages`, `POST/GET /proposals/{proposal_id}/documents`, and `GET /proposals/{proposal_id}/documents/{document_id}` (download) contracts defined in the researcher group. The sender is always resolved from the authenticated user's session.
