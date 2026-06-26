@@ -64,7 +64,6 @@ export interface ObjectOccurrenceLog {
   readonly id: string;
   readonly referenceNumber: string;
   readonly projectId: string;
-  readonly dateConclusion: string | null;
   readonly curator: PermissionPrincipal | null;
 }
 
@@ -118,7 +117,6 @@ export interface ProjectActionPermissions {
   readonly canOpenLog: boolean;
   readonly canCreateObjectLogEntry: boolean;
   readonly canCreateOccurrenceEntry: boolean;
-  readonly canConcludeObjectOccurrenceLog: boolean;
 }
 
 export interface ProjectStaffProposalContext {

@@ -13,7 +13,6 @@ import { firstValueFrom } from 'rxjs';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { ApiError, toApiError } from '@core/http/api-error.model';
-import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ErrorMessageComponent } from '@shared/components/error-message/error-message.component';
 import { LoadingStateComponent } from '@shared/components/loading-state/loading-state.component';
@@ -34,12 +33,7 @@ interface OccurrenceObjectRow {
   selector: 'app-project-occurrence-log-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    LoadingStateComponent,
-    ErrorMessageComponent,
-    EmptyStateComponent,
-    ConfirmModalComponent,
-  ],
+  imports: [LoadingStateComponent, ErrorMessageComponent, EmptyStateComponent],
   templateUrl: './project-occurrence-log-panel.component.html',
   styleUrl: './project-occurrence-log-panel.component.scss',
 })
@@ -75,32 +69,19 @@ export class ProjectOccurrenceLogPanelComponent {
   protected readonly occurrenceLog = computed(
     () => this.occurrenceResource.value()?.occurrenceLog ?? null,
   );
-  protected readonly occurrenceLogConcluded = computed(
-    () => this.occurrenceLog()?.dateConclusion != null,
-  );
   protected readonly project = computed(() => this.projectResource.value() ?? null);
   protected readonly isExternalResearcher = computed(
     () => this.identity.session()?.group === 'EXTERNAL',
   );
   protected readonly projectInProgress = computed(() => this.project()?.status === 'IN_PROGRESS');
   protected readonly canAddOccurrenceEntries = computed(
-    () =>
-      !this.occurrenceLogConcluded() && (!this.isExternalResearcher() || this.projectInProgress()),
+    () => !this.isExternalResearcher() || this.projectInProgress(),
   );
   protected readonly occurrenceAccessMessage = computed(() => {
-    if (this.occurrenceLogConcluded()) return 'This occurrence log is concluded.';
     if (this.isExternalResearcher() && this.project() && !this.projectInProgress()) {
       return 'Researcher occurrence reports are only available while the project is in progress.';
     }
     return null;
-  });
-  protected readonly canConcludeOccurrenceLog = computed(() => {
-    const group = this.identity.session()?.group;
-    return (
-      !!this.occurrenceLog() &&
-      !this.occurrenceLogConcluded() &&
-      (group === 'CURATORIAL' || group === 'COLLECTIONS_MANAGEMENT')
-    );
   });
   protected readonly occurrenceError = computed<ApiError | null>(() => {
     const err = this.occurrenceResource.error();
@@ -121,9 +102,6 @@ export class ProjectOccurrenceLogPanelComponent {
       !!this.occurrenceLog() &&
       this.occurrenceEntries().length > 0,
   );
-  protected readonly occurrenceConcludeConfirmOpen = signal(false);
-  protected readonly occurrenceConcludeSubmitting = signal(false);
-  protected readonly occurrenceConcludeError = signal<ApiError | null>(null);
   protected readonly expandedObjectKey = signal<string | null>(null);
   protected readonly selectedOccurrenceObjectKey = signal<string | null>(null);
   protected readonly selectedOccurrenceObject = computed(() => {
@@ -426,8 +404,6 @@ export class ProjectOccurrenceLogPanelComponent {
       '',
       `Log reference: ${log?.referenceNumber ?? 'Not issued'}`,
       `Project ID: ${this.projectId()}`,
-      `Status: ${log?.dateConclusion ? 'Concluded' : 'Open'}`,
-      `Conclusion: ${log?.dateConclusion ?? '—'}`,
       `Curator: ${log?.curator?.user.name ?? '—'}`,
       '',
       'OCCURRENCES',
@@ -453,32 +429,6 @@ export class ProjectOccurrenceLogPanelComponent {
 
   protected toggleOccurrenceAttachments(entryId: string): void {
     this.expandedOccurrenceEntryId.update((current) => (current === entryId ? null : entryId));
-  }
-
-  protected openOccurrenceConcludeConfirm(): void {
-    this.occurrenceConcludeError.set(null);
-    this.occurrenceConcludeConfirmOpen.set(true);
-  }
-
-  protected closeOccurrenceConcludeConfirm(): void {
-    if (!this.occurrenceConcludeSubmitting()) {
-      this.occurrenceConcludeConfirmOpen.set(false);
-    }
-  }
-
-  protected async concludeOccurrenceLog(): Promise<void> {
-    if (this.occurrenceConcludeSubmitting()) return;
-    this.occurrenceConcludeSubmitting.set(true);
-    this.occurrenceConcludeError.set(null);
-    try {
-      await firstValueFrom(this.projectService.concludeObjectOccurrenceLog(this.projectId()));
-      this.occurrenceConcludeConfirmOpen.set(false);
-      this.occurrenceResource.reload();
-    } catch (err) {
-      this.occurrenceConcludeError.set(toApiError(err));
-    } finally {
-      this.occurrenceConcludeSubmitting.set(false);
-    }
   }
 
   protected dateLabel(date: string): string {

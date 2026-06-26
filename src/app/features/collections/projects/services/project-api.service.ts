@@ -208,13 +208,6 @@ export class ProjectApiService {
     );
   }
 
-  concludeObjectOccurrenceLog(projectId: string): Observable<ObjectOccurrenceLog> {
-    return this.http.post<ObjectOccurrenceLog>(
-      this.url(`/collection-use-projects/${projectId}/object-occurrence-log/conclusion`),
-      {},
-    );
-  }
-
   uploadOccurrenceEntryAttachment(
     projectId: string,
     entryId: string,

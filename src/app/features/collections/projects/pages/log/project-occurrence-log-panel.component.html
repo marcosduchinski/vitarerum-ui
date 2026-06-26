@@ -7,16 +7,6 @@
           Object occurrence log
         </h2>
         <div class="access-sheet__actions">
-          @if (canConcludeOccurrenceLog()) {
-            <button
-              type="button"
-              class="access-sheet__action"
-              [disabled]="occurrenceConcludeSubmitting()"
-              (click)="openOccurrenceConcludeConfirm()"
-            >
-              {{ occurrenceConcludeSubmitting() ? 'Concluding...' : 'Conclude occurrence log' }}
-            </button>
-          }
           <button
             type="button"
             class="access-sheet__action access-sheet__action--download"
@@ -37,39 +27,11 @@
           <dd>{{ occurrenceLog()?.referenceNumber ?? 'Not issued' }}</dd>
         </div>
         <div class="access-summary__item">
-          <dt>Status</dt>
-          <dd>{{ occurrenceLog()?.dateConclusion ? 'Concluded' : 'Open' }}</dd>
-        </div>
-        <div class="access-summary__item">
-          <dt>Conclusion</dt>
-          <dd>
-            {{
-              occurrenceLog()?.dateConclusion ? dateLabel(occurrenceLog()!.dateConclusion!) : '—'
-            }}
-          </dd>
-        </div>
-        <div class="access-summary__item">
           <dt>Curator</dt>
           <dd>{{ occurrenceLog()?.curator?.user?.name ?? '—' }}</dd>
         </div>
       </dl>
     </header>
-
-    <app-confirm-modal
-      [open]="occurrenceConcludeConfirmOpen()"
-      title="Conclude occurrence log?"
-      message="This records the conclusion date and prevents more occurrence entries or occurrence attachments."
-      confirmLabel="Conclude log"
-      cancelLabel="Keep open"
-      tone="warning"
-      [pending]="occurrenceConcludeSubmitting()"
-      (confirmed)="concludeOccurrenceLog()"
-      (cancelled)="closeOccurrenceConcludeConfirm()"
-    >
-      @if (occurrenceConcludeError()) {
-        <app-error-message [apiError]="occurrenceConcludeError()!" />
-      }
-    </app-confirm-modal>
 
     <div class="access-band access-band--occurrence">
       <span>Occurrences Reported</span>

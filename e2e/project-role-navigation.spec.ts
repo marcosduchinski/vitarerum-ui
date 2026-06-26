@@ -93,7 +93,6 @@ test.describe('completed project role navigation', () => {
               canOpenLog: true,
               canCreateObjectLogEntry: false,
               canCreateOccurrenceEntry: false,
-              canConcludeObjectOccurrenceLog: false,
             },
             staffContext: null,
           },

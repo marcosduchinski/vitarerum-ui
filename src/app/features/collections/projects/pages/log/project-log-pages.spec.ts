@@ -696,49 +696,6 @@ describe('project log pages', () => {
     expect(updated?.testimonial).toBe('Updated note.');
   });
 
-  it('allows curatorial staff to conclude an open occurrence log', async () => {
-    const state = TestBed.inject(MockProjectState);
-    const projectService = TestBed.inject(PROJECT_API_SERVICE);
-    await firstValueFrom(
-      projectService.createObjectOccurrenceEntry('proj-3', {
-        inventoryNumber: 'INV-OCC-003',
-        numberOfObjects: 1,
-        occurrenceDate: '2026-06-03T11:30',
-        location: 'Reading room',
-        detailedDescription: 'Occurrence detail.',
-      }),
-    );
-
-    const fixture = TestBed.createComponent(ProjectOccurrenceLogPanelComponent);
-    fixture.componentRef.setInput('projectId', 'proj-3');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const root = fixture.nativeElement as HTMLElement;
-    const concludeButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Conclude occurrence log'),
-    );
-    expect(concludeButton).toBeTruthy();
-
-    concludeButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const confirmButton = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
-      (button) => button.textContent?.includes('Conclude log'),
-    );
-    expect(confirmButton).toBeTruthy();
-
-    confirmButton!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(state.objectOccurrenceLogs.get('proj-3')?.dateConclusion).toBeTruthy();
-  });
-
   it('renders the publication log page with a back link to the project', () => {
     const fixture = TestBed.createComponent(ProjectPublicationLogPageComponent);
     fixture.componentRef.setInput('id', 'proj-3');
