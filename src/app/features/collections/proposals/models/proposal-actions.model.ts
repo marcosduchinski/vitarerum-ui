@@ -39,11 +39,6 @@ export interface ApproveProposalRequest {
   readonly note?: string;
 }
 
-export interface DirectionClarificationRequest {
-  readonly clarification: string;
-  readonly note?: string;
-}
-
 export interface AddRequestedObjectsRequest {
   readonly objects: readonly {
     readonly inventoryNumber: string;
@@ -59,14 +54,6 @@ export interface ProposalAssignmentResult {
   readonly id: string;
   readonly status: ProposalStatus;
   readonly assignedTo: PermissionPrincipal;
-  readonly lastEvent: ProposalEvent;
-}
-
-// Shape returned by status-preserving review commands (request-documents,
-// direction-clarification): the proposal plus its newest event.
-export interface ProposalEventResult {
-  readonly id: string;
-  readonly status: ProposalStatus;
   readonly lastEvent: ProposalEvent;
 }
 

@@ -8,12 +8,10 @@ import {
   AddRequestedObjectsRequest,
   ApproveProposalRequest,
   AssignProposalRequest,
-  DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
   ProposalCancellationResult,
   ProposalDecisionResult,
-  ProposalEventResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
   UpdateProposalRequest,
@@ -415,22 +413,6 @@ export class ProposalApiServiceMock {
     );
     this.pushEvent(proposalId, evt);
     return of({ id: proposalId, status: proposal.status, assignedTo, lastEvent: evt });
-  }
-
-  directionClarification(
-    proposalId: string,
-    request: DirectionClarificationRequest,
-  ): Observable<ProposalEventResult> {
-    const proposal = this.proposals.get(proposalId);
-    if (!proposal) return throwError(() => ({ status: 404, error: 'NOT_FOUND' }));
-    const evt: ProposalEvent = {
-      occurredAt: new Date().toISOString(),
-      type: 'DIRECTION_CLARIFIED',
-      triggeredBy: this.currentPrincipal(),
-      note: request.clarification || request.note || null,
-    };
-    this.pushEvent(proposalId, evt);
-    return of({ id: proposalId, status: proposal.status, lastEvent: evt });
   }
 
   approveProposal(

@@ -10,12 +10,10 @@ import {
   AddRequestedObjectsRequest,
   ApproveProposalRequest,
   AssignProposalRequest,
-  DirectionClarificationRequest,
   ForwardProposalRequest,
   ProposalAssignmentResult,
   ProposalCancellationResult,
   ProposalDecisionResult,
-  ProposalEventResult,
   ProposalNoteRequest,
   ProposalReasonRequest,
   UpdateProposalRequest,
@@ -169,16 +167,6 @@ export class ProposalApiService {
   ): Observable<ProposalAssignmentResult> {
     return this.http.post<ProposalAssignmentResult>(
       this.url(`/proposals/${proposalId}/forward`),
-      request,
-    );
-  }
-
-  directionClarification(
-    proposalId: string,
-    request: DirectionClarificationRequest,
-  ): Observable<ProposalEventResult> {
-    return this.http.post<ProposalEventResult>(
-      this.url(`/proposals/${proposalId}/direction-clarification`),
       request,
     );
   }
