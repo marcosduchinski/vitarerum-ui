@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { IDENTITY_SERVICE } from '@core/auth/identity.service';
 import { LogoMarkComponent } from '@shared/components/logo-mark/logo-mark.component';
@@ -7,7 +7,7 @@ import { LogoMarkComponent } from '@shared/components/logo-mark/logo-mark.compon
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [LogoMarkComponent],
+  imports: [LogoMarkComponent, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
